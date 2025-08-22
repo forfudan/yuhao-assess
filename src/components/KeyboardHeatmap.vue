@@ -20,7 +20,6 @@
             :displayMode="displayMode"
             :maxValue="maxKeyValue"
             :keyInfo="key"
-            @key-hover="handleKeyHover"
           />
         </div>
 
@@ -33,7 +32,6 @@
             :displayMode="displayMode"
             :maxValue="maxKeyValue"
             :keyInfo="key"
-            @key-hover="handleKeyHover"
           />
         </div>
 
@@ -46,7 +44,6 @@
             :displayMode="displayMode"
             :maxValue="maxKeyValue"
             :keyInfo="key"
-            @key-hover="handleKeyHover"
           />
         </div>
 
@@ -59,7 +56,6 @@
             :displayMode="displayMode"
             :maxValue="maxKeyValue"
             :keyInfo="key"
-            @key-hover="handleKeyHover"
           />
         </div>
 
@@ -72,33 +68,11 @@
             :displayMode="displayMode"
             :maxValue="maxKeyValue"
             :keyInfo="key"
-            @key-hover="handleKeyHover"
           />
         </div>
       </div>
 
-      <!-- 键位详情 -->
-      <div v-if="hoveredKey" class="key-details">
-        <h4 class="details-title">键位详情</h4>
-        <div class="details-content">
-          <div class="detail-item">
-            <span class="detail-label">按键：</span>
-            <span class="detail-value key-highlight">{{ hoveredKey.key.toUpperCase() }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">使用次数：</span>
-            <span class="detail-value">{{ hoveredKey.count.toLocaleString() }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">使用频率：</span>
-            <span class="detail-value">{{ (hoveredKey.frequency * 100).toFixed(2) }}%</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">手指分工：</span>
-            <span class="detail-value">{{ getFingerName(hoveredKey.key) }}</span>
-          </div>
-        </div>
-      </div>
+
 
       <!-- 基本数据 -->
       <div class="basic-stats">
@@ -158,7 +132,6 @@ const props = defineProps<Props>()
 // 响应式数据
 const displayMode = ref<'load'>('load') // 固定为按键频率模式
 const keyboardScale = ref(0.8)
-const hoveredKey = ref<KeyData | null>(null)
 
 // 键盘布局定义
 const numberRowKeys: KeyInfo[] = [
@@ -338,16 +311,6 @@ const getKeyData = (key: string): KeyData => {
   }
 }
 
-// 获取手指名称
-const getFingerName = (key: string): string => {
-  return fingerMapping[key.toLowerCase()] || '未知'
-}
-
-// 处理键位悬停
-const handleKeyHover = (keyData: KeyData | null) => {
-  hoveredKey.value = keyData
-}
-
 // 监听窗口大小变化，调整键盘缩放
 const updateKeyboardScale = () => {
   const container = document.querySelector('.keyboard-layout')
@@ -447,49 +410,6 @@ watch(() => props.analysisReady, (ready) => {
   margin-top: 8px;
 }
 
-/* 键位详情 */
-.key-details {
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-lg);
-}
-
-.details-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin-bottom: var(--spacing-md);
-}
-
-.details-content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--spacing-md);
-}
-
-.detail-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.detail-label {
-  color: var(--color-text-secondary);
-}
-
-.detail-value {
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-.key-highlight {
-  background-color: var(--color-primary-light);
-  color: var(--color-primary);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-}
-
 /* 基本数据统计 */
 .basic-stats {
   background-color: var(--color-bg-secondary);
@@ -537,10 +457,6 @@ watch(() => props.analysisReady, (ready) => {
 @media (max-width: 768px) {
   .keyboard-layout {
     padding: var(--spacing-md);
-  }
-  
-  .details-content {
-    grid-template-columns: 1fr;
   }
   
   .basic-stats-grid {

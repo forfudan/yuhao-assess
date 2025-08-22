@@ -3,12 +3,9 @@
     class="key-button"
     :class="[
       `key-${keyInfo.key}`,
-      `mode-${displayMode}`,
-      { 'key-active': isActive }
+      `mode-${displayMode}`
     ]"
     :style="keyStyle"
-    @mouseenter="handleMouseEnter"
-    @mouseleave="handleMouseLeave"
   >
     <div class="key-content">
       <div class="key-label">{{ keyInfo.label || keyInfo.key.toUpperCase() }}</div>
@@ -26,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import type { KeyData, KeyInfo } from '../types/index'
 
 interface Props {
@@ -38,11 +35,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  keyHover: [keyData: KeyData | null]
-}>()
-
-const isActive = ref(false)
+const emit = defineEmits<{}>()
 
 // 显示的值
 const displayValue = computed(() => {
@@ -125,17 +118,6 @@ const getFingerColor = (key: string, intensity: number): string => {
 
   const finger = fingerMapping[key.toLowerCase()]
   return finger ? fingerColors[finger] : `rgba(156, 163, 175, ${intensity * 0.5})`
-}
-
-// 鼠標事件處理
-const handleMouseEnter = () => {
-  isActive.value = true
-  emit('keyHover', props.keyData)
-}
-
-const handleMouseLeave = () => {
-  isActive.value = false
-  emit('keyHover', null)
 }
 </script>
 
