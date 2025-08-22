@@ -111,6 +111,29 @@
             </div>
           </div>
 
+          <!-- 重碼數據分析模塊 -->
+          <div v-if="analysisReady" class="module-card">
+            <div class="module-header">
+              <h3 class="module-title">重碼數據分析</h3>
+              <button 
+                class="toggle-button"
+                @click="toggleModule('duplicate')"
+                :title="modules.duplicate.collapsed ? '展開' : '收起'"
+              >
+                <span class="toggle-icon" :class="{ 'collapsed': modules.duplicate.collapsed }">
+                  ▼
+                </span>
+              </button>
+            </div>
+            <div v-show="!modules.duplicate.collapsed" class="module-content">
+              <p class="module-description">
+                分析不同字符集下的重碼情況，計算靜態重碼率和動態選重率。
+              </p>
+              
+              <DuplicateAnalysisCard :code-table="codeTable" />
+            </div>
+          </div>
+
           <!-- 碼表分析模塊 -->
           <div v-if="analysisReady" class="module-card">
             <div class="module-header">
@@ -160,6 +183,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import CodeTableUploader from './components/CodeTableUploader.vue'
 import KeyboardHeatmap from './components/KeyboardHeatmap.vue'
 import CodeTableViewer from './components/CodeTableViewer.vue'
+import DuplicateAnalysisCard from './components/DuplicateAnalysisCard.vue'
 import type { CodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
 
 // 響應式數據
@@ -175,7 +199,8 @@ const isDarkMode = ref(false)
 const modules = ref({
   upload: { collapsed: false },
   heatmap: { collapsed: false },
-  analysis: { collapsed: false }
+  analysis: { collapsed: false },
+  duplicate: { collapsed: false }
 })
 
 // 切换模块折叠状态
@@ -185,9 +210,7 @@ const toggleModule = (moduleKey: keyof typeof modules.value) => {
 
 // 计算是否所有模块都已折叠
 const allModulesCollapsed = computed(() => {
-  return Object.keys(modules.value).every(key => {
-    return modules.value[key as keyof typeof modules.value].collapsed
-  })
+  return Object.values(modules.value).every(module => module.collapsed)
 })
 
 // 全部展开/折叠
