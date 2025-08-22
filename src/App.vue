@@ -298,6 +298,9 @@ const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; f
   // 生成分析數據
   analysisData.value = generateAnalysis(data.codeTable)
   
+  // 自動隱藏碼表上傳模塊
+  modules.value.upload.collapsed = true
+  
   uploadStatus.value = {
     type: 'success',
     message: `碼表 "${data.fileName}" 上傳成功！共 ${data.codeTable.size} 個字符`
