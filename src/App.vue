@@ -57,6 +57,18 @@
               :analysis-ready="analysisReady"
             />
           </section>
+
+          <!-- 碼表分析區塊 -->
+          <section v-if="analysisReady" class="card analysis-section">
+            <h2 class="section-title">碼表分析</h2>
+            <p class="section-description">
+              詳細分析碼表的字符分布、編碼統計和top熱門條目。
+            </p>
+            
+            <CodeTableViewer 
+              :analysis="analysisData"
+            />
+          </section>
         </div>
       </div>
     </main>
@@ -81,17 +93,70 @@
 import { ref, reactive } from 'vue'
 import CodeTableUploader from './components/CodeTableUploader.vue'
 import KeyboardHeatmap from './components/KeyboardHeatmap.vue'
-import type { CodeTable, UploadStatus } from './types/index'
+import CodeTableViewer from './components/CodeTableViewer.vue'
+import type { CodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
 
 // 響應式數據
 const codeTable = ref<CodeTable>(new Map())
 const analysisReady = ref(false)
 const uploadStatus = ref<UploadStatus | null>(null)
+const analysisData = ref<CodeTableAnalysis | null>(null)
+
+// 生成分析數據
+function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
+  const totalChars = codeTable.size
+  let totalCodes = 0
+  const codeLengthDistribution: { [key: number]: number } = {}
+  let regularChars = 0
+  let gbkChars = 0
+  const cjkChars = { A: 0, B: 0, C: 0, D: 0, E: 0, F: 0, G: 0, H: 0, I: 0 }
+  const topEntries: Array<{ char: string; codes: string[] }> = []
+  
+  // 分析字符和編碼
+  const entries = Array.from(codeTable.entries()).map(([char, codes]) => {
+    totalCodes += codes.length
+    
+    // 統計編碼長度分布
+    codes.forEach(code => {
+      const length = code.length
+      codeLengthDistribution[length] = (codeLengthDistribution[length] || 0) + 1
+    })
+    
+    // 判斷CJK字符類型
+    const charCode = char.charCodeAt(0)
+    if (charCode >= 0x4e00 && charCode <= 0x9fff) {
+      cjkChars.A++
+      regularChars++
+      gbkChars++
+    } else if (charCode >= 0x3400 && charCode <= 0x4dbf) {
+      cjkChars.B++
+    } else if (charCode >= 0x20000 && charCode <= 0x2a6df) {
+      cjkChars.C++
+    }
+    
+    return { char, codes }
+  })
+  
+  // 取前5個條目
+  topEntries.push(...entries.slice(0, 5))
+  
+  return {
+    totalChars,
+    totalCodes,
+    regularChars,
+    gbkChars,
+    cjkChars,
+    topEntries
+  }
+}
 
 // 處理碼表上傳成功
 const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string }) => {
   codeTable.value = data.codeTable
   analysisReady.value = true
+  
+  // 生成分析數據
+  analysisData.value = generateAnalysis(data.codeTable)
   
   uploadStatus.value = {
     type: 'success',

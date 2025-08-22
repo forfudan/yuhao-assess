@@ -18,6 +18,66 @@ export interface ParseResult {
   format: CodeTableFormat
 }
 
+// 內置碼表配置
+export interface BuiltinCodeTable {
+  key: string
+  name: string
+  url: string
+  format: CodeTableFormat
+  description: string
+  website: string
+  category: string
+  enabled: boolean
+}
+
+// 碼表配置文件
+export interface CodeTableConfig {
+  version: string
+  description: string
+  defaultScheme: string
+  builtinCodeTables: BuiltinCodeTable[]
+  settings: {
+    cacheTimeout: number
+    maxRetries: number
+    retryDelay: number
+  }
+}
+
+// 當量表數據
+export interface EquivTable {
+  name: string
+  description: string
+  source: string
+  version: string
+  data: Record<string, number>
+}
+
+// 字頻數據
+export type CharFrequency = Record<string, number>
+
+// 碼表分析結果
+export interface CodeTableAnalysis {
+  totalChars: number
+  totalCodes: number
+  regularChars: number  // 通規漢字數量
+  gbkChars: number      // GBK漢字數量
+  cjkChars: {           // CJK區塊統計
+    A: number           // CJK基本漢字
+    B: number           // CJK擴展A
+    C: number           // CJK擴展B
+    D: number           // CJK擴展C
+    E: number           // CJK擴展D
+    F: number           // CJK擴展E
+    G: number           // CJK擴展F
+    H: number           // CJK擴展G
+    I: number           // CJK擴展I
+  }
+  topEntries: Array<{
+    char: string
+    codes: string[]
+  }>
+}
+
 // 鍵位熱力圖數據
 export interface KeyData {
   key: string

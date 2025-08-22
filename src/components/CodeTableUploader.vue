@@ -1,8 +1,44 @@
 <template>
   <div class="code-table-uploader">
-    <!-- 格式选择 -->
+    <!-- 內置碼表選擇 -->
+    <div class="builtin-selector">
+      <label class="builtin-label">內置碼表方案：</label>
+      <div class="builtin-content">
+        <select 
+          v-model="selectedBuiltinTable" 
+          class="builtin-select"
+          @change="handleBuiltinTableChange"
+          :disabled="isUploading"
+        >
+          <option value="">選擇內置方案...</option>
+          <option 
+            v-for="table in builtinTables" 
+            :key="table.key" 
+            :value="table.key"
+          >
+            {{ table.name }} - {{ table.description }}
+          </option>
+        </select>
+        <button 
+          v-if="selectedBuiltinTable"
+          class="btn btn-primary load-builtin-btn"
+          @click="loadBuiltinTable"
+          :disabled="isUploading"
+        >
+          <span v-if="isUploading">載入中...</span>
+          <span v-else>載入方案</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 分隔線 -->
+    <div class="divider">
+      <span class="divider-text">或者</span>
+    </div>
+
+    <!-- 格式選擇 -->
     <div class="format-selector">
-      <label class="format-label">码表格式：</label>
+      <label class="format-label">碼表格式：</label>
       <div class="format-options">
         <label class="format-option">
           <input 
@@ -11,7 +47,7 @@
             v-model="selectedFormat"
             name="format"
           />
-          <span class="format-text">字符-编码</span>
+          <span class="format-text">字符-編碼</span>
           <span class="format-example">例：的 de</span>
         </label>
         <label class="format-option">
@@ -21,7 +57,7 @@
             v-model="selectedFormat"
             name="format"
           />
-          <span class="format-text">编码-字符</span>
+          <span class="format-text">編碼-字符</span>
           <span class="format-example">例：de 的</span>
         </label>
       </div>
@@ -51,7 +87,7 @@
       <div class="upload-content">
         <div v-if="isUploading" class="uploading-state">
           <div class="spinner"></div>
-          <p>正在解析码表...</p>
+          <p>正在解析碼表...</p>
         </div>
         
         <div v-else-if="selectedFile" class="file-selected">
@@ -67,10 +103,10 @@
         
         <div v-else class="upload-prompt">
           <div class="upload-icon">⬆️</div>
-          <p class="upload-title">点击上传或拖拽文件到此处</p>
+          <p class="upload-title">點擊上傳或拖拽文件到此處</p>
           <p class="upload-subtitle">支持 .txt 和 .csv 格式</p>
           <p class="upload-note">
-            文件格式：每行一个字符和编码，用空格或制表符分隔
+            文件格式：每行一個字符和編碼，用空格或制表符分隔
           </p>
         </div>
       </div>
@@ -122,12 +158,18 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { CodeTable, CodeTableFormat, ParseResult } from '../types/index'
+import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 
 // 定义 emits
 const emit = defineEmits<{
   uploadSuccess: [data: { codeTable: CodeTable; fileName: string; format: CodeTableFormat }]
   uploadError: [error: string]
 }>()
+
+// 內置碼表相關
+const builtinService = new BuiltinCodeTableService()
+const selectedBuiltinTable = ref('')
+const builtinTables = ref<Array<{key: string, name: string, description: string}>>([])
 
 // 响应式数据
 const selectedFormat = ref<CodeTableFormat>('char_first')
@@ -195,6 +237,9 @@ const handleFileSelection = (file: File) => {
     return
   }
 
+  // 清除內置碼表選擇
+  selectedBuiltinTable.value = ''
+  
   selectedFile.value = file
   generatePreview(file)
 }
@@ -317,6 +362,49 @@ const processFile = async () => {
     isUploading.value = false
   }
 }
+
+// 載入內置碼表配置
+async function loadBuiltinConfig() {
+  try {
+    await builtinService.loadConfig()
+    builtinTables.value = builtinService.getAvailableTables()
+  } catch (error) {
+    console.error('載入內置碼表配置失敗:', error)
+  }
+}
+
+// 處理內置碼表選擇變化
+function handleBuiltinTableChange() {
+  // 當選擇內置碼表時，清除檔案選擇
+  if (selectedBuiltinTable.value) {
+    selectedFile.value = null
+    previewData.value = []
+  }
+}
+
+// 載入內置碼表
+async function loadBuiltinTable() {
+  if (!selectedBuiltinTable.value) return
+  
+  try {
+    isUploading.value = true
+    
+    const result = await builtinService.downloadCodeTable(selectedBuiltinTable.value)
+    
+    emit('uploadSuccess', {
+      codeTable: result.codeTable,
+      fileName: `內置方案：${builtinTables.value.find(t => t.key === selectedBuiltinTable.value)?.name || selectedBuiltinTable.value}`,
+      format: result.format
+    })
+  } catch (error) {
+    emit('uploadError', `載入內置碼表失敗: ${error instanceof Error ? error.message : String(error)}`)
+  } finally {
+    isUploading.value = false
+  }
+}
+
+// 初始化
+loadBuiltinConfig()
 </script>
 
 <style scoped>
@@ -324,6 +412,79 @@ const processFile = async () => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+}
+
+/* 內置碼表選擇器樣式 */
+.builtin-selector {
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  background: var(--color-bg-secondary);
+}
+
+.builtin-label {
+  display: block;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.builtin-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.builtin-select {
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  min-height: 44px;
+  font-family: inherit;
+}
+
+.builtin-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.builtin-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.load-builtin-btn {
+  align-self: flex-start;
+}
+
+/* 分隔線樣式 */
+.divider {
+  position: relative;
+  text-align: center;
+  margin: var(--spacing-md) 0;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.divider-text {
+  background: var(--color-bg-primary);
+  padding: 0 var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  position: relative;
+  z-index: 1;
 }
 
 /* 格式选择器 */
