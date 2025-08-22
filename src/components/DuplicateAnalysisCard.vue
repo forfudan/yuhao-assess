@@ -48,13 +48,13 @@
               <td>GB2312重碼字符數</td>
               <td class="metric-value">{{ analysisResults.gb2312DuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.gb2312DuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">GB2312字符集 ({{ analysisResults.charsetSizes.gb2312.toLocaleString() }} 字符) 中存在重碼的字符數</td>
+              <td class="metric-desc">GB2312字符集 ({{ analysisResults.charsetSizes.gb2312.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.gb2312?.toLocaleString() || '未知' }} 有編碼) 中存在重碼的字符數</td>
             </tr>
             <tr>
               <td>國字重碼字符數</td>
               <td class="metric-value">{{ analysisResults.guoziDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.guoziDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">國字標準字體表 ({{ analysisResults.charsetSizes.guozi.toLocaleString() }} 字符) 中存在重碼的字符數</td>
+              <td class="metric-desc">國字標準字體表 ({{ analysisResults.charsetSizes.guozi.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.guozi?.toLocaleString() || '未知' }} 有編碼) 中存在重碼的字符數</td>
             </tr>
             <tr>
               <td>CJK基本集重碼字符數</td>
@@ -129,7 +129,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { generateCharset, type CharsetType } from '../services/charsetService'
+import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
 import { generateFullCodeTable, generateShortCodeTable } from '../services/codeTableCleanService'
 import { getDynamicDupRate } from '../services/analysisService'
 import type { CodeTable, CharFrequency } from '../types'
@@ -181,6 +181,8 @@ interface AnalysisResults {
     cjkToI: number
   }
   charsetEncodedSizes: {
+    gb2312: number
+    guozi: number
     cjkBasic: number
     cjkToA: number
     cjkToB: number
@@ -211,13 +213,24 @@ async function loadCharFrequency(): Promise<CharFrequency> {
 
 // 计算字符集的重码字符数和重码组数（支持双码表）
 async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Set<string>, fullCodeTable: CodeTable, shortCodeTable: CodeTable) {
-  const charset = await generateCharset(charsetType, allChars)
+  // 生成实际有编码的字符集（基于码表中的字符）
+  const actualCharset = await generateCharset(charsetType, allChars)
+  
+  // 获取理论字符集大小
+  let theoreticalSize = 0
+  if (charsetType === 'gb2312' || charsetType === 'guozi') {
+    // 对于GB2312和国字，从JSON文件获取理论大小
+    theoreticalSize = await getTheoreticalCharsetSize(charsetType)
+  } else {
+    // 对于CJK区域，生成完整的理论字符集
+    theoreticalSize = await getTheoreticalCharsetSize(charsetType)
+  }
   
   // 计算全码表的重码统计
   const fullCodeToChars = new Map<string, string[]>()
   let fullCodeTableMatches = 0
   
-  for (const char of charset) {
+  for (const char of actualCharset) {
     const codes = fullCodeTable.get(char)
     if (codes && codes.length > 0) {
       fullCodeTableMatches++
@@ -242,7 +255,7 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
   const shortCodeToChars = new Map<string, string[]>()
   let shortCodeTableMatches = 0
   
-  for (const char of charset) {
+  for (const char of actualCharset) {
     const codes = shortCodeTable.get(char)
     if (codes && codes.length > 0) {
       shortCodeTableMatches++
@@ -266,8 +279,8 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
   return { 
     duplicateChars: { full: fullDuplicateChars, short: shortDuplicateChars },
     duplicateGroups: { full: fullDuplicateGroups, short: shortDuplicateGroups },
-    charsetSize: charset.size,
-    encodedSize: fullCodeTableMatches
+    theoreticalSize: theoreticalSize, // 理论字符集大小
+    encodedSize: actualCharset.size // 实际有编码的字符数
   }
 }
 
@@ -276,22 +289,22 @@ async function generateCJKCharsetCache(allChars: Set<string>) {
   // 定義CJK擴展區順序
   const cjkExtensions = ['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c', 'cjk_d', 'cjk_e', 'cjk_f', 'cjk_g', 'cjk_h', 'cjk_i'] as const
   
-  // 生成各個單獨的字符集
-  const individualCharsets = await Promise.all(
+  // 生成各個單獨的实际字符集
+  const actualCharsets = await Promise.all(
     cjkExtensions.map(ext => generateCharset(ext, allChars))
   )
   
-  // 創建累積字符集
-  const cumulativeCharsets: { [key: string]: Set<string> } = {}
+  // 創建累積实际字符集
+  const cumulativeActualCharsets: { [key: string]: Set<string> } = {}
   
   // 為每個階段創建正確的累積集合
   cjkExtensions.forEach((ext, index) => {
-    const accumulated = new Set<string>()
+    const actualAccumulated = new Set<string>()
     
     // 累積到當前階段的所有字符
     for (let i = 0; i <= index; i++) {
-      for (const char of individualCharsets[i]) {
-        accumulated.add(char)
+      for (const char of actualCharsets[i]) {
+        actualAccumulated.add(char)
       }
     }
     
@@ -304,10 +317,10 @@ async function generateCJKCharsetCache(allChars: Set<string>) {
                       ext === 'cjk_f' ? 'cjkToF' :
                       ext === 'cjk_g' ? 'cjkToG' :
                       ext === 'cjk_h' ? 'cjkToH' : 'cjkToI'
-    cumulativeCharsets[targetName] = accumulated
+    cumulativeActualCharsets[targetName] = actualAccumulated
   })
   
-  return cumulativeCharsets as {
+  return cumulativeActualCharsets as {
     cjkToBasic: Set<string>
     cjkToA: Set<string>
     cjkToB: Set<string>
@@ -322,12 +335,15 @@ async function generateCJKCharsetCache(allChars: Set<string>) {
 }
 
 // 計算字符集的重碼統計（直接使用字符集）
-function calculateDirectCharsetDuplicates(charset: Set<string>, fullCodeTable: CodeTable, shortCodeTable: CodeTable, charsetName: string) {
+async function calculateDirectCharsetDuplicates(actualCharset: Set<string>, theoreticalSizeType: CharsetType, fullCodeTable: CodeTable, shortCodeTable: CodeTable) {
+  // 获取理论字符集大小
+  const theoreticalSize = await getTheoreticalCharsetSize(theoreticalSizeType)
+  
   // 计算全码表的重码统计
   const fullCodeToChars = new Map<string, string[]>()
   let fullCodeTableMatches = 0
   
-  for (const char of charset) {
+  for (const char of actualCharset) {
     const codes = fullCodeTable.get(char)
     if (codes && codes.length > 0) {
       fullCodeTableMatches++
@@ -352,7 +368,7 @@ function calculateDirectCharsetDuplicates(charset: Set<string>, fullCodeTable: C
   const shortCodeToChars = new Map<string, string[]>()
   let shortCodeTableMatches = 0
   
-  for (const char of charset) {
+  for (const char of actualCharset) {
     const codes = shortCodeTable.get(char)
     if (codes && codes.length > 0) {
       shortCodeTableMatches++
@@ -376,8 +392,8 @@ function calculateDirectCharsetDuplicates(charset: Set<string>, fullCodeTable: C
   return { 
     duplicateChars: { full: fullDuplicateChars, short: shortDuplicateChars },
     duplicateGroups: { full: fullDuplicateGroups, short: shortDuplicateGroups },
-    charsetSize: charset.size,
-    encodedSize: fullCodeTableMatches
+    theoreticalSize: theoreticalSize,
+    encodedSize: actualCharset.size
   }
 }
 
@@ -427,9 +443,23 @@ async function calculateAllMetrics() {
     // 使用緩存計算累積字符集的重碼統計
     const cjkExtNames = ['cjkToA', 'cjkToB', 'cjkToC', 'cjkToD', 'cjkToE', 'cjkToF', 'cjkToG', 'cjkToH', 'cjkToI'] as const
     const cjkStats: Record<string, any> = {}
-    cjkExtNames.forEach(name => {
-      cjkStats[name] = calculateDirectCharsetDuplicates(cjkCache[name], fullCodeTable, shortCodeTable, name)
-    })
+    for (const name of cjkExtNames) {
+      const theoreticalSizeType = name === 'cjkToA' ? 'cjk_to_a' :
+                                  name === 'cjkToB' ? 'cjk_to_b' :
+                                  name === 'cjkToC' ? 'cjk_to_c' :
+                                  name === 'cjkToD' ? 'cjk_to_d' :
+                                  name === 'cjkToE' ? 'cjk_to_e' :
+                                  name === 'cjkToF' ? 'cjk_to_f' :
+                                  name === 'cjkToG' ? 'cjk_to_g' :
+                                  name === 'cjkToH' ? 'cjk_to_h' : 'cjk_to_i'
+      
+      cjkStats[name] = await calculateDirectCharsetDuplicates(
+        cjkCache[name], 
+        theoreticalSizeType as CharsetType,
+        fullCodeTable, 
+        shortCodeTable
+      )
+    }
     
     // 構建 CJK 重碼字符結果
     const cjkDuplicateChars: any = {}
@@ -440,7 +470,7 @@ async function calculateAllMetrics() {
     // 構建字符集大小結果
     const cjkCharsetSizes: any = {}
     cjkExtNames.forEach(name => {
-      cjkCharsetSizes[name] = cjkStats[name].charsetSize
+      cjkCharsetSizes[name] = cjkStats[name].theoreticalSize
     })
     
     analysisResults.value = {
@@ -452,13 +482,15 @@ async function calculateAllMetrics() {
       cjkBasicDuplicateChars: cjkBasicStats.duplicateChars,
       ...cjkDuplicateChars,
       charsetSizes: {
-        gb2312: gb2312Stats.charsetSize,
-        guozi: guoziStats.charsetSize,
-        cjkBasic: cjkBasicStats.charsetSize,
+        gb2312: gb2312Stats.theoreticalSize,
+        guozi: guoziStats.theoreticalSize,
+        cjkBasic: cjkBasicStats.theoreticalSize,
         ...cjkCharsetSizes
       },
       charsetEncodedSizes: (() => {
         const result: any = {}
+        result.gb2312 = gb2312Stats.encodedSize
+        result.guozi = guoziStats.encodedSize
         result.cjkBasic = cjkBasicStats.encodedSize
         cjkExtNames.forEach(name => {
           result[name] = cjkStats[name].encodedSize
