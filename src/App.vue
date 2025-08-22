@@ -310,27 +310,27 @@ function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
     // 判斷CJK字符類型
     const charCode = char.charCodeAt(0)
     if (charCode >= 0x4e00 && charCode <= 0x9fff) {
-      cjkChars.A++
+      cjkChars.A++  // CJK基本漢字區
       regularChars++
       gbkChars++
     } else if (charCode >= 0x3400 && charCode <= 0x4dbf) {
-      cjkChars.A++  // CJK擴展A算入A區
+      cjkChars.B++  // CJK擴展A區
     } else if (charCode >= 0x20000 && charCode <= 0x2a6df) {
-      cjkChars.B++  // CJK擴展B區
+      cjkChars.C++  // CJK擴展B區
     } else if (charCode >= 0x2a700 && charCode <= 0x2b73f) {
-      cjkChars.C++  // CJK擴展C區
+      cjkChars.D++  // CJK擴展C區
     } else if (charCode >= 0x2b740 && charCode <= 0x2b81f) {
-      cjkChars.D++  // CJK擴展D區
+      cjkChars.E++  // CJK擴展D區
     } else if (charCode >= 0x2b820 && charCode <= 0x2ceaf) {
-      cjkChars.E++  // CJK擴展E區
+      cjkChars.F++  // CJK擴展E區
     } else if (charCode >= 0x2ceb0 && charCode <= 0x2ebef) {
-      cjkChars.F++  // CJK擴展F區
+      cjkChars.G++  // CJK擴展F區
     } else if (charCode >= 0x30000 && charCode <= 0x3134f) {
-      cjkChars.G++  // CJK擴展G區
+      cjkChars.H++  // CJK擴展G區
     } else if (charCode >= 0x31350 && charCode <= 0x323af) {
-      cjkChars.H++  // CJK擴展H區
+      cjkChars.I++  // CJK擴展H區
     } else if (charCode >= 0x2e80 && charCode <= 0x2eff) {
-      cjkChars.I++  // CJK部首補充
+      // CJK部首補充 - 不計入任何區塊
     }
     
     return { char, codes }

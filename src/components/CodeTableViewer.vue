@@ -77,7 +77,7 @@ const getCJKBlockName = (block: string): string => {
     'F': '擴展E',
     'G': '擴展F',
     'H': '擴展G',
-    'I': '擴展I'
+    'I': '擴展H'
   }
   return blockNames[block] || block
 }

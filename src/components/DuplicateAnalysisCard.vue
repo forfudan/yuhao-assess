@@ -63,16 +63,52 @@
               <td class="metric-desc">CJK統一漢字基本區 ({{ analysisResults.charsetSizes.cjkBasic.toLocaleString() }} 字符) 重碼字符數</td>
             </tr>
             <tr>
+              <td>CJK-A重碼字符數</td>
+              <td class="metric-value">{{ analysisResults.cjkADuplicateChars.full.toLocaleString() }}</td>
+              <td class="metric-value">{{ analysisResults.cjkADuplicateChars.short.toLocaleString() }}</td>
+              <td class="metric-desc">CJK統一漢字擴展A區 ({{ analysisResults.charsetSizes.cjkA.toLocaleString() }} 字符) 重碼字符數</td>
+            </tr>
+            <tr>
               <td>到CJK-B重碼字符數</td>
               <td class="metric-value">{{ analysisResults.cjkToBDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToBDuplicateChars.short.toLocaleString() }}</td>
               <td class="metric-desc">CJK基本區+擴展A+擴展B ({{ analysisResults.charsetSizes.cjkToB.toLocaleString() }} 字符) 重碼字符數</td>
             </tr>
             <tr>
+              <td>CJK-C重碼字符數</td>
+              <td class="metric-value">{{ analysisResults.cjkCDuplicateChars.full.toLocaleString() }}</td>
+              <td class="metric-value">{{ analysisResults.cjkCDuplicateChars.short.toLocaleString() }}</td>
+              <td class="metric-desc">CJK統一漢字擴展C區 ({{ analysisResults.charsetSizes.cjkC.toLocaleString() }} 字符) 重碼字符數</td>
+            </tr>
+            <tr>
+              <td>CJK-D重碼字符數</td>
+              <td class="metric-value">{{ analysisResults.cjkDDuplicateChars.full.toLocaleString() }}</td>
+              <td class="metric-value">{{ analysisResults.cjkDDuplicateChars.short.toLocaleString() }}</td>
+              <td class="metric-desc">CJK統一漢字擴展D區 ({{ analysisResults.charsetSizes.cjkD.toLocaleString() }} 字符) 重碼字符數</td>
+            </tr>
+            <tr>
+              <td>CJK-E重碼字符數</td>
+              <td class="metric-value">{{ analysisResults.cjkEDuplicateChars.full.toLocaleString() }}</td>
+              <td class="metric-value">{{ analysisResults.cjkEDuplicateChars.short.toLocaleString() }}</td>
+              <td class="metric-desc">CJK統一漢字擴展E區 ({{ analysisResults.charsetSizes.cjkE.toLocaleString() }} 字符) 重碼字符數</td>
+            </tr>
+            <tr>
               <td>到CJK-F重碼字符數</td>
               <td class="metric-value">{{ analysisResults.cjkToFDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToFDuplicateChars.short.toLocaleString() }}</td>
               <td class="metric-desc">CJK基本區到擴展F ({{ analysisResults.charsetSizes.cjkToF.toLocaleString() }} 字符) 重碼字符數</td>
+            </tr>
+            <tr>
+              <td>CJK-G重碼字符數</td>
+              <td class="metric-value">{{ analysisResults.cjkGDuplicateChars.full.toLocaleString() }}</td>
+              <td class="metric-value">{{ analysisResults.cjkGDuplicateChars.short.toLocaleString() }}</td>
+              <td class="metric-desc">CJK統一漢字擴展G區 ({{ analysisResults.charsetSizes.cjkG.toLocaleString() }} 字符) 重碼字符數</td>
+            </tr>
+            <tr>
+              <td>CJK-H重碼字符數</td>
+              <td class="metric-value">{{ analysisResults.cjkHDuplicateChars.full.toLocaleString() }}</td>
+              <td class="metric-value">{{ analysisResults.cjkHDuplicateChars.short.toLocaleString() }}</td>
+              <td class="metric-desc">CJK統一漢字擴展H區 ({{ analysisResults.charsetSizes.cjkH.toLocaleString() }} 字符) 重碼字符數</td>
             </tr>
             <tr>
               <td>到CJK-I重碼字符數</td>
@@ -121,6 +157,12 @@ interface AnalysisResults {
   guoziDuplicateGroups: DualValue
   gb2312DuplicateGroups: DualValue
   cjkBasicDuplicateChars: DualValue
+  cjkADuplicateChars: DualValue
+  cjkCDuplicateChars: DualValue
+  cjkDDuplicateChars: DualValue
+  cjkEDuplicateChars: DualValue
+  cjkGDuplicateChars: DualValue
+  cjkHDuplicateChars: DualValue
   cjkToBDuplicateChars: DualValue
   cjkToFDuplicateChars: DualValue
   cjkToIDuplicateChars: DualValue
@@ -128,6 +170,12 @@ interface AnalysisResults {
     gb2312: number
     guozi: number
     cjkBasic: number
+    cjkA: number
+    cjkC: number
+    cjkD: number
+    cjkE: number
+    cjkG: number
+    cjkH: number
     cjkToB: number
     cjkToF: number
     cjkToI: number
@@ -291,6 +339,12 @@ async function calculateAllMetrics() {
     const gb2312Stats = await calculateCharsetDuplicates('gb2312', allChars, fullCodeTable, shortCodeTable)
     const guoziStats = await calculateCharsetDuplicates('guozi', allChars, fullCodeTable, shortCodeTable)
     const cjkBasicStats = await calculateCharsetDuplicates('cjk_basic', allChars, fullCodeTable, shortCodeTable)
+    const cjkAStats = await calculateCharsetDuplicates('cjk_a', allChars, fullCodeTable, shortCodeTable)
+    const cjkCStats = await calculateCharsetDuplicates('cjk_c', allChars, fullCodeTable, shortCodeTable)
+    const cjkDStats = await calculateCharsetDuplicates('cjk_d', allChars, fullCodeTable, shortCodeTable)
+    const cjkEStats = await calculateCharsetDuplicates('cjk_e', allChars, fullCodeTable, shortCodeTable)
+    const cjkGStats = await calculateCharsetDuplicates('cjk_g', allChars, fullCodeTable, shortCodeTable)
+    const cjkHStats = await calculateCharsetDuplicates('cjk_h', allChars, fullCodeTable, shortCodeTable)
     
     // 计算复合字符集
     const cjkToBStats = await calculateCompoundCharsetDuplicates(['cjk_basic', 'cjk_a', 'cjk_b'], allChars, fullCodeTable, shortCodeTable)
@@ -304,6 +358,12 @@ async function calculateAllMetrics() {
       guoziDuplicateGroups: guoziStats.duplicateGroups,
       gb2312DuplicateGroups: gb2312Stats.duplicateGroups,
       cjkBasicDuplicateChars: cjkBasicStats.duplicateChars,
+      cjkADuplicateChars: cjkAStats.duplicateChars,
+      cjkCDuplicateChars: cjkCStats.duplicateChars,
+      cjkDDuplicateChars: cjkDStats.duplicateChars,
+      cjkEDuplicateChars: cjkEStats.duplicateChars,
+      cjkGDuplicateChars: cjkGStats.duplicateChars,
+      cjkHDuplicateChars: cjkHStats.duplicateChars,
       cjkToBDuplicateChars: cjkToBStats.duplicateChars,
       cjkToFDuplicateChars: cjkToFStats.duplicateChars,
       cjkToIDuplicateChars: cjkToIStats.duplicateChars,
@@ -311,6 +371,12 @@ async function calculateAllMetrics() {
         gb2312: gb2312Stats.charsetSize,
         guozi: guoziStats.charsetSize,
         cjkBasic: cjkBasicStats.charsetSize,
+        cjkA: cjkAStats.charsetSize,
+        cjkC: cjkCStats.charsetSize,
+        cjkD: cjkDStats.charsetSize,
+        cjkE: cjkEStats.charsetSize,
+        cjkG: cjkGStats.charsetSize,
+        cjkH: cjkHStats.charsetSize,
         cjkToB: cjkToBStats.charsetSize,
         cjkToF: cjkToFStats.charsetSize,
         cjkToI: cjkToIStats.charsetSize

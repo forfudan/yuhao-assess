@@ -405,7 +405,9 @@ const rowDistributionPercentages = computed(() => {
 // 获取键位数据
 const getKeyData = (key: string): KeyData => {
   const count = stats.value.keyDistribution.get(key.toLowerCase()) || 0
-  const frequency = stats.value.totalCodes > 0 ? count / stats.value.totalCodes : 0
+  // 计算總的加權按鍵使用量
+  const totalWeightedKeyUsage = Array.from(stats.value.keyDistribution.values()).reduce((sum, val) => sum + val, 0)
+  const frequency = totalWeightedKeyUsage > 0 ? count / totalWeightedKeyUsage : 0
   
   return {
     key: key.toLowerCase(),
