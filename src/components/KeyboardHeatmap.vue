@@ -30,8 +30,8 @@
         <div class="option-group">
           <label class="option-label">显示模式：</label>
           <select v-model="displayMode" class="option-select">
-            <option value="frequency">使用频率</option>
-            <option value="load">负担分析</option>
+            <option value="frequency">按鍵頻數</option>
+            <option value="load">按鍵頻率</option>
             <option value="finger">手指分工</option>
           </select>
         </div>
@@ -143,6 +143,10 @@
             <span class="detail-label">手指分工：</span>
             <span class="detail-value">{{ getFingerName(hoveredKey.key) }}</span>
           </div>
+          <div v-if="displayMode === 'finger'" class="detail-item">
+            <span class="detail-label">說明：</span>
+            <span class="detail-value finger-explanation">顏色深淺表示該手指的總負擔程度</span>
+          </div>
         </div>
       </div>
 
@@ -150,11 +154,17 @@
       <div class="color-legend">
         <div class="legend-title">{{ getLegendTitle() }}</div>
         <div class="legend-bar">
-          <div class="legend-gradient"></div>
+          <div 
+            class="legend-gradient" 
+            :style="{ background: getLegendGradient() }"
+          ></div>
           <div class="legend-labels">
             <span>低</span>
             <span>高</span>
           </div>
+        </div>
+        <div v-if="displayMode === 'finger'" class="legend-explanation">
+          <span class="explanation-text">💡 手指分工模式：顏色深淺表示每個手指的按鍵總負擔程度</span>
         </div>
       </div>
     </div>
@@ -174,7 +184,7 @@ interface Props {
 const props = defineProps<Props>()
 
 // 响应式数据
-const displayMode = ref<'frequency' | 'load' | 'finger'>('frequency')
+const displayMode = ref<'frequency' | 'load' | 'finger'>('load') // 默认改为负担分析模式
 const colorIntensity = ref(1)
 const keyboardScale = ref(0.8)
 const hoveredKey = ref<KeyData | null>(null)
@@ -285,9 +295,15 @@ const stats = computed<AnalysisStats>(() => {
 
 // 计算最大键值（用于归一化）
 const maxKeyValue = computed(() => {
-  if (stats.value.keyDistribution.size === 0) return 1
-  
-  return Math.max(...Array.from(stats.value.keyDistribution.values()))
+  if (displayMode.value === 'finger') {
+    // 手指分工模式：使用最大手指负担值
+    if (stats.value.fingerLoad.size === 0) return 1
+    return Math.max(...Array.from(stats.value.fingerLoad.values()))
+  } else {
+    // 其他模式：使用最大按键使用次数
+    if (stats.value.keyDistribution.size === 0) return 1
+    return Math.max(...Array.from(stats.value.keyDistribution.values()))
+  }
 })
 
 // 获取键位数据
@@ -295,9 +311,18 @@ const getKeyData = (key: string): KeyData => {
   const count = stats.value.keyDistribution.get(key.toLowerCase()) || 0
   const frequency = stats.value.totalCodes > 0 ? count / stats.value.totalCodes : 0
   
+  // 对于手指分工模式，我们需要计算该按键所属手指的总负担
+  let fingerLoad = 0
+  if (displayMode.value === 'finger') {
+    const finger = fingerMapping[key.toLowerCase()]
+    if (finger && stats.value.fingerLoad.has(finger)) {
+      fingerLoad = stats.value.fingerLoad.get(finger) || 0
+    }
+  }
+  
   return {
     key: key.toLowerCase(),
-    count,
+    count: displayMode.value === 'finger' ? fingerLoad : count,
     frequency,
     position: { x: 0, y: 0 } // 简化版本，不需要精确位置
   }
@@ -308,15 +333,38 @@ const getFingerName = (key: string): string => {
   return fingerMapping[key.toLowerCase()] || '未知'
 }
 
+// 获取图例颜色
+const getLegendGradient = (): string => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+  
+  switch (displayMode.value) {
+    case 'frequency':
+      // 蓝色系 - 对应按键频数
+      if (isDark) {
+        return 'linear-gradient(90deg, rgba(0, 188, 212, 0.1) 0%, rgba(0, 188, 212, 0.3) 30%, rgba(0, 188, 212, 0.6) 60%, rgba(0, 188, 212, 0.9) 100%)'
+      } else {
+        return 'linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.3) 30%, rgba(59, 130, 246, 0.6) 60%, rgba(59, 130, 246, 0.9) 100%)'
+      }
+    case 'load':
+      // 红色系 - 对应按键频率/负担
+      return 'linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.3) 30%, rgba(239, 68, 68, 0.6) 60%, rgba(239, 68, 68, 0.9) 100%)'
+    case 'finger':
+      // 绿色系 - 对应手指负担
+      return 'linear-gradient(90deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.3) 30%, rgba(34, 197, 94, 0.6) 60%, rgba(34, 197, 94, 0.9) 100%)'
+    default:
+      return 'linear-gradient(90deg, #e5e7eb 0%, #fbbf24 30%, #f97316 60%, #dc2626 100%)'
+  }
+}
+
 // 获取图例标题
 const getLegendTitle = (): string => {
   switch (displayMode.value) {
     case 'frequency':
-      return '使用频率'
+      return '按鍵頻數'
     case 'load':
-      return '负担程度'
+      return '按鍵頻率'
     case 'finger':
-      return '手指分工'
+      return '手指負擔'
     default:
       return '热力图'
   }
@@ -548,12 +596,7 @@ watch(() => props.analysisReady, () => {
 .legend-gradient {
   height: 20px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, 
-    #e5e7eb 0%, 
-    #fbbf24 30%, 
-    #f97316 60%, 
-    #dc2626 100%
-  );
+  /* 背景色通过 JavaScript 动态设置 */
 }
 
 .legend-labels {
@@ -561,6 +604,18 @@ watch(() => props.analysisReady, () => {
   justify-content: space-between;
   font-size: 0.875rem;
   color: var(--color-text-secondary);
+}
+
+.legend-explanation {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.explanation-text {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
 }
 
 /* 响应式设计 */
