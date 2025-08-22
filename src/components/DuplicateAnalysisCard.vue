@@ -129,7 +129,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { generateCharset, type CharsetType, isInCJKBasic } from '../services/charsetService'
+import { generateCharset, type CharsetType } from '../services/charsetService'
 import { generateFullCodeTable, generateShortCodeTable } from '../services/codeTableCleanService'
 import { getDynamicDupRate } from '../services/analysisService'
 import type { CodeTable, CharFrequency } from '../types'
@@ -391,7 +391,7 @@ async function calculateAllMetrics() {
   isCalculating.value = true
   
   try {
-    // 从码表键中提取所有单个字符
+    // 从码表键中提取所有单个字符（修复：处理多字词条问题）
     const allUniqueChars = new Set<string>()
     for (const key of props.codeTable.keys()) {
       // 将每个词条分解为单个字符
@@ -400,19 +400,7 @@ async function calculateAllMetrics() {
       }
     }
     
-    // 步骤0：检查码表数据来源
-    console.log('=== 步骤0：检查码表数据来源 ===')
-    console.log(`props.codeTable 类型: ${props.codeTable.constructor.name}`)
-    console.log(`props.codeTable.size: ${props.codeTable.size}`)
-    console.log(`原始码表词条数: ${props.codeTable.size}`)
-    console.log(`提取的唯一字符数: ${allUniqueChars.size}`)
-    
-    // 检查词条分布
-    const singleCharEntries = Array.from(props.codeTable.keys()).filter(key => Array.from(key).length === 1)
-    const multiCharEntries = Array.from(props.codeTable.keys()).filter(key => Array.from(key).length > 1)
-    console.log(`单字词条: ${singleCharEntries.length}, 多字词条: ${multiCharEntries.length}`)
-    
-    // 使用提取的唯一字符代替原来的allChars
+    // 使用提取的唯一字符代替原来的码表键
     const allChars = allUniqueChars
     
     // 生成全码表和简码表
@@ -432,20 +420,6 @@ async function calculateAllMetrics() {
     const gb2312Stats = await calculateCharsetDuplicates('gb2312', allChars, fullCodeTable, shortCodeTable)
     const guoziStats = await calculateCharsetDuplicates('guozi', allChars, fullCodeTable, shortCodeTable)
     const cjkBasicStats = await calculateCharsetDuplicates('cjk_basic', allChars, fullCodeTable, shortCodeTable)
-    
-    // 调试：验证修复是否成功
-    console.log(`修复验证: 字符总数 ${allChars.size}`)
-    
-    const debugCjkBasic = await generateCharset('cjk_basic', allChars)
-    console.log(`CJK基本区字符数: ${debugCjkBasic.size} (理论值: 20992)`)
-    
-    if (debugCjkBasic.size === 20992) {
-      console.log('✅ CJK基本区字符数修复成功！')
-    } else if (debugCjkBasic.size < 20992) {
-      console.log(`⚠️ CJK基本区字符数偏少: ${debugCjkBasic.size}，可能是码表覆盖不全`)
-    } else {
-      console.error(`❌ CJK基本区字符数仍然过多: ${debugCjkBasic.size}`)
-    }
     
     // 生成CJK累積字符集緩存
     const cjkCache = await generateCJKCharsetCache(allChars)
