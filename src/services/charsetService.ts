@@ -211,7 +211,94 @@ export async function getCharsetSize(charsetType: CharsetType): Promise<number> 
   return count
 }
 
-// 生成字符集的函数
+// 获取理论字符集大小
+export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promise<number> {
+  switch (charsetType) {
+    case 'gb2312':
+    case 'guozi':
+      // 对于GB2312和国字，从JSON文件获取总字符数
+      return await getCharsetSize(charsetType)
+    
+    case 'cjk_basic':
+      // CJK基本区：U+4E00-U+9FFF
+      return 0x9FFF - 0x4E00 + 1
+    
+    case 'cjk_a':
+      // CJK擴展A：U+3400-U+4DBF
+      return 0x4DBF - 0x3400 + 1
+    
+    case 'cjk_b':
+      // CJK擴展B：U+20000-U+2A6DF
+      return 0x2A6DF - 0x20000 + 1
+    
+    case 'cjk_c':
+      // CJK擴展C：U+2A700-U+2B73F
+      // 注意：CJK擴展C區實際填充到 U+2B739
+      return 0x2B739 - 0x2A700 + 1
+    
+    case 'cjk_d':
+      // CJK擴展D：U+2B740-U+2B81F
+      // 注意：CJK擴展D區實際填充到 U+2B81D
+      return 0x2B81D - 0x2B740 + 1
+    
+    case 'cjk_e':
+      // CJK擴展E：U+2B820-U+2CEAF
+      // 注意：CJK擴展E區實際填充到 U+2CEA1
+      return 0x2CEA1 - 0x2B820 + 1
+    
+    case 'cjk_f':
+      // CJK擴展F：U+2CEB0-U+2EBEF
+      // 注意：CJK擴展F區實際填充到 U+2EBE0
+      return 0x2EBE0 - 0x2CEB0 + 1
+    
+    case 'cjk_g':
+      // CJK擴展G：U+30000-U+
+      // 注意：CJK擴展G區實際填充到 U+3134A
+      return 0x3134A - 0x30000 + 1
+    
+    case 'cjk_h':
+      // CJK擴展H：U+31350-U+323AF
+      return 0x323AF - 0x31350 + 1
+    
+    case 'cjk_i':
+      // CJK擴展I：U+2EBF0-U+2EE5F
+      // 注意：CJK擴展I區實際填充到 U+2EE5D
+      return 0x2EE5D - 0x2EBF0 + 1
+    
+    // 累積字符集
+    case 'cjk_to_a':
+      return await getTheoreticalCharsetSize('cjk_basic') + await getTheoreticalCharsetSize('cjk_a')
+    
+    case 'cjk_to_b':
+      return await getTheoreticalCharsetSize('cjk_to_a') + await getTheoreticalCharsetSize('cjk_b')
+    
+    case 'cjk_to_c':
+      return await getTheoreticalCharsetSize('cjk_to_b') + await getTheoreticalCharsetSize('cjk_c')
+    
+    case 'cjk_to_d':
+      return await getTheoreticalCharsetSize('cjk_to_c') + await getTheoreticalCharsetSize('cjk_d')
+    
+    case 'cjk_to_e':
+      return await getTheoreticalCharsetSize('cjk_to_d') + await getTheoreticalCharsetSize('cjk_e')
+    
+    case 'cjk_to_f':
+      return await getTheoreticalCharsetSize('cjk_to_e') + await getTheoreticalCharsetSize('cjk_f')
+    
+    case 'cjk_to_g':
+      return await getTheoreticalCharsetSize('cjk_to_f') + await getTheoreticalCharsetSize('cjk_g')
+    
+    case 'cjk_to_h':
+      return await getTheoreticalCharsetSize('cjk_to_g') + await getTheoreticalCharsetSize('cjk_h')
+    
+    case 'cjk_to_i':
+      return await getTheoreticalCharsetSize('cjk_to_h') + await getTheoreticalCharsetSize('cjk_i')
+    
+    default:
+      console.error(`未知的字符集类型: ${charsetType}`)
+      return 0
+  }
+}
+
 export async function generateCharset(charsetType: CharsetType, allChars: Set<string>): Promise<Set<string>> {
   const charset = new Set<string>()
   
