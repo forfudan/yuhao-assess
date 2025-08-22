@@ -34,7 +34,6 @@ interface Props {
   keyInfo: KeyInfo
   displayMode: 'frequency' | 'load' | 'finger'
   maxValue: number
-  colorIntensity: number
 }
 
 const props = defineProps<Props>()

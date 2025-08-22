@@ -35,19 +35,6 @@
             <option value="finger">手指分工</option>
           </select>
         </div>
-        
-        <div class="option-group">
-          <label class="option-label">颜色强度：</label>
-          <input 
-            type="range" 
-            v-model="colorIntensity" 
-            min="0.1" 
-            max="2" 
-            step="0.1"
-            class="option-range"
-          />
-          <span class="range-value">{{ colorIntensity }}x</span>
-        </div>
       </div>
 
       <!-- 键盘布局 -->
@@ -60,7 +47,6 @@
             :keyData="getKeyData(key.key)"
             :displayMode="displayMode"
             :maxValue="maxKeyValue"
-            :colorIntensity="colorIntensity"
             :keyInfo="key"
             @key-hover="handleKeyHover"
           />
@@ -74,7 +60,6 @@
             :keyData="getKeyData(key.key)"
             :displayMode="displayMode"
             :maxValue="maxKeyValue"
-            :colorIntensity="colorIntensity"
             :keyInfo="key"
             @key-hover="handleKeyHover"
           />
@@ -88,7 +73,6 @@
             :keyData="getKeyData(key.key)"
             :displayMode="displayMode"
             :maxValue="maxKeyValue"
-            :colorIntensity="colorIntensity"
             :keyInfo="key"
             @key-hover="handleKeyHover"
           />
@@ -102,7 +86,6 @@
             :keyData="getKeyData(key.key)"
             :displayMode="displayMode"
             :maxValue="maxKeyValue"
-            :colorIntensity="colorIntensity"
             :keyInfo="key"
             @key-hover="handleKeyHover"
           />
@@ -116,7 +99,6 @@
             :keyData="getKeyData(key.key)"
             :displayMode="displayMode"
             :maxValue="maxKeyValue"
-            :colorIntensity="colorIntensity"
             :keyInfo="key"
             @key-hover="handleKeyHover"
           />
@@ -143,28 +125,21 @@
             <span class="detail-label">手指分工：</span>
             <span class="detail-value">{{ getFingerName(hoveredKey.key) }}</span>
           </div>
-          <div v-if="displayMode === 'finger'" class="detail-item">
-            <span class="detail-label">說明：</span>
-            <span class="detail-value finger-explanation">顏色深淺表示該手指的總負擔程度</span>
-          </div>
         </div>
       </div>
 
-      <!-- 颜色图例 -->
-      <div class="color-legend">
-        <div class="legend-title">{{ getLegendTitle() }}</div>
-        <div class="legend-bar">
+      <!-- 手指负担统计 -->
+      <div v-if="displayMode === 'finger'" class="finger-stats">
+        <h4 class="finger-stats-title">手指负担分布</h4>
+        <div class="finger-stats-grid">
           <div 
-            class="legend-gradient" 
-            :style="{ background: getLegendGradient() }"
-          ></div>
-          <div class="legend-labels">
-            <span>低</span>
-            <span>高</span>
+            v-for="(load, finger) in fingerLoadPercentages" 
+            :key="finger"
+            class="finger-stat-item"
+          >
+            <span class="finger-name">{{ finger }}</span>
+            <span class="finger-percentage">{{ load.toFixed(1) }}%</span>
           </div>
-        </div>
-        <div v-if="displayMode === 'finger'" class="legend-explanation">
-          <span class="explanation-text">💡 手指分工模式：顏色深淺表示每個手指的按鍵總負擔程度</span>
         </div>
       </div>
     </div>
@@ -185,7 +160,6 @@ const props = defineProps<Props>()
 
 // 响应式数据
 const displayMode = ref<'frequency' | 'load' | 'finger'>('load') // 默认改为负担分析模式
-const colorIntensity = ref(1)
 const keyboardScale = ref(0.8)
 const hoveredKey = ref<KeyData | null>(null)
 
@@ -306,6 +280,20 @@ const maxKeyValue = computed(() => {
   }
 })
 
+// 手指负担百分比
+const fingerLoadPercentages = computed(() => {
+  const percentages: Record<string, number> = {}
+  const totalLoad = Array.from(stats.value.fingerLoad.values()).reduce((sum, load) => sum + load, 0)
+  
+  if (totalLoad > 0) {
+    for (const [finger, load] of stats.value.fingerLoad.entries()) {
+      percentages[finger] = (load / totalLoad) * 100
+    }
+  }
+  
+  return percentages
+})
+
 // 获取键位数据
 const getKeyData = (key: string): KeyData => {
   const count = stats.value.keyDistribution.get(key.toLowerCase()) || 0
@@ -331,43 +319,6 @@ const getKeyData = (key: string): KeyData => {
 // 获取手指名称
 const getFingerName = (key: string): string => {
   return fingerMapping[key.toLowerCase()] || '未知'
-}
-
-// 获取图例颜色
-const getLegendGradient = (): string => {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
-  
-  switch (displayMode.value) {
-    case 'frequency':
-      // 蓝色系 - 对应按键频数
-      if (isDark) {
-        return 'linear-gradient(90deg, rgba(0, 188, 212, 0.1) 0%, rgba(0, 188, 212, 0.3) 30%, rgba(0, 188, 212, 0.6) 60%, rgba(0, 188, 212, 0.9) 100%)'
-      } else {
-        return 'linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.3) 30%, rgba(59, 130, 246, 0.6) 60%, rgba(59, 130, 246, 0.9) 100%)'
-      }
-    case 'load':
-      // 红色系 - 对应按键频率/负担
-      return 'linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.3) 30%, rgba(239, 68, 68, 0.6) 60%, rgba(239, 68, 68, 0.9) 100%)'
-    case 'finger':
-      // 绿色系 - 对应手指负担
-      return 'linear-gradient(90deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.3) 30%, rgba(34, 197, 94, 0.6) 60%, rgba(34, 197, 94, 0.9) 100%)'
-    default:
-      return 'linear-gradient(90deg, #e5e7eb 0%, #fbbf24 30%, #f97316 60%, #dc2626 100%)'
-  }
-}
-
-// 获取图例标题
-const getLegendTitle = (): string => {
-  switch (displayMode.value) {
-    case 'frequency':
-      return '按鍵頻數'
-    case 'load':
-      return '按鍵頻率'
-    case 'finger':
-      return '手指負擔'
-    default:
-      return '热力图'
-  }
 }
 
 // 处理键位悬停
@@ -569,53 +520,46 @@ watch(() => props.analysisReady, () => {
   font-family: var(--font-mono);
 }
 
-/* 颜色图例 */
-.color-legend {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-md);
+/* 手指负担统计 */
+.finger-stats {
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
 }
 
-.legend-title {
-  font-weight: 500;
+.finger-stats-title {
+  font-size: 1.1rem;
+  font-weight: 600;
   color: var(--color-text-primary);
-  white-space: nowrap;
+  margin-bottom: var(--spacing-md);
 }
 
-.legend-bar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  flex: 1;
-  max-width: 200px;
+.finger-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--spacing-md);
 }
 
-.legend-gradient {
-  height: 20px;
-  border-radius: var(--radius-sm);
-  /* 背景色通过 JavaScript 动态设置 */
-}
-
-.legend-labels {
+.finger-stat-item {
   display: flex;
   justify-content: space-between;
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-}
-
-.legend-explanation {
-  display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-primary);
 }
 
-.explanation-text {
-  font-size: 0.75rem;
-  color: var(--color-text-tertiary);
+.finger-name {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.finger-percentage {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
 }
 
 /* 响应式设计 */
@@ -642,10 +586,8 @@ watch(() => props.analysisReady, () => {
     grid-template-columns: 1fr;
   }
   
-  .color-legend {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--spacing-md);
+  .finger-stats-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
