@@ -29,55 +29,112 @@
       </div>
     </header>
 
-    <!-- 主要內容區域 -->
+    <!-- 主要內容區域 - 重新設計為單列模塊布局 -->
     <main class="main">
       <div class="container">
-        <div class="content-grid">
-          <!-- 碼表上傳區塊 -->
-          <section class="card upload-section">
-            <h2 class="section-title">碼表上傳</h2>
-            <p class="section-description">
-              上傳您的輸入法碼表文件進行性能分析。支持"字符-編碼"和"編碼-字符"兩種格式。
-            </p>
-            
-            <CodeTableUploader 
-              @upload-success="handleCodeTableUpload"
-              @upload-error="handleUploadError"
-            />
-            
-            <!-- 上傳狀態顯示 -->
-            <div v-if="uploadStatus" class="upload-status" :class="uploadStatus.type">
-              <span class="status-icon">
-                {{ uploadStatus.type === 'success' ? '✓' : '✗' }}
-              </span>
-              {{ uploadStatus.message }}
+        <!-- 全局控制栏 -->
+        <div class="global-controls">
+          <div class="controls-left">
+            <h2 class="page-title">輸入法性能測評</h2>
+          </div>
+          <div class="controls-right">
+            <button 
+              class="global-toggle-btn"
+              @click="toggleAllModules"
+              :title="allModulesCollapsed ? '展開全部' : '折疊全部'"
+            >
+              <span class="btn-icon">{{ allModulesCollapsed ? '📂' : '📁' }}</span>
+              <span class="btn-text">{{ allModulesCollapsed ? '展開全部' : '折疊全部' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 模块容器 -->
+        <div class="module-container">
+          <!-- 碼表上傳模塊 -->
+          <div class="module-card">
+            <div class="module-header">
+              <h3 class="module-title">碼表上傳</h3>
+              <button 
+                class="toggle-button"
+                @click="toggleModule('upload')"
+                :title="modules.upload.collapsed ? '展開' : '收起'"
+              >
+                <span class="toggle-icon" :class="{ 'collapsed': modules.upload.collapsed }">
+                  ▼
+                </span>
+              </button>
             </div>
-          </section>
+            <div v-show="!modules.upload.collapsed" class="module-content">
+              <p class="module-description">
+                上傳您的輸入法碼表文件進行性能分析。支持"字符-編碼"和"編碼-字符"兩種格式。
+              </p>
+              
+              <CodeTableUploader 
+                @upload-success="handleCodeTableUpload"
+                @upload-error="handleUploadError"
+              />
+              
+              <!-- 上傳狀態顯示 -->
+              <div v-if="uploadStatus" class="upload-status" :class="uploadStatus.type">
+                <span class="status-icon">
+                  {{ uploadStatus.type === 'success' ? '✓' : '✗' }}
+                </span>
+                {{ uploadStatus.message }}
+              </div>
+            </div>
+          </div>
 
-          <!-- 熱力圖分析區塊 -->
-          <section class="card heatmap-section">
-            <h2 class="section-title">鍵位熱力圖</h2>
-            <p class="section-description">
-              分析碼表的鍵位分布和使用頻率，可視化展示鍵位負擔。
-            </p>
-            
-            <KeyboardHeatmap 
-              :code-table="codeTable"
-              :analysis-ready="analysisReady"
-            />
-          </section>
+          <!-- 鍵位熱力圖模塊 -->
+          <div class="module-card">
+            <div class="module-header">
+              <h3 class="module-title">鍵位熱力圖</h3>
+              <button 
+                class="toggle-button"
+                @click="toggleModule('heatmap')"
+                :title="modules.heatmap.collapsed ? '展開' : '收起'"
+              >
+                <span class="toggle-icon" :class="{ 'collapsed': modules.heatmap.collapsed }">
+                  ▼
+                </span>
+              </button>
+            </div>
+            <div v-show="!modules.heatmap.collapsed" class="module-content">
+              <p class="module-description">
+                分析碼表的鍵位分布和使用頻率，可視化展示鍵位負擔。
+              </p>
+              
+              <KeyboardHeatmap 
+                :code-table="codeTable"
+                :analysis-ready="analysisReady"
+              />
+            </div>
+          </div>
 
-          <!-- 碼表分析區塊 -->
-          <section v-if="analysisReady" class="card analysis-section">
-            <h2 class="section-title">碼表分析</h2>
-            <p class="section-description">
-              詳細分析碼表的字符分布、編碼統計和top熱門條目。
-            </p>
-            
-            <CodeTableViewer 
-              :analysis="analysisData"
-            />
-          </section>
+          <!-- 碼表分析模塊 -->
+          <div v-if="analysisReady" class="module-card">
+            <div class="module-header">
+              <h3 class="module-title">碼表分析</h3>
+              <button 
+                class="toggle-button"
+                @click="toggleModule('analysis')"
+                :title="modules.analysis.collapsed ? '展開' : '收起'"
+              >
+                <span class="toggle-icon" :class="{ 'collapsed': modules.analysis.collapsed }">
+                  ▼
+                </span>
+              </button>
+            </div>
+            <div v-show="!modules.analysis.collapsed" class="module-content">
+              <p class="module-description">
+                詳細分析碼表的字符分布、編碼統計和top熱門條目。
+              </p>
+              
+              <CodeTableViewer 
+                :analysis="analysisData"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </main>
@@ -99,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import CodeTableUploader from './components/CodeTableUploader.vue'
 import KeyboardHeatmap from './components/KeyboardHeatmap.vue'
 import CodeTableViewer from './components/CodeTableViewer.vue'
@@ -113,6 +170,33 @@ const analysisData = ref<CodeTableAnalysis | null>(null)
 
 // 主題相關
 const isDarkMode = ref(false)
+
+// 模块折叠状态管理
+const modules = ref({
+  upload: { collapsed: false },
+  heatmap: { collapsed: false },
+  analysis: { collapsed: false }
+})
+
+// 切换模块折叠状态
+const toggleModule = (moduleKey: keyof typeof modules.value) => {
+  modules.value[moduleKey].collapsed = !modules.value[moduleKey].collapsed
+}
+
+// 计算是否所有模块都已折叠
+const allModulesCollapsed = computed(() => {
+  return Object.keys(modules.value).every(key => {
+    return modules.value[key as keyof typeof modules.value].collapsed
+  })
+})
+
+// 全部展开/折叠
+const toggleAllModules = () => {
+  const targetState = !allModulesCollapsed.value
+  Object.keys(modules.value).forEach(key => {
+    modules.value[key as keyof typeof modules.value].collapsed = targetState
+  })
+}
 
 // 初始化主題
 onMounted(() => {
@@ -225,6 +309,7 @@ const handleUploadError = (error: string) => {
 </script>
 
 <style scoped>
+/* 头部样式保持原有设计 */
 .header {
   background-color: var(--color-bg-primary);
   border-bottom: 1px solid var(--color-border-primary);
@@ -269,36 +354,171 @@ const handleUploadError = (error: string) => {
   color: var(--color-primary);
 }
 
+/* 主要内容区域 - 重新设计为单列布局 */
 .main {
   padding: var(--spacing-2xl) 0;
   min-height: calc(100vh - 200px);
 }
 
-.content-grid {
-  display: grid;
-  gap: var(--spacing-2xl);
-  grid-template-columns: 1fr;
+/* 全局控制栏 */
+.global-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xl);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border-primary);
+  margin-bottom: var(--spacing-xl);
 }
 
-@media (min-width: 1024px) {
-  .content-grid {
-    grid-template-columns: 1fr 1fr;
+.controls-left {
+  flex: 1;
+}
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.controls-right {
+  flex-shrink: 0;
+}
+
+.global-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.global-toggle-btn:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.global-toggle-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-icon {
+  font-size: 1.1rem;
+}
+
+.btn-text {
+  font-size: 0.9rem;
+}
+
+/* 模块容器 - 单列布局 */
+.module-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  width: 100%;
+}
+
+/* 统一的模块卡片样式 */
+.module-card {
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--color-border-primary);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.module-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+/* 模块头部 */
+.module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xl);
+  background-color: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border-primary);
+}
+
+.module-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* 折叠/展开按钮 */
+.toggle-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.toggle-button:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.toggle-icon {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  transition: transform 0.3s ease;
+  transform-origin: center;
+}
+
+.toggle-icon.collapsed {
+  transform: rotate(-90deg);
+}
+
+/* 模块内容 */
+.module-content {
+  padding: var(--spacing-xl);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.section-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin-bottom: var(--spacing-md);
-}
-
-.section-description {
+.module-description {
   color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
   line-height: 1.6;
+  font-size: 0.95rem;
 }
 
+/* 上传状态样式 */
 .upload-status {
   margin-top: var(--spacing-lg);
   padding: var(--spacing-md);
@@ -327,6 +547,7 @@ const handleUploadError = (error: string) => {
   font-size: 1.1rem;
 }
 
+/* 页脚样式 */
 .footer {
   background-color: var(--color-bg-primary);
   border-top: 1px solid var(--color-border-primary);
@@ -357,6 +578,7 @@ const handleUploadError = (error: string) => {
   margin: 0 var(--spacing-sm);
 }
 
+/* 动画效果 */
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -368,8 +590,43 @@ const handleUploadError = (error: string) => {
   }
 }
 
-/* 響應式調整 */
+/* 响应式设计 */
 @media (max-width: 768px) {
+  .main {
+    padding: var(--spacing-lg) 0;
+  }
+  
+  .global-controls {
+    padding: var(--spacing-lg);
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    text-align: center;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .global-toggle-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  .module-container {
+    gap: var(--spacing-lg);
+  }
+  
+  .module-header {
+    padding: var(--spacing-lg);
+  }
+  
+  .module-content {
+    padding: var(--spacing-lg);
+  }
+  
+  .module-title {
+    font-size: 1.2rem;
+  }
+  
   .header-content {
     flex-direction: column;
     gap: var(--spacing-md);
@@ -383,9 +640,31 @@ const handleUploadError = (error: string) => {
   .nav {
     justify-content: center;
   }
+}
+
+@media (max-width: 480px) {
+  .global-controls {
+    padding: var(--spacing-md);
+  }
   
-  .content-grid {
-    gap: var(--spacing-xl);
+  .page-title {
+    font-size: 1.3rem;
+  }
+  
+  .btn-text {
+    display: none; /* 在小屏幕上只显示图标 */
+  }
+  
+  .module-header {
+    padding: var(--spacing-md);
+  }
+  
+  .module-content {
+    padding: var(--spacing-md);
+  }
+  
+  .module-title {
+    font-size: 1.1rem;
   }
 }
 </style>

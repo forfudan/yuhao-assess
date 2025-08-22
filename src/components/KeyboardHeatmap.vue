@@ -7,112 +7,196 @@
       <p class="placeholder-subtitle">上传码表后将显示键位热力图分析</p>
     </div>
 
-    <!-- 热力图内容 -->
-    <div v-else class="heatmap-content">
-      <!-- 键盘布局 -->
-      <div class="keyboard-layout" :style="{ transform: `scale(${keyboardScale})` }">
-        <!-- 数字行 -->
-        <div class="keyboard-row number-row">
-          <KeyButton 
-            v-for="key in numberRowKeys"
-            :key="key.key"
-            :keyData="getKeyData(key.key)"
-            :displayMode="displayMode"
-            :maxValue="maxKeyValue"
-            :keyInfo="key"
-          />
+    <!-- 热力图内容 - 单列卡片布局 -->
+    <div v-else class="module-container">
+      
+      <!-- 全局控制栏 -->
+      <div class="global-controls">
+        <div class="controls-left">
+          <h2 class="page-title">键盘热力图分析</h2>
         </div>
-
-        <!-- 第一行 -->
-        <div class="keyboard-row first-row">
-          <KeyButton 
-            v-for="key in firstRowKeys"
-            :key="key.key"
-            :keyData="getKeyData(key.key)"
-            :displayMode="displayMode"
-            :maxValue="maxKeyValue"
-            :keyInfo="key"
-          />
+        <div class="controls-right">
+          <button 
+            class="global-toggle-btn"
+            @click="toggleAllModules"
+            :title="allCollapsed ? '展开全部' : '折叠全部'"
+          >
+            <span class="btn-icon">{{ allCollapsed ? '📂' : '📁' }}</span>
+            <span class="btn-text">{{ allCollapsed ? '展开全部' : '折叠全部' }}</span>
+          </button>
         </div>
-
-        <!-- 第二行 -->
-        <div class="keyboard-row second-row">
-          <KeyButton 
-            v-for="key in secondRowKeys"
-            :key="key.key"
-            :keyData="getKeyData(key.key)"
-            :displayMode="displayMode"
-            :maxValue="maxKeyValue"
-            :keyInfo="key"
-          />
+      </div>
+      
+      <!-- 键盘热力图模块 -->
+      <div class="module-card">
+        <div class="module-header">
+          <h3 class="module-title">键位热力图</h3>
+          <button 
+            class="toggle-button"
+            @click="toggleModule('keyboard')"
+            :title="modules.keyboard.collapsed ? '展开' : '收起'"
+          >
+            <span class="toggle-icon" :class="{ 'collapsed': modules.keyboard.collapsed }">
+              ▼
+            </span>
+          </button>
         </div>
+        <div v-show="!modules.keyboard.collapsed" class="module-content">
+          <div class="keyboard-wrapper">
+            <div class="keyboard-layout" :style="{ transform: `scale(${keyboardScale})` }">
+              <!-- 数字行 -->
+              <div class="keyboard-row number-row">
+                <KeyButton 
+                  v-for="key in numberRowKeys"
+                  :key="key.key"
+                  :keyData="getKeyData(key.key)"
+                  :displayMode="displayMode"
+                  :maxValue="maxKeyValue"
+                  :keyInfo="key"
+                />
+              </div>
 
-        <!-- 第三行 -->
-        <div class="keyboard-row third-row">
-          <KeyButton 
-            v-for="key in thirdRowKeys"
-            :key="key.key"
-            :keyData="getKeyData(key.key)"
-            :displayMode="displayMode"
-            :maxValue="maxKeyValue"
-            :keyInfo="key"
-          />
-        </div>
+              <!-- 第一行 -->
+              <div class="keyboard-row first-row">
+                <KeyButton 
+                  v-for="key in firstRowKeys"
+                  :key="key.key"
+                  :keyData="getKeyData(key.key)"
+                  :displayMode="displayMode"
+                  :maxValue="maxKeyValue"
+                  :keyInfo="key"
+                />
+              </div>
 
-        <!-- 空格鍵行 -->
-        <div class="keyboard-row space-row">
-          <KeyButton 
-            v-for="key in spaceRowKeys"
-            :key="key.key"
-            :keyData="getKeyData(key.key)"
-            :displayMode="displayMode"
-            :maxValue="maxKeyValue"
-            :keyInfo="key"
-          />
+              <!-- 第二行 -->
+              <div class="keyboard-row second-row">
+                <KeyButton 
+                  v-for="key in secondRowKeys"
+                  :key="key.key"
+                  :keyData="getKeyData(key.key)"
+                  :displayMode="displayMode"
+                  :maxValue="maxKeyValue"
+                  :keyInfo="key"
+                />
+              </div>
+
+              <!-- 第三行 -->
+              <div class="keyboard-row third-row">
+                <KeyButton 
+                  v-for="key in thirdRowKeys"
+                  :key="key.key"
+                  :keyData="getKeyData(key.key)"
+                  :displayMode="displayMode"
+                  :maxValue="maxKeyValue"
+                  :keyInfo="key"
+                />
+              </div>
+
+              <!-- 空格鍵行 -->
+              <div class="keyboard-row space-row">
+                <KeyButton 
+                  v-for="key in spaceRowKeys"
+                  :key="key.key"
+                  :keyData="getKeyData(key.key)"
+                  :displayMode="displayMode"
+                  :maxValue="maxKeyValue"
+                  :keyInfo="key"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-
-
-      <!-- 基本数据 -->
-      <div class="basic-stats">
-        <h4 class="basic-stats-title">基本數據</h4>
-        <div class="basic-stats-grid">
-          <!-- 基本统计信息 -->
-          <div class="stat-item">
-            <span class="stat-label">总字符</span>
-            <span class="stat-value">{{ stats.totalChars.toLocaleString() }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">平均码长</span>
-            <span class="stat-value">{{ stats.avgCodeLength.toFixed(2) }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">左右比</span>
-            <span class="stat-value">{{ stats.handBalance.left.toFixed(1) }} : {{ stats.handBalance.right.toFixed(1) }}</span>
-          </div>
-          
-          <!-- 按排分布 -->
-          <div 
-            v-for="(percentage, row) in rowDistributionPercentages" 
-            :key="row"
-            class="stat-item"
+      <!-- 基本统计模块 -->
+      <div class="module-card">
+        <div class="module-header">
+          <h3 class="module-title">基本統計</h3>
+          <button 
+            class="toggle-button"
+            @click="toggleModule('basic')"
+            :title="modules.basic.collapsed ? '展开' : '收起'"
           >
-            <span class="stat-label">{{ row }}</span>
-            <span class="stat-value">{{ percentage.toFixed(1) }}%</span>
-          </div>
-          
-          <!-- 手指负担分布 -->
-          <div 
-            v-for="(load, finger) in fingerLoadPercentages" 
-            :key="finger"
-            class="stat-item"
-          >
-            <span class="stat-label">{{ finger }}</span>
-            <span class="stat-value">{{ load.toFixed(1) }}%</span>
+            <span class="toggle-icon" :class="{ 'collapsed': modules.basic.collapsed }">
+              ▼
+            </span>
+          </button>
+        </div>
+        <div v-show="!modules.basic.collapsed" class="module-content">
+          <div class="stats-grid">
+            <!-- 基本统计信息 -->
+            <div class="stat-item">
+              <span class="stat-label">总字符</span>
+              <span class="stat-value">{{ stats.totalChars.toLocaleString() }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">平均码长</span>
+              <span class="stat-value">{{ stats.avgCodeLength.toFixed(2) }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">左右比</span>
+              <span class="stat-value">{{ stats.handBalance.left.toFixed(1) }} : {{ stats.handBalance.right.toFixed(1) }}</span>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- 按排分布模块 -->
+      <div class="module-card">
+        <div class="module-header">
+          <h3 class="module-title">按排分布</h3>
+          <button 
+            class="toggle-button"
+            @click="toggleModule('rows')"
+            :title="modules.rows.collapsed ? '展开' : '收起'"
+          >
+            <span class="toggle-icon" :class="{ 'collapsed': modules.rows.collapsed }">
+              ▼
+            </span>
+          </button>
+        </div>
+        <div v-show="!modules.rows.collapsed" class="module-content">
+          <div class="stats-grid">
+            <div 
+              v-for="(percentage, row) in rowDistributionPercentages" 
+              :key="row"
+              class="stat-item"
+            >
+              <span class="stat-label">{{ row }}</span>
+              <span class="stat-value">{{ percentage.toFixed(1) }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 手指负担模块 -->
+      <div class="module-card">
+        <div class="module-header">
+          <h3 class="module-title">手指負擔</h3>
+          <button 
+            class="toggle-button"
+            @click="toggleModule('fingers')"
+            :title="modules.fingers.collapsed ? '展开' : '收起'"
+          >
+            <span class="toggle-icon" :class="{ 'collapsed': modules.fingers.collapsed }">
+              ▼
+            </span>
+          </button>
+        </div>
+        <div v-show="!modules.fingers.collapsed" class="module-content">
+          <div class="stats-grid">
+            <div 
+              v-for="(load, finger) in fingerLoadPercentages" 
+              :key="finger"
+              class="stat-item"
+            >
+              <span class="stat-label">{{ finger }}</span>
+              <span class="stat-value">{{ load.toFixed(1) }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -132,6 +216,34 @@ const props = defineProps<Props>()
 // 响应式数据
 const displayMode = ref<'load'>('load') // 固定为按键频率模式
 const keyboardScale = ref(0.8)
+
+// 模块折叠状态管理
+const modules = ref({
+  keyboard: { collapsed: false },
+  basic: { collapsed: false },
+  rows: { collapsed: false },
+  fingers: { collapsed: false }
+})
+
+// 切换模块折叠状态
+const toggleModule = (moduleKey: keyof typeof modules.value) => {
+  modules.value[moduleKey].collapsed = !modules.value[moduleKey].collapsed
+}
+
+// 计算是否所有模块都已折叠
+const allCollapsed = computed(() => {
+  return Object.keys(modules.value).every(key => {
+    return modules.value[key as keyof typeof modules.value].collapsed
+  })
+})
+
+// 全部展开/折叠
+const toggleAllModules = () => {
+  const targetState = !allCollapsed.value
+  Object.keys(modules.value).forEach(key => {
+    modules.value[key as keyof typeof modules.value].collapsed = targetState
+  })
+}
 
 // 键盘布局定义
 const numberRowKeys: KeyInfo[] = [
@@ -334,9 +446,10 @@ watch(() => props.analysisReady, (ready) => {
 <style scoped>
 /* 主容器 */
 .keyboard-heatmap {
-  padding: var(--spacing-xl);
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  padding: var(--spacing-lg);
 }
 
 /* 分析占位符 */
@@ -346,6 +459,7 @@ watch(() => props.analysisReady, (ready) => {
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-lg);
   color: var(--color-text-secondary);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .placeholder-icon {
@@ -366,21 +480,173 @@ watch(() => props.analysisReady, (ready) => {
   opacity: 0.8;
 }
 
-/* 热力图内容 */
-.heatmap-content {
+/* 模块容器 - 单列布局 */
+.module-container {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-lg);
+  width: 100%;
+}
+
+/* 全局控制栏 */
+.global-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.controls-left {
+  flex: 1;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.controls-right {
+  flex-shrink: 0;
+}
+
+.global-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.global-toggle-btn:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.global-toggle-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-icon {
+  font-size: 1rem;
+}
+
+.btn-text {
+  font-size: 0.9rem;
+}
+
+/* 统一的模块卡片样式 */
+.module-card {
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--color-border-primary);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.module-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+/* 模块头部 */
+.module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background-color: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border-primary);
+}
+
+.module-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* 折叠/展开按钮 */
+.toggle-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.toggle-button:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.toggle-icon {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  transition: transform 0.3s ease;
+  transform-origin: center;
+}
+
+.toggle-icon.collapsed {
+  transform: rotate(-90deg);
+}
+
+/* 模块内容 */
+.module-content {
+  padding: var(--spacing-lg);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 键盘包装器 */
+.keyboard-wrapper {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  padding: var(--spacing-md) 0;
 }
 
 /* 键盘布局 */
 .keyboard-layout {
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
   transform-origin: center top;
-  overflow-x: auto;
   min-width: 800px;
+  border: 1px solid var(--color-border-secondary);
 }
 
 .keyboard-row {
@@ -410,24 +676,10 @@ watch(() => props.analysisReady, (ready) => {
   margin-top: 8px;
 }
 
-/* 基本数据统计 */
-.basic-stats {
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-lg);
-  margin-top: var(--spacing-lg);
-}
-
-.basic-stats-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin-bottom: var(--spacing-md);
-}
-
-.basic-stats-grid {
+/* 统计网格 */
+.stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: var(--spacing-md);
 }
 
@@ -436,31 +688,132 @@ watch(() => props.analysisReady, (ready) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-sm);
+  padding: var(--spacing-md);
   background-color: var(--color-bg-primary);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-secondary);
+  transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+  background-color: var(--color-bg-secondary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .stat-label {
   color: var(--color-text-secondary);
   font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .stat-value {
   font-weight: 600;
   color: var(--color-text-primary);
   font-size: 0.95rem;
+  text-align: right;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .keyboard-layout {
+  .keyboard-heatmap {
     padding: var(--spacing-md);
   }
   
-  .basic-stats-grid {
+  .module-container {
+    gap: var(--spacing-md);
+  }
+  
+  .global-controls {
+    padding: var(--spacing-md);
+    flex-direction: column;
+    gap: var(--spacing-md);
+    text-align: center;
+  }
+  
+  .page-title {
+    font-size: 1.3rem;
+  }
+  
+  .module-header {
+    padding: var(--spacing-md);
+  }
+  
+  .module-content {
+    padding: var(--spacing-md);
+  }
+  
+  .module-title {
+    font-size: 1.1rem;
+  }
+  
+  .keyboard-layout {
+    padding: var(--spacing-md);
+    min-width: 600px;
+  }
+  
+  .stats-grid {
     grid-template-columns: 1fr;
   }
+  
+  .stat-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .keyboard-heatmap {
+    padding: var(--spacing-sm);
+  }
+  
+  .global-controls {
+    padding: var(--spacing-sm);
+  }
+  
+  .page-title {
+    font-size: 1.2rem;
+  }
+  
+  .global-toggle-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.8rem;
+  }
+  
+  .btn-text {
+    display: none; /* 在小屏幕上只显示图标 */
+  }
+  
+  .module-title {
+    font-size: 1rem;
+  }
+  
+  .keyboard-layout {
+    min-width: 400px;
+    padding: var(--spacing-sm);
+  }
+  
+  .keyboard-row {
+    gap: 2px;
+    margin-bottom: 4px;
+  }
+}
+
+/* 滚动条样式优化 */
+.keyboard-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.keyboard-wrapper::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+  border-radius: 3px;
+}
+
+.keyboard-wrapper::-webkit-scrollbar-thumb {
+  background: var(--color-border-primary);
+  border-radius: 3px;
+}
+
+.keyboard-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
 }
 </style>
