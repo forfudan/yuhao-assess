@@ -85,6 +85,30 @@
             </div>
           </div>
 
+
+          <!-- 重碼數據分析模塊 -->
+          <div v-if="analysisReady" class="module-card">
+            <div class="module-header">
+              <h3 class="module-title">重碼數據分析</h3>
+              <button 
+                class="toggle-button"
+                @click="toggleModule('duplicate')"
+                :title="modules.duplicate.collapsed ? '展開' : '收起'"
+              >
+                <span class="toggle-icon" :class="{ 'collapsed': modules.duplicate.collapsed }">
+                  ▼
+                </span>
+              </button>
+            </div>
+            <div v-show="!modules.duplicate.collapsed" class="module-content">
+              <p class="module-description">
+                分析不同字符集下的重碼情況，計算靜態重碼率和動態選重率。<a href="https://shurufa.app/docs/concepts.html" target="_blank">閱讀《瓊林擷英》瞭解詳細定義。</a>
+              </p>
+              
+              <DuplicateAnalysisCard :code-table="codeTable" />
+            </div>
+          </div>
+
           <!-- 鍵位熱力圖模塊 -->
           <div class="module-card">
             <div class="module-header">
@@ -111,29 +135,6 @@
             </div>
           </div>
 
-          <!-- 重碼數據分析模塊 -->
-          <div v-if="analysisReady" class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">重碼數據分析</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('duplicate')"
-                :title="modules.duplicate.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.duplicate.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <div v-show="!modules.duplicate.collapsed" class="module-content">
-              <p class="module-description">
-                分析不同字符集下的重碼情況，計算靜態重碼率和動態選重率。
-              </p>
-              
-              <DuplicateAnalysisCard :code-table="codeTable" />
-            </div>
-          </div>
-
           <!-- 碼表分析模塊 -->
           <div v-if="analysisReady" class="module-card">
             <div class="module-header">
@@ -150,7 +151,7 @@
             </div>
             <div v-show="!modules.analysis.collapsed" class="module-content">
               <p class="module-description">
-                詳細分析碼表的字符分布、編碼統計和top熱門條目。
+                詳細分析碼表的基本信息。
               </p>
               
               <CodeTableViewer 
