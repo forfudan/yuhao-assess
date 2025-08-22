@@ -153,11 +153,29 @@ export async function getCharsetSize(charsetType: CharsetType): Promise<number> 
 // 生成字符集的函数
 export async function generateCharset(charsetType: CharsetType, allChars: Set<string>): Promise<Set<string>> {
   const charset = new Set<string>()
-  const checker = charsetCheckers[charsetType]
   
-  for (const char of allChars) {
-    if (await checker(char)) {
-      charset.add(char)
+  // 对于 gb2312 和 guozi，直接从字符集数据中过滤
+  if (charsetType === 'gb2312' || charsetType === 'guozi') {
+    await loadCharsetData()
+    if (!charsetData) return charset
+    
+    for (const char of allChars) {
+      const record = charsetData[char]
+      if (record) {
+        if (charsetType === 'gb2312' && record.is_gb2312) {
+          charset.add(char)
+        } else if (charsetType === 'guozi' && record.is_guozi) {
+          charset.add(char)
+        }
+      }
+    }
+  } else {
+    // 对于其他字符集，使用Unicode范围检查
+    const checker = charsetCheckers[charsetType]
+    for (const char of allChars) {
+      if (await checker(char)) {
+        charset.add(char)
+      }
     }
   }
   

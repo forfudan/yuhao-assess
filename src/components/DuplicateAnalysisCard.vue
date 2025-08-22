@@ -69,8 +69,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { charsetInfo, type CharsetType } from '../services/charsetService'
+import { ref, computed, onMounted, watch } from 'vue'
+import { charsetInfo, generateCharset, type CharsetType } from '../services/charsetService'
 import type { CodeTable } from '../types'
 
 // Props
@@ -116,16 +116,21 @@ async function calculateDuplicates() {
   isCalculating.value = true
   
   try {
-    // 模拟异步计算
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 根据选择的字符集过滤字符
+    const allChars = new Set(props.codeTable.keys())
+    const charset = await generateCharset(selectedCharset.value, allChars)
     
-    // 计算重码组
+    console.log(`字符集 ${selectedCharset.value} 过滤后的字符数:`, charset.size)
+    console.log('原始码表字符数:', allChars.size)
+    
+    // 计算重码组（只考虑字符集内的字符）
     const duplicateGroups: Array<{ code: string; chars: string[] }> = []
     const codeToChars = new Map<string, string[]>()
     
-    // 遍历码表构建重码组
-    for (const [char, codes] of props.codeTable.entries()) {
-      if (codes.length > 0) {
+    // 遍历字符集内的字符构建重码组
+    for (const char of charset) {
+      const codes = props.codeTable.get(char)
+      if (codes && codes.length > 0) {
         const code = codes[0]
         if (!codeToChars.has(code)) {
           codeToChars.set(code, [])
@@ -144,10 +149,10 @@ async function calculateDuplicates() {
     // 按重码字符数量排序
     duplicateGroups.sort((a, b) => b.chars.length - a.chars.length)
     
-    // 简单的重码率计算
-    const totalChars = props.codeTable.size
+    // 基于字符集的重码率计算
+    const totalChars = charset.size
     const duplicateChars = duplicateGroups.reduce((sum, group) => sum + group.chars.length, 0)
-    const staticDupRate = duplicateChars / totalChars
+    const staticDupRate = totalChars > 0 ? duplicateChars / totalChars : 0
     
     analysisResult.value = {
       staticDupRate: staticDupRate,
@@ -162,6 +167,13 @@ async function calculateDuplicates() {
     isCalculating.value = false
   }
 }
+
+// 监听字符集选择变化
+watch(selectedCharset, () => {
+  if (props.codeTable && props.codeTable.size > 0) {
+    calculateDuplicates()
+  }
+})
 
 // 组件挂载时自动计算一次
 onMounted(() => {
