@@ -30,7 +30,7 @@
               <td>簡體動態選重率</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRate.full * 10000).toFixed(2) }}‱</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRate.short * 10000).toFixed(2) }}‱</td>
-              <td class="metric-desc">基於字頻表中所有漢字的加權選重率</td>
+              <td class="metric-desc">基於<a href="https://github.com/forfudan/chinese-characters-frequency" target="_blank" rel="noopener">知乎字頻表</a>的加權選重率，‱ 爲萬分符</td>
             </tr>
             <tr>
               <td>GB2312重碼組數</td>
@@ -45,76 +45,76 @@
               <td class="metric-desc">國字字符集中的重碼組數量</td>
             </tr>
             <tr>
-              <td>GB2312重碼字符數</td>
+              <td>GB2312重碼字數</td>
               <td class="metric-value">{{ analysisResults.gb2312DuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.gb2312DuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">GB2312字符集 ({{ analysisResults.charsetSizes.gb2312.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.gb2312?.toLocaleString() || '未知' }} 有編碼) 中存在重碼的字符數</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.gb2312.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.gb2312?.toLocaleString() || '未知' }} 有編碼 </td>
             </tr>
             <tr>
-              <td>國字重碼字符數</td>
+              <td>國字重碼字數</td>
               <td class="metric-value">{{ analysisResults.guoziDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.guoziDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">國字標準字體表 ({{ analysisResults.charsetSizes.guozi.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.guozi?.toLocaleString() || '未知' }} 有編碼) 中存在重碼的字符數</td>
+              <td class="metric-desc">國字標準字體表 {{ analysisResults.charsetSizes.guozi.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.guozi?.toLocaleString() || '未知' }} 有編碼 </td>
             </tr>
             <tr>
-              <td>CJK基本集重碼字符數</td>
+              <td>CJK基本區重碼字數</td>
               <td class="metric-value">{{ analysisResults.cjkBasicDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkBasicDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區 ({{ analysisResults.charsetSizes.cjkBasic.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkBasic?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.cjkBasic.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.cjkBasic?.toLocaleString() || '未知' }} 有編碼 </td>
             </tr>
             <tr>
-              <td>到CJK-A重碼字符數</td>
+              <td>到CJK-A重碼字數</td>
               <td class="metric-value">{{ analysisResults.cjkToADuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToADuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區+擴展A ({{ analysisResults.charsetSizes.cjkToA.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToA?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.cjkToA.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.cjkToA?.toLocaleString() || '未知' }} 有編碼</td>
             </tr>
             <tr>
-              <td>到CJK-B重碼字符數</td>
+              <td>到CJK-B重碼字數</td>
               <td class="metric-value">{{ analysisResults.cjkToBDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToBDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區+擴展A+擴展B ({{ analysisResults.charsetSizes.cjkToB.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToB?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.cjkToB.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.cjkToB?.toLocaleString() || '未知' }} 有編碼</td>
             </tr>
             <tr>
-              <td>到CJK-C重碼字符數</td>
+              <td>到CJK-C重碼字數</td>
               <td class="metric-value">{{ analysisResults.cjkToCDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToCDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展C ({{ analysisResults.charsetSizes.cjkToC.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToC?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.cjkToC.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.cjkToC?.toLocaleString() || '未知' }} 有編碼</td>
             </tr>
             <tr>
-              <td>到CJK-D重碼字符數</td>
+              <td>到CJK-D重碼字數</td>
               <td class="metric-value">{{ analysisResults.cjkToDDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToDDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展D ({{ analysisResults.charsetSizes.cjkToD.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToD?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.cjkToD.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.cjkToD?.toLocaleString() || '未知' }} 有編碼</td>
             </tr>
             <tr>
-              <td>到CJK-E重碼字符數</td>
+              <td>到CJK-E重碼字數</td>
               <td class="metric-value">{{ analysisResults.cjkToEDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToEDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展E ({{ analysisResults.charsetSizes.cjkToE.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToE?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.cjkToE.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.cjkToE?.toLocaleString() || '未知' }} 有編碼</td>
             </tr>
             <tr>
-              <td>到CJK-F重碼字符數</td>
+              <td>到CJK-F重碼字數</td>
               <td class="metric-value">{{ analysisResults.cjkToFDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToFDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展F ({{ analysisResults.charsetSizes.cjkToF.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToF?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.cjkToF.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.cjkToF?.toLocaleString() || '未知' }} 有編碼</td>
             </tr>
             <tr>
-              <td>到CJK-G重碼字符數</td>
+              <td>到CJK-G重碼字數</td>
               <td class="metric-value">{{ analysisResults.cjkToGDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToGDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展G ({{ analysisResults.charsetSizes.cjkToG.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToG?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.cjkToG.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.cjkToG?.toLocaleString() || '未知' }} 有編碼</td>
             </tr>
             <tr>
-              <td>到CJK-H重碼字符數</td>
+              <td>到CJK-H重碼字數</td>
               <td class="metric-value">{{ analysisResults.cjkToHDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToHDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展H ({{ analysisResults.charsetSizes.cjkToH.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToH?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.cjkToH.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.cjkToH?.toLocaleString() || '未知' }} 有編碼</td>
             </tr>
             <tr>
-              <td>到CJK-I重碼字符數</td>
+              <td>到CJK-I重碼字數</td>
               <td class="metric-value">{{ analysisResults.cjkToIDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToIDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展I ({{ analysisResults.charsetSizes.cjkToI.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToI?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.cjkToI.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.cjkToI?.toLocaleString() || '未知' }} 有編碼</td>
             </tr>
           </tbody>
         </table>
