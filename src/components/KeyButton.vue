@@ -3,12 +3,9 @@
     class="key-button"
     :class="[
       `key-${keyInfo.key}`,
-      `mode-${displayMode}`,
-      { 'key-active': isActive }
+      `mode-${displayMode}`
     ]"
     :style="keyStyle"
-    @mouseenter="handleMouseEnter"
-    @mouseleave="handleMouseLeave"
   >
     <div class="key-content">
       <div class="key-label">{{ keyInfo.label || keyInfo.key.toUpperCase() }}</div>
@@ -26,37 +23,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import type { KeyData, KeyInfo } from '../types/index'
 
 interface Props {
   keyData: KeyData
   keyInfo: KeyInfo
-  displayMode: 'frequency' | 'load' | 'finger'
+  displayMode: 'load' | 'frequency' | 'finger'
   maxValue: number
-  colorIntensity: number
 }
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  keyHover: [keyData: KeyData | null]
-}>()
-
-const isActive = ref(false)
+const emit = defineEmits<{}>()
 
 // 显示的值
 const displayValue = computed(() => {
-  switch (props.displayMode) {
-    case 'frequency':
-      return props.keyData.count > 0 ? props.keyData.count.toString() : ''
-    case 'load':
-      return props.keyData.count > 0 ? `${(props.keyData.frequency * 100).toFixed(1)}%` : ''
-    case 'finger':
-      return props.keyData.count > 0 ? props.keyData.count.toString() : ''
-    default:
-      return ''
-  }
+  return props.keyData.count > 0 ? `${(props.keyData.frequency * 100).toFixed(1)}%` : ''
 })
 
 // 是否显示数值
@@ -66,53 +49,48 @@ const showValue = computed(() => {
 
 // 按键样式
 const keyStyle = computed(() => {
-  const width = (props.keyInfo.width || 1) * 50
+  let width = '50px'
+  
+  switch (props.keyInfo.width) {
+    case 'wide':
+      width = '150px' // 空格鍵等寬鍵
+      break
+    case 'extra-wide':
+      width = '200px'
+      break
+    default:
+      width = '50px'
+  }
+
   return {
-    width: `${width}px`,
+    width,
     height: '50px'
   }
 })
 
-// 热力图样式
+// 熱力圖樣式
 const heatmapStyle = computed(() => {
   if (props.keyData.count === 0 || props.maxValue === 0) {
     return {
+      '--intensity': 0,
       opacity: 0
     }
   }
 
-  // 计算强度（0-1）
-  const intensity = (props.keyData.count / props.maxValue) * props.colorIntensity
+  // 計算強度（0-1）
+  const intensity = props.keyData.count / props.maxValue
   const normalizedIntensity = Math.min(Math.max(intensity, 0), 1)
 
-  // 根据显示模式选择颜色
-  let color: string
-  switch (props.displayMode) {
-    case 'frequency':
-      // 蓝色系 - 使用频率
-      color = `rgba(59, 130, 246, ${normalizedIntensity * 0.8})`
-      break
-    case 'load':
-      // 红色系 - 负担程度
-      color = `rgba(239, 68, 68, ${normalizedIntensity * 0.8})`
-      break
-    case 'finger':
-      // 绿色系 - 手指分工
-      color = getFingerColor(props.keyData.key, normalizedIntensity)
-      break
-    default:
-      color = `rgba(156, 163, 175, ${normalizedIntensity * 0.5})`
-  }
-
+  // 使用 CSS 變量
   return {
-    backgroundColor: color,
+    '--intensity': normalizedIntensity,
     opacity: 1
   }
 })
 
-// 获取手指颜色
+// 獲取手指顏色
 const getFingerColor = (key: string, intensity: number): string => {
-  // 手指颜色映射
+  // 手指顏色映射
   const fingerColors: Record<string, string> = {
     '左小指': `rgba(239, 68, 68, ${intensity * 0.8})`,    // 红色
     '左无名指': `rgba(249, 115, 22, ${intensity * 0.8})`,   // 橙色
@@ -141,17 +119,6 @@ const getFingerColor = (key: string, intensity: number): string => {
   const finger = fingerMapping[key.toLowerCase()]
   return finger ? fingerColors[finger] : `rgba(156, 163, 175, ${intensity * 0.5})`
 }
-
-// 鼠标事件处理
-const handleMouseEnter = () => {
-  isActive.value = true
-  emit('keyHover', props.keyData)
-}
-
-const handleMouseLeave = () => {
-  isActive.value = false
-  emit('keyHover', null)
-}
 </script>
 
 <style scoped>
@@ -160,24 +127,26 @@ const handleMouseLeave = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--color-border-primary);
+  border: 2px solid var(--heatmap-key-border);
   border-radius: var(--radius-md);
-  background-color: var(--color-bg-primary);
+  background-color: var(--heatmap-key-bg);
+  color: var(--heatmap-key-text);
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: all var(--transition-base);
   user-select: none;
   overflow: hidden;
+  font-family: var(--font-mono);
 }
 
 .key-button:hover {
-  border-color: var(--color-primary);
+  border-color: var(--heatmap-key-active);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   z-index: 10;
 }
 
 .key-button.key-active {
-  border-color: var(--color-primary);
+  border-color: var(--heatmap-key-active);
   box-shadow: var(--shadow-lg);
 }
 
@@ -206,6 +175,7 @@ const handleMouseLeave = () => {
   line-height: 1;
 }
 
+/* 熱力圖樣式 */
 .key-heatmap-overlay {
   position: absolute;
   top: 0;
@@ -217,7 +187,32 @@ const handleMouseLeave = () => {
   transition: all 0.3s ease;
 }
 
-/* 特殊按键样式 */
+/* 頻率模式 - 淺色主題（蓝色） */
+.key-button.mode-frequency .key-heatmap-overlay {
+  background-color: rgba(59, 130, 246, calc(var(--intensity, 0) * 0.8 + 0.1));
+}
+
+/* 頻率模式 - 深色主題（青色） */
+[data-theme="dark"] .key-button.mode-frequency .key-heatmap-overlay {
+  background-color: rgba(0, 188, 212, calc(var(--intensity, 0) * 0.8 + 0.1));
+}
+
+/* 負擔模式（蓝色 - 与频率模式相同） */
+.key-button.mode-load .key-heatmap-overlay {
+  background-color: rgba(59, 130, 246, calc(var(--intensity, 0) * 0.8 + 0.1));
+}
+
+/* 负担模式 - 深色主题（青色 - 与频率模式相同） */
+[data-theme="dark"] .key-button.mode-load .key-heatmap-overlay {
+  background-color: rgba(0, 188, 212, calc(var(--intensity, 0) * 0.8 + 0.1));
+}
+
+/* 手指模式（綠色） */
+.key-button.mode-finger .key-heatmap-overlay {
+  background-color: rgba(34, 197, 94, calc(var(--intensity, 0) * 0.8 + 0.1));
+}
+
+/* 特殊按鍵樣式 */
 .key-button.key-space {
   width: 200px;
 }
@@ -240,20 +235,9 @@ const handleMouseLeave = () => {
   width: 70px;
 }
 
-/* 模式特定样式 */
-.key-button.mode-frequency {
-  /* 频率模式的特定样式 */
-}
+/* 模式特定樣式已通過熱力圖覆蓋層實現 */
 
-.key-button.mode-load {
-  /* 负担模式的特定样式 */
-}
-
-.key-button.mode-finger {
-  /* 手指模式的特定样式 */
-}
-
-/* 数字行按键 */
+/* 數字行按鍵 */
 .key-button.key-1,
 .key-button.key-2,
 .key-button.key-3,
@@ -267,7 +251,7 @@ const handleMouseLeave = () => {
   background-color: var(--color-bg-tertiary);
 }
 
-/* 标点符号按键 */
+/* 標點符號按鍵 */
 .key-button.key-semicolon,
 .key-button.key-comma,
 .key-button.key-period,
@@ -275,7 +259,7 @@ const handleMouseLeave = () => {
   background-color: var(--color-bg-tertiary);
 }
 
-/* 响应式调整 */
+/* 響應式調整 */
 @media (max-width: 768px) {
   .key-button {
     border-width: 1px;
@@ -290,7 +274,7 @@ const handleMouseLeave = () => {
   }
 }
 
-/* 按键动画 */
+/* 按鍵動畫 */
 @keyframes keyPress {
   0% {
     transform: scale(1);
@@ -307,18 +291,13 @@ const handleMouseLeave = () => {
   animation: keyPress 0.1s ease-in-out;
 }
 
-/* 热力图渐变效果 */
-.key-heatmap-overlay {
-  background: radial-gradient(circle at center, transparent 0%, currentColor 100%);
-}
-
-/* 无障碍支持 */
+/* 無障礙支持 */
 .key-button:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* 高对比度模式支持 */
+/* 高對比度模式支持 */
 @media (prefers-contrast: high) {
   .key-button {
     border-width: 3px;
