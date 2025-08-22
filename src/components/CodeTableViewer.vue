@@ -19,17 +19,6 @@
         </div>
       </div>
 
-      <!-- CJK區塊統計 -->
-      <div class="cjk-stats">
-        <h4>CJK區塊分布</h4>
-        <div class="cjk-grid">
-          <div v-for="(count, block) in analysis.cjkChars" :key="block" class="cjk-item">
-            <span class="cjk-block">CJK {{ getCJKBlockName(block) }}</span>
-            <span class="cjk-count">{{ count.toLocaleString() }}</span>
-          </div>
-        </div>
-      </div>
-
       <!-- 前5個編碼信息 -->
       <div class="top-entries">
         <h4>前5個字符編碼</h4>
@@ -65,22 +54,6 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
-// CJK區塊名稱映射
-const getCJKBlockName = (block: string): string => {
-  const blockNames: Record<string, string> = {
-    'A': '基本漢字',
-    'B': '擴展A',
-    'C': '擴展B',
-    'D': '擴展C',
-    'E': '擴展D',
-    'F': '擴展E',
-    'G': '擴展F',
-    'H': '擴展G',
-    'I': '擴展H'
-  }
-  return blockNames[block] || block
-}
 </script>
 
 <style scoped>
@@ -135,37 +108,11 @@ const getCJKBlockName = (block: string): string => {
   color: var(--color-primary);
 }
 
-.cjk-stats h4,
 .top-entries h4 {
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-md);
-}
-
-.cjk-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: var(--spacing-sm);
-}
-
-.cjk-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-bg-secondary);
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-}
-
-.cjk-block {
-  color: var(--color-text-secondary);
-}
-
-.cjk-count {
-  font-weight: 600;
-  color: var(--color-text-primary);
 }
 
 .entries-list {
