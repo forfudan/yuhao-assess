@@ -19,15 +19,6 @@
             {{ table.name }} - {{ table.description }}
           </option>
         </select>
-        <button 
-          v-if="selectedBuiltinTable"
-          class="btn btn-primary load-builtin-btn"
-          @click="loadBuiltinTable"
-          :disabled="isUploading"
-        >
-          <span v-if="isUploading">載入中...</span>
-          <span v-else>載入方案</span>
-        </button>
       </div>
     </div>
 
@@ -267,7 +258,7 @@ const generatePreview = async (file: File) => {
       }
       
       // 验证是否为单个字符
-      const valid = char.length === 1 && code.length > 0
+      const valid = Array.from(char).length === 1 && code.length > 0
       
       return { raw: line, char, code, valid }
     })
@@ -317,8 +308,16 @@ const parseCodeTable = (text: string, format: CodeTableFormat): ParseResult => {
       char = parts[1].trim()
     }
 
+    // 檢查是否為單個Unicode字符（包括代理對）
+    const isValidChar = (str: string): boolean => {
+      if (!str) return false
+      // 使用Array.from來正確處理Unicode字符
+      const chars = Array.from(str)
+      return Array.from(chars).length === 1
+    }
+
     // 只处理单字
-    if (char.length === 1 && code.length > 0) {
+    if (isValidChar(char) && code.length > 0) {
       if (!codeTable.has(char)) {
         codeTable.set(char, [])
       }
@@ -374,11 +373,14 @@ async function loadBuiltinConfig() {
 }
 
 // 處理內置碼表選擇變化
-function handleBuiltinTableChange() {
+async function handleBuiltinTableChange() {
   // 當選擇內置碼表時，清除檔案選擇
   if (selectedBuiltinTable.value) {
     selectedFile.value = null
     previewData.value = []
+    
+    // 自動載入內置碼表
+    await loadBuiltinTable()
   }
 }
 

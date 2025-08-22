@@ -55,6 +55,75 @@ export interface EquivTable {
 // 字頻數據
 export type CharFrequency = Record<string, number>
 
+// 碼表條目
+export interface CodeTableEntry {
+  char: string
+  code: string
+  frequency?: number
+}
+
+// 分析參數
+export interface AnalysisParams {
+  codeTable: CodeTable
+  charFrequency?: CharFrequency
+  charset?: Set<string> | 'all'
+}
+
+// 碼表指標結果
+export interface CodeTableMetrics {
+  // 重碼指標
+  staticDupCount: number        // 靜態重碼字符數
+  dynamicDupRate: number | null // 動態重碼率（需要字頻數據）
+  
+  // 基本統計
+  totalChars: number            // 總字符數
+  
+  // 編碼統計
+  codeStats: {
+    totalCodes: number          // 總編碼數
+    avgCodeLength: number       // 平均編碼長度
+    minCodeLength: number       // 最短編碼長度
+    maxCodeLength: number       // 最長編碼長度
+  }
+}
+
+// 字符集類型
+export type CharsetType = 'gb2312' | 'common' | 'gbk' | 'cjk-basic' | 'cjk-a' | 'cjk-b' | 'cjk-d' | 'cjk-f'
+
+// 重碼統計結果
+export interface DuplicateStats {
+  charset: CharsetType
+  charsetName: string
+  description: string
+  totalChars: number
+  duplicateCount: number
+  duplicateRate: number
+  uniqueCodes: number
+  codeEfficiency: number
+}
+
+// 碼表清理選項
+export interface CodeTableCleanOptions {
+  singleCharOnly?: boolean
+  codeStrategy: 'longest' | 'shortest' | 'all'
+  removeEmptyCodes?: boolean
+  minCodeLength?: number
+  maxCodeLength?: number
+}
+
+// 清理結果
+export interface CleanResult {
+  codeTable: CodeTable
+  stats: {
+    originalChars: number
+    cleanedChars: number
+    removedChars: number
+    originalCodes: number
+    cleanedCodes: number
+  }
+  removedChars: string[]
+}
+
 // 碼表分析結果
 export interface CodeTableAnalysis {
   totalChars: number
