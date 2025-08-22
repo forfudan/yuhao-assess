@@ -60,7 +60,7 @@
               <td>CJK基本集重碼字符數</td>
               <td class="metric-value">{{ analysisResults.cjkBasicDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkBasicDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK統一漢字基本區 ({{ analysisResults.charsetSizes.cjkBasic.toLocaleString() }} 字符) 重碼字符數</td>
+              <td class="metric-desc">CJK基本區 ({{ analysisResults.charsetSizes.cjkBasic.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkBasic?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
             </tr>
             <tr>
               <td>到CJK-A重碼字符數</td>
@@ -129,7 +129,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { generateCharset, type CharsetType } from '../services/charsetService'
+import { generateCharset, type CharsetType, isInCJKBasic } from '../services/charsetService'
 import { generateFullCodeTable, generateShortCodeTable } from '../services/codeTableCleanService'
 import { getDynamicDupRate } from '../services/analysisService'
 import type { CodeTable, CharFrequency } from '../types'
@@ -181,6 +181,7 @@ interface AnalysisResults {
     cjkToI: number
   }
   charsetEncodedSizes: {
+    cjkBasic: number
     cjkToA: number
     cjkToB: number
     cjkToC: number
@@ -214,9 +215,12 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
   
   // 计算全码表的重码统计
   const fullCodeToChars = new Map<string, string[]>()
+  let fullCodeTableMatches = 0
+  
   for (const char of charset) {
     const codes = fullCodeTable.get(char)
     if (codes && codes.length > 0) {
+      fullCodeTableMatches++
       const code = codes[0]
       if (!fullCodeToChars.has(code)) {
         fullCodeToChars.set(code, [])
@@ -236,9 +240,12 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
   
   // 计算简码表的重码统计
   const shortCodeToChars = new Map<string, string[]>()
+  let shortCodeTableMatches = 0
+  
   for (const char of charset) {
     const codes = shortCodeTable.get(char)
     if (codes && codes.length > 0) {
+      shortCodeTableMatches++
       const code = codes[0]
       if (!shortCodeToChars.has(code)) {
         shortCodeToChars.set(code, [])
@@ -259,7 +266,8 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
   return { 
     duplicateChars: { full: fullDuplicateChars, short: shortDuplicateChars },
     duplicateGroups: { full: fullDuplicateGroups, short: shortDuplicateGroups },
-    charsetSize: charset.size
+    charsetSize: charset.size,
+    encodedSize: fullCodeTableMatches
   }
 }
 
@@ -275,12 +283,18 @@ async function generateCJKCharsetCache(allChars: Set<string>) {
   
   // 創建累積字符集
   const cumulativeCharsets: { [key: string]: Set<string> } = {}
-  let accumulated = new Set<string>()
   
+  // 為每個階段創建正確的累積集合
   cjkExtensions.forEach((ext, index) => {
-    for (const char of individualCharsets[index]) {
-      accumulated.add(char)
+    const accumulated = new Set<string>()
+    
+    // 累積到當前階段的所有字符
+    for (let i = 0; i <= index; i++) {
+      for (const char of individualCharsets[i]) {
+        accumulated.add(char)
+      }
     }
+    
     const targetName = ext === 'cjk_basic' ? 'cjkToBasic' : 
                       ext === 'cjk_a' ? 'cjkToA' :
                       ext === 'cjk_b' ? 'cjkToB' :
@@ -290,7 +304,7 @@ async function generateCJKCharsetCache(allChars: Set<string>) {
                       ext === 'cjk_f' ? 'cjkToF' :
                       ext === 'cjk_g' ? 'cjkToG' :
                       ext === 'cjk_h' ? 'cjkToH' : 'cjkToI'
-    cumulativeCharsets[targetName] = new Set(accumulated)
+    cumulativeCharsets[targetName] = accumulated
   })
   
   return cumulativeCharsets as {
@@ -377,7 +391,29 @@ async function calculateAllMetrics() {
   isCalculating.value = true
   
   try {
-    const allChars = new Set(props.codeTable.keys())
+    // 从码表键中提取所有单个字符
+    const allUniqueChars = new Set<string>()
+    for (const key of props.codeTable.keys()) {
+      // 将每个词条分解为单个字符
+      for (const char of key) {
+        allUniqueChars.add(char)
+      }
+    }
+    
+    // 步骤0：检查码表数据来源
+    console.log('=== 步骤0：检查码表数据来源 ===')
+    console.log(`props.codeTable 类型: ${props.codeTable.constructor.name}`)
+    console.log(`props.codeTable.size: ${props.codeTable.size}`)
+    console.log(`原始码表词条数: ${props.codeTable.size}`)
+    console.log(`提取的唯一字符数: ${allUniqueChars.size}`)
+    
+    // 检查词条分布
+    const singleCharEntries = Array.from(props.codeTable.keys()).filter(key => Array.from(key).length === 1)
+    const multiCharEntries = Array.from(props.codeTable.keys()).filter(key => Array.from(key).length > 1)
+    console.log(`单字词条: ${singleCharEntries.length}, 多字词条: ${multiCharEntries.length}`)
+    
+    // 使用提取的唯一字符代替原来的allChars
+    const allChars = allUniqueChars
     
     // 生成全码表和简码表
     const fullCodeResult = generateFullCodeTable(props.codeTable)
@@ -396,6 +432,20 @@ async function calculateAllMetrics() {
     const gb2312Stats = await calculateCharsetDuplicates('gb2312', allChars, fullCodeTable, shortCodeTable)
     const guoziStats = await calculateCharsetDuplicates('guozi', allChars, fullCodeTable, shortCodeTable)
     const cjkBasicStats = await calculateCharsetDuplicates('cjk_basic', allChars, fullCodeTable, shortCodeTable)
+    
+    // 调试：验证修复是否成功
+    console.log(`修复验证: 字符总数 ${allChars.size}`)
+    
+    const debugCjkBasic = await generateCharset('cjk_basic', allChars)
+    console.log(`CJK基本区字符数: ${debugCjkBasic.size} (理论值: 20992)`)
+    
+    if (debugCjkBasic.size === 20992) {
+      console.log('✅ CJK基本区字符数修复成功！')
+    } else if (debugCjkBasic.size < 20992) {
+      console.log(`⚠️ CJK基本区字符数偏少: ${debugCjkBasic.size}，可能是码表覆盖不全`)
+    } else {
+      console.error(`❌ CJK基本区字符数仍然过多: ${debugCjkBasic.size}`)
+    }
     
     // 生成CJK累積字符集緩存
     const cjkCache = await generateCJKCharsetCache(allChars)
@@ -435,6 +485,7 @@ async function calculateAllMetrics() {
       },
       charsetEncodedSizes: (() => {
         const result: any = {}
+        result.cjkBasic = cjkBasicStats.encodedSize
         cjkExtNames.forEach(name => {
           result[name] = cjkStats[name].encodedSize
         })
