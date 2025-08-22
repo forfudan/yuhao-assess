@@ -8,7 +8,7 @@ import type { CodeTable } from '../types/index'
 
 // 简单的单字符检查函数
 function isSingleChar(char: string): boolean {
-  return char.length === 1
+  return Array.from(char).length === 1
 }
 
 /**
@@ -208,7 +208,7 @@ export function validateCodeTable(codeTable: CodeTable): {
       errors.push('發現空字符')
     }
     
-    if (char.length !== 1) {
+    if (Array.from(char).length === 1) {
       warnings.push(`字符 "${char}" 不是單字符`)
     }
 
@@ -254,7 +254,7 @@ export function getCodeTableStats(codeTable: CodeTable): {
   for (const [char, codes] of codeTable.entries()) {
     totalCodes += codes.length
     
-    if (char.length === 1) {
+    if (Array.from(char).length === 1) {
       singleChars++
       if (isSingleChar(char)) {
         cjkChars++

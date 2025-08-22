@@ -63,58 +63,58 @@
               <td class="metric-desc">CJK統一漢字基本區 ({{ analysisResults.charsetSizes.cjkBasic.toLocaleString() }} 字符) 重碼字符數</td>
             </tr>
             <tr>
-              <td>CJK-A重碼字符數</td>
-              <td class="metric-value">{{ analysisResults.cjkADuplicateChars.full.toLocaleString() }}</td>
-              <td class="metric-value">{{ analysisResults.cjkADuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK統一漢字擴展A區 ({{ analysisResults.charsetSizes.cjkA.toLocaleString() }} 字符) 重碼字符數</td>
+              <td>到CJK-A重碼字符數</td>
+              <td class="metric-value">{{ analysisResults.cjkToADuplicateChars.full.toLocaleString() }}</td>
+              <td class="metric-value">{{ analysisResults.cjkToADuplicateChars.short.toLocaleString() }}</td>
+              <td class="metric-desc">CJK基本區+擴展A ({{ analysisResults.charsetSizes.cjkToA.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToA?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
             </tr>
             <tr>
               <td>到CJK-B重碼字符數</td>
               <td class="metric-value">{{ analysisResults.cjkToBDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToBDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區+擴展A+擴展B ({{ analysisResults.charsetSizes.cjkToB.toLocaleString() }} 字符) 重碼字符數</td>
+              <td class="metric-desc">CJK基本區+擴展A+擴展B ({{ analysisResults.charsetSizes.cjkToB.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToB?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
             </tr>
             <tr>
               <td>到CJK-C重碼字符數</td>
               <td class="metric-value">{{ analysisResults.cjkToCDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToCDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展C ({{ analysisResults.charsetSizes.cjkToC.toLocaleString() }} 字符) 重碼字符數</td>
+              <td class="metric-desc">CJK基本區到擴展C ({{ analysisResults.charsetSizes.cjkToC.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToC?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
             </tr>
             <tr>
               <td>到CJK-D重碼字符數</td>
               <td class="metric-value">{{ analysisResults.cjkToDDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToDDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展D ({{ analysisResults.charsetSizes.cjkToD.toLocaleString() }} 字符) 重碼字符數</td>
+              <td class="metric-desc">CJK基本區到擴展D ({{ analysisResults.charsetSizes.cjkToD.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToD?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
             </tr>
             <tr>
               <td>到CJK-E重碼字符數</td>
               <td class="metric-value">{{ analysisResults.cjkToEDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToEDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展E ({{ analysisResults.charsetSizes.cjkToE.toLocaleString() }} 字符) 重碼字符數</td>
+              <td class="metric-desc">CJK基本區到擴展E ({{ analysisResults.charsetSizes.cjkToE.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToE?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
             </tr>
             <tr>
               <td>到CJK-F重碼字符數</td>
               <td class="metric-value">{{ analysisResults.cjkToFDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToFDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展F ({{ analysisResults.charsetSizes.cjkToF.toLocaleString() }} 字符) 重碼字符數</td>
+              <td class="metric-desc">CJK基本區到擴展F ({{ analysisResults.charsetSizes.cjkToF.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToF?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
             </tr>
             <tr>
               <td>到CJK-G重碼字符數</td>
               <td class="metric-value">{{ analysisResults.cjkToGDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToGDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展G ({{ analysisResults.charsetSizes.cjkToG.toLocaleString() }} 字符) 重碼字符數</td>
+              <td class="metric-desc">CJK基本區到擴展G ({{ analysisResults.charsetSizes.cjkToG.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToG?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
             </tr>
             <tr>
               <td>到CJK-H重碼字符數</td>
               <td class="metric-value">{{ analysisResults.cjkToHDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToHDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展H ({{ analysisResults.charsetSizes.cjkToH.toLocaleString() }} 字符) 重碼字符數</td>
+              <td class="metric-desc">CJK基本區到擴展H ({{ analysisResults.charsetSizes.cjkToH.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToH?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
             </tr>
             <tr>
               <td>到CJK-I重碼字符數</td>
               <td class="metric-value">{{ analysisResults.cjkToIDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.cjkToIDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">CJK基本區到擴展I ({{ analysisResults.charsetSizes.cjkToI.toLocaleString() }} 字符) 重碼字符數</td>
+              <td class="metric-desc">CJK基本區到擴展I ({{ analysisResults.charsetSizes.cjkToI.toLocaleString() }} 字符，{{ analysisResults.charsetEncodedSizes?.cjkToI?.toLocaleString() || '未知' }} 有編碼) 重碼字符數</td>
             </tr>
           </tbody>
         </table>
@@ -157,7 +157,7 @@ interface AnalysisResults {
   guoziDuplicateGroups: DualValue
   gb2312DuplicateGroups: DualValue
   cjkBasicDuplicateChars: DualValue
-  cjkADuplicateChars: DualValue
+  cjkToADuplicateChars: DualValue
   cjkToBDuplicateChars: DualValue
   cjkToCDuplicateChars: DualValue
   cjkToDDuplicateChars: DualValue
@@ -170,7 +170,18 @@ interface AnalysisResults {
     gb2312: number
     guozi: number
     cjkBasic: number
-    cjkA: number
+    cjkToA: number
+    cjkToB: number
+    cjkToC: number
+    cjkToD: number
+    cjkToE: number
+    cjkToF: number
+    cjkToG: number
+    cjkToH: number
+    cjkToI: number
+  }
+  charsetEncodedSizes: {
+    cjkToA: number
     cjkToB: number
     cjkToC: number
     cjkToD: number
@@ -252,23 +263,74 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
   }
 }
 
-// 计算复合字符集（例如CJK基本+A+B）（支持双码表）
-async function calculateCompoundCharsetDuplicates(charsetTypes: CharsetType[], allChars: Set<string>, fullCodeTable: CodeTable, shortCodeTable: CodeTable) {
-  const combinedCharset = new Set<string>()
+// 生成累積CJK字符集緩存
+async function generateCJKCharsetCache(allChars: Set<string>) {
+  // 先生成各個單獨的字符集
+  const cjkBasic = await generateCharset('cjk_basic', allChars)
+  const cjkA = await generateCharset('cjk_a', allChars)
+  const cjkB = await generateCharset('cjk_b', allChars)
+  const cjkC = await generateCharset('cjk_c', allChars)
+  const cjkD = await generateCharset('cjk_d', allChars)
+  const cjkE = await generateCharset('cjk_e', allChars)
+  const cjkF = await generateCharset('cjk_f', allChars)
+  const cjkG = await generateCharset('cjk_g', allChars)
+  const cjkH = await generateCharset('cjk_h', allChars)
+  const cjkI = await generateCharset('cjk_i', allChars)
   
-  // 合并多个字符集
-  for (const charsetType of charsetTypes) {
-    const charset = await generateCharset(charsetType, allChars)
-    for (const char of charset) {
-      combinedCharset.add(char)
-    }
+  // 創建累積字符集
+  const cjkToBasic = new Set(cjkBasic)
+  
+  const cjkToA = new Set(cjkBasic)
+  for (const char of cjkA) cjkToA.add(char)
+  
+  const cjkToB = new Set(cjkToA)
+  for (const char of cjkB) cjkToB.add(char)
+  
+  const cjkToC = new Set(cjkToB)
+  for (const char of cjkC) cjkToC.add(char)
+  
+  const cjkToD = new Set(cjkToC)
+  for (const char of cjkD) cjkToD.add(char)
+  
+  const cjkToE = new Set(cjkToD)
+  for (const char of cjkE) cjkToE.add(char)
+  
+  const cjkToF = new Set(cjkToE)
+  for (const char of cjkF) cjkToF.add(char)
+  
+  const cjkToG = new Set(cjkToF)
+  for (const char of cjkG) cjkToG.add(char)
+  
+  const cjkToH = new Set(cjkToG)
+  for (const char of cjkH) cjkToH.add(char)
+  
+  const cjkToI = new Set(cjkToH)
+  for (const char of cjkI) cjkToI.add(char)
+  
+  return {
+    cjkToBasic,
+    cjkToA,
+    cjkToB,
+    cjkToC,
+    cjkToD,
+    cjkToE,
+    cjkToF,
+    cjkToG,
+    cjkToH,
+    cjkToI
   }
-  
+}
+
+// 計算字符集的重碼統計（直接使用字符集）
+function calculateDirectCharsetDuplicates(charset: Set<string>, fullCodeTable: CodeTable, shortCodeTable: CodeTable, charsetName: string) {
   // 计算全码表的重码统计
   const fullCodeToChars = new Map<string, string[]>()
-  for (const char of combinedCharset) {
+  let fullCodeTableMatches = 0
+  
+  for (const char of charset) {
     const codes = fullCodeTable.get(char)
     if (codes && codes.length > 0) {
+      fullCodeTableMatches++
       const code = codes[0]
       if (!fullCodeToChars.has(code)) {
         fullCodeToChars.set(code, [])
@@ -278,17 +340,22 @@ async function calculateCompoundCharsetDuplicates(charsetTypes: CharsetType[], a
   }
   
   let fullDuplicateChars = 0
+  let fullDuplicateGroups = 0
   for (const chars of fullCodeToChars.values()) {
     if (chars.length > 1) {
       fullDuplicateChars += chars.length
+      fullDuplicateGroups += 1
     }
   }
   
   // 计算简码表的重码统计
   const shortCodeToChars = new Map<string, string[]>()
-  for (const char of combinedCharset) {
+  let shortCodeTableMatches = 0
+  
+  for (const char of charset) {
     const codes = shortCodeTable.get(char)
     if (codes && codes.length > 0) {
+      shortCodeTableMatches++
       const code = codes[0]
       if (!shortCodeToChars.has(code)) {
         shortCodeToChars.set(code, [])
@@ -298,15 +365,19 @@ async function calculateCompoundCharsetDuplicates(charsetTypes: CharsetType[], a
   }
   
   let shortDuplicateChars = 0
+  let shortDuplicateGroups = 0
   for (const chars of shortCodeToChars.values()) {
     if (chars.length > 1) {
       shortDuplicateChars += chars.length
+      shortDuplicateGroups += 1
     }
   }
   
   return { 
     duplicateChars: { full: fullDuplicateChars, short: shortDuplicateChars },
-    charsetSize: combinedCharset.size
+    duplicateGroups: { full: fullDuplicateGroups, short: shortDuplicateGroups },
+    charsetSize: charset.size,
+    encodedSize: fullCodeTableMatches
   }
 }
 
@@ -339,17 +410,20 @@ async function calculateAllMetrics() {
     const gb2312Stats = await calculateCharsetDuplicates('gb2312', allChars, fullCodeTable, shortCodeTable)
     const guoziStats = await calculateCharsetDuplicates('guozi', allChars, fullCodeTable, shortCodeTable)
     const cjkBasicStats = await calculateCharsetDuplicates('cjk_basic', allChars, fullCodeTable, shortCodeTable)
-    const cjkAStats = await calculateCharsetDuplicates('cjk_a', allChars, fullCodeTable, shortCodeTable)
     
-    // 计算复合字符集（累積到各個擴展區）
-    const cjkToBStats = await calculateCompoundCharsetDuplicates(['cjk_basic', 'cjk_a', 'cjk_b'], allChars, fullCodeTable, shortCodeTable)
-    const cjkToCStats = await calculateCompoundCharsetDuplicates(['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c'], allChars, fullCodeTable, shortCodeTable)
-    const cjkToDStats = await calculateCompoundCharsetDuplicates(['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c', 'cjk_d'], allChars, fullCodeTable, shortCodeTable)
-    const cjkToEStats = await calculateCompoundCharsetDuplicates(['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c', 'cjk_d', 'cjk_e'], allChars, fullCodeTable, shortCodeTable)
-    const cjkToFStats = await calculateCompoundCharsetDuplicates(['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c', 'cjk_d', 'cjk_e', 'cjk_f'], allChars, fullCodeTable, shortCodeTable)
-    const cjkToGStats = await calculateCompoundCharsetDuplicates(['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c', 'cjk_d', 'cjk_e', 'cjk_f', 'cjk_g'], allChars, fullCodeTable, shortCodeTable)
-    const cjkToHStats = await calculateCompoundCharsetDuplicates(['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c', 'cjk_d', 'cjk_e', 'cjk_f', 'cjk_g', 'cjk_h'], allChars, fullCodeTable, shortCodeTable)
-    const cjkToIStats = await calculateCompoundCharsetDuplicates(['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c', 'cjk_d', 'cjk_e', 'cjk_f', 'cjk_g', 'cjk_h', 'cjk_i'], allChars, fullCodeTable, shortCodeTable)
+    // 生成CJK累積字符集緩存
+    const cjkCache = await generateCJKCharsetCache(allChars)
+    
+    // 使用緩存計算累積字符集的重碼統計
+    const cjkToAStats = calculateDirectCharsetDuplicates(cjkCache.cjkToA, fullCodeTable, shortCodeTable, 'cjkToA')
+    const cjkToBStats = calculateDirectCharsetDuplicates(cjkCache.cjkToB, fullCodeTable, shortCodeTable, 'cjkToB')
+    const cjkToCStats = calculateDirectCharsetDuplicates(cjkCache.cjkToC, fullCodeTable, shortCodeTable, 'cjkToC')
+    const cjkToDStats = calculateDirectCharsetDuplicates(cjkCache.cjkToD, fullCodeTable, shortCodeTable, 'cjkToD')
+    const cjkToEStats = calculateDirectCharsetDuplicates(cjkCache.cjkToE, fullCodeTable, shortCodeTable, 'cjkToE')
+    const cjkToFStats = calculateDirectCharsetDuplicates(cjkCache.cjkToF, fullCodeTable, shortCodeTable, 'cjkToF')
+    const cjkToGStats = calculateDirectCharsetDuplicates(cjkCache.cjkToG, fullCodeTable, shortCodeTable, 'cjkToG')
+    const cjkToHStats = calculateDirectCharsetDuplicates(cjkCache.cjkToH, fullCodeTable, shortCodeTable, 'cjkToH')
+    const cjkToIStats = calculateDirectCharsetDuplicates(cjkCache.cjkToI, fullCodeTable, shortCodeTable, 'cjkToI')
     
     analysisResults.value = {
       dynamicDupRate: { full: fullDynamicDupRate, short: shortDynamicDupRate },
@@ -358,7 +432,7 @@ async function calculateAllMetrics() {
       guoziDuplicateGroups: guoziStats.duplicateGroups,
       gb2312DuplicateGroups: gb2312Stats.duplicateGroups,
       cjkBasicDuplicateChars: cjkBasicStats.duplicateChars,
-      cjkADuplicateChars: cjkAStats.duplicateChars,
+      cjkToADuplicateChars: cjkToAStats.duplicateChars,
       cjkToBDuplicateChars: cjkToBStats.duplicateChars,
       cjkToCDuplicateChars: cjkToCStats.duplicateChars,
       cjkToDDuplicateChars: cjkToDStats.duplicateChars,
@@ -371,7 +445,7 @@ async function calculateAllMetrics() {
         gb2312: gb2312Stats.charsetSize,
         guozi: guoziStats.charsetSize,
         cjkBasic: cjkBasicStats.charsetSize,
-        cjkA: cjkAStats.charsetSize,
+        cjkToA: cjkToAStats.charsetSize,
         cjkToB: cjkToBStats.charsetSize,
         cjkToC: cjkToCStats.charsetSize,
         cjkToD: cjkToDStats.charsetSize,
@@ -380,6 +454,17 @@ async function calculateAllMetrics() {
         cjkToG: cjkToGStats.charsetSize,
         cjkToH: cjkToHStats.charsetSize,
         cjkToI: cjkToIStats.charsetSize
+      },
+      charsetEncodedSizes: {
+        cjkToA: cjkToAStats.encodedSize,
+        cjkToB: cjkToBStats.encodedSize,
+        cjkToC: cjkToCStats.encodedSize,
+        cjkToD: cjkToDStats.encodedSize,
+        cjkToE: cjkToEStats.encodedSize,
+        cjkToF: cjkToFStats.encodedSize,
+        cjkToG: cjkToGStats.encodedSize,
+        cjkToH: cjkToHStats.encodedSize,
+        cjkToI: cjkToIStats.encodedSize
       }
     }
     

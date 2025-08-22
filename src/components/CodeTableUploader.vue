@@ -258,7 +258,7 @@ const generatePreview = async (file: File) => {
       }
       
       // 验证是否为单个字符
-      const valid = char.length === 1 && code.length > 0
+      const valid = Array.from(char).length === 1 && code.length > 0
       
       return { raw: line, char, code, valid }
     })
@@ -308,8 +308,16 @@ const parseCodeTable = (text: string, format: CodeTableFormat): ParseResult => {
       char = parts[1].trim()
     }
 
+    // 檢查是否為單個Unicode字符（包括代理對）
+    const isValidChar = (str: string): boolean => {
+      if (!str) return false
+      // 使用Array.from來正確處理Unicode字符
+      const chars = Array.from(str)
+      return Array.from(chars).length === 1
+    }
+
     // 只处理单字
-    if (char.length === 1 && code.length > 0) {
+    if (isValidChar(char) && code.length > 0) {
       if (!codeTable.has(char)) {
         codeTable.set(char, [])
       }

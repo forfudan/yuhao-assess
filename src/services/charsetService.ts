@@ -34,81 +34,132 @@ export async function isInGuozi(char: string): Promise<boolean> {
   return charsetData?.[char]?.is_guozi ?? false
 }
 
-// CJK Unicode范围检查函数
-export function isInCJKToBasic(char: string): boolean {
+// CJK Unicode范围检查函数 - 單個區域
+export function isInCJKBasic(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x4E00 && codePoint <= 0x9FFF
+  return codePoint >= 0x4E00 && codePoint <= 0x9FFF // CJK基本区
+}
+
+export function isInCJKA(char: string): boolean {
+  const codePoint = char.codePointAt(0)
+  if (!codePoint) return false
+  return codePoint >= 0x3400 && codePoint <= 0x4DBF // CJK擴展A区
+}
+
+export function isInCJKB(char: string): boolean {
+  const codePoint = char.codePointAt(0)
+  if (!codePoint) return false
+  return codePoint >= 0x20000 && codePoint <= 0x2A6DF // CJK擴展B区
+}
+
+export function isInCJKC(char: string): boolean {
+  const codePoint = char.codePointAt(0)
+  if (!codePoint) return false
+  return codePoint >= 0x2A700 && codePoint <= 0x2B73F // CJK擴展C区
+}
+
+export function isInCJKD(char: string): boolean {
+  const codePoint = char.codePointAt(0)
+  if (!codePoint) return false
+  return codePoint >= 0x2B740 && codePoint <= 0x2B81F // CJK擴展D区
+}
+
+export function isInCJKE(char: string): boolean {
+  const codePoint = char.codePointAt(0)
+  if (!codePoint) return false
+  return codePoint >= 0x2B820 && codePoint <= 0x2CEAF // CJK擴展E区
+}
+
+export function isInCJKF(char: string): boolean {
+  const codePoint = char.codePointAt(0)
+  if (!codePoint) return false
+  return codePoint >= 0x2CEB0 && codePoint <= 0x2EBEF // CJK擴展F区
+}
+
+export function isInCJKG(char: string): boolean {
+  const codePoint = char.codePointAt(0)
+  if (!codePoint) return false
+  return codePoint >= 0x30000 && codePoint <= 0x3134F // CJK擴展G区
+}
+
+export function isInCJKH(char: string): boolean {
+  const codePoint = char.codePointAt(0)
+  if (!codePoint) return false
+  return codePoint >= 0x31350 && codePoint <= 0x323AF // CJK擴展H区
+}
+
+export function isInCJKI(char: string): boolean {
+  const codePoint = char.codePointAt(0)
+  if (!codePoint) return false
+  return codePoint >= 0x2EBF0 && codePoint <= 0x2EE5F // CJK擴展I区（部首補充）
+}
+
+// 累積的CJK範圍檢查函數 - "到X區"
+export function isInCJKToBasic(char: string): boolean {
+  return isInCJKBasic(char)
 }
 
 export function isInCJKToA(char: string): boolean {
-  const codePoint = char.codePointAt(0)
-  if (!codePoint) return false
-  return codePoint >= 0x3400 && codePoint <= 0x4DBF
+  return isInCJKBasic(char) || isInCJKA(char)
 }
 
 export function isInCJKToB(char: string): boolean {
-  const codePoint = char.codePointAt(0)
-  if (!codePoint) return false
-  return codePoint >= 0x20000 && codePoint <= 0x2A6DF
+  return isInCJKBasic(char) || isInCJKA(char) || isInCJKB(char)
 }
 
 export function isInCJKToC(char: string): boolean {
-  const codePoint = char.codePointAt(0)
-  if (!codePoint) return false
-  return codePoint >= 0x2A700 && codePoint <= 0x2B73F
+  return isInCJKBasic(char) || isInCJKA(char) || isInCJKB(char) || isInCJKC(char)
 }
 
 export function isInCJKToD(char: string): boolean {
-  const codePoint = char.codePointAt(0)
-  if (!codePoint) return false
-  return codePoint >= 0x2B740 && codePoint <= 0x2B81F
+  return isInCJKBasic(char) || isInCJKA(char) || isInCJKB(char) || isInCJKC(char) || isInCJKD(char)
 }
 
 export function isInCJKToE(char: string): boolean {
-  const codePoint = char.codePointAt(0)
-  if (!codePoint) return false
-  return codePoint >= 0x2B820 && codePoint <= 0x2CEAF
+  return isInCJKBasic(char) || isInCJKA(char) || isInCJKB(char) || isInCJKC(char) || isInCJKD(char) || isInCJKE(char)
 }
 
 export function isInCJKToF(char: string): boolean {
-  const codePoint = char.codePointAt(0)
-  if (!codePoint) return false
-  return codePoint >= 0x2CEB0 && codePoint <= 0x2EBEF
+  return isInCJKBasic(char) || isInCJKA(char) || isInCJKB(char) || isInCJKC(char) || isInCJKD(char) || isInCJKE(char) || isInCJKF(char)
 }
 
 export function isInCJKToG(char: string): boolean {
-  const codePoint = char.codePointAt(0)
-  if (!codePoint) return false
-  return codePoint >= 0x30000 && codePoint <= 0x3134F
+  return isInCJKBasic(char) || isInCJKA(char) || isInCJKB(char) || isInCJKC(char) || isInCJKD(char) || isInCJKE(char) || isInCJKF(char) || isInCJKG(char)
 }
 
 export function isInCJKToH(char: string): boolean {
-  const codePoint = char.codePointAt(0)
-  if (!codePoint) return false
-  return codePoint >= 0x31350 && codePoint <= 0x323AF
+  return isInCJKBasic(char) || isInCJKA(char) || isInCJKB(char) || isInCJKC(char) || isInCJKD(char) || isInCJKE(char) || isInCJKF(char) || isInCJKG(char) || isInCJKH(char)
 }
 
 export function isInCJKToI(char: string): boolean {
-  const codePoint = char.codePointAt(0)
-  if (!codePoint) return false
-  return codePoint >= 0x2EBF0 && codePoint <= 0x2EE5F
+  return isInCJKBasic(char) || isInCJKA(char) || isInCJKB(char) || isInCJKC(char) || isInCJKD(char) || isInCJKE(char) || isInCJKF(char) || isInCJKG(char) || isInCJKH(char) || isInCJKI(char)
 }
 
 // 字符集检查器映射
 export const charsetCheckers = {
   'gb2312': isInGB2312,
   'guozi': isInGuozi,
-  'cjk_basic': isInCJKToBasic,
-  'cjk_a': isInCJKToA,
-  'cjk_b': isInCJKToB,
-  'cjk_c': isInCJKToC,
-  'cjk_d': isInCJKToD,
-  'cjk_e': isInCJKToE,
-  'cjk_f': isInCJKToF,
-  'cjk_g': isInCJKToG,
-  'cjk_h': isInCJKToH,
-  'cjk_i': isInCJKToI
+  'cjk_basic': isInCJKBasic,
+  'cjk_a': isInCJKA,
+  'cjk_b': isInCJKB,
+  'cjk_c': isInCJKC,
+  'cjk_d': isInCJKD,
+  'cjk_e': isInCJKE,
+  'cjk_f': isInCJKF,
+  'cjk_g': isInCJKG,
+  'cjk_h': isInCJKH,
+  'cjk_i': isInCJKI,
+  'cjk_to_basic': isInCJKToBasic,
+  'cjk_to_a': isInCJKToA,
+  'cjk_to_b': isInCJKToB,
+  'cjk_to_c': isInCJKToC,
+  'cjk_to_d': isInCJKToD,
+  'cjk_to_e': isInCJKToE,
+  'cjk_to_f': isInCJKToF,
+  'cjk_to_g': isInCJKToG,
+  'cjk_to_h': isInCJKToH,
+  'cjk_to_i': isInCJKToI
 }
 
 export type CharsetType = keyof typeof charsetCheckers
@@ -118,15 +169,25 @@ export const charsetInfo: Record<CharsetType, { name: string; description: strin
   'gb2312': { name: 'GB2312', description: 'GB2312 简体中文字符集' },
   'guozi': { name: '常用国字', description: '常用国字标准字体表' },
   'cjk_basic': { name: 'CJK基本区', description: 'CJK统一汉字基本区 (U+4E00-U+9FFF)' },
-  'cjk_a': { name: 'CJK-A', description: 'CJK统一汉字扩展A区 (U+3400-U+4DBF)' },
-  'cjk_b': { name: 'CJK-B', description: 'CJK统一汉字扩展B区 (U+20000-U+2A6DF)' },
-  'cjk_c': { name: 'CJK-C', description: 'CJK统一汉字扩展C区 (U+2A700-U+2B73F)' },
-  'cjk_d': { name: 'CJK-D', description: 'CJK统一汉字扩展D区 (U+2B740-U+2B81F)' },
-  'cjk_e': { name: 'CJK-E', description: 'CJK统一汉字扩展E区 (U+2B820-U+2CEAF)' },
-  'cjk_f': { name: 'CJK-F', description: 'CJK统一汉字扩展F区 (U+2CEB0-U+2EBEF)' },
-  'cjk_g': { name: 'CJK-G', description: 'CJK统一汉字扩展G区 (U+30000-U+3134F)' },
-  'cjk_h': { name: 'CJK-H', description: 'CJK统一汉字扩展H区 (U+31350-U+323AF)' },
-  'cjk_i': { name: 'CJK-I', description: 'CJK统一汉字扩展I区 (U+2EBF0-U+2EE5F)' }
+  'cjk_a': { name: 'CJK擴展A区', description: 'CJK統一漢字擴展A區 (U+3400-U+4DBF)' },
+  'cjk_b': { name: 'CJK擴展B区', description: 'CJK統一漢字擴展B區 (U+20000-U+2A6DF)' },
+  'cjk_c': { name: 'CJK擴展C区', description: 'CJK統一漢字擴展C區 (U+2A700-U+2B73F)' },
+  'cjk_d': { name: 'CJK擴展D区', description: 'CJK統一漢字擴展D區 (U+2B740-U+2B81F)' },
+  'cjk_e': { name: 'CJK擴展E区', description: 'CJK統一漢字擴展E區 (U+2B820-U+2CEAF)' },
+  'cjk_f': { name: 'CJK擴展F区', description: 'CJK統一漢字擴展F區 (U+2CEB0-U+2EBEF)' },
+  'cjk_g': { name: 'CJK擴展G区', description: 'CJK統一漢字擴展G區 (U+30000-U+3134F)' },
+  'cjk_h': { name: 'CJK擴展H区', description: 'CJK統一漢字擴展H區 (U+31350-U+323AF)' },
+  'cjk_i': { name: 'CJK擴展I区', description: 'CJK統一漢字擴展I區 (U+2EBF0-U+2EE5F)' },
+  'cjk_to_basic': { name: '到CJK基本区', description: 'CJK基本區' },
+  'cjk_to_a': { name: '到CJK-A区', description: 'CJK基本區+擴展A區' },
+  'cjk_to_b': { name: '到CJK-B区', description: 'CJK基本區+擴展A+B區' },
+  'cjk_to_c': { name: '到CJK-C区', description: 'CJK基本區+擴展A+B+C區' },
+  'cjk_to_d': { name: '到CJK-D区', description: 'CJK基本區+擴展A+B+C+D區' },
+  'cjk_to_e': { name: '到CJK-E区', description: 'CJK基本區+擴展A+B+C+D+E區' },
+  'cjk_to_f': { name: '到CJK-F区', description: 'CJK基本區+擴展A+B+C+D+E+F區' },
+  'cjk_to_g': { name: '到CJK-G区', description: 'CJK基本區+擴展A+B+C+D+E+F+G區' },
+  'cjk_to_h': { name: '到CJK-H区', description: 'CJK基本區+擴展A+B+C+D+E+F+G+H區' },
+  'cjk_to_i': { name: '到CJK-I区', description: 'CJK基本區+擴展A+B+C+D+E+F+G+H+I區' }
 }
 
 // 获取字符集大小的函数
@@ -172,8 +233,13 @@ export async function generateCharset(charsetType: CharsetType, allChars: Set<st
   } else {
     // 对于其他字符集，使用Unicode范围检查
     const checker = charsetCheckers[charsetType]
+    if (!checker) {
+      console.error(`找不到字符集檢查器: ${charsetType}`)
+      return charset
+    }
+    
     for (const char of allChars) {
-      if (await checker(char)) {
+      if (checker(char)) {
         charset.add(char)
       }
     }
