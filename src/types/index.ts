@@ -109,6 +109,7 @@ export interface AnalysisStats {
   avgCodeLength: number
   keyDistribution: Map<string, number>
   fingerLoad: Map<string, number>
+  rowDistribution: Map<string, number>
   handBalance: {
     left: number
     right: number

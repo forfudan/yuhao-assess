@@ -9,34 +9,6 @@
 
     <!-- 热力图内容 -->
     <div v-else class="heatmap-content">
-      <!-- 统计信息 -->
-      <div class="stats-bar">
-        <div class="stat-item">
-          <span class="stat-label">总字符</span>
-          <span class="stat-value">{{ stats.totalChars.toLocaleString() }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">平均码长</span>
-          <span class="stat-value">{{ stats.avgCodeLength.toFixed(2) }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">左右手比例</span>
-          <span class="stat-value">{{ stats.handBalance.left.toFixed(1) }}% : {{ stats.handBalance.right.toFixed(1) }}%</span>
-        </div>
-      </div>
-
-      <!-- 热力图选项 -->
-      <div class="heatmap-options">
-        <div class="option-group">
-          <label class="option-label">显示模式：</label>
-          <select v-model="displayMode" class="option-select">
-            <option value="frequency">按鍵頻數</option>
-            <option value="load">按鍵頻率</option>
-            <option value="finger">手指分工</option>
-          </select>
-        </div>
-      </div>
-
       <!-- 键盘布局 -->
       <div class="keyboard-layout" :style="{ transform: `scale(${keyboardScale})` }">
         <!-- 数字行 -->
@@ -128,17 +100,42 @@
         </div>
       </div>
 
-      <!-- 手指负担统计 -->
-      <div v-if="displayMode === 'finger'" class="finger-stats">
-        <h4 class="finger-stats-title">手指负担分布</h4>
-        <div class="finger-stats-grid">
+      <!-- 基本数据 -->
+      <div class="basic-stats">
+        <h4 class="basic-stats-title">基本數據</h4>
+        <div class="basic-stats-grid">
+          <!-- 基本统计信息 -->
+          <div class="stat-item">
+            <span class="stat-label">总字符</span>
+            <span class="stat-value">{{ stats.totalChars.toLocaleString() }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">平均码长</span>
+            <span class="stat-value">{{ stats.avgCodeLength.toFixed(2) }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">左右比</span>
+            <span class="stat-value">{{ stats.handBalance.left.toFixed(1) }} : {{ stats.handBalance.right.toFixed(1) }}</span>
+          </div>
+          
+          <!-- 按排分布 -->
+          <div 
+            v-for="(percentage, row) in rowDistributionPercentages" 
+            :key="row"
+            class="stat-item"
+          >
+            <span class="stat-label">{{ row }}</span>
+            <span class="stat-value">{{ percentage.toFixed(1) }}%</span>
+          </div>
+          
+          <!-- 手指负担分布 -->
           <div 
             v-for="(load, finger) in fingerLoadPercentages" 
             :key="finger"
-            class="finger-stat-item"
+            class="stat-item"
           >
-            <span class="finger-name">{{ finger }}</span>
-            <span class="finger-percentage">{{ load.toFixed(1) }}%</span>
+            <span class="stat-label">{{ finger }}</span>
+            <span class="stat-value">{{ load.toFixed(1) }}%</span>
           </div>
         </div>
       </div>
@@ -159,7 +156,7 @@ interface Props {
 const props = defineProps<Props>()
 
 // 响应式数据
-const displayMode = ref<'frequency' | 'load' | 'finger'>('load') // 默认改为负担分析模式
+const displayMode = ref<'load'>('load') // 固定为按键频率模式
 const keyboardScale = ref(0.8)
 const hoveredKey = ref<KeyData | null>(null)
 
@@ -188,7 +185,7 @@ const spaceRowKeys: KeyInfo[] = [
   { key: 'space', label: 'Space', width: 'wide' }
 ]
 
-// 手指分工映射
+// 手指映射
 const fingerMapping: Record<string, string> = {
   '`': '左小指', '1': '左小指', 'q': '左小指', 'a': '左小指', 'z': '左小指',
   '2': '左无名指', 'w': '左无名指', 's': '左无名指', 'x': '左无名指',
@@ -201,6 +198,24 @@ const fingerMapping: Record<string, string> = {
   'space': '双拇指'
 }
 
+// 按排映射 - 五排分布
+const rowMapping: Record<string, string> = {
+  // 数字排
+  '`': '数字排', '1': '数字排', '2': '数字排', '3': '数字排', '4': '数字排', '5': '数字排',
+  '6': '数字排', '7': '数字排', '8': '数字排', '9': '数字排', '0': '数字排', '-': '数字排', '=': '数字排',
+  // 上排（第一字母排）
+  'q': '上排', 'w': '上排', 'e': '上排', 'r': '上排', 't': '上排',
+  'y': '上排', 'u': '上排', 'i': '上排', 'o': '上排', 'p': '上排', '[': '上排', ']': '上排',
+  // 中排（第二字母排/主排）
+  'a': '中排', 's': '中排', 'd': '中排', 'f': '中排', 'g': '中排',
+  'h': '中排', 'j': '中排', 'k': '中排', 'l': '中排', ';': '中排', '\'': '中排',
+  // 下排（第三字母排）
+  'z': '下排', 'x': '下排', 'c': '下排', 'v': '下排', 'b': '下排',
+  'n': '下排', 'm': '下排', ',': '下排', '.': '下排', '/': '下排',
+  // 空格排
+  'space': '空格排'
+}
+
 // 计算统计数据
 const stats = computed<AnalysisStats>(() => {
   if (!props.analysisReady || props.codeTable.size === 0) {
@@ -210,12 +225,14 @@ const stats = computed<AnalysisStats>(() => {
       avgCodeLength: 0,
       keyDistribution: new Map(),
       fingerLoad: new Map(),
+      rowDistribution: new Map(),
       handBalance: { left: 0, right: 0 }
     }
   }
 
   const keyDistribution = new Map<string, number>()
   const fingerLoad = new Map<string, number>()
+  const rowDistribution = new Map<string, number>()
   let totalCodes = 0
   let totalCodeLength = 0
 
@@ -233,6 +250,12 @@ const stats = computed<AnalysisStats>(() => {
         const finger = fingerMapping[key]
         if (finger) {
           fingerLoad.set(finger, (fingerLoad.get(finger) || 0) + 1)
+        }
+        
+        // 统计按排分布
+        const row = rowMapping[key]
+        if (row) {
+          rowDistribution.set(row, (rowDistribution.get(row) || 0) + 1)
         }
       }
     }
@@ -260,6 +283,7 @@ const stats = computed<AnalysisStats>(() => {
     avgCodeLength: totalCodes > 0 ? totalCodeLength / totalCodes : 0,
     keyDistribution,
     fingerLoad,
+    rowDistribution,
     handBalance: {
       left: leftPercentage,
       right: rightPercentage
@@ -269,15 +293,8 @@ const stats = computed<AnalysisStats>(() => {
 
 // 计算最大键值（用于归一化）
 const maxKeyValue = computed(() => {
-  if (displayMode.value === 'finger') {
-    // 手指分工模式：使用最大手指负担值
-    if (stats.value.fingerLoad.size === 0) return 1
-    return Math.max(...Array.from(stats.value.fingerLoad.values()))
-  } else {
-    // 其他模式：使用最大按键使用次数
-    if (stats.value.keyDistribution.size === 0) return 1
-    return Math.max(...Array.from(stats.value.keyDistribution.values()))
-  }
+  if (stats.value.keyDistribution.size === 0) return 1
+  return Math.max(...Array.from(stats.value.keyDistribution.values()))
 })
 
 // 手指负担百分比
@@ -294,23 +311,28 @@ const fingerLoadPercentages = computed(() => {
   return percentages
 })
 
+// 按排分布百分比
+const rowDistributionPercentages = computed(() => {
+  const percentages: Record<string, number> = {}
+  const totalKeys = Array.from(stats.value.rowDistribution.values()).reduce((sum, count) => sum + count, 0)
+  
+  if (totalKeys > 0) {
+    for (const [row, count] of stats.value.rowDistribution.entries()) {
+      percentages[row] = (count / totalKeys) * 100
+    }
+  }
+  
+  return percentages
+})
+
 // 获取键位数据
 const getKeyData = (key: string): KeyData => {
   const count = stats.value.keyDistribution.get(key.toLowerCase()) || 0
   const frequency = stats.value.totalCodes > 0 ? count / stats.value.totalCodes : 0
   
-  // 对于手指分工模式，我们需要计算该按键所属手指的总负担
-  let fingerLoad = 0
-  if (displayMode.value === 'finger') {
-    const finger = fingerMapping[key.toLowerCase()]
-    if (finger && stats.value.fingerLoad.has(finger)) {
-      fingerLoad = stats.value.fingerLoad.get(finger) || 0
-    }
-  }
-  
   return {
     key: key.toLowerCase(),
-    count: displayMode.value === 'finger' ? fingerLoad : count,
+    count,
     frequency,
     position: { x: 0, y: 0 } // 简化版本，不需要精确位置
   }
@@ -328,149 +350,97 @@ const handleKeyHover = (keyData: KeyData | null) => {
 
 // 监听窗口大小变化，调整键盘缩放
 const updateKeyboardScale = () => {
-  const container = document.querySelector('.keyboard-heatmap')
+  const container = document.querySelector('.keyboard-layout')
   if (container) {
-    const containerWidth = container.clientWidth
-    const keyboardWidth = 600 // 键盘的基础宽度
-    keyboardScale.value = Math.min(1, (containerWidth - 40) / keyboardWidth)
+    const containerWidth = container.parentElement?.clientWidth || 800
+    const keyboardWidth = 800 // 基础键盘宽度
+    const scale = Math.min(1, containerWidth / keyboardWidth)
+    keyboardScale.value = scale * 0.9 // 留一些边距
   }
 }
 
-// 组件挂载时设置缩放
-watch(() => props.analysisReady, () => {
-  if (props.analysisReady) {
+// 组件挂载时设置初始缩放，并监听窗口大小变化
+watch(() => props.analysisReady, (ready) => {
+  if (ready) {
     setTimeout(updateKeyboardScale, 100)
+    window.addEventListener('resize', updateKeyboardScale)
   }
 })
 </script>
 
 <style scoped>
+/* 主容器 */
 .keyboard-heatmap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* 分析占位符 */
 .analysis-placeholder {
   text-align: center;
-  padding: var(--spacing-2xl);
+  padding: var(--spacing-xxl);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
   color: var(--color-text-secondary);
 }
 
 .placeholder-icon {
   font-size: 4rem;
   margin-bottom: var(--spacing-lg);
+  opacity: 0.6;
 }
 
 .placeholder-title {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: var(--spacing-sm);
+  color: var(--color-text-primary);
 }
 
 .placeholder-subtitle {
-  font-size: 0.875rem;
+  font-size: 1rem;
+  opacity: 0.8;
 }
 
 /* 热力图内容 */
 .heatmap-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-/* 统计信息栏 */
-.stats-bar {
-  display: flex;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-lg);
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-md);
-  flex-wrap: wrap;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-}
-
-.stat-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-/* 热力图选项 */
-.heatmap-options {
-  display: flex;
   gap: var(--spacing-xl);
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.option-group {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.option-label {
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-.option-select {
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-primary);
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-}
-
-.option-range {
-  width: 100px;
-}
-
-.range-value {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-  min-width: 40px;
 }
 
 /* 键盘布局 */
 .keyboard-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: center;
-  padding: var(--spacing-lg);
-  background-color: var(--heatmap-bg);
+  background-color: var(--color-bg-secondary);
   border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
   transform-origin: center top;
-  transition: transform var(--transition-base);
-  border: 1px solid var(--heatmap-key-border);
+  overflow-x: auto;
+  min-width: 800px;
 }
 
 .keyboard-row {
   display: flex;
-  gap: 6px;
   justify-content: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.number-row {
+  margin-left: 0;
+}
+
+.first-row {
+  margin-left: 25px;
 }
 
 .second-row {
-  margin-left: 20px;
+  margin-left: 40px;
 }
 
 .third-row {
-  margin-left: 40px;
+  margin-left: 60px;
 }
 
 .space-row {
@@ -520,28 +490,29 @@ watch(() => props.analysisReady, () => {
   font-family: var(--font-mono);
 }
 
-/* 手指负担统计 */
-.finger-stats {
+/* 基本数据统计 */
+.basic-stats {
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   margin-top: var(--spacing-lg);
 }
 
-.finger-stats-title {
+.basic-stats-title {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-md);
 }
 
-.finger-stats-grid {
+.basic-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: var(--spacing-md);
 }
 
-.finger-stat-item {
+/* 统计项样式 */
+.stat-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -551,12 +522,12 @@ watch(() => props.analysisReady, () => {
   border: 1px solid var(--color-border-primary);
 }
 
-.finger-name {
+.stat-label {
   color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
-.finger-percentage {
+.stat-value {
   font-weight: 600;
   color: var(--color-text-primary);
   font-size: 0.95rem;
@@ -564,20 +535,6 @@ watch(() => props.analysisReady, () => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .stats-bar {
-    justify-content: center;
-  }
-  
-  .heatmap-options {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--spacing-md);
-  }
-  
-  .option-group {
-    justify-content: space-between;
-  }
-  
   .keyboard-layout {
     padding: var(--spacing-md);
   }
@@ -586,7 +543,7 @@ watch(() => props.analysisReady, () => {
     grid-template-columns: 1fr;
   }
   
-  .finger-stats-grid {
+  .basic-stats-grid {
     grid-template-columns: 1fr;
   }
 }

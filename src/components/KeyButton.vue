@@ -32,7 +32,7 @@ import type { KeyData, KeyInfo } from '../types/index'
 interface Props {
   keyData: KeyData
   keyInfo: KeyInfo
-  displayMode: 'frequency' | 'load' | 'finger'
+  displayMode: 'load'
   maxValue: number
 }
 
@@ -46,16 +46,7 @@ const isActive = ref(false)
 
 // 显示的值
 const displayValue = computed(() => {
-  switch (props.displayMode) {
-    case 'frequency':
-      return props.keyData.count > 0 ? props.keyData.count.toString() : ''
-    case 'load':
-      return props.keyData.count > 0 ? `${(props.keyData.frequency * 100).toFixed(1)}%` : ''
-    case 'finger':
-      return props.keyData.count > 0 ? props.keyData.count.toString() : ''
-    default:
-      return ''
-  }
+  return props.keyData.count > 0 ? `${(props.keyData.frequency * 100).toFixed(1)}%` : ''
 })
 
 // 是否显示数值
@@ -224,9 +215,14 @@ const handleMouseLeave = () => {
   background-color: rgba(0, 188, 212, calc(var(--intensity, 0) * 0.8 + 0.1));
 }
 
-/* 負擔模式（紅色） */
+/* 負擔模式（蓝色 - 与频率模式相同） */
 .key-button.mode-load .key-heatmap-overlay {
-  background-color: rgba(239, 68, 68, calc(var(--intensity, 0) * 0.8 + 0.1));
+  background-color: rgba(59, 130, 246, calc(var(--intensity, 0) * 0.8 + 0.1));
+}
+
+/* 负担模式 - 深色主题（青色 - 与频率模式相同） */
+[data-theme="dark"] .key-button.mode-load .key-heatmap-overlay {
+  background-color: rgba(0, 188, 212, calc(var(--intensity, 0) * 0.8 + 0.1));
 }
 
 /* 手指模式（綠色） */
