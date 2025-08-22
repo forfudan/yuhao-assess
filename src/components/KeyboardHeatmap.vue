@@ -108,90 +108,63 @@
         </div>
       </div>
 
-      <!-- 基本统计模块 -->
+      <!-- 综合统计模块 -->
       <div class="module-card">
         <div class="module-header">
-          <h3 class="module-title">基本統計</h3>
+          <h3 class="module-title">統計分析</h3>
           <button 
             class="toggle-button"
-            @click="toggleModule('basic')"
-            :title="modules.basic.collapsed ? '展开' : '收起'"
+            @click="toggleModule('stats')"
+            :title="modules.stats.collapsed ? '展开' : '收起'"
           >
-            <span class="toggle-icon" :class="{ 'collapsed': modules.basic.collapsed }">
+            <span class="toggle-icon" :class="{ 'collapsed': modules.stats.collapsed }">
               ▼
             </span>
           </button>
         </div>
-        <div v-show="!modules.basic.collapsed" class="module-content">
-          <div class="stats-grid">
-            <!-- 基本统计信息 -->
-            <div class="stat-item">
-              <span class="stat-label">总字符</span>
-              <span class="stat-value">{{ stats.totalChars.toLocaleString() }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">平均码长</span>
-              <span class="stat-value">{{ stats.avgCodeLength.toFixed(2) }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">左右比</span>
-              <span class="stat-value">{{ stats.handBalance.left.toFixed(1) }} : {{ stats.handBalance.right.toFixed(1) }}</span>
+        <div v-show="!modules.stats.collapsed" class="module-content">
+          <!-- 左右手平衡 -->
+          <div class="stats-section">
+            <h4 class="section-title">左右手平衡</h4>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-label">左手</span>
+                <span class="stat-value">{{ stats.handBalance.left.toFixed(1) }}%</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">右手</span>
+                <span class="stat-value">{{ stats.handBalance.right.toFixed(1) }}%</span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- 按排分布模块 -->
-      <div class="module-card">
-        <div class="module-header">
-          <h3 class="module-title">按排分布</h3>
-          <button 
-            class="toggle-button"
-            @click="toggleModule('rows')"
-            :title="modules.rows.collapsed ? '展开' : '收起'"
-          >
-            <span class="toggle-icon" :class="{ 'collapsed': modules.rows.collapsed }">
-              ▼
-            </span>
-          </button>
-        </div>
-        <div v-show="!modules.rows.collapsed" class="module-content">
-          <div class="stats-grid">
-            <div 
-              v-for="(percentage, row) in rowDistributionPercentages" 
-              :key="row"
-              class="stat-item"
-            >
-              <span class="stat-label">{{ row }}</span>
-              <span class="stat-value">{{ percentage.toFixed(1) }}%</span>
+          <!-- 按排分布 -->
+          <div class="stats-section">
+            <h4 class="section-title">按排分布</h4>
+            <div class="stats-grid">
+              <div 
+                v-for="(percentage, row) in rowDistributionPercentages" 
+                :key="row"
+                class="stat-item"
+              >
+                <span class="stat-label">{{ row }}</span>
+                <span class="stat-value">{{ percentage.toFixed(1) }}%</span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- 手指负担模块 -->
-      <div class="module-card">
-        <div class="module-header">
-          <h3 class="module-title">手指負擔</h3>
-          <button 
-            class="toggle-button"
-            @click="toggleModule('fingers')"
-            :title="modules.fingers.collapsed ? '展开' : '收起'"
-          >
-            <span class="toggle-icon" :class="{ 'collapsed': modules.fingers.collapsed }">
-              ▼
-            </span>
-          </button>
-        </div>
-        <div v-show="!modules.fingers.collapsed" class="module-content">
-          <div class="stats-grid">
-            <div 
-              v-for="(load, finger) in fingerLoadPercentages" 
-              :key="finger"
-              class="stat-item"
-            >
-              <span class="stat-label">{{ finger }}</span>
-              <span class="stat-value">{{ load.toFixed(1) }}%</span>
+          <!-- 手指负担 -->
+          <div class="stats-section">
+            <h4 class="section-title">手指負擔</h4>
+            <div class="stats-grid">
+              <div 
+                v-for="(load, finger) in fingerLoadPercentages" 
+                :key="finger"
+                class="stat-item"
+              >
+                <span class="stat-label">{{ finger }}</span>
+                <span class="stat-value">{{ load.toFixed(1) }}%</span>
+              </div>
             </div>
           </div>
         </div>
@@ -202,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import KeyButton from './KeyButton.vue'
 import type { CodeTable, KeyData, KeyInfo, AnalysisStats } from '../types/index'
 
@@ -213,6 +186,24 @@ interface Props {
 
 const props = defineProps<Props>()
 
+// 字符频率数据
+const charFrequency = ref<Record<string, number>>({})
+
+// 载入字符频率数据
+const loadCharFrequency = async () => {
+  try {
+    const response = await fetch('/data/charFrequency.json')
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    charFrequency.value = data
+    console.log('字符频率数据载入成功:', Object.keys(data).length, '个字符')
+  } catch (error) {
+    console.error('载入字符频率数据失败:', error)
+  }
+}
+
 // 响应式数据
 const displayMode = ref<'load'>('load') // 固定为按键频率模式
 const keyboardScale = ref(0.8)
@@ -220,9 +211,7 @@ const keyboardScale = ref(0.8)
 // 模块折叠状态管理
 const modules = ref({
   keyboard: { collapsed: false },
-  basic: { collapsed: false },
-  rows: { collapsed: false },
-  fingers: { collapsed: false }
+  stats: { collapsed: false }
 })
 
 // 切换模块折叠状态
@@ -321,26 +310,29 @@ const stats = computed<AnalysisStats>(() => {
   let totalCodes = 0
   let totalCodeLength = 0
 
-  // 分析码表
+  // 分析码表 - 使用字频权重
   for (const [char, codes] of props.codeTable.entries()) {
+    // 获取字符频率权重，默认为1
+    const charWeight = charFrequency.value[char] || 1
+    
     for (const code of codes) {
       totalCodes++
       totalCodeLength += code.length
 
-      // 统计每个按键的使用次数
+      // 统计每个按键的使用次数（应用字频权重）
       for (const key of code.toLowerCase()) {
-        keyDistribution.set(key, (keyDistribution.get(key) || 0) + 1)
+        keyDistribution.set(key, (keyDistribution.get(key) || 0) + charWeight)
         
         // 统计手指负担
         const finger = fingerMapping[key]
         if (finger) {
-          fingerLoad.set(finger, (fingerLoad.get(finger) || 0) + 1)
+          fingerLoad.set(finger, (fingerLoad.get(finger) || 0) + charWeight)
         }
         
         // 统计按排分布
         const row = rowMapping[key]
         if (row) {
-          rowDistribution.set(row, (rowDistribution.get(row) || 0) + 1)
+          rowDistribution.set(row, (rowDistribution.get(row) || 0) + charWeight)
         }
       }
     }
@@ -440,6 +432,11 @@ watch(() => props.analysisReady, (ready) => {
     setTimeout(updateKeyboardScale, 100)
     window.addEventListener('resize', updateKeyboardScale)
   }
+})
+
+// 组件挂载时加载字符频率数据
+onMounted(() => {
+  loadCharFrequency()
 })
 </script>
 
@@ -681,6 +678,28 @@ watch(() => props.analysisReady, (ready) => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: var(--spacing-md);
+}
+
+/* 统计部分样式 */
+.stats-section {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.stats-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
+  border-left: 3px solid var(--color-primary);
+  padding-left: var(--spacing-sm);
 }
 
 /* 统计项样式 */

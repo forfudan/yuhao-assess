@@ -19,15 +19,6 @@
             {{ table.name }} - {{ table.description }}
           </option>
         </select>
-        <button 
-          v-if="selectedBuiltinTable"
-          class="btn btn-primary load-builtin-btn"
-          @click="loadBuiltinTable"
-          :disabled="isUploading"
-        >
-          <span v-if="isUploading">載入中...</span>
-          <span v-else>載入方案</span>
-        </button>
       </div>
     </div>
 
@@ -374,11 +365,14 @@ async function loadBuiltinConfig() {
 }
 
 // 處理內置碼表選擇變化
-function handleBuiltinTableChange() {
+async function handleBuiltinTableChange() {
   // 當選擇內置碼表時，清除檔案選擇
   if (selectedBuiltinTable.value) {
     selectedFile.value = null
     previewData.value = []
+    
+    // 自動載入內置碼表
+    await loadBuiltinTable()
   }
 }
 

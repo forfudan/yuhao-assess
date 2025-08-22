@@ -110,7 +110,7 @@
           </div>
 
           <!-- 鍵位熱力圖模塊 -->
-          <div class="module-card">
+          <div v-if="analysisReady" class="module-card">
             <div class="module-header">
               <h3 class="module-title">鍵位熱力圖</h3>
               <button 
@@ -222,13 +222,15 @@ const toggleAllModules = () => {
   })
 }
 
-// 初始化主題
+// 初始化主題和數據恢復
 onMounted(() => {
+  // 初始化主題，默認淺色模式
   const savedTheme = localStorage.getItem('theme')
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  
-  isDarkMode.value = savedTheme === 'dark' || (!savedTheme && prefersDark)
+  isDarkMode.value = savedTheme === 'dark'
   updateTheme()
+  
+  // 恢復碼表數據
+  restoreCodeTableData()
 })
 
 // 切換主題
@@ -241,6 +243,48 @@ const toggleTheme = () => {
 // 更新主題
 const updateTheme = () => {
   document.documentElement.setAttribute('data-theme', isDarkMode.value ? 'dark' : 'light')
+}
+
+// 保存碼表數據到本地存儲
+const saveCodeTableData = () => {
+  if (analysisReady.value && codeTable.value.size > 0) {
+    const data = {
+      codeTable: Array.from(codeTable.value.entries()),
+      analysisData: analysisData.value,
+      timestamp: Date.now()
+    }
+    localStorage.setItem('savedCodeTable', JSON.stringify(data))
+  }
+}
+
+// 恢復碼表數據
+const restoreCodeTableData = () => {
+  try {
+    const saved = localStorage.getItem('savedCodeTable')
+    if (saved) {
+      const data = JSON.parse(saved)
+      
+      // 檢查數據是否過於陳舊（超過24小時則清除）
+      const oneDayMs = 24 * 60 * 60 * 1000
+      if (Date.now() - data.timestamp > oneDayMs) {
+        localStorage.removeItem('savedCodeTable')
+        return
+      }
+      
+      // 恢復碼表數據
+      codeTable.value = new Map(data.codeTable)
+      analysisData.value = data.analysisData
+      analysisReady.value = true
+      
+      // 自動隱藏上傳模塊
+      modules.value.upload.collapsed = true
+      
+      console.log('已恢復碼表數據:', codeTable.value.size, '個字符')
+    }
+  } catch (error) {
+    console.error('恢復碼表數據失敗:', error)
+    localStorage.removeItem('savedCodeTable')
+  }
 }
 
 // 生成分析數據
@@ -270,9 +314,23 @@ function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
       regularChars++
       gbkChars++
     } else if (charCode >= 0x3400 && charCode <= 0x4dbf) {
-      cjkChars.B++
+      cjkChars.A++  // CJK擴展A算入A區
     } else if (charCode >= 0x20000 && charCode <= 0x2a6df) {
-      cjkChars.C++
+      cjkChars.B++  // CJK擴展B區
+    } else if (charCode >= 0x2a700 && charCode <= 0x2b73f) {
+      cjkChars.C++  // CJK擴展C區
+    } else if (charCode >= 0x2b740 && charCode <= 0x2b81f) {
+      cjkChars.D++  // CJK擴展D區
+    } else if (charCode >= 0x2b820 && charCode <= 0x2ceaf) {
+      cjkChars.E++  // CJK擴展E區
+    } else if (charCode >= 0x2ceb0 && charCode <= 0x2ebef) {
+      cjkChars.F++  // CJK擴展F區
+    } else if (charCode >= 0x30000 && charCode <= 0x3134f) {
+      cjkChars.G++  // CJK擴展G區
+    } else if (charCode >= 0x31350 && charCode <= 0x323af) {
+      cjkChars.H++  // CJK擴展H區
+    } else if (charCode >= 0x2e80 && charCode <= 0x2eff) {
+      cjkChars.I++  // CJK部首補充
     }
     
     return { char, codes }
@@ -298,6 +356,9 @@ const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; f
   
   // 生成分析數據
   analysisData.value = generateAnalysis(data.codeTable)
+  
+  // 保存到本地存儲
+  saveCodeTableData()
   
   // 自動隱藏碼表上傳模塊
   modules.value.upload.collapsed = true

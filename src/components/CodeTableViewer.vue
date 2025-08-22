@@ -17,14 +17,6 @@
           <div class="stat-label">總編碼數</div>
           <div class="stat-value">{{ analysis.totalCodes.toLocaleString() }}</div>
         </div>
-        <div class="stat-item">
-          <div class="stat-label">通規漢字</div>
-          <div class="stat-value">{{ analysis.regularChars.toLocaleString() }}</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">GBK漢字</div>
-          <div class="stat-value">{{ analysis.gbkChars.toLocaleString() }}</div>
-        </div>
       </div>
 
       <!-- CJK區塊統計 -->
