@@ -25,16 +25,18 @@ export {
 
 // 導出字符集服務
 export {
-  isSingleChar,
   isInGB2312,
-  isInCommonChinese,
-  isInGBK,
-  isInCJKBasic,
+  isInGuozi,
+  isInCJKToBasic,
   isInCJKToA,
   isInCJKToB,
+  isInCJKToC,
   isInCJKToD,
+  isInCJKToE,
   isInCJKToF,
-  generateCharset,
+  isInCJKToG,
+  isInCJKToH,
+  isInCJKToI,
   charsetCheckers,
   charsetInfo
 } from './charsetService'
@@ -47,20 +49,6 @@ export {
   exportDuplicateReportJSON,
   exportDuplicateReportCSV
 } from './duplicateAnalysisService'
-
-// 導出測試函數（開發環境使用）
-export {
-  testStaticDupRate,
-  testDynamicDupRate,
-  testCalculateMetrics,
-  runAllTests
-} from './analysisService.test'
-
-export {
-  testCodeTableCleaning,
-  testDuplicateAnalysis,
-  runDuplicateAnalysisTests
-} from './duplicateAnalysisService.test'
 
 // 重新導出相關類型
 export type {

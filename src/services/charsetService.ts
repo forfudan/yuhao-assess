@@ -1,9 +1,7 @@
 // 类型定义
 type CharsetRecord = {
   is_gb2312: boolean
-  is_gbk: boolean
-  is_common_chinese: boolean
-  is_general_chinese: boolean
+  is_guozi: boolean
 }
 
 type CharsetData = Record<string, CharsetRecord>
@@ -31,19 +29,9 @@ export async function isInGB2312(char: string): Promise<boolean> {
   return charsetData?.[char]?.is_gb2312 ?? false
 }
 
-export async function isInGBK(char: string): Promise<boolean> {
+export async function isInGuozi(char: string): Promise<boolean> {
   await loadCharsetData()
-  return charsetData?.[char]?.is_gbk ?? false
-}
-
-export async function isInCommonChinese(char: string): Promise<boolean> {
-  await loadCharsetData()
-  return charsetData?.[char]?.is_common_chinese ?? false
-}
-
-export async function isInGeneralChinese(char: string): Promise<boolean> {
-  await loadCharsetData()
-  return charsetData?.[char]?.is_general_chinese ?? false
+  return charsetData?.[char]?.is_guozi ?? false
 }
 
 // CJK Unicode范围检查函数
@@ -110,9 +98,7 @@ export function isInCJKToI(char: string): boolean {
 // 字符集检查器映射
 export const charsetCheckers = {
   'gb2312': isInGB2312,
-  'gbk': isInGBK,
-  'common_chinese': isInCommonChinese,
-  'general_chinese': isInGeneralChinese,
+  'guozi': isInGuozi,
   'cjk_basic': isInCJKToBasic,
   'cjk_a': isInCJKToA,
   'cjk_b': isInCJKToB,
@@ -130,9 +116,7 @@ export type CharsetType = keyof typeof charsetCheckers
 // 字符集信息
 export const charsetInfo: Record<CharsetType, { name: string; description: string }> = {
   'gb2312': { name: 'GB2312', description: 'GB2312 简体中文字符集' },
-  'gbk': { name: 'GBK', description: 'GBK 扩展中文字符集' },
-  'common_chinese': { name: '常用汉字', description: '常用国字标准字体表' },
-  'general_chinese': { name: '通用汉字', description: '通用规范汉字表' },
+  'guozi': { name: '常用国字', description: '常用国字标准字体表' },
   'cjk_basic': { name: 'CJK基本区', description: 'CJK统一汉字基本区 (U+4E00-U+9FFF)' },
   'cjk_a': { name: 'CJK-A', description: 'CJK统一汉字扩展A区 (U+3400-U+4DBF)' },
   'cjk_b': { name: 'CJK-B', description: 'CJK统一汉字扩展B区 (U+20000-U+2A6DF)' },
@@ -156,18 +140,26 @@ export async function getCharsetSize(charsetType: CharsetType): Promise<number> 
       case 'gb2312':
         if (record.is_gb2312) count++
         break
-      case 'gbk':
-        if (record.is_gbk) count++
-        break
-      case 'common_chinese':
-        if (record.is_common_chinese) count++
-        break
-      case 'general_chinese':
-        if (record.is_general_chinese) count++
+      case 'guozi':
+        if (record.is_guozi) count++
         break
       default:
         break
     }
   }
   return count
+}
+
+// 生成字符集的函数
+export async function generateCharset(charsetType: CharsetType, allChars: Set<string>): Promise<Set<string>> {
+  const charset = new Set<string>()
+  const checker = charsetCheckers[charsetType]
+  
+  for (const char of allChars) {
+    if (await checker(char)) {
+      charset.add(char)
+    }
+  }
+  
+  return charset
 }

@@ -95,7 +95,7 @@ const analysisResult = ref<{
 
 // 计算属性
 const charsetOptions = computed(() => {
-  const filteredKeys: CharsetType[] = ['gb2312', 'gbk', 'common_chinese', 'general_chinese']
+  const filteredKeys: CharsetType[] = ['gb2312', 'guozi']
   
   const result: Record<string, { name: string; description: string }> = {}
   for (const key of filteredKeys) {

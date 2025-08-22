@@ -56,13 +56,13 @@ export interface DuplicateReport {
  * @param charsetType - 字符集類型
  * @returns 重碼統計結果
  */
-export function calculateCharsetDuplicates(
+export async function calculateCharsetDuplicates(
   fullCodeTable: CodeTable,
   charsetType: CharsetType
-): DuplicateStats {
+): Promise<DuplicateStats> {
   // 生成字符集
   const allChars = new Set(fullCodeTable.keys())
-  const charset = generateCharset(charsetType, allChars)
+  const charset = await generateCharset(charsetType, allChars)
   
   // 計算重碼數
   const duplicateCount = getStaticDupRate(fullCodeTable, charset)
@@ -98,10 +98,10 @@ export function calculateCharsetDuplicates(
  * @param inputMethodName - 輸入法名稱（可選）
  * @returns 完整重碼報告
  */
-export function generateDuplicateReport(
+export async function generateDuplicateReport(
   rawCodeTable: CodeTable,
   inputMethodName?: string
-): DuplicateReport {
+): Promise<DuplicateReport> {
   // 1. 生成單字全碼表
   const cleanResult = generateFullCodeTable(rawCodeTable)
   const fullCodeTable = cleanResult.codeTable
@@ -120,16 +120,15 @@ export function generateDuplicateReport(
   // 3. 計算各字符集的重碼統計
   const charsetTypes: CharsetType[] = [
     'gb2312',
-    'common', 
-    'gbk',
-    'cjk-basic',
-    'cjk-b',
-    'cjk-d',
-    'cjk-f'
+    'guozi',
+    'cjk_basic',
+    'cjk_b',
+    'cjk_d',
+    'cjk_f'
   ]
   
-  const charsetStats: DuplicateStats[] = charsetTypes.map(type => 
-    calculateCharsetDuplicates(fullCodeTable, type)
+  const charsetStats: DuplicateStats[] = await Promise.all(
+    charsetTypes.map(type => calculateCharsetDuplicates(fullCodeTable, type))
   )
   
   // 4. 計算總體重碼率
