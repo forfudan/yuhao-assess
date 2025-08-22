@@ -278,8 +278,6 @@ const restoreCodeTableData = () => {
       
       // 自動隱藏上傳模塊
       modules.value.upload.collapsed = true
-      
-      console.log('已恢復碼表數據:', codeTable.value.size, '個字符')
     }
   } catch (error) {
     console.error('恢復碼表數據失敗:', error)
@@ -373,11 +371,6 @@ const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; f
     uploadStatus.value = null
   }, 3000)
 
-  console.log('碼表上傳成功:', {
-    fileName: data.fileName,
-    format: data.format,
-    size: data.codeTable.size
-  })
 }
 
 // 處理上傳錯誤

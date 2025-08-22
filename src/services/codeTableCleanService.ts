@@ -41,7 +41,6 @@ export interface CleanResult {
     originalCodes: number      // 原始編碼總數
     cleanedCodes: number       // 清理後編碼總數
   }
-  // 被移除的字符（用於調試）
   removedChars: string[]
 }
 

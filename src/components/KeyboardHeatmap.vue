@@ -198,7 +198,6 @@ const loadCharFrequency = async () => {
     }
     const data = await response.json()
     charFrequency.value = data
-    console.log('字符频率数据载入成功:', Object.keys(data).length, '个字符')
   } catch (error) {
     console.error('载入字符频率数据失败:', error)
   }

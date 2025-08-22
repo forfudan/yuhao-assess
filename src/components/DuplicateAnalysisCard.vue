@@ -265,59 +265,45 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
 
 // 生成累積CJK字符集緩存
 async function generateCJKCharsetCache(allChars: Set<string>) {
-  // 先生成各個單獨的字符集
-  const cjkBasic = await generateCharset('cjk_basic', allChars)
-  const cjkA = await generateCharset('cjk_a', allChars)
-  const cjkB = await generateCharset('cjk_b', allChars)
-  const cjkC = await generateCharset('cjk_c', allChars)
-  const cjkD = await generateCharset('cjk_d', allChars)
-  const cjkE = await generateCharset('cjk_e', allChars)
-  const cjkF = await generateCharset('cjk_f', allChars)
-  const cjkG = await generateCharset('cjk_g', allChars)
-  const cjkH = await generateCharset('cjk_h', allChars)
-  const cjkI = await generateCharset('cjk_i', allChars)
+  // 定義CJK擴展區順序
+  const cjkExtensions = ['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c', 'cjk_d', 'cjk_e', 'cjk_f', 'cjk_g', 'cjk_h', 'cjk_i'] as const
+  
+  // 生成各個單獨的字符集
+  const individualCharsets = await Promise.all(
+    cjkExtensions.map(ext => generateCharset(ext, allChars))
+  )
   
   // 創建累積字符集
-  const cjkToBasic = new Set(cjkBasic)
+  const cumulativeCharsets: { [key: string]: Set<string> } = {}
+  let accumulated = new Set<string>()
   
-  const cjkToA = new Set(cjkBasic)
-  for (const char of cjkA) cjkToA.add(char)
+  cjkExtensions.forEach((ext, index) => {
+    for (const char of individualCharsets[index]) {
+      accumulated.add(char)
+    }
+    const targetName = ext === 'cjk_basic' ? 'cjkToBasic' : 
+                      ext === 'cjk_a' ? 'cjkToA' :
+                      ext === 'cjk_b' ? 'cjkToB' :
+                      ext === 'cjk_c' ? 'cjkToC' :
+                      ext === 'cjk_d' ? 'cjkToD' :
+                      ext === 'cjk_e' ? 'cjkToE' :
+                      ext === 'cjk_f' ? 'cjkToF' :
+                      ext === 'cjk_g' ? 'cjkToG' :
+                      ext === 'cjk_h' ? 'cjkToH' : 'cjkToI'
+    cumulativeCharsets[targetName] = new Set(accumulated)
+  })
   
-  const cjkToB = new Set(cjkToA)
-  for (const char of cjkB) cjkToB.add(char)
-  
-  const cjkToC = new Set(cjkToB)
-  for (const char of cjkC) cjkToC.add(char)
-  
-  const cjkToD = new Set(cjkToC)
-  for (const char of cjkD) cjkToD.add(char)
-  
-  const cjkToE = new Set(cjkToD)
-  for (const char of cjkE) cjkToE.add(char)
-  
-  const cjkToF = new Set(cjkToE)
-  for (const char of cjkF) cjkToF.add(char)
-  
-  const cjkToG = new Set(cjkToF)
-  for (const char of cjkG) cjkToG.add(char)
-  
-  const cjkToH = new Set(cjkToG)
-  for (const char of cjkH) cjkToH.add(char)
-  
-  const cjkToI = new Set(cjkToH)
-  for (const char of cjkI) cjkToI.add(char)
-  
-  return {
-    cjkToBasic,
-    cjkToA,
-    cjkToB,
-    cjkToC,
-    cjkToD,
-    cjkToE,
-    cjkToF,
-    cjkToG,
-    cjkToH,
-    cjkToI
+  return cumulativeCharsets as {
+    cjkToBasic: Set<string>
+    cjkToA: Set<string>
+    cjkToB: Set<string>
+    cjkToC: Set<string>
+    cjkToD: Set<string>
+    cjkToE: Set<string>
+    cjkToF: Set<string>
+    cjkToG: Set<string>
+    cjkToH: Set<string>
+    cjkToI: Set<string>
   }
 }
 
@@ -415,15 +401,23 @@ async function calculateAllMetrics() {
     const cjkCache = await generateCJKCharsetCache(allChars)
     
     // 使用緩存計算累積字符集的重碼統計
-    const cjkToAStats = calculateDirectCharsetDuplicates(cjkCache.cjkToA, fullCodeTable, shortCodeTable, 'cjkToA')
-    const cjkToBStats = calculateDirectCharsetDuplicates(cjkCache.cjkToB, fullCodeTable, shortCodeTable, 'cjkToB')
-    const cjkToCStats = calculateDirectCharsetDuplicates(cjkCache.cjkToC, fullCodeTable, shortCodeTable, 'cjkToC')
-    const cjkToDStats = calculateDirectCharsetDuplicates(cjkCache.cjkToD, fullCodeTable, shortCodeTable, 'cjkToD')
-    const cjkToEStats = calculateDirectCharsetDuplicates(cjkCache.cjkToE, fullCodeTable, shortCodeTable, 'cjkToE')
-    const cjkToFStats = calculateDirectCharsetDuplicates(cjkCache.cjkToF, fullCodeTable, shortCodeTable, 'cjkToF')
-    const cjkToGStats = calculateDirectCharsetDuplicates(cjkCache.cjkToG, fullCodeTable, shortCodeTable, 'cjkToG')
-    const cjkToHStats = calculateDirectCharsetDuplicates(cjkCache.cjkToH, fullCodeTable, shortCodeTable, 'cjkToH')
-    const cjkToIStats = calculateDirectCharsetDuplicates(cjkCache.cjkToI, fullCodeTable, shortCodeTable, 'cjkToI')
+    const cjkExtNames = ['cjkToA', 'cjkToB', 'cjkToC', 'cjkToD', 'cjkToE', 'cjkToF', 'cjkToG', 'cjkToH', 'cjkToI'] as const
+    const cjkStats: Record<string, any> = {}
+    cjkExtNames.forEach(name => {
+      cjkStats[name] = calculateDirectCharsetDuplicates(cjkCache[name], fullCodeTable, shortCodeTable, name)
+    })
+    
+    // 構建 CJK 重碼字符結果
+    const cjkDuplicateChars: any = {}
+    cjkExtNames.forEach(name => {
+      cjkDuplicateChars[`${name}DuplicateChars`] = cjkStats[name].duplicateChars
+    })
+    
+    // 構建字符集大小結果
+    const cjkCharsetSizes: any = {}
+    cjkExtNames.forEach(name => {
+      cjkCharsetSizes[name] = cjkStats[name].charsetSize
+    })
     
     analysisResults.value = {
       dynamicDupRate: { full: fullDynamicDupRate, short: shortDynamicDupRate },
@@ -432,43 +426,22 @@ async function calculateAllMetrics() {
       guoziDuplicateGroups: guoziStats.duplicateGroups,
       gb2312DuplicateGroups: gb2312Stats.duplicateGroups,
       cjkBasicDuplicateChars: cjkBasicStats.duplicateChars,
-      cjkToADuplicateChars: cjkToAStats.duplicateChars,
-      cjkToBDuplicateChars: cjkToBStats.duplicateChars,
-      cjkToCDuplicateChars: cjkToCStats.duplicateChars,
-      cjkToDDuplicateChars: cjkToDStats.duplicateChars,
-      cjkToEDuplicateChars: cjkToEStats.duplicateChars,
-      cjkToFDuplicateChars: cjkToFStats.duplicateChars,
-      cjkToGDuplicateChars: cjkToGStats.duplicateChars,
-      cjkToHDuplicateChars: cjkToHStats.duplicateChars,
-      cjkToIDuplicateChars: cjkToIStats.duplicateChars,
+      ...cjkDuplicateChars,
       charsetSizes: {
         gb2312: gb2312Stats.charsetSize,
         guozi: guoziStats.charsetSize,
         cjkBasic: cjkBasicStats.charsetSize,
-        cjkToA: cjkToAStats.charsetSize,
-        cjkToB: cjkToBStats.charsetSize,
-        cjkToC: cjkToCStats.charsetSize,
-        cjkToD: cjkToDStats.charsetSize,
-        cjkToE: cjkToEStats.charsetSize,
-        cjkToF: cjkToFStats.charsetSize,
-        cjkToG: cjkToGStats.charsetSize,
-        cjkToH: cjkToHStats.charsetSize,
-        cjkToI: cjkToIStats.charsetSize
+        ...cjkCharsetSizes
       },
-      charsetEncodedSizes: {
-        cjkToA: cjkToAStats.encodedSize,
-        cjkToB: cjkToBStats.encodedSize,
-        cjkToC: cjkToCStats.encodedSize,
-        cjkToD: cjkToDStats.encodedSize,
-        cjkToE: cjkToEStats.encodedSize,
-        cjkToF: cjkToFStats.encodedSize,
-        cjkToG: cjkToGStats.encodedSize,
-        cjkToH: cjkToHStats.encodedSize,
-        cjkToI: cjkToIStats.encodedSize
-      }
+      charsetEncodedSizes: (() => {
+        const result: any = {}
+        cjkExtNames.forEach(name => {
+          result[name] = cjkStats[name].encodedSize
+        })
+        return result
+      })()
     }
     
-    console.log('分析结果:', analysisResults.value)
   } catch (error) {
     console.error('计算重码时出错:', error)
   } finally {

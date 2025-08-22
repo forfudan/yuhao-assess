@@ -1,7 +1,6 @@
 /**
- * 重碼數據模塊
- * 
- * 計算各種字符集下的靜態重碼數據
+ * 重import { characterSets } from './charsetService'
+import type { CodeTable, DuplicateStats, CharsetType } from '../types/index'種字符集下的靜態重碼數據
  */
 
 import { getStaticDupRate } from './analysisService'
