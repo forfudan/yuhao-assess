@@ -85,70 +85,29 @@ const keyStyle = computed(() => {
   }
 })
 
-// 热力图样式
+// 熱力圖樣式
 const heatmapStyle = computed(() => {
   if (props.keyData.count === 0 || props.maxValue === 0) {
     return {
+      '--intensity': 0,
       opacity: 0
     }
   }
 
-  // 计算强度（0-1）
-  const intensity = (props.keyData.count / props.maxValue) * props.colorIntensity
+  // 計算強度（0-1）
+  const intensity = props.keyData.count / props.maxValue
   const normalizedIntensity = Math.min(Math.max(intensity, 0), 1)
 
-  // 根据显示模式选择颜色 - 仿照 genda.shurufa.app
-  let backgroundColor: string
-  switch (props.displayMode) {
-    case 'frequency':
-      // 蓝色系热力图 - 仿照 genda.shurufa.app
-      if (normalizedIntensity < 0.25) {
-        backgroundColor = 'var(--heatmap-low)'
-      } else if (normalizedIntensity < 0.5) {
-        backgroundColor = 'var(--heatmap-medium)'
-      } else if (normalizedIntensity < 0.75) {
-        backgroundColor = 'var(--heatmap-high)'
-      } else {
-        backgroundColor = 'var(--heatmap-very-high)'
-      }
-      break
-    case 'load':
-      // 红橙色系 - 负担程度
-      if (normalizedIntensity < 0.25) {
-        backgroundColor = '#fff5f5'
-      } else if (normalizedIntensity < 0.5) {
-        backgroundColor = '#fed7d7'
-      } else if (normalizedIntensity < 0.75) {
-        backgroundColor = '#feb2b2'
-      } else {
-        backgroundColor = '#f56565'
-      }
-      break
-    case 'finger':
-      // 绿色系 - 手指分工
-      if (normalizedIntensity < 0.25) {
-        backgroundColor = '#f0fff4'
-      } else if (normalizedIntensity < 0.5) {
-        backgroundColor = '#c6f6d5'
-      } else if (normalizedIntensity < 0.75) {
-        backgroundColor = '#9ae6b4'
-      } else {
-        backgroundColor = '#68d391'
-      }
-      break
-    default:
-      backgroundColor = 'var(--heatmap-low)'
-  }
-
+  // 使用 CSS 變量
   return {
-    backgroundColor,
+    '--intensity': normalizedIntensity,
     opacity: 1
   }
 })
 
-// 获取手指颜色
+// 獲取手指顏色
 const getFingerColor = (key: string, intensity: number): string => {
-  // 手指颜色映射
+  // 手指顏色映射
   const fingerColors: Record<string, string> = {
     '左小指': `rgba(239, 68, 68, ${intensity * 0.8})`,    // 红色
     '左无名指': `rgba(249, 115, 22, ${intensity * 0.8})`,   // 橙色
@@ -178,7 +137,7 @@ const getFingerColor = (key: string, intensity: number): string => {
   return finger ? fingerColors[finger] : `rgba(156, 163, 175, ${intensity * 0.5})`
 }
 
-// 鼠标事件处理
+// 鼠標事件處理
 const handleMouseEnter = () => {
   isActive.value = true
   emit('keyHover', props.keyData)
@@ -244,6 +203,7 @@ const handleMouseLeave = () => {
   line-height: 1;
 }
 
+/* 熱力圖樣式 */
 .key-heatmap-overlay {
   position: absolute;
   top: 0;
@@ -255,7 +215,27 @@ const handleMouseLeave = () => {
   transition: all 0.3s ease;
 }
 
-/* 特殊按键样式 */
+/* 頻率模式 - 淺色主題（蓝色） */
+.key-button.mode-frequency .key-heatmap-overlay {
+  background-color: rgba(59, 130, 246, calc(var(--intensity, 0) * 0.8 + 0.1));
+}
+
+/* 頻率模式 - 深色主題（青色） */
+[data-theme="dark"] .key-button.mode-frequency .key-heatmap-overlay {
+  background-color: rgba(0, 188, 212, calc(var(--intensity, 0) * 0.8 + 0.1));
+}
+
+/* 負擔模式（紅色） */
+.key-button.mode-load .key-heatmap-overlay {
+  background-color: rgba(239, 68, 68, calc(var(--intensity, 0) * 0.8 + 0.1));
+}
+
+/* 手指模式（綠色） */
+.key-button.mode-finger .key-heatmap-overlay {
+  background-color: rgba(34, 197, 94, calc(var(--intensity, 0) * 0.8 + 0.1));
+}
+
+/* 特殊按鍵樣式 */
 .key-button.key-space {
   width: 200px;
 }
@@ -278,20 +258,9 @@ const handleMouseLeave = () => {
   width: 70px;
 }
 
-/* 模式特定样式 */
-.key-button.mode-frequency {
-  /* 频率模式的特定样式 */
-}
+/* 模式特定樣式已通過熱力圖覆蓋層實現 */
 
-.key-button.mode-load {
-  /* 负担模式的特定样式 */
-}
-
-.key-button.mode-finger {
-  /* 手指模式的特定样式 */
-}
-
-/* 数字行按键 */
+/* 數字行按鍵 */
 .key-button.key-1,
 .key-button.key-2,
 .key-button.key-3,
@@ -305,7 +274,7 @@ const handleMouseLeave = () => {
   background-color: var(--color-bg-tertiary);
 }
 
-/* 标点符号按键 */
+/* 標點符號按鍵 */
 .key-button.key-semicolon,
 .key-button.key-comma,
 .key-button.key-period,
@@ -313,7 +282,7 @@ const handleMouseLeave = () => {
   background-color: var(--color-bg-tertiary);
 }
 
-/* 响应式调整 */
+/* 響應式調整 */
 @media (max-width: 768px) {
   .key-button {
     border-width: 1px;
@@ -328,7 +297,7 @@ const handleMouseLeave = () => {
   }
 }
 
-/* 按键动画 */
+/* 按鍵動畫 */
 @keyframes keyPress {
   0% {
     transform: scale(1);
@@ -345,18 +314,13 @@ const handleMouseLeave = () => {
   animation: keyPress 0.1s ease-in-out;
 }
 
-/* 热力图渐变效果 */
-.key-heatmap-overlay {
-  background: radial-gradient(circle at center, transparent 0%, currentColor 100%);
-}
-
-/* 无障碍支持 */
+/* 無障礙支持 */
 .key-button:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* 高对比度模式支持 */
+/* 高對比度模式支持 */
 @media (prefers-contrast: high) {
   .key-button {
     border-width: 3px;
