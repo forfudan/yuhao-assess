@@ -29,7 +29,7 @@ import type { KeyData, KeyInfo } from '../types/index'
 interface Props {
   keyData: KeyData
   keyInfo: KeyInfo
-  displayMode: 'load'
+  displayMode: 'load' | 'frequency' | 'finger'
   maxValue: number
 }
 
