@@ -98,7 +98,7 @@ export interface KeyRow {
 
 export interface KeyInfo {
   key: string
-  width?: number // 鍵位寬度倍數
+  width?: 'normal' | 'wide' | 'extra-wide' // 鍵位寬度
   label?: string // 顯示標籤
 }
 

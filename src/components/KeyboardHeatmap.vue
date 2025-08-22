@@ -107,6 +107,20 @@
             @key-hover="handleKeyHover"
           />
         </div>
+
+        <!-- 空格鍵行 -->
+        <div class="keyboard-row space-row">
+          <KeyButton 
+            v-for="key in spaceRowKeys"
+            :key="key.key"
+            :keyData="getKeyData(key.key)"
+            :displayMode="displayMode"
+            :maxValue="maxKeyValue"
+            :colorIntensity="colorIntensity"
+            :keyInfo="key"
+            @key-hover="handleKeyHover"
+          />
+        </div>
       </div>
 
       <!-- 键位详情 -->
@@ -167,18 +181,18 @@ const hoveredKey = ref<KeyData | null>(null)
 
 // 键盘布局定义
 const numberRowKeys: KeyInfo[] = [
-  { key: '1' }, { key: '2' }, { key: '3' }, { key: '4' }, { key: '5' },
-  { key: '6' }, { key: '7' }, { key: '8' }, { key: '9' }, { key: '0' }
+  { key: '`' }, { key: '1' }, { key: '2' }, { key: '3' }, { key: '4' }, { key: '5' },
+  { key: '6' }, { key: '7' }, { key: '8' }, { key: '9' }, { key: '0' }, { key: '-' }, { key: '=' }
 ]
 
 const firstRowKeys: KeyInfo[] = [
   { key: 'q' }, { key: 'w' }, { key: 'e' }, { key: 'r' }, { key: 't' },
-  { key: 'y' }, { key: 'u' }, { key: 'i' }, { key: 'o' }, { key: 'p' }
+  { key: 'y' }, { key: 'u' }, { key: 'i' }, { key: 'o' }, { key: 'p' }, { key: '[' }, { key: ']' }
 ]
 
 const secondRowKeys: KeyInfo[] = [
   { key: 'a' }, { key: 's' }, { key: 'd' }, { key: 'f' }, { key: 'g' },
-  { key: 'h' }, { key: 'j' }, { key: 'k' }, { key: 'l' }, { key: ';' }
+  { key: 'h' }, { key: 'j' }, { key: 'k' }, { key: 'l' }, { key: ';' }, { key: '\'' }
 ]
 
 const thirdRowKeys: KeyInfo[] = [
@@ -186,18 +200,21 @@ const thirdRowKeys: KeyInfo[] = [
   { key: 'n' }, { key: 'm' }, { key: ',' }, { key: '.' }, { key: '/' }
 ]
 
+const spaceRowKeys: KeyInfo[] = [
+  { key: 'space', label: 'Space', width: 'wide' }
+]
+
 // 手指分工映射
 const fingerMapping: Record<string, string> = {
-  'q': '左小指', 'a': '左小指', 'z': '左小指',
-  'w': '左无名指', 's': '左无名指', 'x': '左无名指',
-  'e': '左中指', 'd': '左中指', 'c': '左中指',
-  'r': '左食指', 'f': '左食指', 'v': '左食指', 't': '左食指', 'g': '左食指', 'b': '左食指',
-  'y': '右食指', 'h': '右食指', 'n': '右食指', 'u': '右食指', 'j': '右食指', 'm': '右食指',
-  'i': '右中指', 'k': '右中指', ',': '右中指',
-  'o': '右无名指', 'l': '右无名指', '.': '右无名指',
-  'p': '右小指', ';': '右小指', '/': '右小指',
-  '1': '左小指', '2': '左无名指', '3': '左中指', '4': '左食指', '5': '左食指',
-  '6': '右食指', '7': '右食指', '8': '右中指', '9': '右无名指', '0': '右小指'
+  '`': '左小指', '1': '左小指', 'q': '左小指', 'a': '左小指', 'z': '左小指',
+  '2': '左无名指', 'w': '左无名指', 's': '左无名指', 'x': '左无名指',
+  '3': '左中指', 'e': '左中指', 'd': '左中指', 'c': '左中指',
+  '4': '左食指', '5': '左食指', 'r': '左食指', 't': '左食指', 'f': '左食指', 'g': '左食指', 'v': '左食指', 'b': '左食指',
+  '6': '右食指', '7': '右食指', 'y': '右食指', 'u': '右食指', 'h': '右食指', 'j': '右食指', 'n': '右食指', 'm': '右食指',
+  '8': '右中指', 'i': '右中指', 'k': '右中指', ',': '右中指',
+  '9': '右无名指', 'o': '右无名指', 'l': '右无名指', '.': '右无名指',
+  '0': '右小指', '-': '右小指', '=': '右小指', 'p': '右小指', '[': '右小指', ']': '右小指', ';': '右小指', '\'': '右小指', '/': '右小指',
+  'space': '双拇指'
 }
 
 // 计算统计数据
@@ -436,10 +453,11 @@ watch(() => props.analysisReady, () => {
   gap: 8px;
   align-items: center;
   padding: var(--spacing-lg);
-  background-color: var(--color-bg-secondary);
+  background-color: var(--heatmap-bg);
   border-radius: var(--radius-lg);
   transform-origin: center top;
-  transition: transform 0.3s ease;
+  transition: transform var(--transition-base);
+  border: 1px solid var(--heatmap-key-border);
 }
 
 .keyboard-row {
@@ -454,6 +472,10 @@ watch(() => props.analysisReady, () => {
 
 .third-row {
   margin-left: 40px;
+}
+
+.space-row {
+  margin-top: 8px;
 }
 
 /* 键位详情 */

@@ -66,9 +66,21 @@ const showValue = computed(() => {
 
 // 按键样式
 const keyStyle = computed(() => {
-  const width = (props.keyInfo.width || 1) * 50
+  let width = '50px'
+  
+  switch (props.keyInfo.width) {
+    case 'wide':
+      width = '150px' // 空格鍵等寬鍵
+      break
+    case 'extra-wide':
+      width = '200px'
+      break
+    default:
+      width = '50px'
+  }
+
   return {
-    width: `${width}px`,
+    width,
     height: '50px'
   }
 })
@@ -85,27 +97,51 @@ const heatmapStyle = computed(() => {
   const intensity = (props.keyData.count / props.maxValue) * props.colorIntensity
   const normalizedIntensity = Math.min(Math.max(intensity, 0), 1)
 
-  // 根据显示模式选择颜色
-  let color: string
+  // 根据显示模式选择颜色 - 仿照 genda.shurufa.app
+  let backgroundColor: string
   switch (props.displayMode) {
     case 'frequency':
-      // 蓝色系 - 使用频率
-      color = `rgba(59, 130, 246, ${normalizedIntensity * 0.8})`
+      // 蓝色系热力图 - 仿照 genda.shurufa.app
+      if (normalizedIntensity < 0.25) {
+        backgroundColor = 'var(--heatmap-low)'
+      } else if (normalizedIntensity < 0.5) {
+        backgroundColor = 'var(--heatmap-medium)'
+      } else if (normalizedIntensity < 0.75) {
+        backgroundColor = 'var(--heatmap-high)'
+      } else {
+        backgroundColor = 'var(--heatmap-very-high)'
+      }
       break
     case 'load':
-      // 红色系 - 负担程度
-      color = `rgba(239, 68, 68, ${normalizedIntensity * 0.8})`
+      // 红橙色系 - 负担程度
+      if (normalizedIntensity < 0.25) {
+        backgroundColor = '#fff5f5'
+      } else if (normalizedIntensity < 0.5) {
+        backgroundColor = '#fed7d7'
+      } else if (normalizedIntensity < 0.75) {
+        backgroundColor = '#feb2b2'
+      } else {
+        backgroundColor = '#f56565'
+      }
       break
     case 'finger':
       // 绿色系 - 手指分工
-      color = getFingerColor(props.keyData.key, normalizedIntensity)
+      if (normalizedIntensity < 0.25) {
+        backgroundColor = '#f0fff4'
+      } else if (normalizedIntensity < 0.5) {
+        backgroundColor = '#c6f6d5'
+      } else if (normalizedIntensity < 0.75) {
+        backgroundColor = '#9ae6b4'
+      } else {
+        backgroundColor = '#68d391'
+      }
       break
     default:
-      color = `rgba(156, 163, 175, ${normalizedIntensity * 0.5})`
+      backgroundColor = 'var(--heatmap-low)'
   }
 
   return {
-    backgroundColor: color,
+    backgroundColor,
     opacity: 1
   }
 })
@@ -160,24 +196,26 @@ const handleMouseLeave = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--color-border-primary);
+  border: 2px solid var(--heatmap-key-border);
   border-radius: var(--radius-md);
-  background-color: var(--color-bg-primary);
+  background-color: var(--heatmap-key-bg);
+  color: var(--heatmap-key-text);
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: all var(--transition-base);
   user-select: none;
   overflow: hidden;
+  font-family: var(--font-mono);
 }
 
 .key-button:hover {
-  border-color: var(--color-primary);
+  border-color: var(--heatmap-key-active);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   z-index: 10;
 }
 
 .key-button.key-active {
-  border-color: var(--color-primary);
+  border-color: var(--heatmap-key-active);
   box-shadow: var(--shadow-lg);
 }
 

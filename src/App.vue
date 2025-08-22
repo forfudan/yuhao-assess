@@ -1,5 +1,14 @@
 <template>
   <div id="app">
+    <!-- 主題切換按鈕 -->
+    <button 
+      class="theme-toggle" 
+      @click="toggleTheme"
+      :title="isDarkMode ? '切換到淺色模式' : '切換到深色模式'"
+    >
+      {{ isDarkMode ? '☀️' : '🌙' }}
+    </button>
+
     <!-- 頭部導航 -->
     <header class="header">
       <div class="container">
@@ -90,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import CodeTableUploader from './components/CodeTableUploader.vue'
 import KeyboardHeatmap from './components/KeyboardHeatmap.vue'
 import CodeTableViewer from './components/CodeTableViewer.vue'
@@ -101,6 +110,30 @@ const codeTable = ref<CodeTable>(new Map())
 const analysisReady = ref(false)
 const uploadStatus = ref<UploadStatus | null>(null)
 const analysisData = ref<CodeTableAnalysis | null>(null)
+
+// 主題相關
+const isDarkMode = ref(false)
+
+// 初始化主題
+onMounted(() => {
+  const savedTheme = localStorage.getItem('theme')
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  
+  isDarkMode.value = savedTheme === 'dark' || (!savedTheme && prefersDark)
+  updateTheme()
+})
+
+// 切換主題
+const toggleTheme = () => {
+  isDarkMode.value = !isDarkMode.value
+  updateTheme()
+  localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light')
+}
+
+// 更新主題
+const updateTheme = () => {
+  document.documentElement.setAttribute('data-theme', isDarkMode.value ? 'dark' : 'light')
+}
 
 // 生成分析數據
 function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
