@@ -21,31 +21,71 @@
             <tr>
               <th>指標</th>
               <th>全碼</th>
-              <th>簡碼</th>
+              <th>
+                簡碼
+                <span 
+                  class="info-icon" 
+                  title="計算簡碼時，會提取碼表相同漢字中編碼長度最小之編碼，並視之為簡碼。故而出現多重簡碼、兼容編碼、無理碼等特殊情況時，該列數據會出現失真現象。欲獲取更加準確之統計，請對碼表進行處理。"
+                >
+                  ⓘ
+                </span>
+              </th>
               <th>說明</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>知乎動態選重率</td>
+              <td>
+                知乎動態選重率
+                <span 
+                  class="info-icon" 
+                  title="計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。"
+                >
+                  ⓘ
+                </span>
+              </td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRate.full * 10000).toFixed(2) }}‱</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRate.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於<a href="https://github.com/forfudan/chinese-characters-frequency" target="_blank" rel="noopener">知乎字頻表</a>的加權選重率，‱ 爲萬分符</td>
             </tr>
             <tr>
-              <td>簡體動態選重率</td>
+              <td>
+                簡體動態選重率
+                <span 
+                  class="info-icon" 
+                  title="計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。"
+                >
+                  ⓘ
+                </span>
+              </td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateSC.full * 10000).toFixed(2) }}‱</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateSC.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於<a href="https://faculty.blcu.edu.cn/xinghb/zh_CN/article/167473/content/1437.htm" target="_blank" rel="noopener">簡體字頻表</a>的加權選重率</td>
             </tr>
             <tr>
-              <td>繁體動態選重率</td>
+              <td>
+                繁體動態選重率
+                <span 
+                  class="info-icon" 
+                  title="計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。"
+                >
+                  ⓘ
+                </span>
+              </td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateTC.full * 10000).toFixed(2) }}‱</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateTC.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於<a href="https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PIN/biau1.htm" target="_blank" rel="noopener">繁體字頻表</a>的加權選重率</td>
             </tr>
             <tr>
-              <td>繁簡聯合動態選重率</td>
+              <td>
+                繁簡聯合動態選重率
+                <span 
+                  class="info-icon" 
+                  title="計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。"
+                >
+                  ⓘ
+                </span>
+              </td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateUnified.full * 10000).toFixed(2) }}‱</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateUnified.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於繁簡聯合字頻表的加權選重率</td>
@@ -717,6 +757,20 @@ onMounted(() => {
   color: #6b7280;
   font-size: 0.875rem;
   margin: 0;
+}
+
+.info-icon {
+  display: inline-block;
+  margin-left: 6px;
+  color: #6b7280;
+  font-size: 0.875rem;
+  cursor: help;
+  transition: color 0.2s ease;
+  vertical-align: middle;
+}
+
+.info-icon:hover {
+  color: #374151;
 }
 
 .empty-state {
