@@ -203,7 +203,7 @@ const analysisResults = ref<AnalysisResults | null>(null)
 // 加载字频数据
 async function loadCharFrequency(): Promise<CharFrequency> {
   try {
-    const response = await fetch('/data/charFrequency.json')
+    const response = await fetch('/data/charFrequencyZhihu.json')
     return await response.json()
   } catch (error) {
     console.error('加载字频数据失败:', error)

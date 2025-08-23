@@ -192,7 +192,7 @@ const charFrequency = ref<Record<string, number>>({})
 // 载入字符频率数据
 const loadCharFrequency = async () => {
   try {
-    const response = await fetch('/data/charFrequency.json')
+    const response = await fetch('/data/charFrequencyZhihu.json')
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }

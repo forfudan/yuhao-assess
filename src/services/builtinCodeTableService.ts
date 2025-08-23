@@ -31,7 +31,7 @@ export class BuiltinCodeTableService {
     }
 
     try {
-      const response = await fetch('/data/charFrequency.json')
+      const response = await fetch('/data/charFrequencyZhihu.json')
       if (!response.ok) {
         throw new Error('Failed to load character frequency data')
       }
