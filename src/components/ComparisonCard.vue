@@ -256,6 +256,13 @@
                     {{ scheme.name }}
                   </option>
                 </select>
+                <button 
+                  @click="addAllBuiltinSchemes" 
+                  :disabled="isAdding || availableBuiltinSchemes.length === 0"
+                  class="add-all-btn"
+                >
+                  選擇所有
+                </button>
               </div>
             </div>
 
@@ -684,6 +691,71 @@ async function addBuiltinScheme() {
     if (index !== -1) {
       additionalSchemes.value.splice(index, 1)
     }
+  } finally {
+    isAdding.value = false
+  }
+}
+
+// 添加所有內置方案
+async function addAllBuiltinSchemes() {
+  if (isAdding.value || availableBuiltinSchemes.value.length === 0) return
+  
+  isAdding.value = true
+  
+  try {
+    // 獲取已添加的內置方案ID，避免重複添加
+    const existingBuiltinIds = new Set(
+      additionalSchemes.value
+        .filter(scheme => scheme.isBuiltin)
+        .map(scheme => scheme.id.split('_')[1])
+    )
+    
+    // 過濾出尚未添加的方案
+    const schemesToAdd = availableBuiltinSchemes.value.filter(
+      scheme => !existingBuiltinIds.has(scheme.id)
+    )
+    
+    if (schemesToAdd.length === 0) {
+      console.log('所有內置方案都已添加')
+      return
+    }
+    
+    // 逐個添加方案
+    for (const builtinScheme of schemesToAdd) {
+      try {
+        const newScheme: Scheme = {
+          id: `builtin_${builtinScheme.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name: builtinScheme.name,
+          isBuiltin: true,
+          isCalculating: true
+        }
+        
+        additionalSchemes.value.push(newScheme)
+        
+        // 載入碼表並計算數據
+        const result = await builtinService.downloadCodeTable(builtinScheme.id)
+        newScheme.codeTable = result.codeTable
+        newScheme.data = await calculateSchemeData(result.codeTable)
+        newScheme.isCalculating = false
+        
+      } catch (error) {
+        console.error(`添加方案 ${builtinScheme.name} 失敗:`, error)
+        // 移除失敗的方案
+        const index = additionalSchemes.value.findIndex(s => s.name === builtinScheme.name && s.isCalculating)
+        if (index !== -1) {
+          additionalSchemes.value.splice(index, 1)
+        }
+      }
+    }
+    
+    showAddForm.value = false
+    selectedBuiltinScheme.value = ''
+    
+    // 立即保存數據
+    saveComparisonData()
+    
+  } catch (error) {
+    console.error('批量添加內置方案失敗:', error)
   } finally {
     isAdding.value = false
   }
@@ -1175,6 +1247,10 @@ function clearAllSchemes() {
   width: 100%;
 }
 
+.builtin-options .scheme-select {
+  flex: 1;
+}
+
 .upload-area {
   display: flex;
   gap: 12px;
@@ -1192,7 +1268,8 @@ function clearAllSchemes() {
 }
 
 .add-btn,
-.upload-btn {
+.upload-btn,
+.add-all-btn {
   background: #10b981;
   color: white;
   border: none;
@@ -1204,13 +1281,22 @@ function clearAllSchemes() {
   transition: background 0.2s ease;
 }
 
+.add-all-btn {
+  background: #3b82f6;
+}
+
 .add-btn:hover:not(:disabled),
 .upload-btn:hover:not(:disabled) {
   background: #059669;
 }
 
+.add-all-btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
 .add-btn:disabled,
-.upload-btn:disabled {
+.upload-btn:disabled,
+.add-all-btn:disabled {
   background: #9ca3af;
   cursor: not-allowed;
 }
