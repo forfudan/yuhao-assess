@@ -544,23 +544,23 @@ const formatNumber = (num?: number) => {
 // 排序函數
 const handleSort = (column: SortColumn) => {
   if (sortColumn.value === column) {
-    // 循環切換排序方向：降序 -> 升序 -> 無排序 -> 降序
+    // 循環切換排序方向：升序 -> 降序 -> 無排序 -> 升序
     switch (sortDirection.value) {
-      case 'desc':
-        sortDirection.value = 'asc'
-        break
       case 'asc':
+        sortDirection.value = 'desc'
+        break
+      case 'desc':
         sortDirection.value = 'none'
         sortColumn.value = null
         break
       case 'none':
-        sortDirection.value = 'desc'
+        sortDirection.value = 'asc'
         break
     }
   } else {
-    // 新列，從降序開始
+    // 新列，從升序開始
     sortColumn.value = column
-    sortDirection.value = 'desc'
+    sortDirection.value = 'asc'
   }
 }
 
