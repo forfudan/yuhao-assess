@@ -250,19 +250,12 @@
               <h5>內置方案</h5>
               <p class="section-desc">選擇預設的輸入法方案</p>
               <div class="builtin-options">
-                <select v-model="selectedBuiltinScheme" class="scheme-select">
+                <select v-model="selectedBuiltinScheme" @change="onBuiltinSchemeSelect" class="scheme-select">
                   <option value="">請選擇內置方案</option>
                   <option v-for="scheme in availableBuiltinSchemes" :key="scheme.id" :value="scheme.id">
                     {{ scheme.name }}
                   </option>
                 </select>
-                <button 
-                  @click="addBuiltinScheme" 
-                  :disabled="!selectedBuiltinScheme || isAdding"
-                  class="add-btn"
-                >
-                  添加
-                </button>
               </div>
             </div>
 
@@ -646,6 +639,13 @@ async function calculateSchemeData(codeTable: CodeTable): Promise<SchemeData> {
   }
 }
 
+// 选择内置方案时自动添加
+async function onBuiltinSchemeSelect() {
+  if (selectedBuiltinScheme.value && !isAdding.value) {
+    await addBuiltinScheme()
+  }
+}
+
 // 添加內置方案
 async function addBuiltinScheme() {
   if (!selectedBuiltinScheme.value || isAdding.value) return
@@ -898,14 +898,14 @@ function clearAllSchemes() {
 
 .comparison-table {
   width: 100%;
-  min-width: 1200px;
+  min-width: 1000px;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .comparison-table th,
 .comparison-table td {
-  padding: 12px 8px;
+  padding: 8px 6px;
   text-align: center;
   border-right: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
@@ -926,8 +926,8 @@ function clearAllSchemes() {
 
 .scheme-name-header {
   background: #f9fafb;
-  width: 140px;
-  min-width: 140px;
+  width: 80px;
+  min-width: 80px;
   text-align: left !important;
   font-weight: 600;
   color: #374151;
@@ -935,8 +935,8 @@ function clearAllSchemes() {
 
 .metric-header {
   background: #f9fafb;
-  width: 100px;
-  min-width: 100px;
+  width: 80px;
+  min-width: 80px;
   font-weight: 600;
   color: #374151;
 }
@@ -945,24 +945,25 @@ function clearAllSchemes() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .metric-header-content span {
-  font-size: 0.75rem;
-  line-height: 1.2;
+  font-size: 0.7rem;
+  line-height: 1.1;
+  text-align: center;
 }
 
 .metric-header-content small {
-  font-size: 0.625rem;
+  font-size: 0.6rem;
   opacity: 0.7;
   font-weight: 400;
 }
 
 .actions-header {
   background: #f9fafb;
-  width: 80px;
-  min-width: 80px;
+  width: 60px;
+  min-width: 60px;
   font-weight: 600;
   color: #374151;
 }
@@ -1171,6 +1172,7 @@ function clearAllSchemes() {
   display: flex;
   gap: 12px;
   align-items: flex-end;
+  width: 100%;
 }
 
 .upload-area {
@@ -1182,7 +1184,7 @@ function clearAllSchemes() {
 
 .scheme-select,
 .file-input {
-  flex: 1;
+  width: 100%;
   padding: 8px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -1243,30 +1245,35 @@ function clearAllSchemes() {
 /* 響應式設計 */
 @media (max-width: 768px) {
   .comparison-table {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
   }
   
   .comparison-table th,
   .comparison-table td {
-    padding: 8px 6px;
+    padding: 6px 4px;
   }
   
   .scheme-name-header {
-    width: 100px;
-    min-width: 100px;
+    width: 90px;
+    min-width: 90px;
   }
   
   .metric-header {
-    width: 80px;
-    min-width: 80px;
+    width: 65px;
+    min-width: 65px;
   }
   
   .metric-header-content span {
-    font-size: 0.625rem;
+    font-size: 0.6rem;
   }
   
   .metric-header-content small {
     font-size: 0.5rem;
+  }
+  
+  .actions-header {
+    width: 50px;
+    min-width: 50px;
   }
   
   .add-form {
