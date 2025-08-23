@@ -384,13 +384,6 @@ const COMPARISON_STORAGE_KEY = 'yuhao-comparison-schemes'
 const saveComparisonData = () => {
   try {
     const dataToSave = {
-      defaultScheme: yuhaoDefaultScheme.value ? {
-        id: yuhaoDefaultScheme.value.id,
-        name: yuhaoDefaultScheme.value.name,
-        isBuiltin: yuhaoDefaultScheme.value.isBuiltin,
-        data: yuhaoDefaultScheme.value.data,
-        codeTableSize: yuhaoDefaultScheme.value.codeTable?.size || 0
-      } : null,
       additionalSchemes: additionalSchemes.value.map(scheme => ({
         id: scheme.id,
         name: scheme.name,
@@ -415,7 +408,7 @@ const loadComparisonData = async () => {
 
     const data = JSON.parse(savedData)
     
-    // 恢復額外方案（跳過默認方案，因為會自動載入）
+    // 恢復額外方案
     if (data.additionalSchemes && Array.isArray(data.additionalSchemes)) {
       for (const savedScheme of data.additionalSchemes) {
         try {
@@ -456,7 +449,6 @@ const clearComparisonData = () => {
 // 計算屬性 - 合併所有方案用於顯示
 const allSchemes = computed(() => {
   const schemes = []
-  if (yuhaoDefaultScheme.value) schemes.push(yuhaoDefaultScheme.value)
   if (currentUserScheme.value) schemes.push(currentUserScheme.value)
   schemes.push(...additionalSchemes.value)
   return schemes
@@ -547,9 +539,6 @@ onMounted(async () => {
       name: table.name
     }))
     
-    // 自動載入宇浩日月作為默認方案
-    await loadDefaultYuhaoScheme()
-    
     // 載入保存的對比數據
     await loadComparisonData()
     
@@ -572,39 +561,12 @@ watch(() => [props.currentCodeTable, props.currentCodeTableName], ([newCodeTable
 })
 
 // 監聽方案數據變化並自動保存
-watch([yuhaoDefaultScheme, additionalSchemes], () => {
+watch([additionalSchemes], () => {
   // 延遲保存以避免頻繁寫入
   setTimeout(() => {
     saveComparisonData()
   }, 500)
 }, { deep: true })
-
-// 載入默認宇浩日月方案
-const loadDefaultYuhaoScheme = async () => {
-  try {
-    // 使用 yuhao-ming (日月) 作為默認方案
-    const yuhaoScheme = availableBuiltinSchemes.value.find(
-      scheme => scheme.id === 'yuhao-ming'
-    )
-    if (yuhaoScheme) {
-      const result = await builtinService.downloadCodeTable(yuhaoScheme.id)
-      yuhaoDefaultScheme.value = {
-        id: `default-${Date.now()}`,
-        name: yuhaoScheme.name,
-        codeTable: result.codeTable,
-        isBuiltin: true,
-        isCalculating: true,
-        data: undefined
-      }
-      // 異步計算數據
-      const data = await calculateSchemeData(result.codeTable)
-      yuhaoDefaultScheme.value.data = data
-      yuhaoDefaultScheme.value.isCalculating = false
-    }
-  } catch (error) {
-    console.error('Failed to load default Yuhao scheme:', error)
-  }
-}
 
 // 載入當前用戶方案
 const loadCurrentUserScheme = async () => {
@@ -820,21 +782,18 @@ function parseCodeTableText(text: string, format: 'char_first' | 'code_first'): 
 // 移除方案
 // 判斷是否可以移除方案
 function canRemoveScheme(index: number): boolean {
-  const defaultSchemeCount = yuhaoDefaultScheme.value ? 1 : 0
   const currentSchemeCount = currentUserScheme.value ? 1 : 0
-  const fixedSchemesCount = defaultSchemeCount + currentSchemeCount
   
-  // 只有額外添加的方案才能移除（索引大於等於固定方案數量）
-  return index >= fixedSchemesCount
+  // 只有額外添加的方案才能移除（索引大於等於當前方案數量）
+  return index >= currentSchemeCount
 }
 
 // 移除方案
 function removeScheme(index: number) {
   if (!canRemoveScheme(index)) return
   
-  const defaultSchemeCount = yuhaoDefaultScheme.value ? 1 : 0
   const currentSchemeCount = currentUserScheme.value ? 1 : 0
-  const additionalSchemeIndex = index - defaultSchemeCount - currentSchemeCount
+  const additionalSchemeIndex = index - currentSchemeCount
   
   if (additionalSchemeIndex >= 0 && additionalSchemeIndex < additionalSchemes.value.length) {
     additionalSchemes.value.splice(additionalSchemeIndex, 1)
