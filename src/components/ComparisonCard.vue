@@ -19,70 +19,108 @@
           <table class="comparison-table">
             <thead>
               <tr>
-                <th class="scheme-name-header">方案名稱</th>
-                <th class="metric-header">
+                <th class="scheme-name-header sortable" @click="handleSort('name')">
+                  <div class="header-content">
+                    <span>方案名稱</span>
+                    <span class="sort-arrow">{{ getSortArrow('name') }}</span>
+                  </div>
+                </th>
+                <th class="metric-header sortable" @click="handleSort('dynamicDupRate')">
                   <div class="metric-header-content">
-                    <span>知乎動態選重率</span>
+                    <div class="header-title">
+                      <span>知乎動態選重率</span>
+                      <span class="sort-arrow">{{ getSortArrow('dynamicDupRate') }}</span>
+                    </div>
                     <small>基於知乎字頻</small>
                   </div>
                 </th>
-                <th class="metric-header">
+                <th class="metric-header sortable" @click="handleSort('dynamicDupRateSC')">
                   <div class="metric-header-content">
-                    <span>簡體動態選重率</span>
+                    <div class="header-title">
+                      <span>簡體動態選重率</span>
+                      <span class="sort-arrow">{{ getSortArrow('dynamicDupRateSC') }}</span>
+                    </div>
                     <small>基於簡體字頻</small>
                   </div>
                 </th>
-                <th class="metric-header">
+                <th class="metric-header sortable" @click="handleSort('dynamicDupRateTC')">
                   <div class="metric-header-content">
-                    <span>繁體動態選重率</span>
+                    <div class="header-title">
+                      <span>繁體動態選重率</span>
+                      <span class="sort-arrow">{{ getSortArrow('dynamicDupRateTC') }}</span>
+                    </div>
                     <small>基於繁體字頻</small>
                   </div>
                 </th>
-                <th class="metric-header">
+                <th class="metric-header sortable" @click="handleSort('dynamicDupRateUnified')">
                   <div class="metric-header-content">
-                    <span>聯合動態選重率</span>
+                    <div class="header-title">
+                      <span>聯合動態選重率</span>
+                      <span class="sort-arrow">{{ getSortArrow('dynamicDupRateUnified') }}</span>
+                    </div>
                     <small>基於繁簡聯合字頻</small>
                   </div>
                 </th>
-                <th class="metric-header">
+                <th class="metric-header sortable" @click="handleSort('gb2312DuplicateChars')">
                   <div class="metric-header-content">
-                    <span>GB2312</span>
+                    <div class="header-title">
+                      <span>GB2312</span>
+                      <span class="sort-arrow">{{ getSortArrow('gb2312DuplicateChars') }}</span>
+                    </div>
                     <small>重碼字數</small>
                   </div>
                 </th>
-                <th class="metric-header">
+                <th class="metric-header sortable" @click="handleSort('guoziDuplicateChars')">
                   <div class="metric-header-content">
-                    <span>國字常用</span>
+                    <div class="header-title">
+                      <span>國字常用</span>
+                      <span class="sort-arrow">{{ getSortArrow('guoziDuplicateChars') }}</span>
+                    </div>
                     <small>重碼字數</small>
                   </div>
                 </th>
-                <th class="metric-header">
+                <th class="metric-header sortable" @click="handleSort('cjkBasicDuplicateChars')">
                   <div class="metric-header-content">
-                    <span>CJK基本區</span>
+                    <div class="header-title">
+                      <span>CJK基本區</span>
+                      <span class="sort-arrow">{{ getSortArrow('cjkBasicDuplicateChars') }}</span>
+                    </div>
                     <small>重碼字數</small>
                   </div>
                 </th>
-                <th class="metric-header">
+                <th class="metric-header sortable" @click="handleSort('cjkToADuplicateChars')">
                   <div class="metric-header-content">
-                    <span>到CJK-A</span>
+                    <div class="header-title">
+                      <span>到CJK-A</span>
+                      <span class="sort-arrow">{{ getSortArrow('cjkToADuplicateChars') }}</span>
+                    </div>
                     <small>重碼字數</small>
                   </div>
                 </th>
-                <th class="metric-header">
+                <th class="metric-header sortable" @click="handleSort('cjkToBDuplicateChars')">
                   <div class="metric-header-content">
-                    <span>到CJK-B</span>
+                    <div class="header-title">
+                      <span>到CJK-B</span>
+                      <span class="sort-arrow">{{ getSortArrow('cjkToBDuplicateChars') }}</span>
+                    </div>
                     <small>重碼字數</small>
                   </div>
                 </th>
-                <th class="metric-header">
+                <th class="metric-header sortable" @click="handleSort('cjkToFDuplicateChars')">
                   <div class="metric-header-content">
-                    <span>到CJK-F</span>
+                    <div class="header-title">
+                      <span>到CJK-F</span>
+                      <span class="sort-arrow">{{ getSortArrow('cjkToFDuplicateChars') }}</span>
+                    </div>
                     <small>重碼字數</small>
                   </div>
                 </th>
-                <th class="metric-header">
+                <th class="metric-header sortable" @click="handleSort('cjkToIDuplicateChars')">
                   <div class="metric-header-content">
-                    <span>到CJK-I</span>
+                    <div class="header-title">
+                      <span>到CJK-I</span>
+                      <span class="sort-arrow">{{ getSortArrow('cjkToIDuplicateChars') }}</span>
+                    </div>
                     <small>重碼字數</small>
                   </div>
                 </th>
@@ -374,6 +412,15 @@ const availableBuiltinSchemes = ref<BuiltinScheme[]>([])
 const fileInputCharCode = ref<HTMLInputElement>()
 const fileInputCodeChar = ref<HTMLInputElement>()
 
+// 排序相關狀態
+type SortDirection = 'desc' | 'asc' | 'none'
+type SortColumn = 'name' | 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateUnified' | 
+                  'gb2312DuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
+                  'cjkToADuplicateChars' | 'cjkToBDuplicateChars' | 'cjkToFDuplicateChars' | 'cjkToIDuplicateChars'
+
+const sortColumn = ref<SortColumn | null>(null)
+const sortDirection = ref<SortDirection>('none')
+
 // 創建服務實例
 const builtinService = new BuiltinCodeTableService()
 
@@ -451,7 +498,35 @@ const allSchemes = computed(() => {
   const schemes = []
   if (currentUserScheme.value) schemes.push(currentUserScheme.value)
   schemes.push(...additionalSchemes.value)
-  return schemes
+  
+  // 如果沒有排序，直接返回
+  if (!sortColumn.value || sortDirection.value === 'none') {
+    return schemes
+  }
+  
+  // 進行排序
+  return [...schemes].sort((a, b) => {
+    let aValue: any
+    let bValue: any
+    
+    if (sortColumn.value === 'name') {
+      aValue = a.name
+      bValue = b.name
+    } else {
+      aValue = a.data?.[sortColumn.value] ?? 0
+      bValue = b.data?.[sortColumn.value] ?? 0
+    }
+    
+    // 字符串排序
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      const comparison = aValue.localeCompare(bValue)
+      return sortDirection.value === 'asc' ? comparison : -comparison
+    }
+    
+    // 數值排序
+    const comparison = aValue - bValue
+    return sortDirection.value === 'asc' ? comparison : -comparison
+  })
 })
 
 // 計算屬性 - 是否有任何方案
@@ -464,6 +539,37 @@ const formatRate = (rate?: number) => {
 
 const formatNumber = (num?: number) => {
   return num ? num.toLocaleString() : '-'
+}
+
+// 排序函數
+const handleSort = (column: SortColumn) => {
+  if (sortColumn.value === column) {
+    // 循環切換排序方向：降序 -> 升序 -> 無排序 -> 降序
+    switch (sortDirection.value) {
+      case 'desc':
+        sortDirection.value = 'asc'
+        break
+      case 'asc':
+        sortDirection.value = 'none'
+        sortColumn.value = null
+        break
+      case 'none':
+        sortDirection.value = 'desc'
+        break
+    }
+  } else {
+    // 新列，從降序開始
+    sortColumn.value = column
+    sortDirection.value = 'desc'
+  }
+}
+
+// 獲取排序箭頭
+const getSortArrow = (column: SortColumn) => {
+  if (sortColumn.value !== column || sortDirection.value === 'none') {
+    return '⇅'
+  }
+  return sortDirection.value === 'desc' ? '↓' : '↑'
 }
 
 // 加载字频数据
@@ -998,8 +1104,8 @@ function clearAllSchemes() {
 
 .scheme-name-header {
   background: #f9fafb;
-  width: 80px;
-  min-width: 80px;
+  width: 120px;
+  min-width: 120px;
   text-align: left !important;
   font-weight: 600;
   color: #374151;
@@ -1011,6 +1117,40 @@ function clearAllSchemes() {
   min-width: 80px;
   font-weight: 600;
   color: #374151;
+}
+
+/* 可排序的表頭樣式 */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.sortable:hover {
+  background: #f3f4f6 !important;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.sort-arrow {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: bold;
+  min-width: 12px;
+  text-align: center;
 }
 
 .metric-header-content {
@@ -1355,6 +1495,14 @@ function clearAllSchemes() {
   
   .metric-header-content small {
     font-size: 0.5rem;
+  }
+  
+  .sort-arrow {
+    font-size: 0.7rem;
+  }
+  
+  .header-title {
+    gap: 2px;
   }
   
   .actions-header {
