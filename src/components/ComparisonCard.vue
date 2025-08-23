@@ -414,9 +414,10 @@ const fileInputCodeChar = ref<HTMLInputElement>()
 
 // 排序相關狀態
 type SortDirection = 'desc' | 'asc' | 'none'
-type SortColumn = 'name' | 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateUnified' | 
-                  'gb2312DuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
-                  'cjkToADuplicateChars' | 'cjkToBDuplicateChars' | 'cjkToFDuplicateChars' | 'cjkToIDuplicateChars'
+type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateUnified' | 
+                      'gb2312DuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
+                      'cjkToADuplicateChars' | 'cjkToBDuplicateChars' | 'cjkToFDuplicateChars' | 'cjkToIDuplicateChars'
+type SortColumn = 'name' | DataSortColumn
 
 const sortColumn = ref<SortColumn | null>(null)
 const sortDirection = ref<SortDirection>('none')
@@ -512,9 +513,14 @@ const allSchemes = computed(() => {
     if (sortColumn.value === 'name') {
       aValue = a.name
       bValue = b.name
+    } else if (sortColumn.value) {
+      // TypeScript类型保护：确保sortColumn.value是数据列而不是'name'
+      const column = sortColumn.value as DataSortColumn
+      aValue = a.data?.[column] ?? 0
+      bValue = b.data?.[column] ?? 0
     } else {
-      aValue = a.data?.[sortColumn.value] ?? 0
-      bValue = b.data?.[sortColumn.value] ?? 0
+      aValue = 0
+      bValue = 0
     }
     
     // 字符串排序
