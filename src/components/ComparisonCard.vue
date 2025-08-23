@@ -237,8 +237,8 @@
                 </td>
                 <td class="actions-cell">
                   <button 
-                    v-if="canRemoveScheme(index)" 
-                    @click="removeScheme(index)" 
+                    v-if="canRemoveScheme(scheme)" 
+                    @click="removeScheme(scheme)" 
                     class="remove-btn"
                     title="移除此方案"
                   >
@@ -959,21 +959,24 @@ function parseCodeTableText(text: string, format: 'char_first' | 'code_first'): 
 
 // 移除方案
 // 判斷是否可以移除方案
-function canRemoveScheme(index: number): boolean {
-  const currentSchemeCount = currentUserScheme.value ? 1 : 0
+function canRemoveScheme(scheme: Scheme): boolean {
+  // 如果是當前用戶方案，不能移除
+  if (currentUserScheme.value && scheme.id === currentUserScheme.value.id) {
+    return false
+  }
   
-  // 只有額外添加的方案才能移除（索引大於等於當前方案數量）
-  return index >= currentSchemeCount
+  // 只有額外添加的方案才能移除
+  return additionalSchemes.value.some(s => s.id === scheme.id)
 }
 
 // 移除方案
-function removeScheme(index: number) {
-  if (!canRemoveScheme(index)) return
+function removeScheme(scheme: Scheme) {
+  if (!canRemoveScheme(scheme)) return
   
-  const currentSchemeCount = currentUserScheme.value ? 1 : 0
-  const additionalSchemeIndex = index - currentSchemeCount
+  // 在額外方案列表中查找並移除
+  const additionalSchemeIndex = additionalSchemes.value.findIndex(s => s.id === scheme.id)
   
-  if (additionalSchemeIndex >= 0 && additionalSchemeIndex < additionalSchemes.value.length) {
+  if (additionalSchemeIndex !== -1) {
     additionalSchemes.value.splice(additionalSchemeIndex, 1)
     // 立即保存數據
     saveComparisonData()
