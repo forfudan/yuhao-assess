@@ -86,10 +86,10 @@
           </div>
 
 
-          <!-- 重碼數據分析模塊 -->
+          <!-- 重碼信息模塊 -->
           <div v-if="analysisReady" class="module-card">
             <div class="module-header">
-              <h3 class="module-title">重碼數據分析</h3>
+              <h3 class="module-title">重碼信息</h3>
               <button 
                 class="toggle-button"
                 @click="toggleModule('duplicate')"
@@ -106,6 +106,13 @@
               </p>
               
               <DuplicateAnalysisCard :code-table="codeTable" />
+            </div>
+            <div v-show="!modules.duplicate.collapsed" class="module-content">
+              <p class="module-description">
+                對比不同輸入法方案的重碼數據，支持內置方案和文件上傳。
+              </p>
+              
+              <ComparisonCard :currentCodeTable="codeTable" :currentCodeTableName="codeTableName" />
             </div>
           </div>
 
@@ -185,13 +192,16 @@ import CodeTableUploader from './components/CodeTableUploader.vue'
 import KeyboardHeatmap from './components/KeyboardHeatmap.vue'
 import CodeTableViewer from './components/CodeTableViewer.vue'
 import DuplicateAnalysisCard from './components/DuplicateAnalysisCard.vue'
+import ComparisonCard from './components/ComparisonCard.vue'
 import type { CodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
 
 // 響應式數據
 const codeTable = ref<CodeTable>(new Map())
+const codeTableName = ref<string>('')
 const analysisReady = ref(false)
 const uploadStatus = ref<UploadStatus | null>(null)
 const analysisData = ref<CodeTableAnalysis | null>(null)
+const analysisResults = ref(null)
 
 // 主題相關
 const isDarkMode = ref(false)
@@ -201,7 +211,8 @@ const modules = ref({
   upload: { collapsed: false },
   heatmap: { collapsed: false },
   analysis: { collapsed: false },
-  duplicate: { collapsed: false }
+  duplicate: { collapsed: false },
+  comparison: { collapsed: false }
 })
 
 // 切换模块折叠状态
@@ -350,6 +361,7 @@ function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
 // 處理碼表上傳成功
 const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string }) => {
   codeTable.value = data.codeTable
+  codeTableName.value = data.fileName.replace(/\.(txt|csv)$/, '') // 移除文件後綴
   analysisReady.value = true
   
   // 生成分析數據
