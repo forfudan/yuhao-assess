@@ -18,10 +18,10 @@
             <span class="subtitle">輸入法性能測評工具</span>
           </div>
           <nav class="nav">
-            <a href="https://github.com/forfudan/yu" target="_blank" class="nav-link">
+            <a href="https://shurufa.app" target="_blank" class="nav-link">
               宇浩輸入法
             </a>
-            <a href="https://github.com/forfudan/assess" target="_blank" class="nav-link">
+            <a href="https://github.com/forfudan/yu" target="_blank" class="nav-link">
               GitHub
             </a>
           </nav>
