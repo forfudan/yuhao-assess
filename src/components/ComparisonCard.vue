@@ -82,7 +82,7 @@
                 <th class="metric-header sortable" @click="handleSort('cjkBasicDuplicateChars')">
                   <div class="metric-header-content">
                     <div class="header-title">
-                      <span>CJK基本區</span>
+                      <span>CJK基本</span>
                       <span class="sort-arrow">{{ getSortArrow('cjkBasicDuplicateChars') }}</span>
                     </div>
                     <small>重碼字數</small>
@@ -1086,10 +1086,11 @@ function clearAllSchemes() {
 
 .comparison-table th,
 .comparison-table td {
-  padding: 8px 6px;
+  padding: 6px 4px;
   text-align: center;
   border-right: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
+  line-height: 1.2;
 }
 
 .comparison-table th:last-child,
@@ -1160,7 +1161,7 @@ function clearAllSchemes() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 
 .metric-header-content span {
@@ -1194,7 +1195,7 @@ function clearAllSchemes() {
 .scheme-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .scheme-title {
@@ -1215,7 +1216,7 @@ function clearAllSchemes() {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   color: #6b7280;
 }
 
@@ -1241,11 +1242,11 @@ function clearAllSchemes() {
 .remove-btn {
   background: none;
   border: none;
-  padding: 6px;
+  padding: 4px;
   cursor: pointer;
   border-radius: 4px;
   transition: background 0.2s ease;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .remove-btn:hover {
@@ -1254,11 +1255,11 @@ function clearAllSchemes() {
 
 .no-remove {
   color: #9ca3af;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  padding: 4px;
 }
 
 /* 添加方案按鈕 */
@@ -1479,7 +1480,8 @@ function clearAllSchemes() {
   
   .comparison-table th,
   .comparison-table td {
-    padding: 6px 4px;
+    padding: 4px 3px;
+    line-height: 1.1;
   }
   
   .scheme-name-header {
