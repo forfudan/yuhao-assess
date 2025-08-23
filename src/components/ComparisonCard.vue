@@ -1,8 +1,8 @@
 <template>
   <div class="comparison-card">
     <div class="card-header">
-      <h3>方案對比</h3>
-      <p class="card-description">對比不同輸入法方案的重碼數據</p>
+      <h3>數據對比</h3>
+      <p class="card-description">對比不同輸入法方案的全碼重碼數據</p>
     </div>
 
     <div class="card-content">
@@ -46,43 +46,51 @@
                 </th>
                 <th class="metric-header">
                   <div class="metric-header-content">
-                    <span>GB2312重碼字數</span>
-                    <small>全碼</small>
+                    <span>GB2312</span>
+                    <small>重碼字數</small>
                   </div>
                 </th>
                 <th class="metric-header">
                   <div class="metric-header-content">
-                    <span>國字重碼字數</span>
-                    <small>全碼</small>
+                    <span>國字常用</span>
+                    <small>重碼字數</small>
                   </div>
                 </th>
                 <th class="metric-header">
                   <div class="metric-header-content">
-                    <span>CJK基本區重碼字數</span>
-                    <small>全碼</small>
+                    <span>CJK基本區</span>
+                    <small>重碼字數</small>
                   </div>
                 </th>
                 <th class="metric-header">
                   <div class="metric-header-content">
-                    <span>到CJK-A重碼字數</span>
-                    <small>全碼</small>
+                    <span>到CJK-A</span>
+                    <small>重碼字數</small>
                   </div>
                 </th>
                 <th class="metric-header">
                   <div class="metric-header-content">
-                    <span>到CJK-B重碼字數</span>
-                    <small>全碼</small>
+                    <span>到CJK-B</span>
+                    <small>重碼字數</small>
+                  </div>
+                </th>
+                <th class="metric-header">
+                  <div class="metric-header-content">
+                    <span>到CJK-I</span>
+                    <small>重碼字數</small>
                   </div>
                 </th>
                 <th class="actions-header">操作</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(scheme, index) in schemes" :key="scheme.id" class="scheme-row">
+              <tr v-for="(scheme, index) in allSchemes" :key="scheme.id" class="scheme-row">
                 <td class="scheme-name">
                   <div class="scheme-info">
                     <span class="scheme-title">{{ scheme.name }}</span>
-                    <span class="scheme-source">{{ scheme.source === 'builtin' ? '內置方案' : '上傳文件' }}</span>
+                    <span v-if="scheme.isBuiltin" class="scheme-source">內置方案</span>
+                    <span v-else-if="scheme.name === '當前方案'" class="scheme-source">當前方案</span>
+                    <span v-else class="scheme-source">上傳文件</span>
                   </div>
                 </td>
                 <td class="metric-cell">
@@ -166,14 +174,25 @@
                     {{ formatNumber(scheme.data?.cjkToBDuplicateChars) }}
                   </span>
                 </td>
+                <td class="metric-cell">
+                  <div v-if="scheme.isCalculating" class="calculating">
+                    <div class="mini-spinner"></div>
+                    <span>計算中</span>
+                  </div>
+                  <span v-else class="metric-value">
+                    {{ formatNumber(scheme.data?.cjkToIDuplicateChars) }}
+                  </span>
+                </td>
                 <td class="actions-cell">
                   <button 
+                    v-if="canRemoveScheme(index)" 
                     @click="removeScheme(index)" 
                     class="remove-btn"
                     title="移除此方案"
                   >
                     🗑️
                   </button>
+                  <span v-else class="no-remove">-</span>
                 </td>
               </tr>
             </tbody>
@@ -257,12 +276,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
 import { generateFullCodeTable, generateShortCodeTable } from '../services/codeTableCleanService'
 import { getDynamicDupRate } from '../services/analysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import type { CodeTable, CharFrequency } from '../types'
+
+// Props
+interface Props {
+  currentCodeTable?: CodeTable | null
+}
+
+const props = defineProps<Props>()
 
 // 定義方案數據接口
 interface SchemeData {
@@ -275,6 +301,7 @@ interface SchemeData {
   cjkBasicDuplicateChars: number
   cjkToADuplicateChars: number
   cjkToBDuplicateChars: number
+  cjkToIDuplicateChars: number
 }
 
 // 定義方案接口
@@ -294,7 +321,9 @@ interface BuiltinScheme {
 }
 
 // 響應式數據
-const schemes = ref<Scheme[]>([])
+const yuhaoDefaultScheme = ref<Scheme | null>(null) // 宇浩日月方案
+const currentUserScheme = ref<Scheme | null>(null) // 當前用戶方案
+const additionalSchemes = ref<Scheme[]>([]) // 額外添加的方案
 const showAddForm = ref(false)
 const isAdding = ref(false)
 const selectedBuiltinScheme = ref('')
@@ -304,8 +333,17 @@ const fileInput = ref<HTMLInputElement>()
 // 創建服務實例
 const builtinService = new BuiltinCodeTableService()
 
-// 計算屬性
-const hasAnyScheme = computed(() => schemes.value.length > 0)
+// 計算屬性 - 合併所有方案用於顯示
+const allSchemes = computed(() => {
+  const schemes = []
+  if (yuhaoDefaultScheme.value) schemes.push(yuhaoDefaultScheme.value)
+  if (currentUserScheme.value) schemes.push(currentUserScheme.value)
+  schemes.push(...additionalSchemes.value)
+  return schemes
+})
+
+// 計算屬性 - 是否有任何方案
+const hasAnyScheme = computed(() => allSchemes.value.length > 0)
 
 // 格式化函數
 const formatRate = (rate?: number) => {
@@ -388,10 +426,76 @@ onMounted(async () => {
       id: table.id,
       name: table.name
     }))
+    
+    // 自動載入宇浩日月作為默認方案
+    await loadDefaultYuhaoScheme()
+    
+    // 如果用戶有當前方案，也載入它
+    if (props.currentCodeTable) {
+      loadCurrentUserScheme()
+    }
   } catch (error) {
     console.error('載入內置方案列表失敗:', error)
   }
 })
+
+// 監聽當前方案變化
+watch(() => props.currentCodeTable, (newCodeTable) => {
+  if (newCodeTable) {
+    loadCurrentUserScheme()
+  } else {
+    currentUserScheme.value = null
+  }
+})
+
+// 載入默認宇浩日月方案
+const loadDefaultYuhaoScheme = async () => {
+  try {
+    const yuhaoScheme = availableBuiltinSchemes.value.find(
+      scheme => scheme.id === 'yuhao-star-original'
+    )
+    if (yuhaoScheme) {
+      const codeTable = await builtinService.loadCodeTable(yuhaoScheme.id)
+      yuhaoDefaultScheme.value = {
+        id: `default-${Date.now()}`,
+        name: yuhaoScheme.name,
+        codeTable,
+        isBuiltin: true,
+        isCalculating: true,
+        data: undefined
+      }
+      // 異步計算數據
+      const data = await calculateSchemeData(codeTable)
+      yuhaoDefaultScheme.value.data = data
+      yuhaoDefaultScheme.value.isCalculating = false
+    }
+  } catch (error) {
+    console.error('Failed to load default Yuhao scheme:', error)
+  }
+}
+
+// 載入當前用戶方案
+const loadCurrentUserScheme = async () => {
+  if (props.currentCodeTable) {
+    currentUserScheme.value = {
+      id: `current-${Date.now()}`,
+      name: '當前方案',
+      codeTable: props.currentCodeTable,
+      isBuiltin: false,
+      isCalculating: true,
+      data: undefined
+    }
+    // 異步計算數據
+    try {
+      const data = await calculateSchemeData(props.currentCodeTable)
+      currentUserScheme.value.data = data
+      currentUserScheme.value.isCalculating = false
+    } catch (error) {
+      console.error('Failed to calculate current scheme data:', error)
+      currentUserScheme.value.isCalculating = false
+    }
+  }
+}
 
 // 計算方案數據
 async function calculateSchemeData(codeTable: CodeTable): Promise<SchemeData> {
@@ -454,11 +558,11 @@ async function addBuiltinScheme() {
     const newScheme: Scheme = {
       id: `builtin_${selectedBuiltinScheme.value}_${Date.now()}`,
       name: builtinScheme.name,
-      source: 'builtin',
+      isBuiltin: true,
       isCalculating: true
     }
     
-    schemes.value.push(newScheme)
+    additionalSchemes.value.push(newScheme)
     showAddForm.value = false
     
     // 載入碼表並計算數據
@@ -472,9 +576,9 @@ async function addBuiltinScheme() {
   } catch (error) {
     console.error('添加內置方案失敗:', error)
     // 移除失敗的方案
-    const index = schemes.value.findIndex(s => s.name === builtinScheme.name && s.isCalculating)
+    const index = additionalSchemes.value.findIndex(s => s.name === builtinScheme.name && s.isCalculating)
     if (index !== -1) {
-      schemes.value.splice(index, 1)
+      additionalSchemes.value.splice(index, 1)
     }
   } finally {
     isAdding.value = false
@@ -498,11 +602,11 @@ async function handleFileUpload(event: Event) {
     const newScheme: Scheme = {
       id: `upload_${Date.now()}`,
       name: file.name.replace(/\.(txt|csv)$/, ''),
-      source: 'upload',
+      isBuiltin: false,
       isCalculating: true
     }
     
-    schemes.value.push(newScheme)
+    additionalSchemes.value.push(newScheme)
     showAddForm.value = false
     
     // 解析碼表文件
@@ -516,9 +620,9 @@ async function handleFileUpload(event: Event) {
   } catch (error) {
     console.error('上傳碼表失敗:', error)
     // 移除失敗的方案
-    const index = schemes.value.findIndex(s => s.name === file.name.replace(/\.(txt|csv)$/, '') && s.isCalculating)
+    const index = additionalSchemes.value.findIndex(s => s.name === file.name.replace(/\.(txt|csv)$/, '') && s.isCalculating)
     if (index !== -1) {
-      schemes.value.splice(index, 1)
+      additionalSchemes.value.splice(index, 1)
     }
   } finally {
     isAdding.value = false
@@ -553,8 +657,27 @@ function parseCodeTableText(text: string): CodeTable {
 }
 
 // 移除方案
+// 判斷是否可以移除方案
+function canRemoveScheme(index: number): boolean {
+  const defaultSchemeCount = yuhaoDefaultScheme.value ? 1 : 0
+  const currentSchemeCount = currentUserScheme.value ? 1 : 0
+  const fixedSchemesCount = defaultSchemeCount + currentSchemeCount
+  
+  // 只有額外添加的方案才能移除（索引大於等於固定方案數量）
+  return index >= fixedSchemesCount
+}
+
+// 移除方案
 function removeScheme(index: number) {
-  schemes.value.splice(index, 1)
+  if (!canRemoveScheme(index)) return
+  
+  const defaultSchemeCount = yuhaoDefaultScheme.value ? 1 : 0
+  const currentSchemeCount = currentUserScheme.value ? 1 : 0
+  const additionalSchemeIndex = index - defaultSchemeCount - currentSchemeCount
+  
+  if (additionalSchemeIndex >= 0 && additionalSchemeIndex < additionalSchemes.value.length) {
+    additionalSchemes.value.splice(additionalSchemeIndex, 1)
+  }
 }
 
 // 取消添加
@@ -781,6 +904,15 @@ function cancelAdd() {
 
 .remove-btn:hover {
   background: #fef2f2;
+}
+
+.no-remove {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
 }
 
 /* 添加方案按鈕 */

@@ -112,7 +112,7 @@
                 對比不同輸入法方案的重碼數據，支持內置方案和文件上傳。
               </p>
               
-              <ComparisonCard />
+              <ComparisonCard :currentCodeTable="codeTable" />
             </div>
           </div>
 
