@@ -223,6 +223,16 @@
             <span v-if="isAdding">添加中...</span>
             <span v-else>➕ 添加新方案</span>
           </button>
+          
+          <!-- 清除所有方案按鈕 -->
+          <button 
+            v-if="additionalSchemes.length > 0"
+            @click="clearAllSchemes" 
+            class="clear-all-btn"
+            title="清除所有額外添加的方案"
+          >
+            🗑️ 清除全部
+          </button>
         </div>
       </div>
 
@@ -367,6 +377,82 @@ const fileInputCodeChar = ref<HTMLInputElement>()
 // 創建服務實例
 const builtinService = new BuiltinCodeTableService()
 
+// 本地存儲鍵名
+const COMPARISON_STORAGE_KEY = 'yuhao-comparison-schemes'
+
+// 保存方案數據到本地存儲
+const saveComparisonData = () => {
+  try {
+    const dataToSave = {
+      defaultScheme: yuhaoDefaultScheme.value ? {
+        id: yuhaoDefaultScheme.value.id,
+        name: yuhaoDefaultScheme.value.name,
+        isBuiltin: yuhaoDefaultScheme.value.isBuiltin,
+        data: yuhaoDefaultScheme.value.data,
+        codeTableSize: yuhaoDefaultScheme.value.codeTable?.size || 0
+      } : null,
+      additionalSchemes: additionalSchemes.value.map(scheme => ({
+        id: scheme.id,
+        name: scheme.name,
+        isBuiltin: scheme.isBuiltin,
+        data: scheme.data,
+        codeTableSize: scheme.codeTable?.size || 0,
+        // 保存內置方案的 key 用於重新載入
+        builtinKey: scheme.isBuiltin ? scheme.id.split('_')[1] : undefined
+      }))
+    }
+    localStorage.setItem(COMPARISON_STORAGE_KEY, JSON.stringify(dataToSave))
+  } catch (error) {
+    console.error('保存對比數據失敗:', error)
+  }
+}
+
+// 從本地存儲載入方案數據
+const loadComparisonData = async () => {
+  try {
+    const savedData = localStorage.getItem(COMPARISON_STORAGE_KEY)
+    if (!savedData) return
+
+    const data = JSON.parse(savedData)
+    
+    // 恢復額外方案（跳過默認方案，因為會自動載入）
+    if (data.additionalSchemes && Array.isArray(data.additionalSchemes)) {
+      for (const savedScheme of data.additionalSchemes) {
+        try {
+          let codeTable: CodeTable | undefined
+          
+          if (savedScheme.isBuiltin && savedScheme.builtinKey) {
+            // 重新載入內置方案
+            const result = await builtinService.downloadCodeTable(savedScheme.builtinKey)
+            codeTable = result.codeTable
+          }
+          
+          // 創建恢復的方案對象
+          const restoredScheme: Scheme = {
+            id: savedScheme.id,
+            name: savedScheme.name,
+            isBuiltin: savedScheme.isBuiltin,
+            isCalculating: false,
+            data: savedScheme.data,
+            codeTable
+          }
+          
+          additionalSchemes.value.push(restoredScheme)
+        } catch (error) {
+          console.error(`恢復方案 ${savedScheme.name} 失敗:`, error)
+        }
+      }
+    }
+  } catch (error) {
+    console.error('載入對比數據失敗:', error)
+  }
+}
+
+// 清理本地存儲數據
+const clearComparisonData = () => {
+  localStorage.removeItem(COMPARISON_STORAGE_KEY)
+}
+
 // 計算屬性 - 合併所有方案用於顯示
 const allSchemes = computed(() => {
   const schemes = []
@@ -464,6 +550,9 @@ onMounted(async () => {
     // 自動載入宇浩日月作為默認方案
     await loadDefaultYuhaoScheme()
     
+    // 載入保存的對比數據
+    await loadComparisonData()
+    
     // 如果用戶有當前方案，也載入它
     if (props.currentCodeTable) {
       loadCurrentUserScheme()
@@ -481,6 +570,14 @@ watch(() => [props.currentCodeTable, props.currentCodeTableName], ([newCodeTable
     currentUserScheme.value = null
   }
 })
+
+// 監聽方案數據變化並自動保存
+watch([yuhaoDefaultScheme, additionalSchemes], () => {
+  // 延遲保存以避免頻繁寫入
+  setTimeout(() => {
+    saveComparisonData()
+  }, 500)
+}, { deep: true })
 
 // 載入默認宇浩日月方案
 const loadDefaultYuhaoScheme = async () => {
@@ -615,6 +712,9 @@ async function addBuiltinScheme() {
     
     selectedBuiltinScheme.value = ''
     
+    // 立即保存數據
+    saveComparisonData()
+    
   } catch (error) {
     console.error('添加內置方案失敗:', error)
     // 移除失敗的方案
@@ -662,6 +762,9 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     newScheme.codeTable = codeTable
     newScheme.data = await calculateSchemeData(codeTable)
     newScheme.isCalculating = false
+    
+    // 立即保存數據
+    saveComparisonData()
     
   } catch (error) {
     console.error('上傳碼表失敗:', error)
@@ -735,6 +838,8 @@ function removeScheme(index: number) {
   
   if (additionalSchemeIndex >= 0 && additionalSchemeIndex < additionalSchemes.value.length) {
     additionalSchemes.value.splice(additionalSchemeIndex, 1)
+    // 立即保存數據
+    saveComparisonData()
   }
 }
 
@@ -742,6 +847,14 @@ function removeScheme(index: number) {
 function cancelAdd() {
   showAddForm.value = false
   selectedBuiltinScheme.value = ''
+}
+
+// 清除所有額外添加的方案
+function clearAllSchemes() {
+  if (additionalSchemes.value.length > 0) {
+    additionalSchemes.value = []
+    saveComparisonData()
+  }
 }
 </script>
 
@@ -977,6 +1090,10 @@ function cancelAdd() {
 .add-scheme-section {
   text-align: center;
   margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .add-scheme-btn {
@@ -998,6 +1115,22 @@ function cancelAdd() {
 .add-scheme-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.clear-all-btn {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 2px solid #fecaca;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.clear-all-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
 }
 
 /* 添加表單覆蓋層 */
