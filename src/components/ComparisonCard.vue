@@ -95,7 +95,7 @@
                   <div class="scheme-info">
                     <span class="scheme-title">{{ scheme.name }}</span>
                     <span v-if="scheme.isBuiltin" class="scheme-source">內置方案</span>
-                    <span v-else class="scheme-source">上傳文件</span>
+                    <span v-else class="scheme-source">上傳方案</span>
                   </div>
                 </td>
                 <td class="metric-cell">
@@ -263,22 +263,39 @@
             <!-- 文件上傳選項 -->
             <div class="form-section">
               <h5>上傳碼表文件</h5>
-              <p class="section-desc">支持 .txt 和 .csv 格式的碼表文件</p>
+              <p class="section-desc">選擇碼表格式並上傳 .txt 或 .csv 文件</p>
               <div class="upload-area">
                 <input 
-                  ref="fileInput"
+                  ref="fileInputCharCode"
                   type="file" 
-                  @change="handleFileUpload" 
+                  @change="(e) => handleFileUpload(e, 'char_first')" 
                   accept=".txt,.csv"
                   class="file-input"
                   :disabled="isAdding"
+                  style="display: none;"
+                >
+                <input 
+                  ref="fileInputCodeChar"
+                  type="file" 
+                  @change="(e) => handleFileUpload(e, 'code_first')" 
+                  accept=".txt,.csv"
+                  class="file-input"
+                  :disabled="isAdding"
+                  style="display: none;"
                 >
                 <button 
-                  @click="triggerFileUpload" 
+                  @click="triggerFileUpload('char_first')" 
                   class="upload-btn"
                   :disabled="isAdding"
                 >
-                  選擇文件
+                  漢字-編碼格式
+                </button>
+                <button 
+                  @click="triggerFileUpload('code_first')" 
+                  class="upload-btn"
+                  :disabled="isAdding"
+                >
+                  編碼-漢字格式
                 </button>
               </div>
             </div>
@@ -344,7 +361,8 @@ const showAddForm = ref(false)
 const isAdding = ref(false)
 const selectedBuiltinScheme = ref('')
 const availableBuiltinSchemes = ref<BuiltinScheme[]>([])
-const fileInput = ref<HTMLInputElement>()
+const fileInputCharCode = ref<HTMLInputElement>()
+const fileInputCodeChar = ref<HTMLInputElement>()
 
 // 創建服務實例
 const builtinService = new BuiltinCodeTableService()
@@ -439,7 +457,7 @@ onMounted(async () => {
   try {
     const config = await builtinService.loadConfig()
     availableBuiltinSchemes.value = config.builtinCodeTables.map(table => ({
-      id: table.id,
+      id: table.key,  // 使用 key 而不是 id
       name: table.name
     }))
     
@@ -467,8 +485,9 @@ watch(() => [props.currentCodeTable, props.currentCodeTableName], ([newCodeTable
 // 載入默認宇浩日月方案
 const loadDefaultYuhaoScheme = async () => {
   try {
+    // 使用 yuhao-ming (日月) 作為默認方案
     const yuhaoScheme = availableBuiltinSchemes.value.find(
-      scheme => scheme.id === 'yuhao-star-original'
+      scheme => scheme.id === 'yuhao-ming'
     )
     if (yuhaoScheme) {
       const result = await builtinService.downloadCodeTable(yuhaoScheme.id)
@@ -609,12 +628,16 @@ async function addBuiltinScheme() {
 }
 
 // 觸發文件上傳
-function triggerFileUpload() {
-  fileInput.value?.click()
+function triggerFileUpload(format: 'char_first' | 'code_first') {
+  if (format === 'char_first') {
+    fileInputCharCode.value?.click()
+  } else {
+    fileInputCodeChar.value?.click()
+  }
 }
 
 // 處理文件上傳
-async function handleFileUpload(event: Event) {
+async function handleFileUpload(event: Event, format: 'char_first' | 'code_first') {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
   if (!file || isAdding.value) return
@@ -634,7 +657,7 @@ async function handleFileUpload(event: Event) {
     
     // 解析碼表文件
     const text = await file.text()
-    const codeTable = parseCodeTableText(text)
+    const codeTable = parseCodeTableText(text, format)
     
     newScheme.codeTable = codeTable
     newScheme.data = await calculateSchemeData(codeTable)
@@ -656,18 +679,30 @@ async function handleFileUpload(event: Event) {
 }
 
 // 解析碼表文本
-function parseCodeTableText(text: string): CodeTable {
+function parseCodeTableText(text: string, format: 'char_first' | 'code_first'): CodeTable {
   const codeTable = new Map<string, string[]>()
   const lines = text.split('\n')
   
+  const isCharFirst = format === 'char_first'
+  
+  // 根據指定格式解析數據
   for (const line of lines) {
     const trimmed = line.trim()
     if (!trimmed || trimmed.startsWith('#')) continue
     
     const parts = trimmed.split(/\s+/)
     if (parts.length >= 2) {
-      const char = parts[0]
-      const code = parts[1]
+      let char: string, code: string
+      
+      if (isCharFirst) {
+        // char code 格式：漢字 編碼
+        char = parts[0]
+        code = parts[1]
+      } else {
+        // code char 格式：編碼 漢字
+        code = parts[0]
+        char = parts[1]
+      }
       
       if (!codeTable.has(char)) {
         codeTable.set(char, [])
@@ -1040,11 +1075,17 @@ function cancelAdd() {
   color: #6b7280;
 }
 
-.builtin-options,
+.builtin-options {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
 .upload-area {
   display: flex;
   gap: 12px;
   align-items: flex-end;
+  flex-wrap: wrap;
 }
 
 .scheme-select,
