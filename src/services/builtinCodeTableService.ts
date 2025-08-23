@@ -43,6 +43,65 @@ export class BuiltinCodeTableService {
     }
   }
 
+  // 加載簡體字頻數據
+  async loadCharFrequencySC(): Promise<CharFrequency> {
+    try {
+      const response = await fetch('/data/charFrequencySC.json')
+      if (!response.ok) {
+        throw new Error('Failed to load SC character frequency data')
+      }
+      return await response.json()
+    } catch (error) {
+      console.error('Error loading SC character frequency data:', error)
+      throw error
+    }
+  }
+
+  // 加載繁體字頻數據
+  async loadCharFrequencyTC(): Promise<CharFrequency> {
+    try {
+      const response = await fetch('/data/charFrequencyTC.json')
+      if (!response.ok) {
+        throw new Error('Failed to load TC character frequency data')
+      }
+      return await response.json()
+    } catch (error) {
+      console.error('Error loading TC character frequency data:', error)
+      throw error
+    }
+  }
+
+  // 創建繁簡聯合字頻表
+  async loadCharFrequencyUnified(): Promise<CharFrequency> {
+    try {
+      const [scFreq, tcFreq] = await Promise.all([
+        this.loadCharFrequencySC(),
+        this.loadCharFrequencyTC()
+      ])
+
+      const unifiedFreq: CharFrequency = {}
+      
+      // 合併簡體字頻
+      for (const [char, freq] of Object.entries(scFreq)) {
+        unifiedFreq[char] = freq
+      }
+      
+      // 合併繁體字頻，如果字符已存在則相加頻數
+      for (const [char, freq] of Object.entries(tcFreq)) {
+        if (unifiedFreq[char]) {
+          unifiedFreq[char] += freq
+        } else {
+          unifiedFreq[char] = freq
+        }
+      }
+      
+      return unifiedFreq
+    } catch (error) {
+      console.error('Error creating unified character frequency data:', error)
+      throw error
+    }
+  }
+
   // 加載當量表
   async loadEquivTable(): Promise<EquivTable> {
     if (this.equivTable) {

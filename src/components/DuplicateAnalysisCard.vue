@@ -27,10 +27,28 @@
           </thead>
           <tbody>
             <tr>
-              <td>簡體動態選重率</td>
+              <td>知乎動態選重率</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRate.full * 10000).toFixed(2) }}‱</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRate.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於<a href="https://github.com/forfudan/chinese-characters-frequency" target="_blank" rel="noopener">知乎字頻表</a>的加權選重率，‱ 爲萬分符</td>
+            </tr>
+            <tr>
+              <td>簡體動態選重率</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateSC.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateSC.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-desc">基於<a href="https://faculty.blcu.edu.cn/xinghb/zh_CN/article/167473/content/1437.htm" target="_blank" rel="noopener">簡體字頻表</a>的加權選重率</td>
+            </tr>
+            <tr>
+              <td>繁體動態選重率</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateTC.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateTC.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-desc">基於<a href="https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PIN/biau1.htm" target="_blank" rel="noopener">繁體字頻表</a>的加權選重率</td>
+            </tr>
+            <tr>
+              <td>繁簡聯合動態選重率</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateUnified.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateUnified.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-desc">基於繁簡聯合字頻表的加權選重率</td>
             </tr>
             <tr>
               <td>GB2312重碼組數</td>
@@ -132,6 +150,7 @@ import { ref, onMounted, watch } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
 import { generateFullCodeTable, generateShortCodeTable } from '../services/codeTableCleanService'
 import { getDynamicDupRate } from '../services/analysisService'
+import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import type { CodeTable, CharFrequency } from '../types'
 
 // Props
@@ -152,6 +171,9 @@ interface DualValue {
 // 分析结果数据结构
 interface AnalysisResults {
   dynamicDupRate: DualValue
+  dynamicDupRateSC: DualValue
+  dynamicDupRateTC: DualValue
+  dynamicDupRateUnified: DualValue
   gb2312DuplicateChars: DualValue
   guoziDuplicateChars: DualValue
   guoziDuplicateGroups: DualValue
@@ -199,14 +221,44 @@ interface AnalysisResults {
 // 响应式数据
 const isCalculating = ref(false)
 const analysisResults = ref<AnalysisResults | null>(null)
+const builtinService = new BuiltinCodeTableService()
 
 // 加载字频数据
 async function loadCharFrequency(): Promise<CharFrequency> {
   try {
-    const response = await fetch('/data/charFrequencyZhihu.json')
-    return await response.json()
+    return await builtinService.loadCharFrequency()
   } catch (error) {
-    console.error('加载字频数据失败:', error)
+    console.error('加载知乎字频数据失败:', error)
+    return {}
+  }
+}
+
+// 加载简体字频数据
+async function loadCharFrequencySC(): Promise<CharFrequency> {
+  try {
+    return await builtinService.loadCharFrequencySC()
+  } catch (error) {
+    console.error('加载简体字频数据失败:', error)
+    return {}
+  }
+}
+
+// 加载繁体字频数据
+async function loadCharFrequencyTC(): Promise<CharFrequency> {
+  try {
+    return await builtinService.loadCharFrequencyTC()
+  } catch (error) {
+    console.error('加载繁体字频数据失败:', error)
+    return {}
+  }
+}
+
+// 加载繁简联合字频数据
+async function loadCharFrequencyUnified(): Promise<CharFrequency> {
+  try {
+    return await builtinService.loadCharFrequencyUnified()
+  } catch (error) {
+    console.error('加载繁简联合字频数据失败:', error)
     return {}
   }
 }
@@ -425,12 +477,26 @@ async function calculateAllMetrics() {
     const fullCodeTable = fullCodeResult.codeTable
     const shortCodeTable = shortCodeResult.codeTable
     
-    // 加载字频数据
-    const charFrequency = await loadCharFrequency()
+    // 加载所有字频数据
+    const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyUnified] = await Promise.all([
+      loadCharFrequency(),
+      loadCharFrequencySC(),
+      loadCharFrequencyTC(),
+      loadCharFrequencyUnified()
+    ])
     
-    // 计算动态选重率
+    // 计算各种动态选重率
     const fullDynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency)
     const shortDynamicDupRate = getDynamicDupRate(shortCodeTable, charFrequency)
+    
+    const fullDynamicDupRateSC = getDynamicDupRate(fullCodeTable, charFrequencySC)
+    const shortDynamicDupRateSC = getDynamicDupRate(shortCodeTable, charFrequencySC)
+    
+    const fullDynamicDupRateTC = getDynamicDupRate(fullCodeTable, charFrequencyTC)
+    const shortDynamicDupRateTC = getDynamicDupRate(shortCodeTable, charFrequencyTC)
+    
+    const fullDynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
+    const shortDynamicDupRateUnified = getDynamicDupRate(shortCodeTable, charFrequencyUnified)
     
     // 计算各字符集的重码统计
     const gb2312Stats = await calculateCharsetDuplicates('gb2312', allChars, fullCodeTable, shortCodeTable)
@@ -475,6 +541,9 @@ async function calculateAllMetrics() {
     
     analysisResults.value = {
       dynamicDupRate: { full: fullDynamicDupRate, short: shortDynamicDupRate },
+      dynamicDupRateSC: { full: fullDynamicDupRateSC, short: shortDynamicDupRateSC },
+      dynamicDupRateTC: { full: fullDynamicDupRateTC, short: shortDynamicDupRateTC },
+      dynamicDupRateUnified: { full: fullDynamicDupRateUnified, short: shortDynamicDupRateUnified },
       gb2312DuplicateChars: gb2312Stats.duplicateChars,
       guoziDuplicateChars: guoziStats.duplicateChars,
       guoziDuplicateGroups: guoziStats.duplicateGroups,
