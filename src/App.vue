@@ -112,7 +112,7 @@
                 對比不同輸入法方案的重碼數據，支持內置方案和文件上傳。
               </p>
               
-              <ComparisonCard :currentCodeTable="codeTable" />
+              <ComparisonCard :currentCodeTable="codeTable" :currentCodeTableName="codeTableName" />
             </div>
           </div>
 
@@ -197,6 +197,7 @@ import type { CodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
 
 // 響應式數據
 const codeTable = ref<CodeTable>(new Map())
+const codeTableName = ref<string>('')
 const analysisReady = ref(false)
 const uploadStatus = ref<UploadStatus | null>(null)
 const analysisData = ref<CodeTableAnalysis | null>(null)
@@ -360,6 +361,7 @@ function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
 // 處理碼表上傳成功
 const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string }) => {
   codeTable.value = data.codeTable
+  codeTableName.value = data.fileName.replace(/\.(txt|csv)$/, '') // 移除文件後綴
   analysisReady.value = true
   
   // 生成分析數據

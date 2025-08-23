@@ -5,7 +5,7 @@
   "builtinCodeTables": [
     {
       "key": "yuhao-ming",
-      "name": "日月·大明",
+      "name": "日月",
       "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-ming.txt",
       "format": "code_first",
       "description": "宇浩拆分·世上首款純形前綴碼",

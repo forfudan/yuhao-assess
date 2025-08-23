@@ -76,6 +76,12 @@
                 </th>
                 <th class="metric-header">
                   <div class="metric-header-content">
+                    <span>到CJK-F</span>
+                    <small>重碼字數</small>
+                  </div>
+                </th>
+                <th class="metric-header">
+                  <div class="metric-header-content">
                     <span>到CJK-I</span>
                     <small>重碼字數</small>
                   </div>
@@ -89,7 +95,6 @@
                   <div class="scheme-info">
                     <span class="scheme-title">{{ scheme.name }}</span>
                     <span v-if="scheme.isBuiltin" class="scheme-source">內置方案</span>
-                    <span v-else-if="scheme.name === '當前方案'" class="scheme-source">當前方案</span>
                     <span v-else class="scheme-source">上傳文件</span>
                   </div>
                 </td>
@@ -172,6 +177,15 @@
                   </div>
                   <span v-else class="metric-value">
                     {{ formatNumber(scheme.data?.cjkToBDuplicateChars) }}
+                  </span>
+                </td>
+                <td class="metric-cell">
+                  <div v-if="scheme.isCalculating" class="calculating">
+                    <div class="mini-spinner"></div>
+                    <span>計算中</span>
+                  </div>
+                  <span v-else class="metric-value">
+                    {{ formatNumber(scheme.data?.cjkToFDuplicateChars) }}
                   </span>
                 </td>
                 <td class="metric-cell">
@@ -286,6 +300,7 @@ import type { CodeTable, CharFrequency } from '../types'
 // Props
 interface Props {
   currentCodeTable?: CodeTable | null
+  currentCodeTableName?: string
 }
 
 const props = defineProps<Props>()
@@ -301,6 +316,7 @@ interface SchemeData {
   cjkBasicDuplicateChars: number
   cjkToADuplicateChars: number
   cjkToBDuplicateChars: number
+  cjkToFDuplicateChars: number
   cjkToIDuplicateChars: number
 }
 
@@ -308,8 +324,8 @@ interface SchemeData {
 interface Scheme {
   id: string
   name: string
-  source: 'builtin' | 'upload'
   codeTable?: CodeTable
+  isBuiltin: boolean
   isCalculating: boolean
   data?: SchemeData
 }
@@ -440,7 +456,7 @@ onMounted(async () => {
 })
 
 // 監聽當前方案變化
-watch(() => props.currentCodeTable, (newCodeTable) => {
+watch(() => [props.currentCodeTable, props.currentCodeTableName], ([newCodeTable, newCodeTableName]) => {
   if (newCodeTable) {
     loadCurrentUserScheme()
   } else {
@@ -455,17 +471,17 @@ const loadDefaultYuhaoScheme = async () => {
       scheme => scheme.id === 'yuhao-star-original'
     )
     if (yuhaoScheme) {
-      const codeTable = await builtinService.loadCodeTable(yuhaoScheme.id)
+      const result = await builtinService.downloadCodeTable(yuhaoScheme.id)
       yuhaoDefaultScheme.value = {
         id: `default-${Date.now()}`,
         name: yuhaoScheme.name,
-        codeTable,
+        codeTable: result.codeTable,
         isBuiltin: true,
         isCalculating: true,
         data: undefined
       }
       // 異步計算數據
-      const data = await calculateSchemeData(codeTable)
+      const data = await calculateSchemeData(result.codeTable)
       yuhaoDefaultScheme.value.data = data
       yuhaoDefaultScheme.value.isCalculating = false
     }
@@ -477,9 +493,12 @@ const loadDefaultYuhaoScheme = async () => {
 // 載入當前用戶方案
 const loadCurrentUserScheme = async () => {
   if (props.currentCodeTable) {
+    // 使用實際的方案名稱，如果沒有則使用默認名稱
+    const schemeName = props.currentCodeTableName || '用戶方案'
+    
     currentUserScheme.value = {
       id: `current-${Date.now()}`,
-      name: '當前方案',
+      name: schemeName,
       codeTable: props.currentCodeTable,
       isBuiltin: false,
       isCalculating: true,
@@ -531,6 +550,8 @@ async function calculateSchemeData(codeTable: CodeTable): Promise<SchemeData> {
   const cjkBasicDuplicateChars = await calculateCharsetDuplicates('cjk_basic', allUniqueChars, fullCodeTable)
   const cjkToADuplicateChars = await calculateCharsetDuplicates('cjk_to_a', allUniqueChars, fullCodeTable)
   const cjkToBDuplicateChars = await calculateCharsetDuplicates('cjk_to_b', allUniqueChars, fullCodeTable)
+  const cjkToFDuplicateChars = await calculateCharsetDuplicates('cjk_to_f', allUniqueChars, fullCodeTable)
+  const cjkToIDuplicateChars = await calculateCharsetDuplicates('cjk_to_i', allUniqueChars, fullCodeTable)
   
   return {
     dynamicDupRate,
@@ -541,7 +562,9 @@ async function calculateSchemeData(codeTable: CodeTable): Promise<SchemeData> {
     guoziDuplicateChars,
     cjkBasicDuplicateChars,
     cjkToADuplicateChars,
-    cjkToBDuplicateChars
+    cjkToBDuplicateChars,
+    cjkToFDuplicateChars,
+    cjkToIDuplicateChars
   }
 }
 
