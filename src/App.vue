@@ -100,12 +100,19 @@
                 </span>
               </button>
             </div>
+            <!--重碼數據分析卡片-->
             <div v-show="!modules.duplicate.collapsed" class="module-content">
               <p class="module-description">
                 分析不同字符集下的重碼情況，計算靜態重碼率和動態選重率。<a href="https://shurufa.app/docs/concepts.html" target="_blank">閱讀《瓊林擷英》瞭解詳細定義。</a>
               </p>
-              
               <DuplicateAnalysisCard :code-table="codeTable" />
+            </div>
+            <!--最大候選個數卡片-->
+            <div v-show="!modules.duplicate.collapsed" class="module-content">
+              <p class="module-description">
+                分析不同字符集下的最大候選項個數。數字越小，翻頁次數越少。
+              </p>
+              <MaximumCandidatesCard :code-table="codeTable" />
             </div>
           </div>
 
@@ -127,7 +134,6 @@
               <p class="module-description">
                 對比不同輸入法方案的重碼數據，支持內置方案和文件上傳。
               </p>
-              
               <ComparisonCard :currentCodeTable="codeTable" :currentCodeTableName="codeTableName" />
             </div>
           </div>
@@ -208,6 +214,7 @@ import CodeTableUploader from './components/CodeTableUploader.vue'
 import KeyboardHeatmap from './components/KeyboardHeatmap.vue'
 import CodeTableViewer from './components/CodeTableViewer.vue'
 import DuplicateAnalysisCard from './components/DuplicateAnalysisCard.vue'
+import MaximumCandidatesCard from './components/MaximumCandidatesCard.vue'
 import ComparisonCard from './components/ComparisonCard.vue'
 import type { CodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
 
