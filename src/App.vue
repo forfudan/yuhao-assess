@@ -38,7 +38,7 @@
       </div>
     </header>
 
-    <!-- 主要內容區域 - 重新設計為單列模塊布局 -->
+    <!-- 主要內容區域 - 設計為單列模塊布局 -->
     <main class="main">
       <div class="container">
         <!-- 模块容器 -->
@@ -94,16 +94,10 @@
             </div>
             <!--重碼數據分析卡片-->
             <div v-show="!modules.duplicate.collapsed" class="module-content">
-              <p class="module-description">
-                分析不同字符集下的重碼情況，計算靜態重碼率和動態選重率。<a href="https://shurufa.app/docs/concepts.html" target="_blank">閱讀《瓊林擷英》瞭解詳細定義。</a>
-              </p>
               <DuplicateAnalysisCard :code-table="codeTable" />
             </div>
             <!--最大候選個數卡片-->
             <div v-show="!modules.duplicate.collapsed" class="module-content">
-              <p class="module-description">
-                分析不同字符集下的最大候選項個數。數字越小，翻頁次數越少。
-              </p>
               <MaximumCandidatesCard :code-table="codeTable" />
             </div>
           </div>

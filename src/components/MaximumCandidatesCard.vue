@@ -2,7 +2,7 @@
   <div class="maximum-candidates-card">
     <div class="card-header">
       <h3>最大候選項個數</h3>
-      <p class="card-description">分析不同字符集下每個編碼的最大候選項個數</p>
+      <p class="card-description">分析不同字符集下每個編碼的最大候選項個數。數字越小，翻頁次數越少。</p>
     </div>
     
     <div class="card-content">

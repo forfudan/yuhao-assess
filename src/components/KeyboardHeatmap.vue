@@ -7,131 +7,122 @@
       <p class="placeholder-subtitle">上传码表后将显示键位热力图分析</p>
     </div>
 
-    <!-- 热力图内容 - 单列卡片布局 -->
-    <div v-else class="module-container">
-      
-      <!-- 键盘热力图模块 -->
-      <div class="module-card">
-        <div class="module-content">
-          <div class="keyboard-wrapper">
-            <div class="keyboard-layout" :style="{ transform: `scale(${keyboardScale})` }">
-              <!-- 数字行 -->
-              <div class="keyboard-row number-row">
-                <KeyButton 
-                  v-for="key in numberRowKeys"
-                  :key="key.key"
-                  :keyData="getKeyData(key.key)"
-                  :displayMode="displayMode"
-                  :maxValue="maxKeyValue"
-                  :keyInfo="key"
-                />
-              </div>
+    <!-- 热力图内容 -->
+    <div v-else class="keyboard-heatmap-content">
+      <!-- 键盘热力图 -->
+      <div class="keyboard-wrapper">
+        <div class="keyboard-layout" :style="{ transform: `scale(${keyboardScale})` }">
+          <!-- 数字行 -->
+          <div class="keyboard-row number-row">
+            <KeyButton 
+              v-for="key in numberRowKeys"
+              :key="key.key"
+              :keyData="getKeyData(key.key)"
+              :displayMode="displayMode"
+              :maxValue="maxKeyValue"
+              :keyInfo="key"
+            />
+          </div>
 
-              <!-- 第一行 -->
-              <div class="keyboard-row first-row">
-                <KeyButton 
-                  v-for="key in firstRowKeys"
-                  :key="key.key"
-                  :keyData="getKeyData(key.key)"
-                  :displayMode="displayMode"
-                  :maxValue="maxKeyValue"
-                  :keyInfo="key"
-                />
-              </div>
+          <!-- 第一行 -->
+          <div class="keyboard-row first-row">
+            <KeyButton 
+              v-for="key in firstRowKeys"
+              :key="key.key"
+              :keyData="getKeyData(key.key)"
+              :displayMode="displayMode"
+              :maxValue="maxKeyValue"
+              :keyInfo="key"
+            />
+          </div>
 
-              <!-- 第二行 -->
-              <div class="keyboard-row second-row">
-                <KeyButton 
-                  v-for="key in secondRowKeys"
-                  :key="key.key"
-                  :keyData="getKeyData(key.key)"
-                  :displayMode="displayMode"
-                  :maxValue="maxKeyValue"
-                  :keyInfo="key"
-                />
-              </div>
+          <!-- 第二行 -->
+          <div class="keyboard-row second-row">
+            <KeyButton 
+              v-for="key in secondRowKeys"
+              :key="key.key"
+              :keyData="getKeyData(key.key)"
+              :displayMode="displayMode"
+              :maxValue="maxKeyValue"
+              :keyInfo="key"
+            />
+          </div>
 
-              <!-- 第三行 -->
-              <div class="keyboard-row third-row">
-                <KeyButton 
-                  v-for="key in thirdRowKeys"
-                  :key="key.key"
-                  :keyData="getKeyData(key.key)"
-                  :displayMode="displayMode"
-                  :maxValue="maxKeyValue"
-                  :keyInfo="key"
-                />
-              </div>
+          <!-- 第三行 -->
+          <div class="keyboard-row third-row">
+            <KeyButton 
+              v-for="key in thirdRowKeys"
+              :key="key.key"
+              :keyData="getKeyData(key.key)"
+              :displayMode="displayMode"
+              :maxValue="maxKeyValue"
+              :keyInfo="key"
+            />
+          </div>
 
-              <!-- 空格鍵行 -->
-              <div class="keyboard-row space-row">
-                <KeyButton 
-                  v-for="key in spaceRowKeys"
-                  :key="key.key"
-                  :keyData="getKeyData(key.key)"
-                  :displayMode="displayMode"
-                  :maxValue="maxKeyValue"
-                  :keyInfo="key"
-                />
-              </div>
-            </div>
+          <!-- 空格鍵行 -->
+          <div class="keyboard-row space-row">
+            <KeyButton 
+              v-for="key in spaceRowKeys"
+              :key="key.key"
+              :keyData="getKeyData(key.key)"
+              :displayMode="displayMode"
+              :maxValue="maxKeyValue"
+              :keyInfo="key"
+            />
           </div>
         </div>
       </div>
 
-      <!-- 综合统计模块 -->
-      <div class="module-card">
-        <div class="module-header">
-          <h3 class="module-title">統計分析</h3>
+      <!-- 统计分析 -->
+      <div class="stats-container">
+        <h4 class="stats-title">統計分析</h4>
+        
+        <!-- 左右手平衡 -->
+        <div class="stats-section">
+          <h5 class="section-title">左右手平衡</h5>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-label">左手</span>
+              <span class="stat-value">{{ stats.handBalance.left.toFixed(1) }}%</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">右手</span>
+              <span class="stat-value">{{ stats.handBalance.right.toFixed(1) }}%</span>
+            </div>
+          </div>
         </div>
-        <div class="module-content">
-          <!-- 左右手平衡 -->
-          <div class="stats-section">
-            <h4 class="section-title">左右手平衡</h4>
-            <div class="stats-grid">
-              <div class="stat-item">
-                <span class="stat-label">左手</span>
-                <span class="stat-value">{{ stats.handBalance.left.toFixed(1) }}%</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">右手</span>
-                <span class="stat-value">{{ stats.handBalance.right.toFixed(1) }}%</span>
-              </div>
+
+        <!-- 按排分布 -->
+        <div class="stats-section">
+          <h5 class="section-title">按排分布</h5>
+          <div class="stats-grid">
+            <div 
+              v-for="(percentage, row) in rowDistributionPercentages" 
+              :key="row"
+              class="stat-item"
+            >
+              <span class="stat-label">{{ row }}</span>
+              <span class="stat-value">{{ percentage.toFixed(1) }}%</span>
             </div>
           </div>
+        </div>
 
-          <!-- 按排分布 -->
-          <div class="stats-section">
-            <h4 class="section-title">按排分布</h4>
-            <div class="stats-grid">
-              <div 
-                v-for="(percentage, row) in rowDistributionPercentages" 
-                :key="row"
-                class="stat-item"
-              >
-                <span class="stat-label">{{ row }}</span>
-                <span class="stat-value">{{ percentage.toFixed(1) }}%</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 手指负担 -->
-          <div class="stats-section">
-            <h4 class="section-title">手指負擔</h4>
-            <div class="stats-grid">
-              <div 
-                v-for="(load, finger) in fingerLoadPercentages" 
-                :key="finger"
-                class="stat-item"
-              >
-                <span class="stat-label">{{ finger }}</span>
-                <span class="stat-value">{{ load.toFixed(1) }}%</span>
-              </div>
+        <!-- 手指负担 -->
+        <div class="stats-section">
+          <h5 class="section-title">手指負擔</h5>
+          <div class="stats-grid">
+            <div 
+              v-for="(load, finger) in fingerLoadPercentages" 
+              :key="finger"
+              class="stat-item"
+            >
+              <span class="stat-label">{{ finger }}</span>
+              <span class="stat-value">{{ load.toFixed(1) }}%</span>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -412,6 +403,30 @@ onMounted(() => {
 .placeholder-subtitle {
   font-size: 1rem;
   opacity: 0.8;
+}
+
+/* 键盘热力图内容 */
+.keyboard-heatmap-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* 统计容器 */
+.stats-container {
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  border: 1px solid var(--color-border-primary);
+}
+
+.stats-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: var(--spacing-sm);
 }
 
 /* 模块容器 - 单列布局 */
