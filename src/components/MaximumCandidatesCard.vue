@@ -26,7 +26,7 @@
               <tr>
                 <th class="charset-header">字符集</th>
                 <th class="count-header">最大候選項個數</th>
-                <th class="description-header">說明</th>
+                <th class="codes-header">對應編碼</th>
               </tr>
             </thead>
             <tbody>
@@ -34,7 +34,6 @@
                 <td class="charset-cell">
                   <div class="charset-info">
                     <span class="charset-name">{{ item.name }}</span>
-                    <span class="charset-code">{{ item.charset }}</span>
                   </div>
                 </td>
                 <td class="count-cell">
@@ -42,8 +41,25 @@
                     {{ item.count }}
                   </span>
                 </td>
-                <td class="description-cell">
-                  <span class="description-text">{{ item.description }}</span>
+                <td class="codes-cell">
+                  <div class="codes-list">
+                    <span 
+                      v-for="(codeInfo, index) in item.codes" 
+                      :key="codeInfo.code"
+                      class="code-item"
+                    >
+                      <span class="code-text">{{ codeInfo.code }}</span>
+                      <span 
+                        class="help-icon"
+                        :title="getCharacterTooltip(codeInfo.chars)"
+                        @mouseenter="showTooltip($event, codeInfo.chars)"
+                        @mouseleave="hideTooltip()"
+                      >
+                        ⓘ
+                      </span>
+                      <span v-if="index < item.codes.length - 1" class="code-separator">, </span>
+                    </span>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -70,7 +86,19 @@
                 <span class="count-demo high">>5</span>
               </span>
             </div>
+            <div class="note-item">
+              <span class="note-label">編碼說明:</span>
+              <span>鼠標懸停在 ⓘ 圖標上可查看該編碼對應的所有漢字</span>
+            </div>
           </div>
+        </div>
+      </div>
+
+      <!-- 自定義工具提示 -->
+      <div v-if="tooltipVisible" class="custom-tooltip" :style="tooltipStyle">
+        <div class="tooltip-content">
+          <div class="tooltip-header">該編碼對應的漢字：</div>
+          <div class="tooltip-chars">{{ tooltipChars }}</div>
         </div>
       </div>
     </div>
@@ -79,7 +107,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { getAllMaximumCandidates } from '../services/maximumCandidatesService'
+import { getAllMaximumCandidates, type MaximumCandidatesResult } from '../services/maximumCandidatesService'
 import type { CodeTable } from '../types'
 
 // Props
@@ -92,37 +120,35 @@ const props = defineProps<Props>()
 // 響應式數據
 const loading = ref(false)
 const error = ref<string | null>(null)
-const analysisResults = ref<Record<string, number> | null>(null)
+const analysisResults = ref<Record<string, MaximumCandidatesResult> | null>(null)
+
+// 工具提示相關
+const tooltipVisible = ref(false)
+const tooltipChars = ref('')
+const tooltipStyle = ref({})
 
 // 字符集信息映射
 const charsetInfo = {
   gb2312: {
-    name: 'GB2312',
-    description: '簡體字符集（6763字）'
+    name: 'GB2312'
   },
   guozi: {
-    name: '國字常用',
-    description: '繁體常用字符集（4808字）'
+    name: '國字常用'
   },
   cjk_basic: {
-    name: 'CJK基本區',
-    description: 'Unicode基本漢字區（20992字）'
+    name: 'CJK基本區'
   },
   cjk_to_a: {
-    name: '到CJK-A',
-    description: '包含CJK基本區+擴展A區'
+    name: '到CJK-A'
   },
   cjk_to_b: {
-    name: '到CJK-B',
-    description: '包含到CJK-A+擴展B區'
+    name: '到CJK-B'
   },
   cjk_to_f: {
-    name: '到CJK-F',
-    description: '包含到CJK-B+擴展C-F區'
+    name: '到CJK-F'
   },
   cjk_to_i: {
-    name: '到CJK-I',
-    description: '包含到CJK-F+擴展G-I區'
+    name: '到CJK-I'
   }
 }
 
@@ -130,13 +156,37 @@ const charsetInfo = {
 const tableData = computed(() => {
   if (!analysisResults.value) return []
   
-  return Object.entries(analysisResults.value).map(([charset, count]) => ({
+  return Object.entries(analysisResults.value).map(([charset, result]) => ({
     charset,
     name: charsetInfo[charset as keyof typeof charsetInfo]?.name || charset,
-    description: charsetInfo[charset as keyof typeof charsetInfo]?.description || '',
-    count
+    count: result.maxCount,
+    codes: result.codes
   }))
 })
+
+// 生成字符工具提示文本
+const getCharacterTooltip = (chars: string[]) => {
+  return `該編碼對應的漢字：${chars.join('')}`
+}
+
+// 顯示自定義工具提示
+const showTooltip = (event: MouseEvent, chars: string[]) => {
+  tooltipChars.value = chars.join('')
+  tooltipVisible.value = true
+  
+  const rect = (event.target as HTMLElement).getBoundingClientRect()
+  tooltipStyle.value = {
+    position: 'fixed',
+    left: `${rect.left}px`,
+    top: `${rect.bottom + 8}px`,
+    zIndex: 1000
+  }
+}
+
+// 隱藏工具提示
+const hideTooltip = () => {
+  tooltipVisible.value = false
+}
 
 // 計算分析數據
 const calculateData = async () => {
@@ -292,16 +342,16 @@ onMounted(() => {
 }
 
 .charset-header {
-  width: 30%;
+  width: 25%;
 }
 
 .count-header {
-  width: 25%;
+  width: 20%;
   text-align: center;
 }
 
-.description-header {
-  width: 45%;
+.codes-header {
+  width: 55%;
 }
 
 .result-row:hover {
@@ -321,12 +371,6 @@ onMounted(() => {
 .charset-name {
   font-weight: 500;
   color: #374151;
-}
-
-.charset-code {
-  font-size: 0.75rem;
-  color: #6b7280;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
 }
 
 .count-cell {
@@ -353,9 +397,87 @@ onMounted(() => {
   color: #991b1b;
 }
 
-.description-cell {
-  color: #6b7280;
+.codes-cell {
+  padding: 12px 16px;
+}
+
+.codes-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.code-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.code-text {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
   font-size: 0.875rem;
+  color: #374151;
+}
+
+.help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: help;
+  transition: all 0.2s ease;
+}
+
+.help-icon:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+}
+
+.code-separator {
+  color: #6b7280;
+}
+
+/* 自定義工具提示 */
+.custom-tooltip {
+  position: fixed;
+  background: #1f2937;
+  color: white;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 0.875rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  max-width: 300px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tooltip-header {
+  font-weight: 500;
+  color: #d1d5db;
+  font-size: 0.75rem;
+}
+
+.tooltip-chars {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  word-break: break-all;
 }
 
 /* 分析說明 */
@@ -435,15 +557,15 @@ onMounted(() => {
   }
   
   .charset-header {
-    width: 35%;
+    width: 30%;
   }
   
   .count-header {
     width: 25%;
   }
   
-  .description-header {
-    width: 40%;
+  .codes-header {
+    width: 45%;
   }
   
   .notes-grid {
@@ -458,6 +580,26 @@ onMounted(() => {
   .note-label {
     min-width: auto;
   }
+  
+  .code-text {
+    font-size: 0.75rem;
+    padding: 1px 4px;
+  }
+  
+  .help-icon {
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+  }
+  
+  .custom-tooltip {
+    max-width: 250px;
+    font-size: 0.75rem;
+  }
+  
+  .tooltip-chars {
+    font-size: 1rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -470,17 +612,36 @@ onMounted(() => {
     padding: 6px 8px;
   }
   
-  .description-header,
-  .description-cell {
-    display: none;
-  }
-  
   .charset-header {
-    width: 60%;
+    width: 35%;
   }
   
   .count-header {
+    width: 25%;
+  }
+  
+  .codes-header {
     width: 40%;
+  }
+  
+  .codes-list {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  
+  .code-item {
+    gap: 2px;
+  }
+  
+  .custom-tooltip {
+    max-width: 200px;
+    padding: 8px;
+    font-size: 0.7rem;
+  }
+  
+  .tooltip-chars {
+    font-size: 0.9rem;
   }
 }
 </style>
