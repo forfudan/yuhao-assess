@@ -12,7 +12,8 @@
       "website": "https://shurufa.app/",
       "category": "形碼",
       "tags": ["形碼", "前綴碼", "五碼"],
-      "enabled": true
+      "enabled": true,
+      "prefix": true
     },
     {
       "key": "yuhao-joy",

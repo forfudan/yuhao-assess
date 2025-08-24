@@ -120,7 +120,7 @@
             </div>
             <!--速度當量卡片-->
             <div v-show="!modules.ergonomics.collapsed" class="module-content">
-              <SpeedEquivCard :code-table="codeTable" />
+              <SpeedEquivCard :code-table="codeTable" :code-table-name="codeTableName" :initial-prefix="uploadPrefixFlag" />
             </div>
           </div>
 
@@ -234,6 +234,7 @@ const analysisReady = ref(false)
 const uploadStatus = ref<UploadStatus | null>(null)
 const analysisData = ref<CodeTableAnalysis | null>(null)
 const analysisResults = ref(null)
+const uploadPrefixFlag = ref<boolean>(false)
 
 // 主題相關
 const isDarkMode = ref(false)
@@ -392,9 +393,10 @@ function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
 }
 
 // 處理碼表上傳成功
-const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string }) => {
+const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean }) => {
   codeTable.value = data.codeTable
-  codeTableName.value = data.fileName.replace(/\.(txt|csv)$/, '') // 移除文件後綴
+  codeTableName.value = data.tableKey || data.fileName.replace(/\.(txt|csv)$/, '') // 优先使用tableKey，用于内置方案前缀码检测
+  uploadPrefixFlag.value = data.isPrefix || false  // 设置用户上传时的前缀码标记
   analysisReady.value = true
   
   // 生成分析數據

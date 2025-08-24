@@ -50,12 +50,24 @@
           </tbody>
         </table>
 
+        <div class="prefix-control">
+          <button 
+            @click="togglePrefixMode" 
+            :class="['prefix-button', { 'active': isPrefixCode }]"
+            title="切換前綴碼模式"
+          >
+            {{ isPrefixCode ? '✓ 本方案為前綴碼' : '本方案為前綴碼' }}
+          </button>
+        </div>
+
         <div class="info-section">
           <h4>指標說明</h4>
           <p>速度當量基於實驗統計結果，評估輸入法按鍵對的手感表現。數值越小表示輸入越流暢。計算考慮了：</p>
           <ul>
             <li>漢字的使用頻率</li>
-            <li>碼表的規範化處理，即在未達到最大碼長時使用空格補充</li>
+            <li v-if="!isPrefixCode">碼表的規範化處理，即在未達到最大碼長時使用空格補充</li>
+            <li v-else>前綴碼特性，未達到最大碼長時不補充空格</li>
+            <li>多候選字的選擇鍵處理（第2候選加分號，第3候選加單引號，依此類推）</li>
           </ul>
           <p>檢測到的最大碼長為：{{ maxCodeLength }} 位</p>
         </div>
@@ -72,10 +84,14 @@ import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 // Props
 interface Props {
   codeTable?: CodeTable
+  codeTableName?: string
+  initialPrefix?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  codeTable: () => new Map()
+  codeTable: () => new Map(),
+  codeTableName: '',
+  initialPrefix: false
 })
 
 // 分析结果数据结构
@@ -91,10 +107,43 @@ const isCalculating = ref(false)
 const error = ref<string | null>(null)
 const analysisResults = ref<SpeedEquivResults | null>(null)
 const maxCodeLength = ref<number>(0)
+const isPrefixCode = ref(false)
 const builtinService = new BuiltinCodeTableService()
 
 // 特殊字符用于测试最大码长
 const TEST_CHARS = ['灌', '瓣', '璧', '豁', '糯', '籍', '矗', '瓤', '嚼', '瞻', '覆', '馨', '徽', '警', '繁', '霜', '霞']
+
+// 检查是否为内置前缀码方案
+async function checkBuiltinPrefixCode() {
+  if (!props.codeTableName) return
+  
+  try {
+    const response = await fetch('/data/codeTableConfig.json')
+    if (!response.ok) return
+    
+    const config = await response.json()
+    const builtinTables = config.builtinCodeTables || []
+    
+    const matchedTable = builtinTables.find((table: any) => 
+      table.key === props.codeTableName || table.name === props.codeTableName
+    )
+    
+    if (matchedTable && matchedTable.prefix === true) {
+      isPrefixCode.value = true
+    }
+  } catch (error) {
+    console.warn('检查内置方案配置失败:', error)
+  }
+}
+
+// 切换前缀码模式
+function togglePrefixMode() {
+  isPrefixCode.value = !isPrefixCode.value
+  // 立即重新计算当量
+  if (props.codeTable && props.codeTable.size > 0) {
+    calculateSpeedEquivAnalysis()
+  }
+}
 
 // 加载当量表
 async function loadEquivTable(): Promise<Record<string, number>> {
@@ -124,17 +173,55 @@ function calculateMaxCodeLength(codeTable: CodeTable): number {
   return maxLength || 4 // 默认4位
 }
 
-// 处理码表：短码补充下划线
-function processCodeTable(codeTable: CodeTable, maxLength: number): CodeTable {
+// 处理码表：短码补充下划线（前缀码除外）并添加选择键
+function processCodeTable(codeTable: CodeTable, maxLength: number, isPrefix: boolean): CodeTable {
   const processedTable = new Map<string, string[]>()
   
+  // 首先收集所有编码的字符，按频率排序以确定候选顺序
+  const codeToChars = new Map<string, string[]>()
+  
   for (const [char, codes] of codeTable.entries()) {
-    const processedCodes = codes.map(code => {
-      if (code.length < maxLength) {
-        return code + '_'
+    if (codes.length === 0) continue
+    
+    for (const code of codes) {
+      if (!codeToChars.has(code)) {
+        codeToChars.set(code, [])
       }
-      return code
-    })
+      codeToChars.get(code)!.push(char)
+    }
+  }
+  
+  // 为每个字符处理编码
+  for (const [char, codes] of codeTable.entries()) {
+    if (codes.length === 0) continue
+    
+    const processedCodes: string[] = []
+    
+    for (const code of codes) {
+      const charsWithThisCode = codeToChars.get(code) || []
+      const charIndex = charsWithThisCode.indexOf(char)
+      
+      let processedCode = code
+      
+      // 非前缀码且未达到最大码长时补充下划线
+      if (!isPrefix && code.length < maxLength) {
+        processedCode = code + '_'
+      }
+      
+      // 如果有多个候选，添加选择键
+      if (charsWithThisCode.length > 1 && charIndex > 0) {
+        const selectKeys = [';', "'", '4', '5', '6', '7', '8', '9']
+        if (charIndex - 1 < selectKeys.length) {
+          processedCode += selectKeys[charIndex - 1]
+        } else {
+          // 超过选择键数量时用数字继续
+          processedCode += (charIndex + 1).toString()
+        }
+      }
+      
+      processedCodes.push(processedCode)
+    }
+    
     processedTable.set(char, processedCodes)
   }
   
@@ -197,7 +284,7 @@ async function calculateSpeedEquivAnalysis() {
     maxCodeLength.value = calculateMaxCodeLength(props.codeTable)
     
     // 2. 处理码表
-    const processedCodeTable = processCodeTable(props.codeTable, maxCodeLength.value)
+    const processedCodeTable = processCodeTable(props.codeTable, maxCodeLength.value, isPrefixCode.value)
     
     // 3. 加载当量表
     const equivTable = await loadEquivTable()
@@ -238,8 +325,26 @@ watch(() => props.codeTable, (newCodeTable) => {
   }
 }, { immediate: true })
 
+// 监听方案名称变化，检查是否为内置前缀码方案
+watch(() => props.codeTableName, (newName) => {
+  if (newName) {
+    checkBuiltinPrefixCode()
+  }
+}, { immediate: true })
+
 // 组件挂载时自动计算
-onMounted(() => {
+onMounted(async () => {
+  // 检查是否为内置前缀码方案
+  if (props.codeTableName) {
+    await checkBuiltinPrefixCode()
+  }
+  
+  // 如果没有检测到内置前缀码，使用用户上传时的设置
+  if (!isPrefixCode.value && props.initialPrefix) {
+    isPrefixCode.value = true
+  }
+  
+  // 自动计算
   if (props.codeTable && props.codeTable.size > 0) {
     calculateSpeedEquivAnalysis()
   }
@@ -378,6 +483,43 @@ onMounted(() => {
 
 .metric-desc a:hover {
   text-decoration: underline;
+}
+
+.prefix-control {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.prefix-button {
+  background: #f3f4f6;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.prefix-button:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.prefix-button.active {
+  background: #dcfce7;
+  border-color: #16a34a;
+  color: #15803d;
+}
+
+.prefix-button.active:hover {
+  background: #bbf7d0;
+  border-color: #15803d;
 }
 
 .info-section {
