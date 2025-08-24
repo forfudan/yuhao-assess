@@ -25,7 +25,8 @@
                 簡碼
                 <span 
                   class="info-icon" 
-                  title="計算簡碼時，會提取碼表相同漢字中編碼長度最小之編碼，並視之為簡碼。故而出現多重簡碼、兼容編碼、無理碼等特殊情況時，該列數據會出現失真現象。欲獲取更加準確之統計，請對碼表進行處理。"
+                  @mouseenter="showTooltip($event, '計算簡碼時，會提取碼表相同漢字中編碼長度最小之編碼，並視之為簡碼。故而出現多重簡碼、兼容編碼、無理碼等特殊情況時，該列數據會出現失真現象。欲獲取更加準確之統計，請對碼表進行處理。')"
+                  @mouseleave="hideTooltip()"
                 >
                   ⓘ
                 </span>
@@ -39,7 +40,8 @@
                 知乎動態選重率
                 <span 
                   class="info-icon" 
-                  title="計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。"
+                  @mouseenter="showTooltip($event, '計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。')"
+                  @mouseleave="hideTooltip()"
                 >
                   ⓘ
                 </span>
@@ -53,7 +55,8 @@
                 簡體動態選重率
                 <span 
                   class="info-icon" 
-                  title="計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。"
+                  @mouseenter="showTooltip($event, '計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。')"
+                  @mouseleave="hideTooltip()"
                 >
                   ⓘ
                 </span>
@@ -67,7 +70,8 @@
                 繁體動態選重率
                 <span 
                   class="info-icon" 
-                  title="計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。"
+                  @mouseenter="showTooltip($event, '計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。')"
+                  @mouseleave="hideTooltip()"
                 >
                   ⓘ
                 </span>
@@ -81,7 +85,8 @@
                 繁簡聯合動態選重率
                 <span 
                   class="info-icon" 
-                  title="計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。"
+                  @mouseenter="showTooltip($event, '計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。')"
+                  @mouseleave="hideTooltip()"
                 >
                   ⓘ
                 </span>
@@ -183,10 +188,19 @@
       </div>
     </div>
   </div>
+
+  <!-- 自定義工具提示 - 使用 Teleport 移到 body -->
+  <Teleport to="body">
+    <div v-if="tooltipVisible" class="custom-tooltip" :style="tooltipStyle">
+      <div class="tooltip-content">
+        {{ tooltipText }}
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
 import { generateFullCodeTable, generateShortCodeTable } from '../services/codeTableCleanService'
 import { getDynamicDupRate } from '../services/analysisService'
@@ -262,6 +276,33 @@ interface AnalysisResults {
 const isCalculating = ref(false)
 const analysisResults = ref<AnalysisResults | null>(null)
 const builtinService = new BuiltinCodeTableService()
+
+// 工具提示相关
+const tooltipVisible = ref(false)
+const tooltipText = ref('')
+const tooltipStyle = ref({})
+
+// 显示自定义工具提示
+const showTooltip = (event: MouseEvent, text: string) => {
+  tooltipText.value = text
+  tooltipVisible.value = true
+  
+  const rect = (event.target as HTMLElement).getBoundingClientRect()
+  const tooltipLeft = Math.min(rect.left, window.innerWidth - 320)
+  const tooltipTop = rect.bottom + 8
+  
+  tooltipStyle.value = {
+    position: 'fixed',
+    left: `${tooltipLeft}px`,
+    top: `${tooltipTop}px`,
+    zIndex: 9999
+  }
+}
+
+// 隐藏工具提示
+const hideTooltip = () => {
+  tooltipVisible.value = false
+}
 
 // 加载字频数据
 async function loadCharFrequency(): Promise<CharFrequency> {
@@ -803,5 +844,24 @@ onMounted(() => {
   .metrics-table td {
     padding: 8px 12px;
   }
+}
+
+/* 自定義工具提示樣式 */
+.custom-tooltip {
+  position: fixed;
+  background: #1f2937;
+  color: white;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 0.875rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  max-width: 300px;
+  z-index: 9999;
+  pointer-events: none;
+  line-height: 1.5;
+}
+
+.tooltip-content {
+  display: block;
 }
 </style>
