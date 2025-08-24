@@ -48,14 +48,12 @@
                       :key="codeInfo.code"
                       class="code-item"
                     >
-                      <span class="code-text">{{ codeInfo.code }}</span>
                       <span 
-                        class="help-icon"
-                        :title="getCharacterTooltip(codeInfo.chars)"
+                        class="code-text hoverable"
                         @mouseenter="showTooltip($event, codeInfo.chars)"
                         @mouseleave="hideTooltip()"
                       >
-                        ⓘ
+                        {{ codeInfo.code }}
                       </span>
                       <span v-if="index < item.codes.length - 1" class="code-separator">, </span>
                     </span>
@@ -88,25 +86,27 @@
             </div>
             <div class="note-item">
               <span class="note-label">編碼說明:</span>
-              <span>鼠標懸停在 ⓘ 圖標上可查看該編碼對應的所有漢字</span>
+              <span>鼠標懸停在編碼上可查看該編碼對應的所有漢字</span>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- 自定義工具提示 -->
-      <div v-if="tooltipVisible" class="custom-tooltip" :style="tooltipStyle">
-        <div class="tooltip-content">
-          <div class="tooltip-header">該編碼對應的漢字：</div>
-          <div class="tooltip-chars">{{ tooltipChars }}</div>
-        </div>
-      </div>
     </div>
   </div>
+
+  <!-- 自定義工具提示 - 使用 Teleport 移到 body -->
+  <Teleport to="body">
+    <div v-if="tooltipVisible" class="custom-tooltip" :style="tooltipStyle">
+      <div class="tooltip-content">
+        <div class="tooltip-header">該編碼對應的漢字：</div>
+        <div class="tooltip-chars">{{ tooltipChars }}</div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, Teleport } from 'vue'
 import { getAllMaximumCandidates, type MaximumCandidatesResult } from '../services/maximumCandidatesService'
 import type { CodeTable } from '../types'
 
@@ -171,20 +171,27 @@ const getCharacterTooltip = (chars: string[]) => {
 
 // 顯示自定義工具提示
 const showTooltip = (event: MouseEvent, chars: string[]) => {
+  console.log('showTooltip called with chars:', chars)
   tooltipChars.value = chars.join('')
   tooltipVisible.value = true
   
   const rect = (event.target as HTMLElement).getBoundingClientRect()
+  const tooltipLeft = Math.min(rect.left, window.innerWidth - 320) // 确保不超出右边界
+  const tooltipTop = rect.bottom + 8
+  
   tooltipStyle.value = {
     position: 'fixed',
-    left: `${rect.left}px`,
-    top: `${rect.bottom + 8}px`,
-    zIndex: 1000
+    left: `${tooltipLeft}px`,
+    top: `${tooltipTop}px`,
+    zIndex: 9999
   }
+  console.log('Tooltip visible:', tooltipVisible.value, 'chars:', tooltipChars.value)
+  console.log('Tooltip position:', tooltipStyle.value)
 }
 
 // 隱藏工具提示
 const hideTooltip = () => {
+  console.log('hideTooltip called')
   tooltipVisible.value = false
 }
 
@@ -423,24 +430,18 @@ onMounted(() => {
   color: #374151;
 }
 
-.help-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #3b82f6;
-  color: white;
-  font-size: 10px;
-  font-weight: bold;
+.hoverable {
   cursor: help;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: #cbd5e1;
   transition: all 0.2s ease;
 }
 
-.help-icon:hover {
-  background: #2563eb;
-  transform: scale(1.1);
+.hoverable:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+  text-decoration-color: #3b82f6;
 }
 
 .code-separator {
@@ -457,8 +458,11 @@ onMounted(() => {
   font-size: 0.875rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   max-width: 300px;
-  z-index: 1000;
+  z-index: 9999;
   pointer-events: none;
+  border: 2px solid #3b82f6; /* 添加边框便于调试 */
+  min-width: 100px;
+  min-height: 50px;
 }
 
 .tooltip-content {
