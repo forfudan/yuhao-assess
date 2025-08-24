@@ -107,6 +107,22 @@
               
               <DuplicateAnalysisCard :code-table="codeTable" />
             </div>
+          </div>
+
+          <!-- 方案對比模塊 -->
+          <div v-if="analysisReady" class="module-card">
+            <div class="module-header">
+              <h3 class="module-title">方案對比</h3>
+              <button 
+                class="toggle-button"
+                @click="toggleModule('duplicate')"
+                :title="modules.duplicate.collapsed ? '展開' : '收起'"
+              >
+                <span class="toggle-icon" :class="{ 'collapsed': modules.duplicate.collapsed }">
+                  ▼
+                </span>
+              </button>
+            </div>
             <div v-show="!modules.duplicate.collapsed" class="module-content">
               <p class="module-description">
                 對比不同輸入法方案的重碼數據，支持內置方案和文件上傳。
