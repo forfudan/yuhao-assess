@@ -158,7 +158,7 @@ const loadCharFrequency = async () => {
 
 // 响应式数据
 const displayMode = ref<'load'>('load') // 固定为按键频率模式
-const keyboardScale = ref(0.8)
+const keyboardScale = ref(1.0)
 
 // 键盘布局定义
 const numberRowKeys: KeyInfo[] = [
@@ -349,8 +349,8 @@ const updateKeyboardScale = () => {
   if (container) {
     const containerWidth = container.parentElement?.clientWidth || 800
     const keyboardWidth = 800 // 基础键盘宽度
-    const scale = Math.min(1, containerWidth / keyboardWidth)
-    keyboardScale.value = scale * 0.9 // 留一些边距
+    const scale = Math.min(1.2, containerWidth / keyboardWidth) // 允许轻微放大，最多120%
+    keyboardScale.value = scale * 0.95 // 留很少的边距，充分利用空间
   }
 }
 
@@ -583,7 +583,6 @@ onMounted(() => {
 /* 键盘包装器 */
 .keyboard-wrapper {
   display: flex;
-  justify-content: center;
   overflow-x: auto;
   padding: var(--spacing-md) 0;
 }
@@ -593,7 +592,8 @@ onMounted(() => {
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
-  transform-origin: center top;
+  transform-origin: left top;
+  width: 100%;
   min-width: 800px;
   border: 1px solid var(--color-border-secondary);
 }

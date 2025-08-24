@@ -745,16 +745,18 @@ onMounted(() => {
 
 .metrics-table th,
 .metrics-table td {
-  padding: 12px 16px;
+  padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid #e5e7eb;
+  font-size: 0.8rem;
+  line-height: 1.3;
 }
 
 .metrics-table th {
   background: #f8fafc;
   font-weight: 600;
   color: #374151;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -816,12 +818,13 @@ onMounted(() => {
   }
   
   .metrics-table {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
   }
   
   .metrics-table th,
   .metrics-table td {
-    padding: 8px 12px;
+    padding: 6px 8px;
+    font-size: 0.7rem;
   }
 }
 
