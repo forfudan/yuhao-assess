@@ -50,6 +50,12 @@ export {
   exportDuplicateReportCSV
 } from './duplicateAnalysisService'
 
+// 導出最大候選項分析函數
+export {
+  getMaximumCandidates,
+  getAllMaximumCandidates
+} from './maximumCandidatesService'
+
 // 重新導出相關類型
 export type {
   CodeTable,
