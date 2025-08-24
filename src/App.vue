@@ -104,6 +104,26 @@
             </div>
           </div>
 
+          <!-- 人體工學模塊 -->
+          <div v-if="analysisReady" class="module-card">
+            <div class="module-header">
+              <h3 class="module-title">人體工學</h3>
+              <button 
+                class="toggle-button"
+                @click="toggleModule('ergonomics')"
+                :title="modules.ergonomics.collapsed ? '展開' : '收起'"
+              >
+                <span class="toggle-icon" :class="{ 'collapsed': modules.ergonomics.collapsed }">
+                  ▼
+                </span>
+              </button>
+            </div>
+            <!--速度當量卡片-->
+            <div v-show="!modules.ergonomics.collapsed" class="module-content">
+              <SpeedEquivCard :code-table="codeTable" />
+            </div>
+          </div>
+
           <!-- 方案對比模塊 -->
           <div v-if="analysisReady" class="module-card">
             <div class="module-header">
@@ -204,6 +224,7 @@ import CodeTableViewer from './components/CodeTableViewer.vue'
 import DuplicateAnalysisCard from './components/DuplicateAnalysisCard.vue'
 import MaximumCandidatesCard from './components/MaximumCandidatesCard.vue'
 import ComparisonCard from './components/ComparisonCard.vue'
+import SpeedEquivCard from './components/SpeedEquivCard.vue'
 import type { CodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
 
 // 響應式數據
@@ -223,6 +244,7 @@ const modules = ref({
   heatmap: { collapsed: false },
   analysis: { collapsed: false },
   duplicate: { collapsed: false },
+  ergonomics: { collapsed: false },
   comparison: { collapsed: false }
 })
 
