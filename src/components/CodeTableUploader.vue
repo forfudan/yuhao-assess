@@ -413,14 +413,14 @@ loadBuiltinConfig()
 .code-table-uploader {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 /* 內置碼表選擇器樣式 */
 .builtin-selector {
   border: 2px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   background: var(--color-bg-secondary);
 }
 
@@ -428,13 +428,13 @@ loadBuiltinConfig()
   display: block;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
 }
 
 .builtin-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
 .builtin-select {
@@ -467,7 +467,7 @@ loadBuiltinConfig()
 .divider {
   position: relative;
   text-align: center;
-  margin: var(--spacing-md) 0;
+  margin: var(--spacing-sm) 0;
 }
 
 .divider::before {
@@ -493,7 +493,7 @@ loadBuiltinConfig()
 .format-selector {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
 .format-label {
@@ -540,7 +540,7 @@ loadBuiltinConfig()
 .upload-area {
   border: 2px dashed var(--color-border-primary);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-2xl);
+  padding: var(--spacing-lg);
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease-in-out;

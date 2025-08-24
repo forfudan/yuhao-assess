@@ -24,6 +24,15 @@
             <a href="https://github.com/forfudan/yu" target="_blank" class="nav-link">
               GitHub
             </a>
+            <!-- 全局折叠控制按钮 -->
+            <button 
+              class="global-toggle-btn-header"
+              @click="toggleAllModules"
+              :title="allModulesCollapsed ? '展開全部' : '折疊全部'"
+            >
+              <span class="btn-icon">{{ allModulesCollapsed ? '📂' : '📁' }}</span>
+              <span class="btn-text">{{ allModulesCollapsed ? '展開全部' : '折疊全部' }}</span>
+            </button>
           </nav>
         </div>
       </div>
@@ -32,23 +41,6 @@
     <!-- 主要內容區域 - 重新設計為單列模塊布局 -->
     <main class="main">
       <div class="container">
-        <!-- 全局控制栏 -->
-        <div class="global-controls">
-          <div class="controls-left">
-            <h2 class="page-title">輸入法性能測評</h2>
-          </div>
-          <div class="controls-right">
-            <button 
-              class="global-toggle-btn"
-              @click="toggleAllModules"
-              :title="allModulesCollapsed ? '展開全部' : '折疊全部'"
-            >
-              <span class="btn-icon">{{ allModulesCollapsed ? '📂' : '📁' }}</span>
-              <span class="btn-text">{{ allModulesCollapsed ? '展開全部' : '折疊全部' }}</span>
-            </button>
-          </div>
-        </div>
-
         <!-- 模块容器 -->
         <div class="module-container">
           <!-- 碼表上傳模塊 -->
@@ -457,6 +449,7 @@ const handleUploadError = (error: string) => {
 .nav {
   display: flex;
   gap: var(--spacing-lg);
+  align-items: center;
 }
 
 .nav-link {
@@ -470,73 +463,40 @@ const handleUploadError = (error: string) => {
   color: var(--color-primary);
 }
 
+/* 头部的全局折叠按钮 */
+.global-toggle-btn-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: var(--spacing-sm);
+}
+
+.global-toggle-btn-header:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.global-toggle-btn-header .btn-icon {
+  font-size: 0.9rem;
+}
+
+.global-toggle-btn-header .btn-text {
+  font-size: 0.8rem;
+}
+
 /* 主要内容区域 - 重新设计为单列布局 */
 .main {
   padding: var(--spacing-2xl) 0;
   min-height: calc(100vh - 200px);
-}
-
-/* 全局控制栏 */
-.global-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-xl);
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--color-border-primary);
-  margin-bottom: var(--spacing-xl);
-}
-
-.controls-left {
-  flex: 1;
-}
-
-.page-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-.controls-right {
-  flex-shrink: 0;
-}
-
-.global-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.global-toggle-btn:hover {
-  background-color: var(--color-primary-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.global-toggle-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.btn-icon {
-  font-size: 1.1rem;
-}
-
-.btn-text {
-  font-size: 0.9rem;
 }
 
 /* 模块容器 - 单列布局 */
@@ -568,13 +528,13 @@ const handleUploadError = (error: string) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md) var(--spacing-xl);
   background-color: var(--color-bg-primary);
   border-bottom: 1px solid var(--color-border-primary);
 }
 
 .module-title {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
@@ -612,7 +572,7 @@ const handleUploadError = (error: string) => {
 
 /* 模块内容 */
 .module-content {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-lg);
   animation: fadeIn 0.3s ease;
 }
 
@@ -629,7 +589,7 @@ const handleUploadError = (error: string) => {
 
 .module-description {
   color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
   line-height: 1.6;
   font-size: 0.95rem;
 }

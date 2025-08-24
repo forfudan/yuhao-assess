@@ -10,38 +10,9 @@
     <!-- 热力图内容 - 单列卡片布局 -->
     <div v-else class="module-container">
       
-      <!-- 全局控制栏 -->
-      <div class="global-controls">
-        <div class="controls-left">
-          <h2 class="page-title">键盘热力图分析</h2>
-        </div>
-        <div class="controls-right">
-          <button 
-            class="global-toggle-btn"
-            @click="toggleAllModules"
-            :title="allCollapsed ? '展开全部' : '折叠全部'"
-          >
-            <span class="btn-icon">{{ allCollapsed ? '📂' : '📁' }}</span>
-            <span class="btn-text">{{ allCollapsed ? '展开全部' : '折叠全部' }}</span>
-          </button>
-        </div>
-      </div>
-      
       <!-- 键盘热力图模块 -->
       <div class="module-card">
-        <div class="module-header">
-          <h3 class="module-title">键位热力图</h3>
-          <button 
-            class="toggle-button"
-            @click="toggleModule('keyboard')"
-            :title="modules.keyboard.collapsed ? '展开' : '收起'"
-          >
-            <span class="toggle-icon" :class="{ 'collapsed': modules.keyboard.collapsed }">
-              ▼
-            </span>
-          </button>
-        </div>
-        <div v-show="!modules.keyboard.collapsed" class="module-content">
+        <div class="module-content">
           <div class="keyboard-wrapper">
             <div class="keyboard-layout" :style="{ transform: `scale(${keyboardScale})` }">
               <!-- 数字行 -->
@@ -112,17 +83,8 @@
       <div class="module-card">
         <div class="module-header">
           <h3 class="module-title">統計分析</h3>
-          <button 
-            class="toggle-button"
-            @click="toggleModule('stats')"
-            :title="modules.stats.collapsed ? '展开' : '收起'"
-          >
-            <span class="toggle-icon" :class="{ 'collapsed': modules.stats.collapsed }">
-              ▼
-            </span>
-          </button>
         </div>
-        <div v-show="!modules.stats.collapsed" class="module-content">
+        <div class="module-content">
           <!-- 左右手平衡 -->
           <div class="stats-section">
             <h4 class="section-title">左右手平衡</h4>
@@ -206,32 +168,6 @@ const loadCharFrequency = async () => {
 // 响应式数据
 const displayMode = ref<'load'>('load') // 固定为按键频率模式
 const keyboardScale = ref(0.8)
-
-// 模块折叠状态管理
-const modules = ref({
-  keyboard: { collapsed: false },
-  stats: { collapsed: false }
-})
-
-// 切换模块折叠状态
-const toggleModule = (moduleKey: keyof typeof modules.value) => {
-  modules.value[moduleKey].collapsed = !modules.value[moduleKey].collapsed
-}
-
-// 计算是否所有模块都已折叠
-const allCollapsed = computed(() => {
-  return Object.keys(modules.value).every(key => {
-    return modules.value[key as keyof typeof modules.value].collapsed
-  })
-})
-
-// 全部展开/折叠
-const toggleAllModules = () => {
-  const targetState = !allCollapsed.value
-  Object.keys(modules.value).forEach(key => {
-    modules.value[key as keyof typeof modules.value].collapsed = targetState
-  })
-}
 
 // 键盘布局定义
 const numberRowKeys: KeyInfo[] = [
