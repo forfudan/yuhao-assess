@@ -67,7 +67,7 @@
             <li>漢字的使用頻率</li>
             <li v-if="!isPrefixCode">碼表的規範化處理，即在未達到最大碼長時使用空格補充</li>
             <li v-else>前綴碼特性，未達到最大碼長時不補充空格</li>
-            <li>多候選字的選擇鍵處理（第2候選加分號，第3候選加單引號，依此類推）</li>
+            <li>多候選字的選擇鍵處理（第2候選加分號，第3候選加單引號）</li>
           </ul>
           <p>檢測到的最大碼長為：{{ maxCodeLength }} 位</p>
         </div>
@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 import type { CodeTable } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 
@@ -115,11 +115,20 @@ const TEST_CHARS = ['灌', '瓣', '璧', '豁', '糯', '籍', '矗', '瓤', '嚼
 
 // 检查是否为内置前缀码方案
 async function checkBuiltinPrefixCode() {
-  if (!props.codeTableName) return
+  if (!props.codeTableName) {
+    console.log('checkBuiltinPrefixCode: 没有方案名称')
+    return
+  }
+  
+  // 重置前缀码状态
+  isPrefixCode.value = false
   
   try {
     const response = await fetch('/data/codeTableConfig.json')
-    if (!response.ok) return
+    if (!response.ok) {
+      console.log('checkBuiltinPrefixCode: 配置文件加载失败')
+      return
+    }
     
     const config = await response.json()
     const builtinTables = config.builtinCodeTables || []
@@ -128,8 +137,13 @@ async function checkBuiltinPrefixCode() {
       table.key === props.codeTableName || table.name === props.codeTableName
     )
     
+    console.log('checkBuiltinPrefixCode: codeTableName =', props.codeTableName, 'matchedTable =', matchedTable)
+    
     if (matchedTable && matchedTable.prefix === true) {
       isPrefixCode.value = true
+      console.log('设置为前缀码: isPrefixCode =', isPrefixCode.value)
+    } else {
+      console.log('未匹配到前缀码方案或方案不是前缀码')
     }
   } catch (error) {
     console.warn('检查内置方案配置失败:', error)
@@ -276,6 +290,8 @@ async function calculateSpeedEquivAnalysis() {
     return
   }
 
+  console.log('开始计算速度当量, 前缀码状态:', isPrefixCode.value)
+  
   isCalculating.value = true
   error.value = null
 
@@ -319,32 +335,46 @@ async function calculateSpeedEquivAnalysis() {
 }
 
 // 监听码表变化
-watch(() => props.codeTable, (newCodeTable) => {
+watch(() => props.codeTable, async (newCodeTable) => {
   if (newCodeTable && newCodeTable.size > 0) {
+    // 延迟一点确保其他watch已执行
+    await nextTick()
     calculateSpeedEquivAnalysis()
+  }
+}, { immediate: false })  // 不立即执行，让组件挂载逻辑控制
+
+// 监听方案名称变化，检查是否为内置前缀码方案
+watch(() => props.codeTableName, async (newName) => {
+  if (newName) {
+    await checkBuiltinPrefixCode()
   }
 }, { immediate: true })
 
-// 监听方案名称变化，检查是否为内置前缀码方案
-watch(() => props.codeTableName, (newName) => {
-  if (newName) {
-    checkBuiltinPrefixCode()
+// 监听前缀码状态变化
+watch(() => isPrefixCode.value, (newValue) => {
+  console.log('前缀码状态改变:', newValue)
+  // 当前缀码状态改变时重新计算
+  if (props.codeTable && props.codeTable.size > 0) {
+    calculateSpeedEquivAnalysis()
   }
-}, { immediate: true })
+})
 
 // 组件挂载时自动计算
 onMounted(async () => {
-  // 检查是否为内置前缀码方案
+  console.log('组件挂载: codeTableName =', props.codeTableName, 'codeTable size =', props.codeTable?.size)
+  
+  // 1. 首先检查是否为内置前缀码方案
   if (props.codeTableName) {
     await checkBuiltinPrefixCode()
   }
   
-  // 如果没有检测到内置前缀码，使用用户上传时的设置
+  // 2. 如果没有检测到内置前缀码，使用用户上传时的设置
   if (!isPrefixCode.value && props.initialPrefix) {
     isPrefixCode.value = true
+    console.log('使用用户上传的前缀码设置: isPrefixCode =', isPrefixCode.value)
   }
   
-  // 自动计算
+  // 3. 执行计算
   if (props.codeTable && props.codeTable.size > 0) {
     calculateSpeedEquivAnalysis()
   }
