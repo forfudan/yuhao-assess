@@ -2,11 +2,7 @@
   <div class="duplicate-analysis-card">
     <div class="card-header">
       <h3>重碼數據分析</h3>
-      <div class="controls">
-        <button @click="calculateAllMetrics" :disabled="isCalculating" class="calculate-btn">
-          {{ isCalculating ? '計算中...' : '重新計算' }}
-        </button>
-      </div>
+      <p class="card-description">分析不同字符集下的重碼情況，計算靜態重碼率和動態選重率。閱讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
     </div>
 
     <div class="card-content">
@@ -684,45 +680,28 @@ onMounted(() => {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
 }
 
 .card-header h3 {
-  margin: 0;
+  margin: 0 0 8px 0;
   font-size: 1.5rem;
   font-weight: 600;
 }
 
-.controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+.card-description {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  line-height: 1.4;
 }
 
-.calculate-btn {
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.95);
-  color: #333;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
+.card-description a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
 }
 
-.calculate-btn:hover:not(:disabled) {
-  background: white;
-  transform: translateY(-1px);
-}
-
-.calculate-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+.card-description a:hover {
+  color: white;
 }
 
 .card-content {
@@ -766,16 +745,18 @@ onMounted(() => {
 
 .metrics-table th,
 .metrics-table td {
-  padding: 12px 16px;
+  padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid #e5e7eb;
+  font-size: 0.8rem;
+  line-height: 1.3;
 }
 
 .metrics-table th {
   background: #f8fafc;
   font-weight: 600;
   color: #374151;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -837,12 +818,13 @@ onMounted(() => {
   }
   
   .metrics-table {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
   }
   
   .metrics-table th,
   .metrics-table td {
-    padding: 8px 12px;
+    padding: 6px 8px;
+    font-size: 0.7rem;
   }
 }
 

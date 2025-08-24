@@ -7,169 +7,122 @@
       <p class="placeholder-subtitle">上传码表后将显示键位热力图分析</p>
     </div>
 
-    <!-- 热力图内容 - 单列卡片布局 -->
-    <div v-else class="module-container">
-      
-      <!-- 全局控制栏 -->
-      <div class="global-controls">
-        <div class="controls-left">
-          <h2 class="page-title">键盘热力图分析</h2>
-        </div>
-        <div class="controls-right">
-          <button 
-            class="global-toggle-btn"
-            @click="toggleAllModules"
-            :title="allCollapsed ? '展开全部' : '折叠全部'"
-          >
-            <span class="btn-icon">{{ allCollapsed ? '📂' : '📁' }}</span>
-            <span class="btn-text">{{ allCollapsed ? '展开全部' : '折叠全部' }}</span>
-          </button>
-        </div>
-      </div>
-      
-      <!-- 键盘热力图模块 -->
-      <div class="module-card">
-        <div class="module-header">
-          <h3 class="module-title">键位热力图</h3>
-          <button 
-            class="toggle-button"
-            @click="toggleModule('keyboard')"
-            :title="modules.keyboard.collapsed ? '展开' : '收起'"
-          >
-            <span class="toggle-icon" :class="{ 'collapsed': modules.keyboard.collapsed }">
-              ▼
-            </span>
-          </button>
-        </div>
-        <div v-show="!modules.keyboard.collapsed" class="module-content">
-          <div class="keyboard-wrapper">
-            <div class="keyboard-layout" :style="{ transform: `scale(${keyboardScale})` }">
-              <!-- 数字行 -->
-              <div class="keyboard-row number-row">
-                <KeyButton 
-                  v-for="key in numberRowKeys"
-                  :key="key.key"
-                  :keyData="getKeyData(key.key)"
-                  :displayMode="displayMode"
-                  :maxValue="maxKeyValue"
-                  :keyInfo="key"
-                />
-              </div>
+    <!-- 热力图内容 -->
+    <div v-else class="keyboard-heatmap-content">
+      <!-- 键盘热力图 -->
+      <div class="keyboard-wrapper">
+        <div class="keyboard-layout" :style="{ transform: `scale(${keyboardScale})` }">
+          <!-- 数字行 -->
+          <div class="keyboard-row number-row">
+            <KeyButton 
+              v-for="key in numberRowKeys"
+              :key="key.key"
+              :keyData="getKeyData(key.key)"
+              :displayMode="displayMode"
+              :maxValue="maxKeyValue"
+              :keyInfo="key"
+            />
+          </div>
 
-              <!-- 第一行 -->
-              <div class="keyboard-row first-row">
-                <KeyButton 
-                  v-for="key in firstRowKeys"
-                  :key="key.key"
-                  :keyData="getKeyData(key.key)"
-                  :displayMode="displayMode"
-                  :maxValue="maxKeyValue"
-                  :keyInfo="key"
-                />
-              </div>
+          <!-- 第一行 -->
+          <div class="keyboard-row first-row">
+            <KeyButton 
+              v-for="key in firstRowKeys"
+              :key="key.key"
+              :keyData="getKeyData(key.key)"
+              :displayMode="displayMode"
+              :maxValue="maxKeyValue"
+              :keyInfo="key"
+            />
+          </div>
 
-              <!-- 第二行 -->
-              <div class="keyboard-row second-row">
-                <KeyButton 
-                  v-for="key in secondRowKeys"
-                  :key="key.key"
-                  :keyData="getKeyData(key.key)"
-                  :displayMode="displayMode"
-                  :maxValue="maxKeyValue"
-                  :keyInfo="key"
-                />
-              </div>
+          <!-- 第二行 -->
+          <div class="keyboard-row second-row">
+            <KeyButton 
+              v-for="key in secondRowKeys"
+              :key="key.key"
+              :keyData="getKeyData(key.key)"
+              :displayMode="displayMode"
+              :maxValue="maxKeyValue"
+              :keyInfo="key"
+            />
+          </div>
 
-              <!-- 第三行 -->
-              <div class="keyboard-row third-row">
-                <KeyButton 
-                  v-for="key in thirdRowKeys"
-                  :key="key.key"
-                  :keyData="getKeyData(key.key)"
-                  :displayMode="displayMode"
-                  :maxValue="maxKeyValue"
-                  :keyInfo="key"
-                />
-              </div>
+          <!-- 第三行 -->
+          <div class="keyboard-row third-row">
+            <KeyButton 
+              v-for="key in thirdRowKeys"
+              :key="key.key"
+              :keyData="getKeyData(key.key)"
+              :displayMode="displayMode"
+              :maxValue="maxKeyValue"
+              :keyInfo="key"
+            />
+          </div>
 
-              <!-- 空格鍵行 -->
-              <div class="keyboard-row space-row">
-                <KeyButton 
-                  v-for="key in spaceRowKeys"
-                  :key="key.key"
-                  :keyData="getKeyData(key.key)"
-                  :displayMode="displayMode"
-                  :maxValue="maxKeyValue"
-                  :keyInfo="key"
-                />
-              </div>
-            </div>
+          <!-- 空格鍵行 -->
+          <div class="keyboard-row space-row">
+            <KeyButton 
+              v-for="key in spaceRowKeys"
+              :key="key.key"
+              :keyData="getKeyData(key.key)"
+              :displayMode="displayMode"
+              :maxValue="maxKeyValue"
+              :keyInfo="key"
+            />
           </div>
         </div>
       </div>
 
-      <!-- 综合统计模块 -->
-      <div class="module-card">
-        <div class="module-header">
-          <h3 class="module-title">統計分析</h3>
-          <button 
-            class="toggle-button"
-            @click="toggleModule('stats')"
-            :title="modules.stats.collapsed ? '展开' : '收起'"
-          >
-            <span class="toggle-icon" :class="{ 'collapsed': modules.stats.collapsed }">
-              ▼
-            </span>
-          </button>
+      <!-- 统计分析 -->
+      <div class="stats-container">
+        <h4 class="stats-title">統計分析</h4>
+        
+        <!-- 左右手平衡 -->
+        <div class="stats-section">
+          <h5 class="section-title">左右手平衡</h5>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-label">左手</span>
+              <span class="stat-value">{{ stats.handBalance.left.toFixed(1) }}%</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">右手</span>
+              <span class="stat-value">{{ stats.handBalance.right.toFixed(1) }}%</span>
+            </div>
+          </div>
         </div>
-        <div v-show="!modules.stats.collapsed" class="module-content">
-          <!-- 左右手平衡 -->
-          <div class="stats-section">
-            <h4 class="section-title">左右手平衡</h4>
-            <div class="stats-grid">
-              <div class="stat-item">
-                <span class="stat-label">左手</span>
-                <span class="stat-value">{{ stats.handBalance.left.toFixed(1) }}%</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">右手</span>
-                <span class="stat-value">{{ stats.handBalance.right.toFixed(1) }}%</span>
-              </div>
+
+        <!-- 按排分布 -->
+        <div class="stats-section">
+          <h5 class="section-title">按排分布</h5>
+          <div class="stats-grid">
+            <div 
+              v-for="(percentage, row) in rowDistributionPercentages" 
+              :key="row"
+              class="stat-item"
+            >
+              <span class="stat-label">{{ row }}</span>
+              <span class="stat-value">{{ percentage.toFixed(1) }}%</span>
             </div>
           </div>
+        </div>
 
-          <!-- 按排分布 -->
-          <div class="stats-section">
-            <h4 class="section-title">按排分布</h4>
-            <div class="stats-grid">
-              <div 
-                v-for="(percentage, row) in rowDistributionPercentages" 
-                :key="row"
-                class="stat-item"
-              >
-                <span class="stat-label">{{ row }}</span>
-                <span class="stat-value">{{ percentage.toFixed(1) }}%</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 手指负担 -->
-          <div class="stats-section">
-            <h4 class="section-title">手指負擔</h4>
-            <div class="stats-grid">
-              <div 
-                v-for="(load, finger) in fingerLoadPercentages" 
-                :key="finger"
-                class="stat-item"
-              >
-                <span class="stat-label">{{ finger }}</span>
-                <span class="stat-value">{{ load.toFixed(1) }}%</span>
-              </div>
+        <!-- 手指负担 -->
+        <div class="stats-section">
+          <h5 class="section-title">手指負擔</h5>
+          <div class="stats-grid">
+            <div 
+              v-for="(load, finger) in fingerLoadPercentages" 
+              :key="finger"
+              class="stat-item"
+            >
+              <span class="stat-label">{{ finger }}</span>
+              <span class="stat-value">{{ load.toFixed(1) }}%</span>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -205,33 +158,7 @@ const loadCharFrequency = async () => {
 
 // 响应式数据
 const displayMode = ref<'load'>('load') // 固定为按键频率模式
-const keyboardScale = ref(0.8)
-
-// 模块折叠状态管理
-const modules = ref({
-  keyboard: { collapsed: false },
-  stats: { collapsed: false }
-})
-
-// 切换模块折叠状态
-const toggleModule = (moduleKey: keyof typeof modules.value) => {
-  modules.value[moduleKey].collapsed = !modules.value[moduleKey].collapsed
-}
-
-// 计算是否所有模块都已折叠
-const allCollapsed = computed(() => {
-  return Object.keys(modules.value).every(key => {
-    return modules.value[key as keyof typeof modules.value].collapsed
-  })
-})
-
-// 全部展开/折叠
-const toggleAllModules = () => {
-  const targetState = !allCollapsed.value
-  Object.keys(modules.value).forEach(key => {
-    modules.value[key as keyof typeof modules.value].collapsed = targetState
-  })
-}
+const keyboardScale = ref(1.0)
 
 // 键盘布局定义
 const numberRowKeys: KeyInfo[] = [
@@ -422,8 +349,8 @@ const updateKeyboardScale = () => {
   if (container) {
     const containerWidth = container.parentElement?.clientWidth || 800
     const keyboardWidth = 800 // 基础键盘宽度
-    const scale = Math.min(1, containerWidth / keyboardWidth)
-    keyboardScale.value = scale * 0.9 // 留一些边距
+    const scale = Math.min(1.2, containerWidth / keyboardWidth) // 允许轻微放大，最多120%
+    keyboardScale.value = scale * 0.95 // 留很少的边距，充分利用空间
   }
 }
 
@@ -476,6 +403,30 @@ onMounted(() => {
 .placeholder-subtitle {
   font-size: 1rem;
   opacity: 0.8;
+}
+
+/* 键盘热力图内容 */
+.keyboard-heatmap-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* 统计容器 */
+.stats-container {
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  border: 1px solid var(--color-border-primary);
+}
+
+.stats-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: var(--spacing-sm);
 }
 
 /* 模块容器 - 单列布局 */
@@ -632,7 +583,6 @@ onMounted(() => {
 /* 键盘包装器 */
 .keyboard-wrapper {
   display: flex;
-  justify-content: center;
   overflow-x: auto;
   padding: var(--spacing-md) 0;
 }
@@ -642,7 +592,8 @@ onMounted(() => {
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
-  transform-origin: center top;
+  transform-origin: left top;
+  width: 100%;
   min-width: 800px;
   border: 1px solid var(--color-border-secondary);
 }

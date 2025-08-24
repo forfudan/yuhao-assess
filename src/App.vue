@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <!-- 主題切換按鈕 -->
+    <!-- 暫時性地注释掉主题切换功能，等到暗黑主題后续完善後再啟用
     <button 
       class="theme-toggle" 
       @click="toggleTheme"
@@ -8,6 +9,7 @@
     >
       {{ isDarkMode ? '☀️' : '🌙' }}
     </button>
+     -->
 
     <!-- 頭部導航 -->
     <header class="header">
@@ -24,31 +26,23 @@
             <a href="https://github.com/forfudan/yu" target="_blank" class="nav-link">
               GitHub
             </a>
-          </nav>
-        </div>
-      </div>
-    </header>
-
-    <!-- 主要內容區域 - 重新設計為單列模塊布局 -->
-    <main class="main">
-      <div class="container">
-        <!-- 全局控制栏 -->
-        <div class="global-controls">
-          <div class="controls-left">
-            <h2 class="page-title">輸入法性能測評</h2>
-          </div>
-          <div class="controls-right">
+            <!-- 全局折叠控制按钮 -->
             <button 
-              class="global-toggle-btn"
+              class="global-toggle-btn-header"
               @click="toggleAllModules"
               :title="allModulesCollapsed ? '展開全部' : '折疊全部'"
             >
               <span class="btn-icon">{{ allModulesCollapsed ? '📂' : '📁' }}</span>
               <span class="btn-text">{{ allModulesCollapsed ? '展開全部' : '折疊全部' }}</span>
             </button>
-          </div>
+          </nav>
         </div>
+      </div>
+    </header>
 
+    <!-- 主要內容區域 - 設計為單列模塊布局 -->
+    <main class="main">
+      <div class="container">
         <!-- 模块容器 -->
         <div class="module-container">
           <!-- 碼表上傳模塊 -->
@@ -102,17 +96,31 @@
             </div>
             <!--重碼數據分析卡片-->
             <div v-show="!modules.duplicate.collapsed" class="module-content">
-              <p class="module-description">
-                分析不同字符集下的重碼情況，計算靜態重碼率和動態選重率。<a href="https://shurufa.app/docs/concepts.html" target="_blank">閱讀《瓊林擷英》瞭解詳細定義。</a>
-              </p>
               <DuplicateAnalysisCard :code-table="codeTable" />
             </div>
             <!--最大候選個數卡片-->
             <div v-show="!modules.duplicate.collapsed" class="module-content">
-              <p class="module-description">
-                分析不同字符集下的最大候選項個數。數字越小，翻頁次數越少。
-              </p>
               <MaximumCandidatesCard :code-table="codeTable" />
+            </div>
+          </div>
+
+          <!-- 人體工學模塊 -->
+          <div v-if="analysisReady" class="module-card">
+            <div class="module-header">
+              <h3 class="module-title">人體工學</h3>
+              <button 
+                class="toggle-button"
+                @click="toggleModule('ergonomics')"
+                :title="modules.ergonomics.collapsed ? '展開' : '收起'"
+              >
+                <span class="toggle-icon" :class="{ 'collapsed': modules.ergonomics.collapsed }">
+                  ▼
+                </span>
+              </button>
+            </div>
+            <!--速度當量卡片-->
+            <div v-show="!modules.ergonomics.collapsed" class="module-content">
+              <SpeedEquivCard :code-table="codeTable" :code-table-name="codeTableName" :initial-prefix="uploadPrefixFlag" />
             </div>
           </div>
 
@@ -216,6 +224,7 @@ import CodeTableViewer from './components/CodeTableViewer.vue'
 import DuplicateAnalysisCard from './components/DuplicateAnalysisCard.vue'
 import MaximumCandidatesCard from './components/MaximumCandidatesCard.vue'
 import ComparisonCard from './components/ComparisonCard.vue'
+import SpeedEquivCard from './components/SpeedEquivCard.vue'
 import type { CodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
 
 // 響應式數據
@@ -225,6 +234,7 @@ const analysisReady = ref(false)
 const uploadStatus = ref<UploadStatus | null>(null)
 const analysisData = ref<CodeTableAnalysis | null>(null)
 const analysisResults = ref(null)
+const uploadPrefixFlag = ref<boolean>(false)
 
 // 主題相關
 const isDarkMode = ref(false)
@@ -235,6 +245,7 @@ const modules = ref({
   heatmap: { collapsed: false },
   analysis: { collapsed: false },
   duplicate: { collapsed: false },
+  ergonomics: { collapsed: false },
   comparison: { collapsed: false }
 })
 
@@ -382,9 +393,10 @@ function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
 }
 
 // 處理碼表上傳成功
-const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string }) => {
+const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean }) => {
   codeTable.value = data.codeTable
-  codeTableName.value = data.fileName.replace(/\.(txt|csv)$/, '') // 移除文件後綴
+  codeTableName.value = data.tableKey || data.fileName.replace(/\.(txt|csv)$/, '') // 优先使用tableKey，用于内置方案前缀码检测
+  uploadPrefixFlag.value = data.isPrefix || false  // 设置用户上传时的前缀码标记
   analysisReady.value = true
   
   // 生成分析數據
@@ -457,6 +469,7 @@ const handleUploadError = (error: string) => {
 .nav {
   display: flex;
   gap: var(--spacing-lg);
+  align-items: center;
 }
 
 .nav-link {
@@ -470,73 +483,40 @@ const handleUploadError = (error: string) => {
   color: var(--color-primary);
 }
 
+/* 头部的全局折叠按钮 */
+.global-toggle-btn-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: var(--spacing-sm);
+}
+
+.global-toggle-btn-header:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.global-toggle-btn-header .btn-icon {
+  font-size: 0.9rem;
+}
+
+.global-toggle-btn-header .btn-text {
+  font-size: 0.8rem;
+}
+
 /* 主要内容区域 - 重新设计为单列布局 */
 .main {
   padding: var(--spacing-2xl) 0;
   min-height: calc(100vh - 200px);
-}
-
-/* 全局控制栏 */
-.global-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-xl);
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--color-border-primary);
-  margin-bottom: var(--spacing-xl);
-}
-
-.controls-left {
-  flex: 1;
-}
-
-.page-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-.controls-right {
-  flex-shrink: 0;
-}
-
-.global-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.global-toggle-btn:hover {
-  background-color: var(--color-primary-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.global-toggle-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.btn-icon {
-  font-size: 1.1rem;
-}
-
-.btn-text {
-  font-size: 0.9rem;
 }
 
 /* 模块容器 - 单列布局 */
@@ -568,13 +548,13 @@ const handleUploadError = (error: string) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md) var(--spacing-xl);
   background-color: var(--color-bg-primary);
   border-bottom: 1px solid var(--color-border-primary);
 }
 
 .module-title {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
@@ -612,7 +592,7 @@ const handleUploadError = (error: string) => {
 
 /* 模块内容 */
 .module-content {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-lg);
   animation: fadeIn 0.3s ease;
 }
 
@@ -629,7 +609,7 @@ const handleUploadError = (error: string) => {
 
 .module-description {
   color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
   line-height: 1.6;
   font-size: 0.95rem;
 }

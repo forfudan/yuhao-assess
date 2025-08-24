@@ -30,27 +30,39 @@
     <!-- 格式選擇 -->
     <div class="format-selector">
       <label class="format-label">碼表格式：</label>
-      <div class="format-options">
-        <label class="format-option">
-          <input 
-            type="radio" 
-            value="char_first" 
-            v-model="selectedFormat"
-            name="format"
-          />
-          <span class="format-text">字符-編碼</span>
-          <span class="format-example">例：的 de</span>
-        </label>
-        <label class="format-option">
-          <input 
-            type="radio" 
-            value="code_first" 
-            v-model="selectedFormat"
-            name="format"
-          />
-          <span class="format-text">編碼-字符</span>
-          <span class="format-example">例：de 的</span>
-        </label>
+      <div class="format-content">
+        <div class="format-options">
+          <label class="format-option">
+            <input 
+              type="radio" 
+              value="char_first" 
+              v-model="selectedFormat"
+              name="format"
+            />
+            <span class="format-text">字符-編碼</span>
+            <span class="format-example">例：的 de</span>
+          </label>
+          <label class="format-option">
+            <input 
+              type="radio" 
+              value="code_first" 
+              v-model="selectedFormat"
+              name="format"
+            />
+            <span class="format-text">編碼-字符</span>
+            <span class="format-example">例：de 的</span>
+          </label>
+        </div>
+        <div class="prefix-control">
+          <button 
+            @click="togglePrefixMode" 
+            :class="['prefix-button', { 'active': isPrefixCode }]"
+            title="切換前綴碼模式"
+            type="button"
+          >
+            {{ isPrefixCode ? '✓ 本方案為前綴碼' : '本方案為前綴碼' }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -153,7 +165,7 @@ import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 
 // 定义 emits
 const emit = defineEmits<{
-  uploadSuccess: [data: { codeTable: CodeTable; fileName: string; format: CodeTableFormat }]
+  uploadSuccess: [data: { codeTable: CodeTable; fileName: string; format: CodeTableFormat; tableKey?: string; isPrefix?: boolean }]
   uploadError: [error: string]
 }>()
 
@@ -167,6 +179,7 @@ const selectedFormat = ref<CodeTableFormat>('char_first')
 const selectedFile = ref<File | null>(null)
 const isDragOver = ref(false)
 const isUploading = ref(false)
+const isPrefixCode = ref(false)
 const fileInput = ref<HTMLInputElement>()
 const previewData = ref<Array<{
   raw: string
@@ -187,6 +200,11 @@ const triggerFileInput = () => {
   if (!isUploading.value) {
     fileInput.value?.click()
   }
+}
+
+// 切换前缀码模式
+const togglePrefixMode = () => {
+  isPrefixCode.value = !isPrefixCode.value
 }
 
 // 处理拖拽
@@ -352,7 +370,8 @@ const processFile = async () => {
     emit('uploadSuccess', {
       codeTable: result.codeTable,
       fileName: selectedFile.value.name,
-      format: result.format
+      format: result.format,
+      isPrefix: isPrefixCode.value
     })
 
   } catch (error) {
@@ -396,7 +415,9 @@ async function loadBuiltinTable() {
     emit('uploadSuccess', {
       codeTable: result.codeTable,
       fileName: `內置方案：${builtinTables.value.find(t => t.key === selectedBuiltinTable.value)?.name || selectedBuiltinTable.value}`,
-      format: result.format
+      format: result.format,
+      tableKey: selectedBuiltinTable.value,  // 添加tableKey用于前缀码检测
+      isPrefix: isPrefixCode.value
     })
   } catch (error) {
     emit('uploadError', `載入內置碼表失敗: ${error instanceof Error ? error.message : String(error)}`)
@@ -413,14 +434,14 @@ loadBuiltinConfig()
 .code-table-uploader {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 /* 內置碼表選擇器樣式 */
 .builtin-selector {
   border: 2px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   background: var(--color-bg-secondary);
 }
 
@@ -428,13 +449,13 @@ loadBuiltinConfig()
   display: block;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
 }
 
 .builtin-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
 .builtin-select {
@@ -467,7 +488,7 @@ loadBuiltinConfig()
 .divider {
   position: relative;
   text-align: center;
-  margin: var(--spacing-md) 0;
+  margin: var(--spacing-sm) 0;
 }
 
 .divider::before {
@@ -493,7 +514,7 @@ loadBuiltinConfig()
 .format-selector {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
 .format-label {
@@ -501,10 +522,18 @@ loadBuiltinConfig()
   color: var(--color-text-primary);
 }
 
+.format-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
 .format-options {
   display: flex;
   gap: var(--spacing-lg);
   flex-wrap: wrap;
+  flex: 1;
 }
 
 .format-option {
@@ -536,11 +565,45 @@ loadBuiltinConfig()
   font-family: var(--font-mono);
 }
 
+.prefix-control {
+  display: flex;
+  align-items: flex-start;
+}
+
+.prefix-button {
+  background: #f3f4f6;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.prefix-button:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.prefix-button.active {
+  background: #dcfce7;
+  border-color: #16a34a;
+  color: #15803d;
+}
+
+.prefix-button.active:hover {
+  background: #bbf7d0;
+  border-color: #15803d;
+}
+
 /* 上传区域 */
 .upload-area {
   border: 2px dashed var(--color-border-primary);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-2xl);
+  padding: var(--spacing-lg);
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease-in-out;

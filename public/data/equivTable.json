@@ -1,8 +1,11 @@
 {
   "name": "按键组合当量表",
-  "description": "数据来源:陈一凡,张鹿,周志农《键位相关速度当量的研究》",
-  "source": "http://jcip.cipsc.org.cn/CN/Y1990/V4/I4/14",
+  "description": "標準化後的按鍵組合耗時",
+  "source": "键位相关速度当量的研究",
+  "authors": "陈一凡,张鹿,周志农",
+  "link": "http://jcip.cipsc.org.cn/CN/Y1990/V4/I4/14",
   "version": "1.0",
+  "notes": "表格中的下劃線_表示空格鍵",
   "data": {
     "_a": 1.4,
     "_b": 1.4,
