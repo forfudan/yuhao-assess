@@ -26,9 +26,9 @@
       "enabled": true
     },
     {
-      "key": "yuhao-light",
-      "name": "光華",
-      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-light.txt",
+      "key": "yuhao-star",
+      "name": "星陳",
+      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-star.txt",
       "format": "code_first",
       "description": "宇浩拆分·四碼定長",
       "website": "https://shurufa.app/",
@@ -37,9 +37,9 @@
       "enabled": true
     },
     {
-      "key": "yuhao-star",
-      "name": "星陳",
-      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-star.txt",
+      "key": "yuhao-light",
+      "name": "光華",
+      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-light.txt",
       "format": "code_first",
       "description": "宇浩拆分·四碼定長",
       "website": "https://shurufa.app/",
@@ -52,10 +52,10 @@
       "name": "天碼",
       "url": "https://raw.githubusercontent.com/forfudan/tianma-sky/main/mabiao-sky.txt",
       "format": "code_first",
-      "description": "宋天製作",
+      "description": "宋天製作·表形碼·四碼定長",
       "website": "http://soongsky.com/sky/",
       "category": "形碼",
-      "tags": ["形碼", "定長", "四碼"],
+      "tags": ["形碼", "表形碼", "定長", "四碼"],
       "enabled": true
     }
   ],
