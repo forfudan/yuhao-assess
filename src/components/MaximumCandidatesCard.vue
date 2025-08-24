@@ -70,11 +70,7 @@
           <div class="notes-grid">
             <div class="note-item">
               <span class="note-label">計算方式:</span>
-              <span>使用全碼表統計每個編碼對應的漢字數量，取最大值</span>
-            </div>
-            <div class="note-item">
-              <span class="note-label">數值意義:</span>
-              <span>數值越小表示重碼越少，翻頁次數越少</span>
+              <span>使用全碼表和某個字符集，統計每個編碼對應的漢字數量，取最大值</span>
             </div>
             <div class="note-item">
               <span class="note-label">顏色標示:</span>
@@ -85,7 +81,7 @@
               </span>
             </div>
             <div class="note-item">
-              <span class="note-label">編碼說明:</span>
+              <span class="note-label">其他功能:</span>
               <span>鼠標懸停在編碼上可查看該編碼對應的所有漢字</span>
             </div>
           </div>
