@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <!-- 主題切換按鈕 -->
+    <!-- 暫時性地注释掉主题切换功能，等到暗黑主題后续完善後再啟用
     <button 
       class="theme-toggle" 
       @click="toggleTheme"
@@ -8,6 +9,7 @@
     >
       {{ isDarkMode ? '☀️' : '🌙' }}
     </button>
+     -->
 
     <!-- 頭部導航 -->
     <header class="header">
