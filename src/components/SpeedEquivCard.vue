@@ -56,7 +56,7 @@
             :class="['prefix-button', { 'active': isPrefixCode }]"
             title="切換前綴碼模式"
           >
-            {{ isPrefixCode ? '✓ 本方案為前綴碼' : '本方案為前綴碼' }}
+            {{ isPrefixCode ? '✓ 本方案為前綴碼' : '✗ 本方案為前綴碼' }}
           </button>
         </div>
 
@@ -64,6 +64,7 @@
           <h4>指標說明</h4>
           <p>速度當量基於實驗統計結果，評估輸入法按鍵對的手感表現。數值越小表示輸入越流暢。計算考慮了：</p>
           <ul>
+            <li>使用全碼碼表（每個單字的最長編碼）進行分析</li>
             <li>漢字的使用頻率</li>
             <li v-if="!isPrefixCode">碼表的規範化處理，即在未達到最大碼長時使用空格補充</li>
             <li v-else>前綴碼特性，未達到最大碼長時不補充空格</li>
@@ -80,6 +81,7 @@
 import { ref, watch, onMounted, nextTick } from 'vue'
 import type { CodeTable } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
+import { generateFullCodeTable } from '../services/codeTableCleanService'
 
 // Props
 interface Props {
@@ -116,7 +118,6 @@ const TEST_CHARS = ['灌', '瓣', '璧', '豁', '糯', '籍', '矗', '瓤', '嚼
 // 检查是否为内置前缀码方案
 async function checkBuiltinPrefixCode() {
   if (!props.codeTableName) {
-    console.log('checkBuiltinPrefixCode: 没有方案名称')
     return
   }
   
@@ -126,7 +127,6 @@ async function checkBuiltinPrefixCode() {
   try {
     const response = await fetch('/data/codeTableConfig.json')
     if (!response.ok) {
-      console.log('checkBuiltinPrefixCode: 配置文件加载失败')
       return
     }
     
@@ -137,13 +137,8 @@ async function checkBuiltinPrefixCode() {
       table.key === props.codeTableName || table.name === props.codeTableName
     )
     
-    console.log('checkBuiltinPrefixCode: codeTableName =', props.codeTableName, 'matchedTable =', matchedTable)
-    
     if (matchedTable && matchedTable.prefix === true) {
       isPrefixCode.value = true
-      console.log('设置为前缀码: isPrefixCode =', isPrefixCode.value)
-    } else {
-      console.log('未匹配到前缀码方案或方案不是前缀码')
     }
   } catch (error) {
     console.warn('检查内置方案配置失败:', error)
@@ -289,23 +284,25 @@ async function calculateSpeedEquivAnalysis() {
   if (!props.codeTable || props.codeTable.size === 0) {
     return
   }
-
-  console.log('开始计算速度当量, 前缀码状态:', isPrefixCode.value)
   
   isCalculating.value = true
   error.value = null
 
   try {
-    // 1. 计算最大码长
-    maxCodeLength.value = calculateMaxCodeLength(props.codeTable)
+    // 1. 生成全码码表（只保留单字的最长编码）
+    const fullCodeResult = generateFullCodeTable(props.codeTable)
+    const fullCodeTable = fullCodeResult.codeTable
     
-    // 2. 处理码表
-    const processedCodeTable = processCodeTable(props.codeTable, maxCodeLength.value, isPrefixCode.value)
+    // 2. 计算最大码长（基于全码码表）
+    maxCodeLength.value = calculateMaxCodeLength(fullCodeTable)
     
-    // 3. 加载当量表
+    // 3. 处理码表
+    const processedCodeTable = processCodeTable(fullCodeTable, maxCodeLength.value, isPrefixCode.value)
+    
+    // 4. 加载当量表
     const equivTable = await loadEquivTable()
     
-    // 4. 加载各种字频表
+    // 5. 加载各种字频表
     const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
       builtinService.loadCharFrequency(),
       builtinService.loadCharFrequencySC(),
@@ -313,7 +310,7 @@ async function calculateSpeedEquivAnalysis() {
       builtinService.loadCharFrequencyUnified()
     ])
     
-    // 5. 计算各种字频下的速度当量
+    // 6. 计算各种字频下的速度当量
     const zhihuPairFreq = calculateCodePairFrequencies(processedCodeTable, zhihuFreq)
     const scPairFreq = calculateCodePairFrequencies(processedCodeTable, scFreq)
     const tcPairFreq = calculateCodePairFrequencies(processedCodeTable, tcFreq)
@@ -352,7 +349,6 @@ watch(() => props.codeTableName, async (newName) => {
 
 // 监听前缀码状态变化
 watch(() => isPrefixCode.value, (newValue) => {
-  console.log('前缀码状态改变:', newValue)
   // 当前缀码状态改变时重新计算
   if (props.codeTable && props.codeTable.size > 0) {
     calculateSpeedEquivAnalysis()
@@ -361,8 +357,6 @@ watch(() => isPrefixCode.value, (newValue) => {
 
 // 组件挂载时自动计算
 onMounted(async () => {
-  console.log('组件挂载: codeTableName =', props.codeTableName, 'codeTable size =', props.codeTable?.size)
-  
   // 1. 首先检查是否为内置前缀码方案
   if (props.codeTableName) {
     await checkBuiltinPrefixCode()
@@ -371,7 +365,6 @@ onMounted(async () => {
   // 2. 如果没有检测到内置前缀码，使用用户上传时的设置
   if (!isPrefixCode.value && props.initialPrefix) {
     isPrefixCode.value = true
-    console.log('使用用户上传的前缀码设置: isPrefixCode =', isPrefixCode.value)
   }
   
   // 3. 执行计算
