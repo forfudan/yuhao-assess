@@ -164,7 +164,7 @@
           <p class="footer-links">
             <a href="https://shurufa.app/docs/concepts.html" target="_blank">中文輸入法常用概念指南</a>
             <span>·</span>
-            <a href="https://www.zhihu.com/people/zhuyuhao" target="_blank">作者主頁</a>
+            <a href="https://shurufa.app/docs/statistics.html" target="_blank">常見輸入法測評數據</a>
           </p>
         </div>
       </div>
