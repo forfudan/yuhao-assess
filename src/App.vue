@@ -16,7 +16,14 @@
       <div class="container">
         <div class="header-content">
           <div class="logo">
-            <h1>宇浩測評網</h1>
+            <a href="https://shurufa.app/" target="_blank" class="logo-link">
+              <img 
+                src="https://github.com/forfudan/yu/blob/main/src/public/logo_blue.png?raw=true" 
+                alt="宇浩输入法 Logo" 
+                class="logo-image"
+              >
+              <h1>宇浩測評網</h1>
+            </a>
           </div>
           <div class="header-actions">
             <button @click="toggleAllCards" class="action-button" :title="allCardsCollapsed ? '展開所有卡片' : '摺疊所有卡片'">
@@ -537,6 +544,27 @@ const handleUploadError = (error: string) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: nowrap !important; /* 强制不换行 */
+  gap: var(--spacing-sm);
+  width: 100%;
+  min-height: 0; /* 允许收缩 */
+  overflow: hidden;
+}
+
+.logo {
+  flex: 1 1 auto; /* 允许logo收缩和扩展 */
+  min-width: 0; /* 允许收缩到内容以下 */
+  overflow: hidden;
+  text-overflow: ellipsis; /* 如果logo过长则用省略号 */
+}
+
+.header-actions {
+  flex: 0 0 auto; /* 防止按钮收缩或扩展 */
+  display: flex;
+  align-items: center;
+  white-space: nowrap; /* 强制按钮容器不换行 */
+  display: flex;
+  align-items: center;
 }
 
 .logo h1 {
@@ -544,6 +572,25 @@ const handleUploadError = (error: string) => {
   font-weight: 700;
   color: var(--color-primary);
   margin: 0; /* 移除下边距，因为删除了副标题 */
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s ease;
+}
+
+.logo-link:hover {
+  opacity: 0.8;
+}
+
+.logo-image {
+  height: 1.75rem; /* 与标题字体大小一致 */
+  width: auto;
+  object-fit: contain;
 }
 
 /* 头部操作按钮 */
@@ -733,8 +780,28 @@ const handleUploadError = (error: string) => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .header {
+    padding: var(--spacing-md) 0; /* 减少header的垂直padding */
+  }
+  
+  .header-content {
+    gap: var(--spacing-xs); /* 在小屏幕上减少logo和按钮之间的间距 */
+  }
+  
+  .logo h1 {
+    font-size: 1.25rem; /* 进一步减小标题字体 */
+  }
+  
+  .logo-image {
+    height: 1.25rem; /* 相应减少logo大小 */
+  }
+  
+  .logo-link {
+    gap: calc(var(--spacing-xs) / 2); /* 减少logo和标题之间的间距 */
+  }
+  
   .header-actions {
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs); /* 减少按钮间距 */
   }
   
   .action-button {
@@ -779,12 +846,6 @@ const handleUploadError = (error: string) => {
   
   .cards-container {
     gap: var(--spacing-lg);
-  }
-  
-  .header-content {
-    flex-direction: column;
-    gap: var(--spacing-md);
-    text-align: center;
   }
   
   .logo h1 {
@@ -930,6 +991,59 @@ const handleUploadError = (error: string) => {
 }
 
 @media (max-width: 480px) {
+  .header {
+    padding: var(--spacing-sm) 0;
+  }
+  
+  .header-content {
+    gap: 2px !important; /* 强制最小间距 */
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .logo {
+    flex: 1 1 50% !important; /* 限制logo最大宽度为50% */
+    max-width: 50%;
+    min-width: 0;
+  }
+  
+  .logo h1 {
+    font-size: 0.8rem !important; /* 更小的字体 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .logo-image {
+    height: 0.8rem;
+    flex-shrink: 0;
+  }
+  
+  .logo-link {
+    gap: 2px;
+    min-width: 0;
+    overflow: hidden;
+  }
+  
+  .header-actions {
+    gap: 2px !important;
+    flex: 0 0 auto !important; /* 强制固定尺寸 */
+    white-space: nowrap !important;
+  }
+  
+  .action-button {
+    padding: 2px !important; /* 最小padding */
+    min-width: 28px; /* 固定最小宽度 */
+    width: 28px; /* 固定宽度 */
+    height: 28px; /* 固定高度 */
+    flex-shrink: 0 !important; /* 绝对不允许收缩 */
+  }
+  
+  .action-button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  
   .card-header {
     padding: var(--spacing-md);
   }
@@ -940,6 +1054,62 @@ const handleUploadError = (error: string) => {
   
   .card-title {
     font-size: 1.1rem;
+  }
+}
+
+/* 极小屏幕优化 - 最强约束 */
+@media (max-width: 360px) {
+  .header {
+    padding: 2px 0 !important; /* 最小header padding */
+  }
+  
+  .header-content {
+    gap: 1px !important; /* 最小间距 */
+    width: 100%;
+  }
+  
+  .logo {
+    flex: 1 1 40% !important; /* 进一步限制logo空间 */
+    max-width: 40%;
+    min-width: 0;
+  }
+  
+  .logo h1 {
+    font-size: 0.7rem !important; /* 极小字体 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .logo-image {
+    height: 0.7rem; /* 极小logo */
+    flex-shrink: 0;
+  }
+  
+  .logo-link {
+    gap: 1px; /* 最小间距 */
+    min-width: 0;
+    overflow: hidden;
+  }
+  
+  .header-actions {
+    gap: 1px !important; /* 最小按钮间距 */
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+  
+  .action-button {
+    padding: 1px !important; /* 最小padding */
+    min-width: 24px !important; /* 更小的固定宽度 */
+    width: 24px !important;
+    height: 24px !important;
+    flex-shrink: 0 !important;
+    font-size: 0; /* 隐藏可能的文本 */
+  }
+  
+  .action-button svg {
+    width: 14px !important; /* 更小图标 */
+    height: 14px !important;
   }
 }
 </style>
