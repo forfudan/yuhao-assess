@@ -155,6 +155,46 @@
                     </div>
                   </th>
                 </template>
+                
+                <!-- 速度當量 Tab 的列 -->
+                <template v-else-if="activeTab === 'speedEquiv'">
+                  <th class="metric-header sortable" @click="handleSort('zhihuEquiv')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>知乎速度當量</span>
+                        <span class="sort-arrow">{{ getSortArrow('zhihuEquiv') }}</span>
+                      </div>
+                      <small>基於知乎字頻</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('scEquiv')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>簡體速度當量</span>
+                        <span class="sort-arrow">{{ getSortArrow('scEquiv') }}</span>
+                      </div>
+                      <small>基於簡體字頻</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('tcEquiv')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>繁體速度當量</span>
+                        <span class="sort-arrow">{{ getSortArrow('tcEquiv') }}</span>
+                      </div>
+                      <small>基於繁體字頻</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('unifiedEquiv')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>聯合速度當量</span>
+                        <span class="sort-arrow">{{ getSortArrow('unifiedEquiv') }}</span>
+                      </div>
+                      <small>基於繁簡聯合字頻</small>
+                    </div>
+                  </th>
+                </template>
                 <th class="actions-header">操作</th>
               </tr>
             </thead>
@@ -271,6 +311,46 @@
                     </div>
                     <span v-else class="metric-value">
                       {{ formatNumber(scheme.data?.static?.cjkToIDuplicateChars) }}
+                    </span>
+                  </td>
+                </template>
+                
+                <!-- 速度當量 Tab 的數據列 -->
+                <template v-else-if="activeTab === 'speedEquiv'">
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatEquiv(scheme.data?.speedEquiv?.zhihuEquiv) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatEquiv(scheme.data?.speedEquiv?.scEquiv) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatEquiv(scheme.data?.speedEquiv?.tcEquiv) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatEquiv(scheme.data?.speedEquiv?.unifiedEquiv) }}
                     </span>
                   </td>
                 </template>
@@ -455,9 +535,17 @@ interface StaticData {
   cjkToIDuplicateChars: number
 }
 
+interface SpeedEquivData {
+  zhihuEquiv: number
+  scEquiv: number
+  tcEquiv: number
+  unifiedEquiv: number
+}
+
 interface SchemeData {
   dynamic?: DynamicData
   static?: StaticData
+  speedEquiv?: SpeedEquivData
 }
 
 // 定義方案接口
@@ -489,10 +577,11 @@ const fileInputCodeChar = ref<HTMLInputElement>()
 const uploadPrefixFlag = ref(false) // 用户上传文件时的前缀码标志
 
 // Tab 相關狀態
-const activeTab = ref<'dynamic' | 'static'>('dynamic')
+const activeTab = ref<'dynamic' | 'static' | 'speedEquiv'>('dynamic')
 const tabs = [
   { key: 'dynamic', label: '動態選重' },
-  { key: 'static', label: '靜態重碼' }
+  { key: 'static', label: '靜態重碼' },
+  { key: 'speedEquiv', label: '速度當量' }
 ] as const
 
 // 惰性計算：監聽 Tab 切換
@@ -508,9 +597,14 @@ const ensureCurrentTabDataLoaded = async () => {
   for (const scheme of schemes) {
     if (!scheme.codeTable || scheme.isCalculating) continue
     
-    const needsCalculation = activeTab.value === 'dynamic' 
-      ? !scheme.data?.dynamic 
-      : !scheme.data?.static
+    let needsCalculation = false
+    if (activeTab.value === 'dynamic') {
+      needsCalculation = !scheme.data?.dynamic
+    } else if (activeTab.value === 'static') {
+      needsCalculation = !scheme.data?.static
+    } else if (activeTab.value === 'speedEquiv') {
+      needsCalculation = !scheme.data?.speedEquiv
+    }
     
     if (needsCalculation) {
       pendingCalculations.push(calculateMissingData(scheme))
@@ -535,6 +629,8 @@ const calculateMissingData = async (scheme: Scheme) => {
       scheme.data.dynamic = await calculateDynamicData(scheme.codeTable)
     } else if (activeTab.value === 'static' && !scheme.data.static) {
       scheme.data.static = await calculateStaticData(scheme.codeTable)
+    } else if (activeTab.value === 'speedEquiv' && !scheme.data.speedEquiv) {
+      scheme.data.speedEquiv = await calculateSpeedEquivData(scheme.codeTable)
     }
   } catch (error) {
     console.error(`計算方案 ${scheme.name} 的數據失敗:`, error)
@@ -547,7 +643,8 @@ const calculateMissingData = async (scheme: Scheme) => {
 type SortDirection = 'desc' | 'asc' | 'none'
 type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateUnified' | 
                       'gb2312DuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
-                      'cjkToADuplicateChars' | 'cjkToBDuplicateChars' | 'cjkToFDuplicateChars' | 'cjkToIDuplicateChars'
+                      'cjkToADuplicateChars' | 'cjkToBDuplicateChars' | 'cjkToFDuplicateChars' | 'cjkToIDuplicateChars' |
+                      'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'unifiedEquiv'
 type SortColumn = 'name' | DataSortColumn
 
 const sortColumn = ref<SortColumn | null>(null)
@@ -652,6 +749,9 @@ const allSchemes = computed(() => {
       if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateUnified'].includes(column)) {
         aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
         bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
+      } else if (['zhihuEquiv', 'scEquiv', 'tcEquiv', 'unifiedEquiv'].includes(column)) {
+        aValue = a.data?.speedEquiv?.[column as keyof SpeedEquivData] ?? 0
+        bValue = b.data?.speedEquiv?.[column as keyof SpeedEquivData] ?? 0
       } else {
         aValue = a.data?.static?.[column as keyof StaticData] ?? 0
         bValue = b.data?.static?.[column as keyof StaticData] ?? 0
@@ -683,6 +783,10 @@ const formatRate = (rate?: number) => {
 
 const formatNumber = (num?: number) => {
   return num ? num.toLocaleString() : '-'
+}
+
+const formatEquiv = (equiv?: number) => {
+  return equiv ? equiv.toFixed(4) : '-'
 }
 
 // 排序函數
@@ -907,6 +1011,98 @@ async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Prom
   }
 }
 
+// 計算速度當量數據
+async function calculateSpeedEquivData(codeTable: CodeTable, isPrefix = false): Promise<SpeedEquivData> {
+  try {
+    // 使用 codeTableProcessingService 處理碼表
+    const processedTables = codeTableProcessingService.processCodeTable(codeTable, { isPrefix })
+    const processedCodeTable = processedTables.fullWithSelection
+    
+    // 加載當量表
+    const response = await fetch('/data/equivTable.json')
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const equivTableData = await response.json()
+    const equivTable = equivTableData.data || {}
+    
+    // 加載各種字頻表
+    const builtinService = new BuiltinCodeTableService()
+    const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
+      builtinService.loadCharFrequency(),
+      builtinService.loadCharFrequencySC(),
+      builtinService.loadCharFrequencyTC(),
+      builtinService.loadCharFrequencyUnified()
+    ])
+    
+    // 計算各種字頻下的速度當量
+    const zhihuEquiv = calculateSpeedEquiv(processedCodeTable, zhihuFreq, equivTable)
+    const scEquiv = calculateSpeedEquiv(processedCodeTable, scFreq, equivTable)
+    const tcEquiv = calculateSpeedEquiv(processedCodeTable, tcFreq, equivTable)
+    const unifiedEquiv = calculateSpeedEquiv(processedCodeTable, unifiedFreq, equivTable)
+    
+    return {
+      zhihuEquiv,
+      scEquiv,
+      tcEquiv,
+      unifiedEquiv
+    }
+  } catch (error) {
+    console.error('速度當量計算失敗:', error)
+    return {
+      zhihuEquiv: 0,
+      scEquiv: 0,
+      tcEquiv: 0,
+      unifiedEquiv: 0
+    }
+  }
+}
+
+// 計算編碼對的頻率分佈
+function calculateCodePairFrequencies(
+  codeTable: CodeTable, 
+  charFrequency: Record<string, number>
+): Record<string, number> {
+  const pairFrequencies: Record<string, number> = {}
+  
+  for (const [char, codes] of codeTable.entries()) {
+    const frequency = charFrequency[char] || 0
+    if (frequency === 0 || codes.length === 0) continue
+    
+    const code = codes[0] // 使用第一個編碼
+    
+    // 生成所有相鄰的編碼對
+    for (let i = 0; i < code.length - 1; i++) {
+      const pair = code.substring(i, i + 2)
+      pairFrequencies[pair] = (pairFrequencies[pair] || 0) + frequency
+    }
+  }
+  
+  return pairFrequencies
+}
+
+// 計算速度當量
+function calculateSpeedEquiv(
+  codeTable: CodeTable,
+  charFrequency: Record<string, number>,
+  equivTable: Record<string, number>
+): number {
+  const pairFrequencies = calculateCodePairFrequencies(codeTable, charFrequency)
+  
+  let totalWeightedEquiv = 0
+  let totalFrequency = 0
+  
+  for (const [pair, frequency] of Object.entries(pairFrequencies)) {
+    const equiv = equivTable[pair]
+    if (equiv !== undefined) {
+      totalWeightedEquiv += equiv * frequency
+      totalFrequency += frequency
+    }
+  }
+  
+  return totalFrequency > 0 ? totalWeightedEquiv / totalFrequency : 0
+}
+
 // 已废弃：保留兼容性，但推荐使用分离的函数
 async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Promise<SchemeData> {
   const [dynamic, static_] = await Promise.all([
@@ -955,8 +1151,10 @@ async function addBuiltinScheme() {
     newScheme.data = {}
     if (activeTab.value === 'dynamic') {
       newScheme.data.dynamic = await calculateDynamicData(result.codeTable)
-    } else {
+    } else if (activeTab.value === 'static') {
       newScheme.data.static = await calculateStaticData(result.codeTable)
+    } else if (activeTab.value === 'speedEquiv') {
+      newScheme.data.speedEquiv = await calculateSpeedEquivData(result.codeTable)
     }
     
     newScheme.isCalculating = false
@@ -1022,8 +1220,10 @@ async function addAllBuiltinSchemes() {
         newScheme.data = {}
         if (activeTab.value === 'dynamic') {
           newScheme.data.dynamic = await calculateDynamicData(result.codeTable)
-        } else {
+        } else if (activeTab.value === 'static') {
           newScheme.data.static = await calculateStaticData(result.codeTable)
+        } else if (activeTab.value === 'speedEquiv') {
+          newScheme.data.speedEquiv = await calculateSpeedEquivData(result.codeTable)
         }
         
         newScheme.isCalculating = false
@@ -1089,8 +1289,10 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     newScheme.data = {}
     if (activeTab.value === 'dynamic') {
       newScheme.data.dynamic = await calculateDynamicData(codeTable, uploadPrefixFlag.value)
-    } else {
+    } else if (activeTab.value === 'static') {
       newScheme.data.static = await calculateStaticData(codeTable, uploadPrefixFlag.value)
+    } else if (activeTab.value === 'speedEquiv') {
+      newScheme.data.speedEquiv = await calculateSpeedEquivData(codeTable, uploadPrefixFlag.value)
     }
     
     newScheme.isCalculating = false
