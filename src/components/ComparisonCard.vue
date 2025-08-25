@@ -176,7 +176,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatRate(scheme.data?.dynamicDupRate) }}
+                      {{ formatRate(scheme.data?.dynamic?.dynamicDupRate) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -185,7 +185,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatRate(scheme.data?.dynamicDupRateSC) }}
+                      {{ formatRate(scheme.data?.dynamic?.dynamicDupRateSC) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -194,7 +194,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatRate(scheme.data?.dynamicDupRateTC) }}
+                      {{ formatRate(scheme.data?.dynamic?.dynamicDupRateTC) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -203,7 +203,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatRate(scheme.data?.dynamicDupRateUnified) }}
+                      {{ formatRate(scheme.data?.dynamic?.dynamicDupRateUnified) }}
                     </span>
                   </td>
                 </template>
@@ -216,7 +216,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.gb2312DuplicateChars) }}
+                      {{ formatNumber(scheme.data?.static?.gb2312DuplicateChars) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -225,7 +225,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.guoziDuplicateChars) }}
+                      {{ formatNumber(scheme.data?.static?.guoziDuplicateChars) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -234,7 +234,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.cjkBasicDuplicateChars) }}
+                      {{ formatNumber(scheme.data?.static?.cjkBasicDuplicateChars) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -243,7 +243,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.cjkToADuplicateChars) }}
+                      {{ formatNumber(scheme.data?.static?.cjkToADuplicateChars) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -252,7 +252,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.cjkToBDuplicateChars) }}
+                      {{ formatNumber(scheme.data?.static?.cjkToBDuplicateChars) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -261,7 +261,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.cjkToFDuplicateChars) }}
+                      {{ formatNumber(scheme.data?.static?.cjkToFDuplicateChars) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -270,7 +270,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.cjkToIDuplicateChars) }}
+                      {{ formatNumber(scheme.data?.static?.cjkToIDuplicateChars) }}
                     </span>
                   </td>
                 </template>
@@ -438,11 +438,14 @@ defineExpose({
 })
 
 // 定義方案數據接口
-interface SchemeData {
+interface DynamicData {
   dynamicDupRate: number
   dynamicDupRateSC: number
   dynamicDupRateTC: number
   dynamicDupRateUnified: number
+}
+
+interface StaticData {
   gb2312DuplicateChars: number
   guoziDuplicateChars: number
   cjkBasicDuplicateChars: number
@@ -450,6 +453,11 @@ interface SchemeData {
   cjkToBDuplicateChars: number
   cjkToFDuplicateChars: number
   cjkToIDuplicateChars: number
+}
+
+interface SchemeData {
+  dynamic?: DynamicData
+  static?: StaticData
 }
 
 // 定義方案接口
@@ -486,6 +494,54 @@ const tabs = [
   { key: 'dynamic', label: '動態選重' },
   { key: 'static', label: '靜態重碼' }
 ] as const
+
+// 惰性計算：監聽 Tab 切換
+watch(activeTab, async (newTab) => {
+  await ensureCurrentTabDataLoaded()
+}, { immediate: true })
+
+// 確保當前 Tab 的數據已加載
+const ensureCurrentTabDataLoaded = async () => {
+  const schemes = allSchemes.value
+  const pendingCalculations: Promise<void>[] = []
+  
+  for (const scheme of schemes) {
+    if (!scheme.codeTable || scheme.isCalculating) continue
+    
+    const needsCalculation = activeTab.value === 'dynamic' 
+      ? !scheme.data?.dynamic 
+      : !scheme.data?.static
+    
+    if (needsCalculation) {
+      pendingCalculations.push(calculateMissingData(scheme))
+    }
+  }
+  
+  await Promise.all(pendingCalculations)
+}
+
+// 為方案計算缺失的數據
+const calculateMissingData = async (scheme: Scheme) => {
+  if (!scheme.codeTable || scheme.isCalculating) return
+  
+  scheme.isCalculating = true
+  
+  try {
+    if (!scheme.data) {
+      scheme.data = {}
+    }
+    
+    if (activeTab.value === 'dynamic' && !scheme.data.dynamic) {
+      scheme.data.dynamic = await calculateDynamicData(scheme.codeTable)
+    } else if (activeTab.value === 'static' && !scheme.data.static) {
+      scheme.data.static = await calculateStaticData(scheme.codeTable)
+    }
+  } catch (error) {
+    console.error(`計算方案 ${scheme.name} 的數據失敗:`, error)
+  } finally {
+    scheme.isCalculating = false
+  }
+}
 
 // 排序相關狀態
 type SortDirection = 'desc' | 'asc' | 'none'
@@ -591,8 +647,15 @@ const allSchemes = computed(() => {
     } else if (sortColumn.value) {
       // TypeScript类型保护：确保sortColumn.value是数据列而不是'name'
       const column = sortColumn.value as DataSortColumn
-      aValue = a.data?.[column] ?? 0
-      bValue = b.data?.[column] ?? 0
+      
+      // 根据列名判断是动态还是静态数据
+      if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateUnified'].includes(column)) {
+        aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
+        bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
+      } else {
+        aValue = a.data?.static?.[column as keyof StaticData] ?? 0
+        bValue = b.data?.static?.[column as keyof StaticData] ?? 0
+      }
     } else {
       aValue = 0
       bValue = 0
@@ -782,15 +845,7 @@ const loadCurrentUserScheme = async () => {
 }
 
 // 計算方案數據
-async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Promise<SchemeData> {
-  // 從碼表鍵中提取所有單個字符
-  const allUniqueChars = new Set<string>()
-  for (const key of codeTable.keys()) {
-    for (const char of key) {
-      allUniqueChars.add(char)
-    }
-  }
-  
+async function calculateDynamicData(codeTable: CodeTable, isPrefix = false): Promise<DynamicData> {
   // 为对比方案独立处理码表，不使用单例服务以避免干扰当前方案
   const { generateFullCodeTable } = await import('../services/index')
   const fullResult = generateFullCodeTable(codeTable)
@@ -810,6 +865,28 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
   const dynamicDupRateTC = getDynamicDupRate(fullCodeTable, charFrequencyTC)
   const dynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
   
+  return {
+    dynamicDupRate,
+    dynamicDupRateSC,
+    dynamicDupRateTC,
+    dynamicDupRateUnified
+  }
+}
+
+async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Promise<StaticData> {
+  // 從碼表鍵中提取所有單個字符
+  const allUniqueChars = new Set<string>()
+  for (const key of codeTable.keys()) {
+    for (const char of key) {
+      allUniqueChars.add(char)
+    }
+  }
+  
+  // 为对比方案独立处理码表，不使用单例服务以避免干扰当前方案
+  const { generateFullCodeTable } = await import('../services/index')
+  const fullResult = generateFullCodeTable(codeTable)
+  const fullCodeTable = fullResult.codeTable
+  
   // 計算各字符集的重碼統計（只計算全碼）
   const gb2312DuplicateChars = await calculateCharsetDuplicates('gb2312', allUniqueChars, fullCodeTable)
   const guoziDuplicateChars = await calculateCharsetDuplicates('guozi', allUniqueChars, fullCodeTable)
@@ -820,10 +897,6 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
   const cjkToIDuplicateChars = await calculateCharsetDuplicates('cjk_to_i', allUniqueChars, fullCodeTable)
   
   return {
-    dynamicDupRate,
-    dynamicDupRateSC,
-    dynamicDupRateTC,
-    dynamicDupRateUnified,
     gb2312DuplicateChars,
     guoziDuplicateChars,
     cjkBasicDuplicateChars,
@@ -831,6 +904,19 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
     cjkToBDuplicateChars,
     cjkToFDuplicateChars,
     cjkToIDuplicateChars
+  }
+}
+
+// 已废弃：保留兼容性，但推荐使用分离的函数
+async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Promise<SchemeData> {
+  const [dynamic, static_] = await Promise.all([
+    calculateDynamicData(codeTable, isPrefix),
+    calculateStaticData(codeTable, isPrefix)
+  ])
+  
+  return {
+    dynamic,
+    static: static_
   }
 }
 
@@ -861,10 +947,18 @@ async function addBuiltinScheme() {
     additionalSchemes.value.push(newScheme)
     showAddForm.value = false
     
-    // 載入碼表並計算數據
+    // 載入碼表並計算當前Tab的數據
     const result = await builtinService.downloadCodeTable(selectedBuiltinScheme.value)
     newScheme.codeTable = result.codeTable
-    newScheme.data = await calculateSchemeData(result.codeTable)
+    
+    // 只計算當前Tab需要的數據
+    newScheme.data = {}
+    if (activeTab.value === 'dynamic') {
+      newScheme.data.dynamic = await calculateDynamicData(result.codeTable)
+    } else {
+      newScheme.data.static = await calculateStaticData(result.codeTable)
+    }
+    
     newScheme.isCalculating = false
     
     selectedBuiltinScheme.value = ''
@@ -920,10 +1014,18 @@ async function addAllBuiltinSchemes() {
         
         additionalSchemes.value.push(newScheme)
         
-        // 載入碼表並計算數據
+        // 載入碼表並計算當前Tab的數據
         const result = await builtinService.downloadCodeTable(builtinScheme.id)
         newScheme.codeTable = result.codeTable
-        newScheme.data = await calculateSchemeData(result.codeTable)
+        
+        // 只計算當前Tab需要的數據
+        newScheme.data = {}
+        if (activeTab.value === 'dynamic') {
+          newScheme.data.dynamic = await calculateDynamicData(result.codeTable)
+        } else {
+          newScheme.data.static = await calculateStaticData(result.codeTable)
+        }
+        
         newScheme.isCalculating = false
         
       } catch (error) {
@@ -982,7 +1084,15 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     const codeTable = parseCodeTableText(text, format)
     
     newScheme.codeTable = codeTable
-    newScheme.data = await calculateSchemeData(codeTable, uploadPrefixFlag.value)
+    
+    // 只計算當前Tab需要的數據
+    newScheme.data = {}
+    if (activeTab.value === 'dynamic') {
+      newScheme.data.dynamic = await calculateDynamicData(codeTable, uploadPrefixFlag.value)
+    } else {
+      newScheme.data.static = await calculateStaticData(codeTable, uploadPrefixFlag.value)
+    }
+    
     newScheme.isCalculating = false
     
     // 立即保存數據
@@ -1211,9 +1321,10 @@ function clearAllSchemes() {
 
 .comparison-table {
   width: 100%;
-  min-width: 1000px;
+  min-width: max-content; /* 内容所需的最小宽度 */
   border-collapse: collapse;
   font-size: 0.8rem;
+  table-layout: auto; /* 允许浏览器自动调整列宽 */
 }
 
 .comparison-table th,
@@ -1223,6 +1334,9 @@ function clearAllSchemes() {
   border-right: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
   line-height: 1.2;
+  white-space: nowrap; /* 防止文字换行 */
+  min-width: 0; /* 允许列宽压缩到最小 */
+  max-width: none; /* 不限制最大宽度 */
 }
 
 .comparison-table th:last-child,
@@ -1240,8 +1354,8 @@ function clearAllSchemes() {
 
 .scheme-name-header {
   background: #f9fafb;
-  width: 120px;
-  min-width: 120px;
+  width: auto; /* 改为自动宽度 */
+  min-width: 60px; /* 较小的最小宽度 */
   text-align: left !important;
   font-weight: 600;
   color: #374151;
@@ -1249,8 +1363,8 @@ function clearAllSchemes() {
 
 .metric-header {
   background: #f9fafb;
-  width: 80px;
-  min-width: 80px;
+  width: auto; /* 改为自动宽度 */
+  min-width: 40px; /* 较小的最小宽度 */
   font-weight: 600;
   color: #374151;
 }
