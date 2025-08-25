@@ -4,7 +4,7 @@
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">鍵位熱力圖</h3>
-          <p class="card-description">分析碼表的鍵位分布和使用頻率，可視化展示鍵位負擔。</p>
+          <p class="card-description">基於全碼加選重按鍵表分析鍵位分布和使用頻率，可視化展示鍵位負擔。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
           <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -25,8 +25,8 @@
     <!-- 热力图内容 -->
     <div v-else class="keyboard-heatmap-content">
       <!-- 键盘热力图 -->
-      <div class="keyboard-wrapper">
-        <div class="keyboard-layout" :style="{ transform: `scale(${keyboardScale})` }">
+      <div class="keyboard-wrapper" ref="keyboardWrapper">
+        <div class="keyboard-layout" ref="keyboardLayout" :style="{ transform: `scale(${keyboardScale})` }">
           <!-- 数字行 -->
           <div class="keyboard-row number-row">
             <KeyButton 
@@ -144,9 +144,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import KeyButton from './KeyButton.vue'
 import { useCollapse } from '../composables/useCollapse'
+import { codeTableProcessingService } from '../services'
 import type { CodeTable, KeyData, KeyInfo, AnalysisStats } from '../types/index'
 
 interface Props {
@@ -187,6 +188,65 @@ const loadCharFrequency = async () => {
 // 响应式数据
 const displayMode = ref<'load'>('load') // 固定为按键频率模式
 const keyboardScale = ref(1.0)
+
+// 自适应缩放相关
+const keyboardWrapper = ref<HTMLElement>()
+const keyboardLayout = ref<HTMLElement>()
+
+// 计算自适应缩放
+const calculateAdaptiveScale = () => {
+  if (!keyboardWrapper.value || !keyboardLayout.value) return
+  
+  const wrapperWidth = keyboardWrapper.value.clientWidth
+  const layoutWidth = 800 // 键盘布局的基础宽度
+  const scale = Math.min(1, (wrapperWidth - 32) / layoutWidth) // 减去padding
+  
+  keyboardScale.value = scale
+}
+
+// 窗口大小变化监听
+const handleResize = () => {
+  calculateAdaptiveScale()
+}
+
+// 生命周期钩子
+onMounted(() => {
+  loadCharFrequency()
+  
+  // 延迟计算缩放，确保DOM已渲染
+  setTimeout(() => {
+    calculateAdaptiveScale()
+  }, 100)
+  
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
+
+// 监听分析状态变化，重新计算缩放
+watch(
+  () => props.analysisReady,
+  (newReady) => {
+    if (newReady) {
+      setTimeout(() => {
+        calculateAdaptiveScale()
+      }, 100)
+    }
+  }
+)
+
+// 获取处理后的码表（全码加选重按键表）
+const processedCodeTable = computed(() => {
+  if (!props.analysisReady) return new Map()
+  
+  const processedTables = codeTableProcessingService.getProcessedTables()
+  if (!processedTables) return new Map()
+  
+  // 使用全码加选重按键表，注意下划线代表空格
+  return processedTables.fullWithSelection
+})
 
 // 键盘布局定义
 const numberRowKeys: KeyInfo[] = [
@@ -246,7 +306,7 @@ const rowMapping: Record<string, string> = {
 
 // 计算统计数据
 const stats = computed<AnalysisStats>(() => {
-  if (!props.analysisReady || props.codeTable.size === 0) {
+  if (!props.analysisReady || processedCodeTable.value.size === 0) {
     return {
       totalChars: 0,
       totalCodes: 0,
@@ -265,7 +325,7 @@ const stats = computed<AnalysisStats>(() => {
   let totalCodeLength = 0
 
   // 分析码表 - 使用字频权重
-  for (const [char, codes] of props.codeTable.entries()) {
+  for (const [char, codes] of processedCodeTable.value.entries()) {
     // 获取字符频率权重，默认为1
     const charWeight = charFrequency.value[char] || 1
     
@@ -274,17 +334,20 @@ const stats = computed<AnalysisStats>(() => {
       totalCodeLength += code.length
 
       // 统计每个按键的使用次数（应用字频权重）
+      // 注意：这里需要特殊处理下划线，将其视为空格键
       for (const key of code.toLowerCase()) {
-        keyDistribution.set(key, (keyDistribution.get(key) || 0) + charWeight)
+        const actualKey = key === '_' ? 'space' : key
+        
+        keyDistribution.set(actualKey, (keyDistribution.get(actualKey) || 0) + charWeight)
         
         // 统计手指负担
-        const finger = fingerMapping[key]
+        const finger = fingerMapping[actualKey]
         if (finger) {
           fingerLoad.set(finger, (fingerLoad.get(finger) || 0) + charWeight)
         }
         
         // 统计按排分布
-        const row = rowMapping[key]
+        const row = rowMapping[actualKey]
         if (row) {
           rowDistribution.set(row, (rowDistribution.get(row) || 0) + charWeight)
         }
@@ -309,7 +372,7 @@ const stats = computed<AnalysisStats>(() => {
   const rightPercentage = totalHandCount > 0 ? (rightHandCount / totalHandCount) * 100 : 0
 
   return {
-    totalChars: props.codeTable.size,
+    totalChars: processedCodeTable.value.size,
     totalCodes,
     avgCodeLength: totalCodes > 0 ? totalCodeLength / totalCodes : 0,
     keyDistribution,
@@ -370,30 +433,6 @@ const getKeyData = (key: string): KeyData => {
     position: { x: 0, y: 0 } // 简化版本，不需要精确位置
   }
 }
-
-// 监听窗口大小变化，调整键盘缩放
-const updateKeyboardScale = () => {
-  const container = document.querySelector('.keyboard-layout')
-  if (container) {
-    const containerWidth = container.parentElement?.clientWidth || 800
-    const keyboardWidth = 800 // 基础键盘宽度
-    const scale = Math.min(1.2, containerWidth / keyboardWidth) // 允许轻微放大，最多120%
-    keyboardScale.value = scale * 0.95 // 留很少的边距，充分利用空间
-  }
-}
-
-// 组件挂载时设置初始缩放，并监听窗口大小变化
-watch(() => props.analysisReady, (ready) => {
-  if (ready) {
-    setTimeout(updateKeyboardScale, 100)
-    window.addEventListener('resize', updateKeyboardScale)
-  }
-})
-
-// 组件挂载时加载字符频率数据
-onMounted(() => {
-  loadCharFrequency()
-})
 </script>
 
 <style scoped>
@@ -644,8 +683,10 @@ onMounted(() => {
 /* 键盘包装器 */
 .keyboard-wrapper {
   display: flex;
-  overflow-x: auto;
+  justify-content: center;
   padding: var(--spacing-md) 0;
+  overflow: hidden; /* 防止出现滚动条 */
+  width: 100%;
 }
 
 /* 键盘布局 */
@@ -653,10 +694,10 @@ onMounted(() => {
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
-  transform-origin: left top;
-  width: 100%;
-  min-width: 800px;
+  transform-origin: center top;
+  width: 800px; /* 固定基础宽度 */
   border: 1px solid var(--color-border-secondary);
+  transition: transform 0.3s ease;
 }
 
 .keyboard-row {
