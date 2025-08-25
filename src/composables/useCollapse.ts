@@ -15,10 +15,16 @@ export function useCollapse(initialState = false) {
     isCollapsed.value = false
   }
 
+  // 获取当前折叠状态
+  const getCollapsedState = () => {
+    return isCollapsed.value
+  }
+
   return {
     isCollapsed,
     toggleCollapsed,
     collapse,
-    expand
+    expand,
+    getCollapsedState
   }
 }

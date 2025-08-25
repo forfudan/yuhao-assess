@@ -224,7 +224,34 @@ const scrollToCard = (cardId: string) => {
         block: 'start',
         inline: 'nearest'
       })
+      
+      // 滚动完成后，检查并展开卡片（如果是收起状态）
+      setTimeout(() => {
+        expandCardIfCollapsed(cardId)
+      }, 800) // 等待滚动动画完成
     }, 150)
+  }
+}
+
+// 如果卡片是收起状态，则展开它
+const expandCardIfCollapsed = (cardId: string) => {
+  const cardRefMap: Record<string, any> = {
+    'uploader': uploaderCardRef.value,
+    'duplicate': duplicateAnalysisCardRef.value,
+    'maximum': maximumCandidatesCardRef.value,
+    'speed': speedEquivCardRef.value,
+    'comparison': comparisonCardRef.value,
+    'heatmap': keyboardHeatmapCardRef.value,
+    'analysis': codeTableAnalysisCardRef.value
+  }
+  
+  const cardRef = cardRefMap[cardId]
+  if (cardRef && typeof cardRef.getCollapsedState === 'function' && typeof cardRef.expand === 'function') {
+    // 检查卡片是否是收起状态
+    const isCollapsed = cardRef.getCollapsedState()
+    if (isCollapsed) {
+      cardRef.expand()
+    }
   }
 }
 
