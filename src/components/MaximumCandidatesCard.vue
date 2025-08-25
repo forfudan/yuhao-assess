@@ -1,5 +1,5 @@
 <template>
-  <div class="maximum-candidates-card">
+  <div class="maximum-candidates-card" :id="id">
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
@@ -119,6 +119,7 @@ import type { CodeTable } from '../types'
 // Props
 interface Props {
   codeTable: CodeTable
+  id?: string
 }
 
 const props = defineProps<Props>()

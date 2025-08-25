@@ -1,5 +1,5 @@
 <template>
-  <div class="duplicate-analysis-card">
+  <div class="duplicate-analysis-card" :id="id">
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
@@ -216,6 +216,7 @@ import type { CodeTable, CharFrequency } from '../types'
 // Props
 interface Props {
   codeTable?: CodeTable
+  id?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
