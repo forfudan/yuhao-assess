@@ -528,14 +528,14 @@ loadBuiltinConfig()
 .code-table-uploader {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm); /* 从 var(--spacing-md) 减少到 var(--spacing-sm) */
 }
 
 /* 內置碼表選擇器樣式 */
 .builtin-selector {
   border: 2px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm); /* 从 var(--spacing-md) 减少到 var(--spacing-sm) */
   background: var(--color-bg-secondary);
 }
 
@@ -543,23 +543,23 @@ loadBuiltinConfig()
   display: block;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs); /* 从 var(--spacing-sm) 减少到 var(--spacing-xs) */
 }
 
 .builtin-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs); /* 从 var(--spacing-sm) 减少到 var(--spacing-xs) */
 }
 
 .builtin-select {
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm); /* 从 var(--spacing-md) 减少到 var(--spacing-sm) */
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
-  min-height: 44px;
+  min-height: 40px; /* 从 44px 减少到 40px */
   font-family: inherit;
 }
 
@@ -582,7 +582,7 @@ loadBuiltinConfig()
 .divider {
   position: relative;
   text-align: center;
-  margin: var(--spacing-sm) 0;
+  margin: var(--spacing-xs) 0; /* 从 var(--spacing-sm) 减少到 var(--spacing-xs) */
 }
 
 .divider::before {
@@ -608,7 +608,7 @@ loadBuiltinConfig()
 .format-selector {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs); /* 从 var(--spacing-sm) 减少到 var(--spacing-xs) */
 }
 
 .format-label {

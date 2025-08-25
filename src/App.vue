@@ -483,12 +483,16 @@ const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; f
   // 保存到本地存儲
   saveCodeTableData()
   
-  // 码表分析成功后，自动折叠上传卡片
-  if (uploaderCardRef.value && typeof uploaderCardRef.value.collapse === 'function') {
-    setTimeout(() => {
-      uploaderCardRef.value.collapse()
-    }, 500) // 延迟500ms，让用户看到成功反馈
-  }
+  // 码表分析成功后，自动滚动到第一个分析卡片
+  setTimeout(() => {
+    const firstAnalysisCard = document.getElementById('card-duplicate')
+    if (firstAnalysisCard) {
+      firstAnalysisCard.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
+  }, 500) // 延迟500ms，让用户看到成功反馈
   
   uploadStatus.value = {
     type: 'success',
