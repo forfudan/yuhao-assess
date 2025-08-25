@@ -162,9 +162,9 @@
         <div class="footer-content">
           <p>&copy; 2025 宇浩測評網. 基于 Vue 3 + TypeScript 構建</p>
           <p class="footer-links">
-            <a href="https://shurufa.app" target="_blank">宇浩輸入法官網</a>
+            <a href="https://shurufa.app/docs/concepts.html" target="_blank">中文輸入法常用概念指南</a>
             <span>·</span>
-            <a href="https://zhuyuhao.com" target="_blank">作者主頁</a>
+            <a href="https://www.zhihu.com/people/zhuyuhao" target="_blank">作者主頁</a>
           </p>
         </div>
       </div>
