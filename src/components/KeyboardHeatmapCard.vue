@@ -188,6 +188,7 @@ const loadCharFrequency = async () => {
 // 响应式数据
 const displayMode = ref<'load'>('load') // 固定为按键频率模式
 const keyboardScale = ref(1.0)
+const refreshTrigger = ref(0) // 用于强制刷新的触发器
 
 // 自适应缩放相关
 const keyboardWrapper = ref<HTMLElement>()
@@ -239,6 +240,9 @@ watch(
 
 // 获取处理后的码表（全码加选重按键表）
 const processedCodeTable = computed(() => {
+  // 依赖refreshTrigger来强制刷新
+  refreshTrigger.value
+  
   if (!props.analysisReady) return new Map()
   
   const processedTables = codeTableProcessingService.getProcessedTables()
@@ -247,6 +251,23 @@ const processedCodeTable = computed(() => {
   // 使用全码加选重按键表，注意下划线代表空格
   return processedTables.fullWithSelection
 })
+
+// 监听码表变化，确保切换方案时热力图会刷新
+watch(
+  () => props.codeTable,
+  (newCodeTable) => {
+    if (props.analysisReady && newCodeTable.size > 0) {
+      // 触发刷新
+      refreshTrigger.value++
+      
+      // 重新计算缩放
+      setTimeout(() => {
+        calculateAdaptiveScale()
+      }, 100)
+    }
+  },
+  { deep: true }
+)
 
 // 键盘布局定义
 const numberRowKeys: KeyInfo[] = [
