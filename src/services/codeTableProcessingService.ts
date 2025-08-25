@@ -43,10 +43,18 @@ export class CodeTableProcessingService {
     const maxLength = options?.maxLength || this.calculateMaxCodeLength(fullResult.codeTable)
     const isPrefix = options?.isPrefix || false
     
+    console.log(`码表处理参数: maxLength=${maxLength}, isPrefix=${isPrefix}`)
+    console.log(`原始码表大小: ${originalCodeTable.size}`)
+    console.log(`全码表大小: ${fullResult.codeTable.size}`)
+    console.log(`简码表大小: ${shortResult.codeTable.size}`)
+    
     // 生成两种加选重按键的码表
     // 无论全码表还是简码表，都使用相同的逻辑：根据是否前缀码决定是否补空格
     const fullWithSelection = this.generateCodeTableWithSelection(fullResult.codeTable, maxLength, isPrefix)
     const shortWithSelection = this.generateCodeTableWithSelection(shortResult.codeTable, maxLength, isPrefix)
+    
+    console.log(`处理后全码表大小: ${fullWithSelection.size}`)
+    console.log(`处理后简码表大小: ${shortWithSelection.size}`)
     
     this.processedTables = {
       original: originalCodeTable,

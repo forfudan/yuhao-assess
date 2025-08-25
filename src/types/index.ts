@@ -27,7 +27,9 @@ export interface BuiltinCodeTable {
   description: string
   website: string
   category: string
+  tags: string[]
   enabled: boolean
+  prefix?: boolean  // 前缀码标记
 }
 
 // 碼表配置文件

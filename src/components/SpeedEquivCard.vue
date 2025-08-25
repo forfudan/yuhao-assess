@@ -255,13 +255,10 @@ async function calculateSpeedEquivAnalysis() {
   error.value = null
 
   try {
-    // 1. 根据当前前缀码设置重新处理码表（确保使用正确的前缀码设置）
-    codeTableProcessingService.processCodeTable(props.codeTable, {
-      isPrefix: isPrefixCode.value
-    })
+    // 1. 直接获取已处理的码表（由App.vue统一处理）
     const processedTables = codeTableProcessingService.getProcessedTables()
     if (!processedTables) {
-      throw new Error('无法处理码表')
+      throw new Error('无法获取处理后的码表')
     }
     
     const fullCodeTable = processedTables.full
@@ -320,8 +317,13 @@ watch(() => props.codeTableName, async (newName) => {
 
 // 监听前缀码状态变化
 watch(() => isPrefixCode.value, (newValue) => {
-  // 当前缀码状态改变时重新计算
+  // 当前缀码状态改变时，重新处理码表并重新计算
   if (props.codeTable && props.codeTable.size > 0) {
+    // 重新处理码表（这会更新全局缓存）
+    codeTableProcessingService.processCodeTable(props.codeTable, {
+      isPrefix: newValue
+    })
+    // 重新计算当量
     calculateSpeedEquivAnalysis()
   }
 })

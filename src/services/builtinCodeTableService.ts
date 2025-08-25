@@ -139,6 +139,14 @@ export class BuiltinCodeTableService {
     }))
   }
 
+  // 根據key獲取內置碼表配置
+  getTableConfig(key: string): BuiltinCodeTable | null {
+    if (!this.config) {
+      return null
+    }
+    return this.config.builtinCodeTables.find(table => table.key === key) || null
+  }
+
   // 根據key獲取內置碼表
   async getBuiltinCodeTable(key: string): Promise<BuiltinCodeTable | null> {
     const tables = await this.getBuiltinCodeTables()
