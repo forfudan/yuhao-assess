@@ -23,6 +23,20 @@
       </div>
       
       <div v-else>
+        <!-- Tab 切換器 -->
+        <div class="tabs-container">
+          <div class="tab-list">
+            <button 
+              v-for="tab in tabs" 
+              :key="tab.key"
+              :class="['tab-button', { 'active': activeTab === tab.key }]"
+              @click="activeTab = tab.key"
+            >
+              {{ tab.label }}
+            </button>
+          </div>
+        </div>
+
         <!-- 對比表格 -->
         <div class="comparison-table-container">
           <table class="comparison-table">
@@ -34,105 +48,153 @@
                     <span class="sort-arrow">{{ getSortArrow('name') }}</span>
                   </div>
                 </th>
-                <th class="metric-header sortable" @click="handleSort('dynamicDupRate')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>知乎動態選重率</span>
-                      <span class="sort-arrow">{{ getSortArrow('dynamicDupRate') }}</span>
+                
+                <!-- 動態選重 Tab 的列 -->
+                <template v-if="activeTab === 'dynamic'">
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRate')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>知乎動態選重率</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRate') }}</span>
+                      </div>
+                      <small>基於知乎字頻</small>
                     </div>
-                    <small>基於知乎字頻</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('dynamicDupRateSC')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>簡體動態選重率</span>
-                      <span class="sort-arrow">{{ getSortArrow('dynamicDupRateSC') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateSC')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>簡體動態選重率</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateSC') }}</span>
+                      </div>
+                      <small>基於簡體字頻</small>
                     </div>
-                    <small>基於簡體字頻</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('dynamicDupRateTC')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>繁體動態選重率</span>
-                      <span class="sort-arrow">{{ getSortArrow('dynamicDupRateTC') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateTC')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>繁體動態選重率</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateTC') }}</span>
+                      </div>
+                      <small>基於繁體字頻</small>
                     </div>
-                    <small>基於繁體字頻</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('dynamicDupRateUnified')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>聯合動態選重率</span>
-                      <span class="sort-arrow">{{ getSortArrow('dynamicDupRateUnified') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateUnified')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>聯合動態選重率</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateUnified') }}</span>
+                      </div>
+                      <small>基於繁簡聯合字頻</small>
                     </div>
-                    <small>基於繁簡聯合字頻</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('gb2312DuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>GB2312</span>
-                      <span class="sort-arrow">{{ getSortArrow('gb2312DuplicateChars') }}</span>
+                  </th>
+                </template>
+                
+                <!-- 靜態重碼 Tab 的列 -->
+                <template v-else-if="activeTab === 'static'">
+                  <th class="metric-header sortable" @click="handleSort('gb2312DuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>GB2312</span>
+                        <span class="sort-arrow">{{ getSortArrow('gb2312DuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('guoziDuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>國字常用</span>
-                      <span class="sort-arrow">{{ getSortArrow('guoziDuplicateChars') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('guoziDuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>國字常用</span>
+                        <span class="sort-arrow">{{ getSortArrow('guoziDuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('cjkBasicDuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>CJK基本</span>
-                      <span class="sort-arrow">{{ getSortArrow('cjkBasicDuplicateChars') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkBasicDuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>CJK基本</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkBasicDuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('cjkToADuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>到CJK-A</span>
-                      <span class="sort-arrow">{{ getSortArrow('cjkToADuplicateChars') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkToADuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>到CJK-A</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToADuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('cjkToBDuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>到CJK-B</span>
-                      <span class="sort-arrow">{{ getSortArrow('cjkToBDuplicateChars') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkToBDuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>到CJK-B</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToBDuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('cjkToFDuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>到CJK-F</span>
-                      <span class="sort-arrow">{{ getSortArrow('cjkToFDuplicateChars') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkToFDuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>到CJK-F</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToFDuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('cjkToIDuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>到CJK-I</span>
-                      <span class="sort-arrow">{{ getSortArrow('cjkToIDuplicateChars') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkToIDuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>到CJK-I</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToIDuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
+                  </th>
+                </template>
+                
+                <!-- 速度當量 Tab 的列 -->
+                <template v-else-if="activeTab === 'speedEquiv'">
+                  <th class="metric-header sortable" @click="handleSort('zhihuEquiv')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>知乎速度當量</span>
+                        <span class="sort-arrow">{{ getSortArrow('zhihuEquiv') }}</span>
+                      </div>
+                      <small>基於知乎字頻</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('scEquiv')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>簡體速度當量</span>
+                        <span class="sort-arrow">{{ getSortArrow('scEquiv') }}</span>
+                      </div>
+                      <small>基於簡體字頻</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('tcEquiv')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>繁體速度當量</span>
+                        <span class="sort-arrow">{{ getSortArrow('tcEquiv') }}</span>
+                      </div>
+                      <small>基於繁體字頻</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('unifiedEquiv')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>聯合速度當量</span>
+                        <span class="sort-arrow">{{ getSortArrow('unifiedEquiv') }}</span>
+                      </div>
+                      <small>基於繁簡聯合字頻</small>
+                    </div>
+                  </th>
+                </template>
                 <th class="actions-header">操作</th>
               </tr>
             </thead>
@@ -145,105 +207,153 @@
                     <span v-else class="scheme-source">上傳方案</span>
                   </div>
                 </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatRate(scheme.data?.dynamicDupRate) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatRate(scheme.data?.dynamicDupRateSC) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatRate(scheme.data?.dynamicDupRateTC) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatRate(scheme.data?.dynamicDupRateUnified) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.gb2312DuplicateChars) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.guoziDuplicateChars) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.cjkBasicDuplicateChars) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.cjkToADuplicateChars) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.cjkToBDuplicateChars) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.cjkToFDuplicateChars) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.cjkToIDuplicateChars) }}
-                  </span>
-                </td>
+                
+                <!-- 動態選重 Tab 的數據列 -->
+                <template v-if="activeTab === 'dynamic'">
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamic?.dynamicDupRate) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamic?.dynamicDupRateSC) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamic?.dynamicDupRateTC) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamic?.dynamicDupRateUnified) }}
+                    </span>
+                  </td>
+                </template>
+                
+                <!-- 靜態重碼 Tab 的數據列 -->
+                <template v-else-if="activeTab === 'static'">
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.static?.gb2312DuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.static?.guoziDuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.static?.cjkBasicDuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.static?.cjkToADuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.static?.cjkToBDuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.static?.cjkToFDuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.static?.cjkToIDuplicateChars) }}
+                    </span>
+                  </td>
+                </template>
+                
+                <!-- 速度當量 Tab 的數據列 -->
+                <template v-else-if="activeTab === 'speedEquiv'">
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatEquiv(scheme.data?.speedEquiv?.zhihuEquiv) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatEquiv(scheme.data?.speedEquiv?.scEquiv) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatEquiv(scheme.data?.speedEquiv?.tcEquiv) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatEquiv(scheme.data?.speedEquiv?.unifiedEquiv) }}
+                    </span>
+                  </td>
+                </template>
                 <td class="actions-cell">
                   <button 
                     v-if="canRemoveScheme(scheme)" 
@@ -408,11 +518,14 @@ defineExpose({
 })
 
 // 定義方案數據接口
-interface SchemeData {
+interface DynamicData {
   dynamicDupRate: number
   dynamicDupRateSC: number
   dynamicDupRateTC: number
   dynamicDupRateUnified: number
+}
+
+interface StaticData {
   gb2312DuplicateChars: number
   guoziDuplicateChars: number
   cjkBasicDuplicateChars: number
@@ -422,6 +535,19 @@ interface SchemeData {
   cjkToIDuplicateChars: number
 }
 
+interface SpeedEquivData {
+  zhihuEquiv: number
+  scEquiv: number
+  tcEquiv: number
+  unifiedEquiv: number
+}
+
+interface SchemeData {
+  dynamic?: DynamicData
+  static?: StaticData
+  speedEquiv?: SpeedEquivData
+}
+
 // 定義方案接口
 interface Scheme {
   id: string
@@ -429,6 +555,7 @@ interface Scheme {
   codeTable?: CodeTable
   isBuiltin: boolean
   isCalculating: boolean
+  isPrefix?: boolean
   data?: SchemeData
 }
 
@@ -450,11 +577,84 @@ const fileInputCharCode = ref<HTMLInputElement>()
 const fileInputCodeChar = ref<HTMLInputElement>()
 const uploadPrefixFlag = ref(false) // 用户上传文件时的前缀码标志
 
+// Tab 相關狀態
+const activeTab = ref<'dynamic' | 'static' | 'speedEquiv'>('dynamic')
+const tabs = [
+  { key: 'dynamic', label: '動態選重' },
+  { key: 'static', label: '靜態重碼' },
+  { key: 'speedEquiv', label: '速度當量' }
+] as const
+
+// 惰性計算：監聽 Tab 切換
+watch(activeTab, async (newTab) => {
+  await ensureCurrentTabDataLoaded()
+}, { immediate: true })
+
+// 確保當前 Tab 的數據已加載
+const ensureCurrentTabDataLoaded = async () => {
+  const schemes = allSchemes.value
+  const pendingCalculations: Promise<void>[] = []
+  
+  for (const scheme of schemes) {
+    if (!scheme.codeTable || scheme.isCalculating) continue
+    
+    let needsCalculation = false
+    if (activeTab.value === 'dynamic') {
+      needsCalculation = !scheme.data?.dynamic
+    } else if (activeTab.value === 'static') {
+      needsCalculation = !scheme.data?.static
+    } else if (activeTab.value === 'speedEquiv') {
+      needsCalculation = !scheme.data?.speedEquiv
+    }
+    
+    if (needsCalculation) {
+      pendingCalculations.push(calculateMissingData(scheme))
+    }
+  }
+  
+  await Promise.all(pendingCalculations)
+}
+
+// 為方案計算缺失的數據
+const calculateMissingData = async (scheme: Scheme) => {
+  if (!scheme.codeTable || scheme.isCalculating) return
+  
+  scheme.isCalculating = true
+  
+  try {
+    if (!scheme.data) {
+      scheme.data = {}
+    }
+    
+    // 檢查是否為主方案（不可刪除的方案）
+    const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
+    
+    if (activeTab.value === 'dynamic' && !scheme.data.dynamic) {
+      scheme.data.dynamic = await calculateDynamicData(scheme.codeTable, scheme.isPrefix)
+    } else if (activeTab.value === 'static' && !scheme.data.static) {
+      scheme.data.static = await calculateStaticData(scheme.codeTable, scheme.isPrefix)
+    } else if (activeTab.value === 'speedEquiv' && !scheme.data.speedEquiv) {
+      if (isMainScheme) {
+        // 主方案使用全局已處理的碼表
+        scheme.data.speedEquiv = await calculateMainSchemeSpeedEquivData()
+      } else {
+        // 新增方案使用獨立計算
+        scheme.data.speedEquiv = await calculateSpeedEquivData(scheme.codeTable, scheme.isPrefix)
+      }
+    }
+  } catch (error) {
+    console.error(`計算方案 ${scheme.name} 的數據失敗:`, error)
+  } finally {
+    scheme.isCalculating = false
+  }
+}
+
 // 排序相關狀態
 type SortDirection = 'desc' | 'asc' | 'none'
 type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateUnified' | 
                       'gb2312DuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
-                      'cjkToADuplicateChars' | 'cjkToBDuplicateChars' | 'cjkToFDuplicateChars' | 'cjkToIDuplicateChars'
+                      'cjkToADuplicateChars' | 'cjkToBDuplicateChars' | 'cjkToFDuplicateChars' | 'cjkToIDuplicateChars' |
+                      'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'unifiedEquiv'
 type SortColumn = 'name' | DataSortColumn
 
 const sortColumn = ref<SortColumn | null>(null)
@@ -554,8 +754,18 @@ const allSchemes = computed(() => {
     } else if (sortColumn.value) {
       // TypeScript类型保护：确保sortColumn.value是数据列而不是'name'
       const column = sortColumn.value as DataSortColumn
-      aValue = a.data?.[column] ?? 0
-      bValue = b.data?.[column] ?? 0
+      
+      // 根据列名判断是动态还是静态数据
+      if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateUnified'].includes(column)) {
+        aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
+        bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
+      } else if (['zhihuEquiv', 'scEquiv', 'tcEquiv', 'unifiedEquiv'].includes(column)) {
+        aValue = a.data?.speedEquiv?.[column as keyof SpeedEquivData] ?? 0
+        bValue = b.data?.speedEquiv?.[column as keyof SpeedEquivData] ?? 0
+      } else {
+        aValue = a.data?.static?.[column as keyof StaticData] ?? 0
+        bValue = b.data?.static?.[column as keyof StaticData] ?? 0
+      }
     } else {
       aValue = 0
       bValue = 0
@@ -583,6 +793,10 @@ const formatRate = (rate?: number) => {
 
 const formatNumber = (num?: number) => {
   return num ? num.toLocaleString() : '-'
+}
+
+const formatEquiv = (equiv?: number) => {
+  return equiv ? equiv.toFixed(4) : '-'
 }
 
 // 排序函數
@@ -724,17 +938,22 @@ const loadCurrentUserScheme = async () => {
     // 使用實際的方案名稱，如果沒有則使用默認名稱
     const schemeName = props.currentCodeTableName || '用戶方案'
     
+    // 獲取全局的前綴碼信息
+    const processingOptions = codeTableProcessingService.getProcessingOptions()
+    const globalIsPrefix = processingOptions?.isPrefix || false
+    
     currentUserScheme.value = {
       id: `current-${Date.now()}`,
       name: schemeName,
       codeTable: props.currentCodeTable,
       isBuiltin: false,
       isCalculating: true,
+      isPrefix: globalIsPrefix,  // 使用全局的前綴碼設置
       data: undefined
     }
     // 異步計算數據
     try {
-      const data = await calculateSchemeData(props.currentCodeTable)
+      const data = await calculateSchemeData(props.currentCodeTable, globalIsPrefix)
       currentUserScheme.value.data = data
       currentUserScheme.value.isCalculating = false
     } catch (error) {
@@ -745,15 +964,7 @@ const loadCurrentUserScheme = async () => {
 }
 
 // 計算方案數據
-async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Promise<SchemeData> {
-  // 從碼表鍵中提取所有單個字符
-  const allUniqueChars = new Set<string>()
-  for (const key of codeTable.keys()) {
-    for (const char of key) {
-      allUniqueChars.add(char)
-    }
-  }
-  
+async function calculateDynamicData(codeTable: CodeTable, isPrefix = false): Promise<DynamicData> {
   // 为对比方案独立处理码表，不使用单例服务以避免干扰当前方案
   const { generateFullCodeTable } = await import('../services/index')
   const fullResult = generateFullCodeTable(codeTable)
@@ -773,6 +984,28 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
   const dynamicDupRateTC = getDynamicDupRate(fullCodeTable, charFrequencyTC)
   const dynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
   
+  return {
+    dynamicDupRate,
+    dynamicDupRateSC,
+    dynamicDupRateTC,
+    dynamicDupRateUnified
+  }
+}
+
+async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Promise<StaticData> {
+  // 從碼表鍵中提取所有單個字符
+  const allUniqueChars = new Set<string>()
+  for (const key of codeTable.keys()) {
+    for (const char of key) {
+      allUniqueChars.add(char)
+    }
+  }
+  
+  // 为对比方案独立处理码表，不使用单例服务以避免干扰当前方案
+  const { generateFullCodeTable } = await import('../services/index')
+  const fullResult = generateFullCodeTable(codeTable)
+  const fullCodeTable = fullResult.codeTable
+  
   // 計算各字符集的重碼統計（只計算全碼）
   const gb2312DuplicateChars = await calculateCharsetDuplicates('gb2312', allUniqueChars, fullCodeTable)
   const guoziDuplicateChars = await calculateCharsetDuplicates('guozi', allUniqueChars, fullCodeTable)
@@ -783,10 +1016,6 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
   const cjkToIDuplicateChars = await calculateCharsetDuplicates('cjk_to_i', allUniqueChars, fullCodeTable)
   
   return {
-    dynamicDupRate,
-    dynamicDupRateSC,
-    dynamicDupRateTC,
-    dynamicDupRateUnified,
     gb2312DuplicateChars,
     guoziDuplicateChars,
     cjkBasicDuplicateChars,
@@ -794,6 +1023,241 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
     cjkToBDuplicateChars,
     cjkToFDuplicateChars,
     cjkToIDuplicateChars
+  }
+}
+
+// 計算速度當量數據（對比方案用）
+async function calculateSpeedEquivData(codeTable: CodeTable, isPrefix = false): Promise<SpeedEquivData> {
+  try {
+    // 獨立處理碼表，不使用全局單例服務
+    const { generateFullCodeTable } = await import('../services/index')
+    const fullResult = generateFullCodeTable(codeTable)
+    const fullCodeTable = fullResult.codeTable
+    
+    // 計算最大碼長
+    let maxLength = 0
+    for (const [, codes] of codeTable.entries()) {
+      for (const code of codes) {
+        maxLength = Math.max(maxLength, code.length)
+      }
+    }
+    maxLength = maxLength || 4
+    
+    // 生成加選重鍵的碼表
+    const processedCodeTable = generateCodeTableWithSelection(fullCodeTable, maxLength, isPrefix)
+    
+    // 加載當量表
+    const response = await fetch('/data/equivTable.json')
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const equivTableData = await response.json()
+    const equivTable = equivTableData.data || {}
+    
+    // 加載各種字頻表
+    const builtinService = new BuiltinCodeTableService()
+    const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
+      builtinService.loadCharFrequency(),
+      builtinService.loadCharFrequencySC(),
+      builtinService.loadCharFrequencyTC(),
+      builtinService.loadCharFrequencyUnified()
+    ])
+    
+    // 計算各種字頻下的速度當量
+    const zhihuEquiv = calculateSpeedEquiv(processedCodeTable, zhihuFreq, equivTable)
+    const scEquiv = calculateSpeedEquiv(processedCodeTable, scFreq, equivTable)
+    const tcEquiv = calculateSpeedEquiv(processedCodeTable, tcFreq, equivTable)
+    const unifiedEquiv = calculateSpeedEquiv(processedCodeTable, unifiedFreq, equivTable)
+    
+    return {
+      zhihuEquiv,
+      scEquiv,
+      tcEquiv,
+      unifiedEquiv
+    }
+  } catch (error) {
+    console.error('速度當量計算失敗:', error)
+    return {
+      zhihuEquiv: 0,
+      scEquiv: 0,
+      tcEquiv: 0,
+      unifiedEquiv: 0
+    }
+  }
+}
+
+// 計算主方案速度當量數據（使用全局已處理的碼表）
+async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
+  try {
+    // 使用全局已處理的碼表
+    const processedTables = codeTableProcessingService.getProcessedTables()
+    if (!processedTables) {
+      throw new Error('無法獲取已處理的碼表')
+    }
+    
+    const processedCodeTable = processedTables.fullWithSelection
+    
+    // 加載當量表
+    const response = await fetch('/data/equivTable.json')
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const equivTableData = await response.json()
+    const equivTable = equivTableData.data || {}
+    
+    // 加載各種字頻表
+    const builtinService = new BuiltinCodeTableService()
+    const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
+      builtinService.loadCharFrequency(),
+      builtinService.loadCharFrequencySC(),
+      builtinService.loadCharFrequencyTC(),
+      builtinService.loadCharFrequencyUnified()
+    ])
+    
+    // 計算各種字頻下的速度當量
+    const zhihuEquiv = calculateSpeedEquiv(processedCodeTable, zhihuFreq, equivTable)
+    const scEquiv = calculateSpeedEquiv(processedCodeTable, scFreq, equivTable)
+    const tcEquiv = calculateSpeedEquiv(processedCodeTable, tcFreq, equivTable)
+    const unifiedEquiv = calculateSpeedEquiv(processedCodeTable, unifiedFreq, equivTable)
+    
+    return {
+      zhihuEquiv,
+      scEquiv,
+      tcEquiv,
+      unifiedEquiv
+    }
+  } catch (error) {
+    console.error('主方案速度當量計算失敗:', error)
+    return {
+      zhihuEquiv: 0,
+      scEquiv: 0,
+      tcEquiv: 0,
+      unifiedEquiv: 0
+    }
+  }
+}
+
+// 獨立的碼表選重鍵處理函數（不依賴全局服務）
+function generateCodeTableWithSelection(
+  codeTable: CodeTable,
+  maxLength: number, 
+  isPrefix: boolean
+): CodeTable {
+  const result = new Map<string, string[]>()
+  
+  // 統計每個編碼的候選字符數量
+  const codeToChars = new Map<string, string[]>()
+  
+  for (const [char, codes] of codeTable.entries()) {
+    for (const code of codes) {
+      let processedCode = code
+      
+      // 如果不是前綴碼且編碼長度小於最大長度，補充下劃線
+      if (!isPrefix && code.length < maxLength) {
+        processedCode = code + '_'.repeat(maxLength - code.length)
+      }
+      
+      if (!codeToChars.has(processedCode)) {
+        codeToChars.set(processedCode, [])
+      }
+      codeToChars.get(processedCode)!.push(char)
+    }
+  }
+  
+  // 為每個字符生成最終編碼（包含選重鍵）
+  for (const [char, codes] of codeTable.entries()) {
+    const processedCodes: string[] = []
+    
+    for (const code of codes) {
+      let processedCode = code
+      
+      // 如果不是前綴碼且編碼長度小於最大長度，補充下劃線
+      if (!isPrefix && code.length < maxLength) {
+        processedCode = code + '_'.repeat(maxLength - code.length)
+      }
+      
+      const candidates = codeToChars.get(processedCode) || []
+      const charIndex = candidates.indexOf(char)
+      
+      // 添加選重鍵
+      if (charIndex === 0) {
+        // 第一候選，不加選重鍵
+        processedCodes.push(processedCode)
+      } else if (charIndex === 1) {
+        // 第二候選，加分號
+        processedCodes.push(processedCode + ';')
+      } else if (charIndex === 2) {
+        // 第三候選，加單引號
+        processedCodes.push(processedCode + "'")
+      } else {
+        // 更多候選，使用數字鍵（簡化處理）
+        processedCodes.push(processedCode + (charIndex + 1).toString())
+      }
+    }
+    
+    if (processedCodes.length > 0) {
+      result.set(char, processedCodes)
+    }
+  }
+  
+  return result
+}
+
+// 計算編碼對的頻率分佈
+function calculateCodePairFrequencies(
+  codeTable: CodeTable, 
+  charFrequency: Record<string, number>
+): Record<string, number> {
+  const pairFrequencies: Record<string, number> = {}
+  
+  for (const [char, codes] of codeTable.entries()) {
+    const frequency = charFrequency[char] || 0
+    if (frequency === 0 || codes.length === 0) continue
+    
+    const code = codes[0] // 使用第一個編碼
+    
+    // 生成所有相鄰的編碼對
+    for (let i = 0; i < code.length - 1; i++) {
+      const pair = code.substring(i, i + 2)
+      pairFrequencies[pair] = (pairFrequencies[pair] || 0) + frequency
+    }
+  }
+  
+  return pairFrequencies
+}
+
+// 計算速度當量
+function calculateSpeedEquiv(
+  codeTable: CodeTable,
+  charFrequency: Record<string, number>,
+  equivTable: Record<string, number>
+): number {
+  const pairFrequencies = calculateCodePairFrequencies(codeTable, charFrequency)
+  
+  let totalWeightedEquiv = 0
+  let totalFrequency = 0
+  
+  for (const [pair, frequency] of Object.entries(pairFrequencies)) {
+    const equiv = equivTable[pair]
+    if (equiv !== undefined) {
+      totalWeightedEquiv += equiv * frequency
+      totalFrequency += frequency
+    }
+  }
+  
+  return totalFrequency > 0 ? totalWeightedEquiv / totalFrequency : 0
+}
+
+// 已废弃：保留兼容性，但推荐使用分离的函数
+async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Promise<SchemeData> {
+  const [dynamic, static_] = await Promise.all([
+    calculateDynamicData(codeTable, isPrefix),
+    calculateStaticData(codeTable, isPrefix)
+  ])
+  
+  return {
+    dynamic,
+    static: static_
   }
 }
 
@@ -814,20 +1278,34 @@ async function addBuiltinScheme() {
   isAdding.value = true
   
   try {
+    // 獲取方案配置信息
+    const schemeConfig = await builtinService.getBuiltinCodeTable(selectedBuiltinScheme.value)
+    
     const newScheme: Scheme = {
       id: `builtin_${selectedBuiltinScheme.value}_${Date.now()}`,
       name: builtinScheme.name,
       isBuiltin: true,
-      isCalculating: true
+      isCalculating: true,
+      isPrefix: schemeConfig?.prefix || false  // 從配置中獲取前綴碼屬性
     }
     
     additionalSchemes.value.push(newScheme)
     showAddForm.value = false
     
-    // 載入碼表並計算數據
+    // 載入碼表並計算當前Tab的數據
     const result = await builtinService.downloadCodeTable(selectedBuiltinScheme.value)
     newScheme.codeTable = result.codeTable
-    newScheme.data = await calculateSchemeData(result.codeTable)
+    
+    // 只計算當前Tab需要的數據
+    newScheme.data = {}
+    if (activeTab.value === 'dynamic') {
+      newScheme.data.dynamic = await calculateDynamicData(result.codeTable, newScheme.isPrefix)
+    } else if (activeTab.value === 'static') {
+      newScheme.data.static = await calculateStaticData(result.codeTable, newScheme.isPrefix)
+    } else if (activeTab.value === 'speedEquiv') {
+      newScheme.data.speedEquiv = await calculateSpeedEquivData(result.codeTable, newScheme.isPrefix)
+    }
+    
     newScheme.isCalculating = false
     
     selectedBuiltinScheme.value = ''
@@ -874,19 +1352,33 @@ async function addAllBuiltinSchemes() {
     // 逐個添加方案
     for (const builtinScheme of schemesToAdd) {
       try {
+        // 獲取方案配置信息
+        const schemeConfig = await builtinService.getBuiltinCodeTable(builtinScheme.id)
+        
         const newScheme: Scheme = {
           id: `builtin_${builtinScheme.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: builtinScheme.name,
           isBuiltin: true,
-          isCalculating: true
+          isCalculating: true,
+          isPrefix: schemeConfig?.prefix || false  // 從配置中獲取前綴碼屬性
         }
         
         additionalSchemes.value.push(newScheme)
         
-        // 載入碼表並計算數據
+        // 載入碼表並計算當前Tab的數據
         const result = await builtinService.downloadCodeTable(builtinScheme.id)
         newScheme.codeTable = result.codeTable
-        newScheme.data = await calculateSchemeData(result.codeTable)
+        
+        // 只計算當前Tab需要的數據
+        newScheme.data = {}
+        if (activeTab.value === 'dynamic') {
+          newScheme.data.dynamic = await calculateDynamicData(result.codeTable, newScheme.isPrefix)
+        } else if (activeTab.value === 'static') {
+          newScheme.data.static = await calculateStaticData(result.codeTable, newScheme.isPrefix)
+        } else if (activeTab.value === 'speedEquiv') {
+          newScheme.data.speedEquiv = await calculateSpeedEquivData(result.codeTable, newScheme.isPrefix)
+        }
+        
         newScheme.isCalculating = false
         
       } catch (error) {
@@ -934,7 +1426,8 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
       id: `upload_${Date.now()}`,
       name: file.name.replace(/\.(txt|csv)$/, ''),
       isBuiltin: false,
-      isCalculating: true
+      isCalculating: true,
+      isPrefix: uploadPrefixFlag.value  // 使用上傳時的前綴碼設置
     }
     
     additionalSchemes.value.push(newScheme)
@@ -945,7 +1438,17 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     const codeTable = parseCodeTableText(text, format)
     
     newScheme.codeTable = codeTable
-    newScheme.data = await calculateSchemeData(codeTable, uploadPrefixFlag.value)
+    
+    // 只計算當前Tab需要的數據
+    newScheme.data = {}
+    if (activeTab.value === 'dynamic') {
+      newScheme.data.dynamic = await calculateDynamicData(codeTable, uploadPrefixFlag.value)
+    } else if (activeTab.value === 'static') {
+      newScheme.data.static = await calculateStaticData(codeTable, uploadPrefixFlag.value)
+    } else if (activeTab.value === 'speedEquiv') {
+      newScheme.data.speedEquiv = await calculateSpeedEquivData(codeTable, uploadPrefixFlag.value)
+    }
+    
     newScheme.isCalculating = false
     
     // 立即保存數據
@@ -1085,6 +1588,45 @@ function clearAllSchemes() {
   transform: rotate(180deg);
 }
 
+/* Tab 样式 */
+.tabs-container {
+  margin-bottom: var(--spacing-lg);
+}
+
+.tab-list {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: var(--spacing-md);
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tab-button:hover {
+  color: #374151;
+  background-color: #f9fafb;
+}
+
+.tab-button.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.collapse-button svg.rotated {
+  transform: rotate(180deg);
+}
+
 /* 原有样式 */
 /* 空狀態樣式 */
 .empty-state {
@@ -1135,9 +1677,10 @@ function clearAllSchemes() {
 
 .comparison-table {
   width: 100%;
-  min-width: 1000px;
+  min-width: max-content; /* 内容所需的最小宽度 */
   border-collapse: collapse;
   font-size: 0.8rem;
+  table-layout: auto; /* 允许浏览器自动调整列宽 */
 }
 
 .comparison-table th,
@@ -1147,6 +1690,9 @@ function clearAllSchemes() {
   border-right: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
   line-height: 1.2;
+  white-space: nowrap; /* 防止文字换行 */
+  min-width: 0; /* 允许列宽压缩到最小 */
+  max-width: none; /* 不限制最大宽度 */
 }
 
 .comparison-table th:last-child,
@@ -1164,8 +1710,8 @@ function clearAllSchemes() {
 
 .scheme-name-header {
   background: #f9fafb;
-  width: 120px;
-  min-width: 120px;
+  width: auto; /* 改为自动宽度 */
+  min-width: 60px; /* 较小的最小宽度 */
   text-align: left !important;
   font-weight: 600;
   color: #374151;
@@ -1173,8 +1719,8 @@ function clearAllSchemes() {
 
 .metric-header {
   background: #f9fafb;
-  width: 80px;
-  min-width: 80px;
+  width: auto; /* 改为自动宽度 */
+  min-width: 40px; /* 较小的最小宽度 */
   font-weight: 600;
   color: #374151;
 }

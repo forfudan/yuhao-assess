@@ -167,7 +167,7 @@
     <footer class="footer">
       <div class="container">
         <div class="footer-content">
-          <p>&copy; 2025 宇浩測評網. 基于 Vue 3 + TypeScript 構建</p>
+          <p>&copy; 2025 宇浩測評網</p>
           <p class="footer-links">
             <a href="https://shurufa.app/docs/concepts.html" target="_blank">中文輸入法常用概念指南</a>
             <span>·</span>
@@ -952,7 +952,7 @@ const handleUploadError = (error: string) => {
 }
 
 .duplicate-analysis-card .card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ea476d 0%, #b13846 100%);
 }
 
 .maximum-candidates-card .card-header {
