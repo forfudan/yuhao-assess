@@ -199,10 +199,16 @@ const calculateAdaptiveScale = () => {
   if (!keyboardWrapper.value || !keyboardLayout.value) return
   
   const wrapperWidth = keyboardWrapper.value.clientWidth
-  const layoutWidth = 800 // 键盘布局的基础宽度
-  const scale = Math.min(1, (wrapperWidth - 32) / layoutWidth) // 减去padding
+  const layoutWidth = keyboardLayout.value.offsetWidth
   
-  keyboardScale.value = scale
+  // 更激进的缩放策略：确保键盘占用容器的大部分宽度
+  if (layoutWidth > 0) {
+    const availableWidth = wrapperWidth - 20 // 减去最小边距
+    const scale = Math.min(1.5, availableWidth / layoutWidth) // 允许放大到1.5倍，确保充分利用空间
+    keyboardScale.value = Math.max(0.5, scale) // 最小缩放0.5倍
+  } else {
+    keyboardScale.value = 1.0
+  }
 }
 
 // 窗口大小变化监听
@@ -734,7 +740,9 @@ const getKeyData = (key: string): KeyData => {
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   transform-origin: center top;
-  width: 800px; /* 固定基础宽度 */
+  width: 95%; /* 使用容器的95%宽度 */
+  max-width: 1000px; /* 设置最大宽度避免过大 */
+  min-width: 320px; /* 设置最小宽度保证可用性 */
   border: 1px solid var(--color-border-secondary);
   transition: transform 0.3s ease;
 }
@@ -826,6 +834,18 @@ const getKeyData = (key: string): KeyData => {
   text-align: right;
 }
 
+/* 大屏幕优化 */
+@media (min-width: 1200px) {
+  .keyboard-layout {
+    width: 90%; /* 大屏幕上使用90%宽度 */
+    max-width: 1200px; /* 增加最大宽度 */
+  }
+  
+  .keyboard-wrapper {
+    padding: var(--spacing-lg) 0; /* 增加垂直padding */
+  }
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .module-container {
@@ -861,9 +881,9 @@ const getKeyData = (key: string): KeyData => {
   
   .keyboard-layout {
     padding: var(--spacing-md);
-    width: 100% !important; /* 强制适应容器宽度 */
-    min-width: unset !important; /* 移除最小宽度限制 */
-    max-width: 100%; /* 防止溢出 */
+    width: 98% !important; /* 在平板上使用更多宽度 */
+    min-width: unset !important;
+    max-width: 100%;
   }
   
   .stats-container {
