@@ -1,5 +1,5 @@
 <template>
-  <div class="keyboard-heatmap keyboard-heatmap-card">
+  <div class="keyboard-heatmap">
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
@@ -428,13 +428,6 @@ onMounted(() => {
 
 .collapse-button svg.rotated {
   transform: rotate(180deg);
-}
-/* 主容器 */
-.keyboard-heatmap {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--spacing-lg);
 }
 
 /* 分析占位符 */

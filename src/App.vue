@@ -527,11 +527,11 @@ const handleUploadError = (error: string) => {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
-.keyboard-heatmap-card .card-header {
+.keyboard-heatmap .card-header {
   background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
 }
 
-.code-analysis-card .card-header {
+.code-table-viewer .card-header {
   background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
 }
 

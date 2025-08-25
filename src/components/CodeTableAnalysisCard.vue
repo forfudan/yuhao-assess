@@ -1,5 +1,5 @@
 <template>
-  <div class="code-table-viewer code-analysis-card">
+  <div class="code-table-viewer">
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
@@ -118,13 +118,6 @@ const { isCollapsed, toggleCollapsed } = useCollapse()
 }
 
 /* 原有样式 */
-.code-table-viewer {
-  background: white;
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
-}
-
 .viewer-title {
   font-size: 1.25rem;
   font-weight: 600;
