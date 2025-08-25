@@ -4,7 +4,7 @@
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">全碼速度當量分析</h3>
-          <p class="card-description">分析輸入法的人體工學表現，計算基於字頻加權的按鍵組合速度當量</p>
+          <p class="card-description">分析輸入法的人體工學表現，計算基於字頻加權的按鍵組合速度當量。閱讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
           <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -75,8 +75,8 @@
           <ul>
             <li>使用全碼碼表（每個單字的最長編碼）進行分析</li>
             <li>漢字的使用頻率</li>
-            <li v-if="!isPrefixCode">碼表的規範化處理，即在未達到最大碼長時使用空格補充</li>
-            <li v-else>前綴碼特性，未達到最大碼長時不補充空格</li>
+            <li v-if="!isPrefixCode">碼表的規範化處理，即在未達到最大碼長時使用下劃線補充（代表空格）</li>
+            <li v-else>前綴碼特性，未達到最大碼長時不補充下劃線</li>
             <li>多候選字的選擇鍵處理（第2候選加分號，第3候選加單引號）</li>
           </ul>
           <p>檢測到的最大碼長為：{{ maxCodeLength }} 位</p>
@@ -91,7 +91,7 @@ import { ref, watch, onMounted, nextTick } from 'vue'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
-import { generateFullCodeTable } from '../services/codeTableCleanService'
+import { codeTableProcessingService } from '../services/codeTableProcessingService'
 
 // Props
 interface Props {
@@ -203,61 +203,6 @@ function calculateMaxCodeLength(codeTable: CodeTable): number {
   return maxLength || 4 // 默认4位
 }
 
-// 处理码表：短码补充下划线（前缀码除外）并添加选择键
-function processCodeTable(codeTable: CodeTable, maxLength: number, isPrefix: boolean): CodeTable {
-  const processedTable = new Map<string, string[]>()
-  
-  // 首先收集所有编码的字符，按频率排序以确定候选顺序
-  const codeToChars = new Map<string, string[]>()
-  
-  for (const [char, codes] of codeTable.entries()) {
-    if (codes.length === 0) continue
-    
-    for (const code of codes) {
-      if (!codeToChars.has(code)) {
-        codeToChars.set(code, [])
-      }
-      codeToChars.get(code)!.push(char)
-    }
-  }
-  
-  // 为每个字符处理编码
-  for (const [char, codes] of codeTable.entries()) {
-    if (codes.length === 0) continue
-    
-    const processedCodes: string[] = []
-    
-    for (const code of codes) {
-      const charsWithThisCode = codeToChars.get(code) || []
-      const charIndex = charsWithThisCode.indexOf(char)
-      
-      let processedCode = code
-      
-      // 非前缀码且未达到最大码长时补充下划线
-      if (!isPrefix && code.length < maxLength) {
-        processedCode = code + '_'
-      }
-      
-      // 如果有多个候选，添加选择键
-      if (charsWithThisCode.length > 1 && charIndex > 0) {
-        const selectKeys = [';', "'", '4', '5', '6', '7', '8', '9']
-        if (charIndex - 1 < selectKeys.length) {
-          processedCode += selectKeys[charIndex - 1]
-        } else {
-          // 超过选择键数量时用数字继续
-          processedCode += (charIndex + 1).toString()
-        }
-      }
-      
-      processedCodes.push(processedCode)
-    }
-    
-    processedTable.set(char, processedCodes)
-  }
-  
-  return processedTable
-}
-
 // 计算编码对的频率分布
 function calculateCodePairFrequencies(
   codeTable: CodeTable, 
@@ -310,17 +255,22 @@ async function calculateSpeedEquivAnalysis() {
   error.value = null
 
   try {
-    // 1. 生成全码码表（只保留单字的最长编码）
-    const fullCodeResult = generateFullCodeTable(props.codeTable)
-    const fullCodeTable = fullCodeResult.codeTable
+    // 1. 根据当前前缀码设置重新处理码表（确保使用正确的前缀码设置）
+    codeTableProcessingService.processCodeTable(props.codeTable, {
+      isPrefix: isPrefixCode.value
+    })
+    const processedTables = codeTableProcessingService.getProcessedTables()
+    if (!processedTables) {
+      throw new Error('无法处理码表')
+    }
+    
+    const fullCodeTable = processedTables.full
+    const processedCodeTable = processedTables.fullWithSelection
     
     // 2. 计算最大码长（基于全码码表）
     maxCodeLength.value = calculateMaxCodeLength(fullCodeTable)
     
-    // 3. 处理码表
-    const processedCodeTable = processCodeTable(fullCodeTable, maxCodeLength.value, isPrefixCode.value)
-    
-    // 4. 加载当量表
+    // 3. 加载当量表
     const equivTable = await loadEquivTable()
     
     // 5. 加载各种字频表

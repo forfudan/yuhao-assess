@@ -162,9 +162,9 @@
         <div class="footer-content">
           <p>&copy; 2025 宇浩測評網. 基于 Vue 3 + TypeScript 構建</p>
           <p class="footer-links">
-            <a href="https://shurufa.app" target="_blank">宇浩輸入法官網</a>
+            <a href="https://shurufa.app/docs/concepts.html" target="_blank">中文輸入法常用概念指南</a>
             <span>·</span>
-            <a href="https://zhuyuhao.com" target="_blank">作者主頁</a>
+            <a href="https://www.zhihu.com/people/zhuyuhao" target="_blank">作者主頁</a>
           </p>
         </div>
       </div>
@@ -181,6 +181,7 @@ import DuplicateAnalysisCard from './components/DuplicateAnalysisCard.vue'
 import MaximumCandidatesCard from './components/MaximumCandidatesCard.vue'
 import ComparisonCard from './components/ComparisonCard.vue'
 import SpeedEquivCard from './components/SpeedEquivCard.vue'
+import { codeTableProcessingService } from './services/codeTableProcessingService'
 import type { CodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
 
 // 響應式數據
@@ -413,9 +414,17 @@ function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
 
 // 處理碼表上傳成功
 const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean }) => {
+  console.log('开始处理上传的码表...')
+  
   codeTable.value = data.codeTable
   codeTableName.value = data.tableKey || data.fileName.replace(/\.(txt|csv)$/, '') // 优先使用tableKey，用于内置方案前缀码检测
   uploadPrefixFlag.value = data.isPrefix || false  // 设置用户上传时的前缀码标记
+  
+  // 立即处理码表，生成所有派生版本
+  codeTableProcessingService.processCodeTable(data.codeTable, {
+    isPrefix: data.isPrefix || false
+  })
+  
   analysisReady.value = true
   
   // 生成分析數據
@@ -423,6 +432,8 @@ const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; f
   
   // 保存到本地存儲
   saveCodeTableData()
+  
+  console.log('码表处理完成，各个组件可以使用缓存的处理结果')
   
   // 码表分析成功后，自动折叠上传卡片
   if (uploaderCardRef.value && typeof uploaderCardRef.value.collapse === 'function') {
@@ -440,7 +451,6 @@ const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; f
   setTimeout(() => {
     uploadStatus.value = null
   }, 3000)
-
 }
 
 // 處理上傳錯誤

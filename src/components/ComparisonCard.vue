@@ -366,9 +366,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
-import { generateFullCodeTable, generateShortCodeTable } from '../services/codeTableCleanService'
 import { getDynamicDupRate } from '../services/analysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
+import { codeTableProcessingService } from '../services/codeTableProcessingService'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, CharFrequency } from '../types'
 
@@ -737,9 +737,10 @@ async function calculateSchemeData(codeTable: CodeTable): Promise<SchemeData> {
     }
   }
   
-  // 生成全碼表
-  const fullCodeResult = generateFullCodeTable(codeTable)
-  const fullCodeTable = fullCodeResult.codeTable
+  // 生成全碼表（使用处理服务）
+  codeTableProcessingService.processCodeTable(codeTable)
+  const processedTables = codeTableProcessingService.getProcessedTables()
+  const fullCodeTable = processedTables?.full || new Map()
   
   // 加載所有字頻數據
   const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyUnified] = await Promise.all([
