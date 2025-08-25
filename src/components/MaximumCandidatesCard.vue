@@ -4,7 +4,7 @@
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">最大候選項個數</h3>
-          <p class="card-description">分析不同字符集下每個編碼的最大候選項個數。數字越小，翻頁次數越少。</p>
+          <p class="card-description">分析不同字符集下每個編碼的最大候選項個數。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
           <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -74,26 +74,15 @@
         </div>
 
         <!-- 數據說明 -->
-        <div class="analysis-notes">
-          <h4>📝 分析說明</h4>
-          <div class="notes-grid">
-            <div class="note-item">
-              <span class="note-label">計算方式:</span>
-              <span>使用全碼表和某個字符集，統計每個編碼對應的漢字數量，取最大值</span>
-            </div>
-            <div class="note-item">
-              <span class="note-label">顏色標示:</span>
-              <span>
-                <span class="count-demo normal">≤2</span>
-                <span class="count-demo medium">3-5</span>
-                <span class="count-demo high">>5</span>
-              </span>
-            </div>
-            <div class="note-item">
-              <span class="note-label">其他功能:</span>
-              <span>鼠標懸停在編碼上可查看該編碼對應的所有漢字</span>
-            </div>
-          </div>
+        <div class="info-section">
+          <h4>指標說明</h4>
+          <p>最大候選項個數評估輸入法的選字體驗，數值越小表示翻頁次數越少，輸入效率越高。計算考慮了：</p>
+          <ul>
+            <li>使用全碼表和指定字符集，統計每個編碼對應的漢字數量</li>
+            <li>取所有編碼中候選項個數的最大值</li>
+            <li>顏色標示：<span style="color: #059669; font-weight: 600;">≤2</span>、<span style="color: #d97706; font-weight: 600;">3-5</span>、<span style="color: #dc2626; font-weight: 600;">>5</span></li>
+            <li>鼠標懸停在編碼上可查看該編碼對應的所有漢字</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -517,68 +506,36 @@ onMounted(() => {
 }
 
 /* 分析說明 */
-.analysis-notes {
+.info-section {
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 20px;
+  border-left: 4px solid #f59e0b;
 }
 
-.analysis-notes h4 {
-  margin: 0 0 16px 0;
+.info-section h4 {
+  margin: 0 0 12px 0;
+  color: #374151;
   font-size: 1rem;
-  color: #374151;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-weight: 600;
 }
 
-.notes-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.note-item {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-}
-
-.note-label {
-  font-weight: 500;
-  color: #374151;
-  min-width: 80px;
-  flex-shrink: 0;
-}
-
-.note-item span:last-child {
+.info-section p {
+  margin: 0 0 12px 0;
   color: #6b7280;
-  line-height: 1.5;
+  font-size: 0.875rem;
+  line-height: 1.6;
 }
 
-.count-demo {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  margin-right: 8px;
+.info-section ul {
+  margin: 0 0 12px 0;
+  padding-left: 20px;
+  color: #6b7280;
+  font-size: 0.875rem;
 }
 
-.count-demo.normal {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.count-demo.medium {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.count-demo.high {
-  background: #fee2e2;
-  color: #991b1b;
+.info-section li {
+  margin-bottom: 4px;
 }
 
 /* 響應式設計 */
