@@ -26,15 +26,6 @@
             <a href="https://github.com/forfudan/yu" target="_blank" class="nav-link">
               GitHub
             </a>
-            <!-- 全局折叠控制按钮 -->
-            <button 
-              class="global-toggle-btn-header"
-              @click="toggleAllModules"
-              :title="allModulesCollapsed ? '展開全部' : '折疊全部'"
-            >
-              <span class="btn-icon">{{ allModulesCollapsed ? '📂' : '📁' }}</span>
-              <span class="btn-text">{{ allModulesCollapsed ? '展開全部' : '折疊全部' }}</span>
-            </button>
           </nav>
         </div>
       </div>
@@ -43,159 +34,37 @@
     <!-- 主要內容區域 - 設計為單列模塊布局 -->
     <main class="main">
       <div class="container">
-        <!-- 模块容器 -->
-        <div class="module-container">
-          <!-- 碼表上傳模塊 -->
-          <div class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">碼表上傳</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('upload')"
-                :title="modules.upload.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.upload.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <div v-show="!modules.upload.collapsed" class="module-content">
-              <p class="module-description">
-                上傳您的輸入法碼表文件進行性能分析。支持"字符-編碼"和"編碼-字符"兩種格式。
-              </p>
-              
-              <CodeTableUploader 
-                @upload-success="handleCodeTableUpload"
-                @upload-error="handleUploadError"
-              />
-              
-              <!-- 上傳狀態顯示 -->
-              <div v-if="uploadStatus" class="upload-status" :class="uploadStatus.type">
-                <span class="status-icon">
-                  {{ uploadStatus.type === 'success' ? '✓' : '✗' }}
-                </span>
-                {{ uploadStatus.message }}
-              </div>
-            </div>
-          </div>
+        <!-- 
+         卡片容器 
+         所有的卡片使用統一的樣式：
+         - 統一的標題底色樣式（漸變色），但各個卡片的漸變色可不同
+         - 統一的卡片標題及標題下方信息行的字體和大小。
+        -->
+        <div class="cards-container">
+          <!-- 碼表上傳卡片 -->
+          <CodeTableUploader 
+            @upload-success="handleCodeTableUpload"
+            @upload-error="handleUploadError"
+            :upload-status="uploadStatus"
+          />
 
+          <!-- 重碼數據分析卡片 -->
+          <DuplicateAnalysisCard v-if="analysisReady" :code-table="codeTable" />
 
-          <!-- 重碼信息模塊 -->
-          <div v-if="analysisReady" class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">重碼信息</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('duplicate')"
-                :title="modules.duplicate.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.duplicate.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <!--重碼數據分析卡片-->
-            <div v-show="!modules.duplicate.collapsed" class="module-content">
-              <DuplicateAnalysisCard :code-table="codeTable" />
-            </div>
-            <!--最大候選個數卡片-->
-            <div v-show="!modules.duplicate.collapsed" class="module-content">
-              <MaximumCandidatesCard :code-table="codeTable" />
-            </div>
-          </div>
+          <!-- 最大候選個數卡片 -->
+          <MaximumCandidatesCard v-if="analysisReady" :code-table="codeTable" />
 
-          <!-- 人體工學模塊 -->
-          <div v-if="analysisReady" class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">人體工學</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('ergonomics')"
-                :title="modules.ergonomics.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.ergonomics.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <!--速度當量卡片-->
-            <div v-show="!modules.ergonomics.collapsed" class="module-content">
-              <SpeedEquivCard :code-table="codeTable" :code-table-name="codeTableName" :initial-prefix="uploadPrefixFlag" />
-            </div>
-          </div>
+          <!-- 速度當量卡片 -->
+          <SpeedEquivCard v-if="analysisReady" :code-table="codeTable" :code-table-name="codeTableName" :initial-prefix="uploadPrefixFlag" />
 
-          <!-- 方案對比模塊 -->
-          <div v-if="analysisReady" class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">方案對比</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('duplicate')"
-                :title="modules.duplicate.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.duplicate.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <div v-show="!modules.duplicate.collapsed" class="module-content">
-              <p class="module-description">
-                對比不同輸入法方案的重碼數據，支持內置方案和文件上傳。
-              </p>
-              <ComparisonCard :currentCodeTable="codeTable" :currentCodeTableName="codeTableName" />
-            </div>
-          </div>
+          <!-- 方案對比卡片 -->
+          <ComparisonCard v-if="analysisReady" :currentCodeTable="codeTable" :currentCodeTableName="codeTableName" />
 
-          <!-- 鍵位熱力圖模塊 -->
-          <div v-if="analysisReady" class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">鍵位熱力圖</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('heatmap')"
-                :title="modules.heatmap.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.heatmap.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <div v-show="!modules.heatmap.collapsed" class="module-content">
-              <p class="module-description">
-                分析碼表的鍵位分布和使用頻率，可視化展示鍵位負擔。
-              </p>
-              
-              <KeyboardHeatmap 
-                :code-table="codeTable"
-                :analysis-ready="analysisReady"
-              />
-            </div>
-          </div>
+          <!-- 鍵位熱力圖卡片 -->
+          <KeyboardHeatmap v-if="analysisReady" :code-table="codeTable" :analysis-ready="analysisReady" />
 
-          <!-- 碼表分析模塊 -->
-          <div v-if="analysisReady" class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">碼表分析</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('analysis')"
-                :title="modules.analysis.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.analysis.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <div v-show="!modules.analysis.collapsed" class="module-content">
-              <p class="module-description">
-                詳細分析碼表的基本信息。
-              </p>
-              
-              <CodeTableViewer 
-                :analysis="analysisData"
-              />
-            </div>
-          </div>
+          <!-- 碼表分析卡片 -->
+          <CodeTableViewer v-if="analysisReady" :analysis="analysisData" />
         </div>
       </div>
     </main>
@@ -238,34 +107,6 @@ const uploadPrefixFlag = ref<boolean>(false)
 
 // 主題相關
 const isDarkMode = ref(false)
-
-// 模块折叠状态管理
-const modules = ref({
-  upload: { collapsed: false },
-  heatmap: { collapsed: false },
-  analysis: { collapsed: false },
-  duplicate: { collapsed: false },
-  ergonomics: { collapsed: false },
-  comparison: { collapsed: false }
-})
-
-// 切换模块折叠状态
-const toggleModule = (moduleKey: keyof typeof modules.value) => {
-  modules.value[moduleKey].collapsed = !modules.value[moduleKey].collapsed
-}
-
-// 计算是否所有模块都已折叠
-const allModulesCollapsed = computed(() => {
-  return Object.values(modules.value).every(module => module.collapsed)
-})
-
-// 全部展开/折叠
-const toggleAllModules = () => {
-  const targetState = !allModulesCollapsed.value
-  Object.keys(modules.value).forEach(key => {
-    modules.value[key as keyof typeof modules.value].collapsed = targetState
-  })
-}
 
 // 初始化主題和數據恢復
 onMounted(() => {
@@ -320,9 +161,6 @@ const restoreCodeTableData = () => {
       codeTable.value = new Map(data.codeTable)
       analysisData.value = data.analysisData
       analysisReady.value = true
-      
-      // 自動隱藏上傳模塊
-      modules.value.upload.collapsed = true
     }
   } catch (error) {
     console.error('恢復碼表數據失敗:', error)
@@ -405,9 +243,6 @@ const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; f
   // 保存到本地存儲
   saveCodeTableData()
   
-  // 自動隱藏碼表上傳模塊
-  modules.value.upload.collapsed = true
-  
   uploadStatus.value = {
     type: 'success',
     message: `碼表 "${data.fileName}" 上傳成功！共 ${data.codeTable.size} 個字符`
@@ -483,52 +318,22 @@ const handleUploadError = (error: string) => {
   color: var(--color-primary);
 }
 
-/* 头部的全局折叠按钮 */
-.global-toggle-btn-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-left: var(--spacing-sm);
-}
-
-.global-toggle-btn-header:hover {
-  background-color: var(--color-primary-dark);
-  transform: translateY(-1px);
-}
-
-.global-toggle-btn-header .btn-icon {
-  font-size: 0.9rem;
-}
-
-.global-toggle-btn-header .btn-text {
-  font-size: 0.8rem;
-}
-
-/* 主要内容区域 - 重新设计为单列布局 */
+/* 主要内容区域 - 卡片布局 */
 .main {
   padding: var(--spacing-2xl) 0;
   min-height: calc(100vh - 200px);
 }
 
-/* 模块容器 - 单列布局 */
-.module-container {
+/* 卡片容器 - 单列布局 */
+.cards-container {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
   width: 100%;
 }
 
-/* 统一的模块卡片样式 */
-.module-card {
+/* 统一的卡片样式 */
+.card {
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -538,109 +343,35 @@ const handleUploadError = (error: string) => {
   width: 100%;
 }
 
-.module-card:hover {
+.card:hover {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transform: translateY(-2px);
 }
 
-/* 模块头部 */
-.module-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* 卡片头部 */
+.card-header {
   padding: var(--spacing-md) var(--spacing-xl);
   background-color: var(--color-bg-primary);
   border-bottom: 1px solid var(--color-border-primary);
 }
 
-.module-title {
+.card-title {
   font-size: 1.2rem;
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
 }
 
-/* 折叠/展开按钮 */
-.toggle-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 36px;
-  min-height: 36px;
-}
-
-.toggle-button:hover {
-  background-color: var(--color-bg-secondary);
-}
-
-.toggle-icon {
-  font-size: 1rem;
-  color: var(--color-text-secondary);
-  transition: transform 0.3s ease;
-  transform-origin: center;
-}
-
-.toggle-icon.collapsed {
-  transform: rotate(-90deg);
-}
-
-/* 模块内容 */
-.module-content {
+/* 卡片内容 */
+.card-content {
   padding: var(--spacing-lg);
-  animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.module-description {
+.card-description {
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-md);
   line-height: 1.6;
   font-size: 0.95rem;
-}
-
-/* 上传状态样式 */
-.upload-status {
-  margin-top: var(--spacing-lg);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  font-weight: 500;
-  animation: slideIn 0.3s ease-out;
-}
-
-.upload-status.success {
-  background-color: #dcfce7;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-}
-
-.upload-status.error {
-  background-color: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
-}
-
-.status-icon {
-  font-weight: bold;
-  font-size: 1.1rem;
 }
 
 /* 页脚样式 */
@@ -692,34 +423,24 @@ const handleUploadError = (error: string) => {
     padding: var(--spacing-lg) 0;
   }
   
-  .global-controls {
-    padding: var(--spacing-lg);
-    flex-direction: column;
-    gap: var(--spacing-lg);
-    text-align: center;
+  .container {
+    max-width: 100%;
+    padding: 0 var(--spacing-md);
   }
   
-  .page-title {
-    font-size: 1.5rem;
-  }
-  
-  .global-toggle-btn {
-    padding: var(--spacing-sm) var(--spacing-md);
-  }
-  
-  .module-container {
+  .cards-container {
     gap: var(--spacing-lg);
   }
   
-  .module-header {
+  .card-header {
     padding: var(--spacing-lg);
   }
   
-  .module-content {
+  .card-content {
     padding: var(--spacing-lg);
   }
   
-  .module-title {
+  .card-title {
     font-size: 1.2rem;
   }
   
@@ -739,27 +460,15 @@ const handleUploadError = (error: string) => {
 }
 
 @media (max-width: 480px) {
-  .global-controls {
+  .card-header {
     padding: var(--spacing-md);
   }
   
-  .page-title {
-    font-size: 1.3rem;
-  }
-  
-  .btn-text {
-    display: none; /* 在小屏幕上只显示图标 */
-  }
-  
-  .module-header {
+  .card-content {
     padding: var(--spacing-md);
   }
   
-  .module-content {
-    padding: var(--spacing-md);
-  }
-  
-  .module-title {
+  .card-title {
     font-size: 1.1rem;
   }
 }

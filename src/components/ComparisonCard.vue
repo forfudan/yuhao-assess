@@ -1,8 +1,8 @@
 <template>
-  <div class="comparison-card">
+  <div class="comparison-card card">
     <div class="card-header">
-      <h3>數據對比</h3>
-      <p class="card-description">對比不同輸入法方案的全碼重碼數據</p>
+      <h3 class="card-title">方案對比</h3>
+      <p class="card-description">對比不同輸入法方案的重碼數據，支持內置方案和文件上傳。</p>
     </div>
 
     <div class="card-content">

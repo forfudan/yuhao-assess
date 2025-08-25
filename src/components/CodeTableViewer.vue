@@ -1,6 +1,11 @@
 <template>
-  <div class="code-table-viewer">
-    <h3 class="viewer-title">碼表檢視</h3>
+  <div class="code-table-viewer card">
+    <div class="card-header">
+      <h3 class="card-title">碼表分析</h3>
+      <p class="card-description">詳細分析碼表的基本信息。</p>
+    </div>
+    
+    <div class="card-content">
     
     <div v-if="!analysis" class="no-data">
       <p>請先上傳或選擇碼表進行分析</p>
@@ -41,6 +46,7 @@
           </div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </template>

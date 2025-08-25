@@ -1,5 +1,11 @@
 <template>
-  <div class="keyboard-heatmap">
+  <div class="keyboard-heatmap card">
+    <div class="card-header">
+      <h3 class="card-title">鍵位熱力圖</h3>
+      <p class="card-description">分析碼表的鍵位分布和使用頻率，可視化展示鍵位負擔。</p>
+    </div>
+    
+    <div class="card-content">
     <!-- 分析状态 -->
     <div v-if="!analysisReady" class="analysis-placeholder">
       <div class="placeholder-icon">⌨️</div>
@@ -123,6 +129,7 @@
           </div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </template>
