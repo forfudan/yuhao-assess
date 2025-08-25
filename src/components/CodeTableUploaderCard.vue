@@ -457,12 +457,19 @@ async function loadBuiltinTable() {
     
     const result = await builtinService.downloadCodeTable(selectedBuiltinTable.value)
     
+    // 获取内置方案的前缀码配置
+    const tableConfig = builtinService.getTableConfig(selectedBuiltinTable.value)
+    const isBuiltinPrefix = tableConfig?.prefix || false
+    
+    // 更新前缀码按钮状态以反映配置
+    isPrefixCode.value = isBuiltinPrefix
+    
     emit('uploadSuccess', {
       codeTable: result.codeTable,
       fileName: `內置方案：${builtinTables.value.find(t => t.key === selectedBuiltinTable.value)?.name || selectedBuiltinTable.value}`,
       format: result.format,
       tableKey: selectedBuiltinTable.value,  // 添加tableKey用于前缀码检测
-      isPrefix: isPrefixCode.value
+      isPrefix: isBuiltinPrefix  // 使用配置中的前缀码属性
     })
   } catch (error) {
     emit('uploadError', `載入內置碼表失敗: ${error instanceof Error ? error.message : String(error)}`)
@@ -521,14 +528,14 @@ loadBuiltinConfig()
 .code-table-uploader {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm); /* 从 var(--spacing-md) 减少到 var(--spacing-sm) */
 }
 
 /* 內置碼表選擇器樣式 */
 .builtin-selector {
   border: 2px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm); /* 从 var(--spacing-md) 减少到 var(--spacing-sm) */
   background: var(--color-bg-secondary);
 }
 
@@ -536,23 +543,23 @@ loadBuiltinConfig()
   display: block;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs); /* 从 var(--spacing-sm) 减少到 var(--spacing-xs) */
 }
 
 .builtin-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs); /* 从 var(--spacing-sm) 减少到 var(--spacing-xs) */
 }
 
 .builtin-select {
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm); /* 从 var(--spacing-md) 减少到 var(--spacing-sm) */
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
-  min-height: 44px;
+  min-height: 40px; /* 从 44px 减少到 40px */
   font-family: inherit;
 }
 
@@ -575,7 +582,7 @@ loadBuiltinConfig()
 .divider {
   position: relative;
   text-align: center;
-  margin: var(--spacing-sm) 0;
+  margin: var(--spacing-xs) 0; /* 从 var(--spacing-sm) 减少到 var(--spacing-xs) */
 }
 
 .divider::before {
@@ -601,7 +608,7 @@ loadBuiltinConfig()
 .format-selector {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs); /* 从 var(--spacing-sm) 减少到 var(--spacing-xs) */
 }
 
 .format-label {

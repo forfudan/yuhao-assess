@@ -16,7 +16,14 @@
       <div class="container">
         <div class="header-content">
           <div class="logo">
-            <h1>宇浩測評網</h1>
+            <a href="https://shurufa.app/" target="_blank" class="logo-link">
+              <img 
+                src="https://github.com/forfudan/yu/blob/main/src/public/logo_blue.png?raw=true" 
+                alt="宇浩输入法 Logo" 
+                class="logo-image"
+              >
+              <h1>宇浩測評網</h1>
+            </a>
           </div>
           <div class="header-actions">
             <button @click="toggleAllCards" class="action-button" :title="allCardsCollapsed ? '展開所有卡片' : '摺疊所有卡片'">
@@ -164,7 +171,7 @@
           <p class="footer-links">
             <a href="https://shurufa.app/docs/concepts.html" target="_blank">中文輸入法常用概念指南</a>
             <span>·</span>
-            <a href="https://www.zhihu.com/people/zhuyuhao" target="_blank">作者主頁</a>
+            <a href="https://shurufa.app/docs/statistics.html" target="_blank">常見輸入法測評數據</a>
           </p>
         </div>
       </div>
@@ -192,6 +199,7 @@ const uploadStatus = ref<UploadStatus | null>(null)
 const analysisData = ref<CodeTableAnalysis | null>(null)
 const analysisResults = ref(null)
 const uploadPrefixFlag = ref<boolean>(false)
+const globalMaxLength = ref<number>(4) // 全局最大码长，计算一次后不再改变
 
 // 上传卡片引用
 const uploaderCardRef = ref()
@@ -319,6 +327,9 @@ const saveCodeTableData = () => {
     const data = {
       codeTable: Array.from(codeTable.value.entries()),
       analysisData: analysisData.value,
+      codeTableName: codeTableName.value,
+      uploadPrefixFlag: uploadPrefixFlag.value,
+      globalMaxLength: globalMaxLength.value,
       timestamp: Date.now()
     }
     localStorage.setItem('savedCodeTable', JSON.stringify(data))
@@ -342,6 +353,16 @@ const restoreCodeTableData = () => {
       // 恢復碼表數據
       codeTable.value = new Map(data.codeTable)
       analysisData.value = data.analysisData
+      codeTableName.value = data.codeTableName || ''
+      uploadPrefixFlag.value = data.uploadPrefixFlag || false
+      globalMaxLength.value = data.globalMaxLength || 4
+      
+      // 重新处理码表以确保processing service有正确的数据
+      codeTableProcessingService.processCodeTable(codeTable.value, {
+        isPrefix: uploadPrefixFlag.value,
+        maxLength: globalMaxLength.value
+      })
+      
       analysisReady.value = true
     }
   } catch (error) {
@@ -412,17 +433,53 @@ function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
   }
 }
 
+// 计算最大码长的测试字符
+const TEST_CHARS = ['灌', '瓣', '璧', '豁', '糯', '籍', '矗', '瓤', '嚼', '瞻', '覆', '馨', '徽', '警', '繁', '霜', '霞']
+
+// 计算最大码长
+function calculateMaxCodeLength(codeTable: CodeTable): number {
+  let maxLength = 0
+  
+  // 首先尝试使用测试字符
+  for (const char of TEST_CHARS) {
+    const codes = codeTable.get(char)
+    if (codes && codes.length > 0) {
+      const codeLength = codes[0].length
+      maxLength = Math.max(maxLength, codeLength)
+    }
+  }
+  
+  // 如果测试字符没有找到合适的结果，遍历所有字符
+  if (maxLength === 0) {
+    for (const codes of codeTable.values()) {
+      if (codes && codes.length > 0) {
+        const codeLength = codes[0].length
+        maxLength = Math.max(maxLength, codeLength)
+      }
+    }
+  }
+  
+  return maxLength || 4 // 默认4位
+}
+
 // 處理碼表上傳成功
 const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean }) => {
-  console.log('开始处理上传的码表...')
-  
   codeTable.value = data.codeTable
-  codeTableName.value = data.tableKey || data.fileName.replace(/\.(txt|csv)$/, '') // 优先使用tableKey，用于内置方案前缀码检测
+  // 如果是内置方案，从fileName中提取名称（格式：内置方案：方案名）
+  if (data.tableKey && data.fileName.startsWith('內置方案：')) {
+    codeTableName.value = data.fileName.replace('內置方案：', '')
+  } else {
+    codeTableName.value = data.fileName.replace(/\.(txt|csv)$/, '')
+  }
   uploadPrefixFlag.value = data.isPrefix || false  // 设置用户上传时的前缀码标记
+  
+  // 计算最大码长（全局变量，计算一次后不再改变）
+  globalMaxLength.value = calculateMaxCodeLength(data.codeTable)
   
   // 立即处理码表，生成所有派生版本
   codeTableProcessingService.processCodeTable(data.codeTable, {
-    isPrefix: data.isPrefix || false
+    isPrefix: data.isPrefix || false,
+    maxLength: globalMaxLength.value
   })
   
   analysisReady.value = true
@@ -433,14 +490,16 @@ const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; f
   // 保存到本地存儲
   saveCodeTableData()
   
-  console.log('码表处理完成，各个组件可以使用缓存的处理结果')
-  
-  // 码表分析成功后，自动折叠上传卡片
-  if (uploaderCardRef.value && typeof uploaderCardRef.value.collapse === 'function') {
-    setTimeout(() => {
-      uploaderCardRef.value.collapse()
-    }, 500) // 延迟500ms，让用户看到成功反馈
-  }
+  // 码表分析成功后，自动滚动到第一个分析卡片
+  setTimeout(() => {
+    const firstAnalysisCard = document.getElementById('card-duplicate')
+    if (firstAnalysisCard) {
+      firstAnalysisCard.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
+  }, 500) // 延迟500ms，让用户看到成功反馈
   
   uploadStatus.value = {
     type: 'success',
@@ -485,6 +544,27 @@ const handleUploadError = (error: string) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: nowrap !important; /* 强制不换行 */
+  gap: var(--spacing-sm);
+  width: 100%;
+  min-height: 0; /* 允许收缩 */
+  overflow: hidden;
+}
+
+.logo {
+  flex: 1 1 auto; /* 允许logo收缩和扩展 */
+  min-width: 0; /* 允许收缩到内容以下 */
+  overflow: hidden;
+  text-overflow: ellipsis; /* 如果logo过长则用省略号 */
+}
+
+.header-actions {
+  flex: 0 0 auto; /* 防止按钮收缩或扩展 */
+  display: flex;
+  align-items: center;
+  white-space: nowrap; /* 强制按钮容器不换行 */
+  display: flex;
+  align-items: center;
 }
 
 .logo h1 {
@@ -492,6 +572,25 @@ const handleUploadError = (error: string) => {
   font-weight: 700;
   color: var(--color-primary);
   margin: 0; /* 移除下边距，因为删除了副标题 */
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s ease;
+}
+
+.logo-link:hover {
+  opacity: 0.8;
+}
+
+.logo-image {
+  height: 1.75rem; /* 与标题字体大小一致 */
+  width: auto;
+  object-fit: contain;
 }
 
 /* 头部操作按钮 */
@@ -681,8 +780,28 @@ const handleUploadError = (error: string) => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .header {
+    padding: var(--spacing-md) 0; /* 减少header的垂直padding */
+  }
+  
+  .header-content {
+    gap: var(--spacing-xs); /* 在小屏幕上减少logo和按钮之间的间距 */
+  }
+  
+  .logo h1 {
+    font-size: 1.25rem; /* 进一步减小标题字体 */
+  }
+  
+  .logo-image {
+    height: 1.25rem; /* 相应减少logo大小 */
+  }
+  
+  .logo-link {
+    gap: calc(var(--spacing-xs) / 2); /* 减少logo和标题之间的间距 */
+  }
+  
   .header-actions {
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs); /* 减少按钮间距 */
   }
   
   .action-button {
@@ -727,12 +846,6 @@ const handleUploadError = (error: string) => {
   
   .cards-container {
     gap: var(--spacing-lg);
-  }
-  
-  .header-content {
-    flex-direction: column;
-    gap: var(--spacing-md);
-    text-align: center;
   }
   
   .logo h1 {
@@ -878,6 +991,59 @@ const handleUploadError = (error: string) => {
 }
 
 @media (max-width: 480px) {
+  .header {
+    padding: var(--spacing-sm) 0;
+  }
+  
+  .header-content {
+    gap: 2px !important; /* 强制最小间距 */
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .logo {
+    flex: 1 1 50% !important; /* 限制logo最大宽度为50% */
+    max-width: 50%;
+    min-width: 0;
+  }
+  
+  .logo h1 {
+    font-size: 0.8rem !important; /* 更小的字体 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .logo-image {
+    height: 0.8rem;
+    flex-shrink: 0;
+  }
+  
+  .logo-link {
+    gap: 2px;
+    min-width: 0;
+    overflow: hidden;
+  }
+  
+  .header-actions {
+    gap: 2px !important;
+    flex: 0 0 auto !important; /* 强制固定尺寸 */
+    white-space: nowrap !important;
+  }
+  
+  .action-button {
+    padding: 2px !important; /* 最小padding */
+    min-width: 28px; /* 固定最小宽度 */
+    width: 28px; /* 固定宽度 */
+    height: 28px; /* 固定高度 */
+    flex-shrink: 0 !important; /* 绝对不允许收缩 */
+  }
+  
+  .action-button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  
   .card-header {
     padding: var(--spacing-md);
   }
@@ -888,6 +1054,62 @@ const handleUploadError = (error: string) => {
   
   .card-title {
     font-size: 1.1rem;
+  }
+}
+
+/* 极小屏幕优化 - 最强约束 */
+@media (max-width: 360px) {
+  .header {
+    padding: 2px 0 !important; /* 最小header padding */
+  }
+  
+  .header-content {
+    gap: 1px !important; /* 最小间距 */
+    width: 100%;
+  }
+  
+  .logo {
+    flex: 1 1 40% !important; /* 进一步限制logo空间 */
+    max-width: 40%;
+    min-width: 0;
+  }
+  
+  .logo h1 {
+    font-size: 0.7rem !important; /* 极小字体 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .logo-image {
+    height: 0.7rem; /* 极小logo */
+    flex-shrink: 0;
+  }
+  
+  .logo-link {
+    gap: 1px; /* 最小间距 */
+    min-width: 0;
+    overflow: hidden;
+  }
+  
+  .header-actions {
+    gap: 1px !important; /* 最小按钮间距 */
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+  
+  .action-button {
+    padding: 1px !important; /* 最小padding */
+    min-width: 24px !important; /* 更小的固定宽度 */
+    width: 24px !important;
+    height: 24px !important;
+    flex-shrink: 0 !important;
+    font-size: 0; /* 隐藏可能的文本 */
+  }
+  
+  .action-button svg {
+    width: 14px !important; /* 更小图标 */
+    height: 14px !important;
   }
 }
 </style>

@@ -19,6 +19,7 @@ export interface ProcessedCodeTables {
 export class CodeTableProcessingService {
   private static instance: CodeTableProcessingService
   private processedTables: ProcessedCodeTables | null = null
+  private processingOptions: { isPrefix: boolean; maxLength: number } | null = null
 
   private constructor() {}
 
@@ -33,17 +34,19 @@ export class CodeTableProcessingService {
    * 处理原始码表，生成所有需要的派生码表
    */
   processCodeTable(originalCodeTable: CodeTable, options?: { isPrefix?: boolean, maxLength?: number }): ProcessedCodeTables {
-    console.log('开始处理码表...')
-    
     // 生成全码表和简码表
     const fullResult = generateFullCodeTable(originalCodeTable)
     const shortResult = generateShortCodeTable(originalCodeTable)
     
     // 计算最大码长
-    const maxLength = options?.maxLength || this.calculateMaxCodeLength(fullResult.codeTable)
+    const maxLength = options?.maxLength || this.calculateMaxCodeLength(originalCodeTable)  // 使用原始码表计算
     const isPrefix = options?.isPrefix || false
     
+    // 保存处理选项
+    this.processingOptions = { isPrefix, maxLength }
+    
     // 生成两种加选重按键的码表
+    // 无论全码表还是简码表，都使用相同的逻辑：根据是否前缀码决定是否补空格
     const fullWithSelection = this.generateCodeTableWithSelection(fullResult.codeTable, maxLength, isPrefix)
     const shortWithSelection = this.generateCodeTableWithSelection(shortResult.codeTable, maxLength, isPrefix)
     
@@ -55,8 +58,38 @@ export class CodeTableProcessingService {
       shortWithSelection: shortWithSelection
     }
     
-    console.log('码表处理完成')
     return this.processedTables
+  }
+
+  private debugUnderscoreInFullWithSelection(fullWithSelection: CodeTable) {
+    console.log('=== 全码加选重按键表调试 ===')
+    const underscoreCodes: string[] = []
+    const allCodes: string[] = []
+    
+    for (const [char, codes] of Object.entries(fullWithSelection)) {
+      for (const code of codes) {
+        allCodes.push(`${char}: ${code}`)
+        if (code.endsWith('_')) {
+          underscoreCodes.push(`${char}: ${code}`)
+          if (underscoreCodes.length >= 10) break
+        }
+      }
+      if (underscoreCodes.length >= 10 && allCodes.length >= 100) break
+    }
+    
+    // 输出前10个下划线编码
+    console.log('前10个末尾是下划线的编码:')
+    underscoreCodes.forEach((item, index) => {
+      console.log(`${index + 1}. ${item}`)
+    })
+    
+    // 输出前100个所有编码
+    console.log('前100个全码加选重编码:')
+    allCodes.slice(0, 100).forEach((item, index) => {
+      console.log(`${index + 1}. ${item}`)
+    })
+    
+    console.log('=== 全码加选重按键表调试结束 ===')
   }
 
   /**
@@ -64,6 +97,10 @@ export class CodeTableProcessingService {
    */
   getProcessedTables(): ProcessedCodeTables | null {
     return this.processedTables
+  }
+
+  getProcessingOptions(): { isPrefix: boolean; maxLength: number } | null {
+    return this.processingOptions
   }
 
   /**
@@ -91,11 +128,16 @@ export class CodeTableProcessingService {
 
   /**
    * 生成加选重按键的码表
-   * 这个方法可以同时处理全码表和简码表
-   * 对于简码表，会对不到最大码长的编码补充下划线（代表空格，前缀码除外）
+   * 对于不到最大码长的编码：
+   * - 如果不是前缀码且为首选：补充一个下划线（代表空格）用于选重
+   * - 如果是前缀码且为首选：不补充任何东西
    * 对于重码，会添加选择键
    */
-  private generateCodeTableWithSelection(codeTable: CodeTable, maxLength: number, isPrefix: boolean): CodeTable {
+  private generateCodeTableWithSelection(
+    codeTable: CodeTable, 
+    maxLength: number, 
+    isPrefix: boolean
+  ): CodeTable {
     const processedTable = new Map<string, string[]>()
     
     // 首先收集所有编码的字符，按频率排序以确定候选顺序
@@ -121,16 +163,17 @@ export class CodeTableProcessingService {
       for (const code of codes) {
         const charsWithThisCode = codeToChars.get(code) || []
         const charIndex = charsWithThisCode.indexOf(char)
+        const isFirstCandidate = charIndex === 0
         
         let processedCode = code
         
-        // 非前缀码且未达到最大码长时补充下划线（代表空格）
-        // 注意：对于前缀码，不补充下划线
-        if (!isPrefix && code.length < maxLength) {
-          processedCode = code + '_'.repeat(maxLength - code.length)
+        // 如果不是前缀码，且码长不到最大码长，且为首选时，补充一个下划线（代表空格）用于选重
+        // 如果是前缀码，则不补充下划线
+        if (!isPrefix && code.length < maxLength && isFirstCandidate) {
+          processedCode = code + '_'
         }
         
-        // 如果有多个候选，添加选择键
+        // 如果有多个候选，且不是首选，添加选择键
         if (charsWithThisCode.length > 1 && charIndex > 0) {
           const selectKeys = [';', "'", '4', '5', '6', '7', '8', '9']
           if (charIndex - 1 < selectKeys.length) {

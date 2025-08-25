@@ -59,27 +59,17 @@
           </tbody>
         </table>
 
-        <div class="prefix-control">
-          <button 
-            @click="togglePrefixMode" 
-            :class="['prefix-button', { 'active': isPrefixCode }]"
-            title="切換前綴碼模式"
-          >
-            {{ isPrefixCode ? '✓ 本方案為前綴碼' : '✗ 本方案為前綴碼' }}
-          </button>
-        </div>
-
         <div class="info-section">
           <h4>指標說明</h4>
           <p>速度當量基於實驗統計結果，評估輸入法按鍵對的手感表現。數值越小表示輸入越流暢。計算考慮了：</p>
           <ul>
             <li>使用全碼碼表（每個單字的最長編碼）進行分析</li>
             <li>漢字的使用頻率</li>
-            <li v-if="!isPrefixCode">碼表的規範化處理，即在未達到最大碼長時使用下劃線補充（代表空格）</li>
+            <li v-if="!detectedIsPrefix">碼表的規範化處理，即在未達到最大碼長時使用下劃線補充（代表空格）</li>
             <li v-else>前綴碼特性，未達到最大碼長時不補充下劃線</li>
             <li>多候選字的選擇鍵處理（第2候選加分號，第3候選加單引號）</li>
           </ul>
-          <p>檢測到的最大碼長為：{{ maxCodeLength }} 位</p>
+          <p>檢測到的最大碼長為：{{ maxCodeLength }} 位{{ detectedIsPrefix ? '，檢測到本方案為前綴碼' : '' }}</p>
         </div>
       </div>
     </div>
@@ -130,50 +120,8 @@ const isCalculating = ref(false)
 const error = ref<string | null>(null)
 const analysisResults = ref<SpeedEquivResults | null>(null)
 const maxCodeLength = ref<number>(0)
-const isPrefixCode = ref(false)
+const detectedIsPrefix = ref(false)
 const builtinService = new BuiltinCodeTableService()
-
-// 特殊字符用于测试最大码长
-const TEST_CHARS = ['灌', '瓣', '璧', '豁', '糯', '籍', '矗', '瓤', '嚼', '瞻', '覆', '馨', '徽', '警', '繁', '霜', '霞']
-
-// 检查是否为内置前缀码方案
-async function checkBuiltinPrefixCode() {
-  if (!props.codeTableName) {
-    return
-  }
-  
-  // 重置前缀码状态
-  isPrefixCode.value = false
-  
-  try {
-    const response = await fetch('/data/codeTableConfig.json')
-    if (!response.ok) {
-      return
-    }
-    
-    const config = await response.json()
-    const builtinTables = config.builtinCodeTables || []
-    
-    const matchedTable = builtinTables.find((table: any) => 
-      table.key === props.codeTableName || table.name === props.codeTableName
-    )
-    
-    if (matchedTable && matchedTable.prefix === true) {
-      isPrefixCode.value = true
-    }
-  } catch (error) {
-    console.warn('检查内置方案配置失败:', error)
-  }
-}
-
-// 切换前缀码模式
-function togglePrefixMode() {
-  isPrefixCode.value = !isPrefixCode.value
-  // 立即重新计算当量
-  if (props.codeTable && props.codeTable.size > 0) {
-    calculateSpeedEquivAnalysis()
-  }
-}
 
 // 加载当量表
 async function loadEquivTable(): Promise<Record<string, number>> {
@@ -188,19 +136,6 @@ async function loadEquivTable(): Promise<Record<string, number>> {
     console.error('加载当量表失败:', error)
     throw new Error('加载当量表失败')
   }
-}
-
-// 计算最大码长
-function calculateMaxCodeLength(codeTable: CodeTable): number {
-  let maxLength = 0
-  for (const char of TEST_CHARS) {
-    const codes = codeTable.get(char)
-    if (codes && codes.length > 0) {
-      const codeLength = codes[0].length
-      maxLength = Math.max(maxLength, codeLength)
-    }
-  }
-  return maxLength || 4 // 默认4位
 }
 
 // 计算编码对的频率分布
@@ -255,20 +190,19 @@ async function calculateSpeedEquivAnalysis() {
   error.value = null
 
   try {
-    // 1. 根据当前前缀码设置重新处理码表（确保使用正确的前缀码设置）
-    codeTableProcessingService.processCodeTable(props.codeTable, {
-      isPrefix: isPrefixCode.value
-    })
+    // 1. 直接获取已处理的码表（由App.vue统一处理）
     const processedTables = codeTableProcessingService.getProcessedTables()
     if (!processedTables) {
-      throw new Error('无法处理码表')
+      throw new Error('无法获取处理后的码表')
     }
     
     const fullCodeTable = processedTables.full
     const processedCodeTable = processedTables.fullWithSelection
     
-    // 2. 计算最大码长（基于全码码表）
-    maxCodeLength.value = calculateMaxCodeLength(fullCodeTable)
+    // 2. 从处理服务获取最大码长和前缀码检测结果
+    const processingOptions = codeTableProcessingService.getProcessingOptions()
+    maxCodeLength.value = processingOptions?.maxLength || 4
+    detectedIsPrefix.value = processingOptions?.isPrefix || false
     
     // 3. 加载当量表
     const equivTable = await loadEquivTable()
@@ -311,34 +245,10 @@ watch(() => props.codeTable, async (newCodeTable) => {
   }
 }, { immediate: false })  // 不立即执行，让组件挂载逻辑控制
 
-// 监听方案名称变化，检查是否为内置前缀码方案
-watch(() => props.codeTableName, async (newName) => {
-  if (newName) {
-    await checkBuiltinPrefixCode()
-  }
-}, { immediate: true })
-
-// 监听前缀码状态变化
-watch(() => isPrefixCode.value, (newValue) => {
-  // 当前缀码状态改变时重新计算
-  if (props.codeTable && props.codeTable.size > 0) {
-    calculateSpeedEquivAnalysis()
-  }
-})
-
 // 组件挂载时自动计算
 onMounted(async () => {
-  // 1. 首先检查是否为内置前缀码方案
-  if (props.codeTableName) {
-    await checkBuiltinPrefixCode()
-  }
-  
-  // 2. 如果没有检测到内置前缀码，使用用户上传时的设置
-  if (!isPrefixCode.value && props.initialPrefix) {
-    isPrefixCode.value = true
-  }
-  
-  // 3. 执行计算
+  // SpeedEquivCard不再自己检测前缀码，完全依赖App.vue的处理结果
+  // 直接执行计算
   if (props.codeTable && props.codeTable.size > 0) {
     calculateSpeedEquivAnalysis()
   }
@@ -488,43 +398,6 @@ onMounted(async () => {
 
 .metric-desc a:hover {
   text-decoration: underline;
-}
-
-.prefix-control {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.prefix-button {
-  background: #f3f4f6;
-  border: 2px solid #d1d5db;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.prefix-button:hover {
-  background: #e5e7eb;
-  border-color: #9ca3af;
-}
-
-.prefix-button.active {
-  background: #dcfce7;
-  border-color: #16a34a;
-  color: #15803d;
-}
-
-.prefix-button.active:hover {
-  background: #bbf7d0;
-  border-color: #15803d;
 }
 
 .info-section {

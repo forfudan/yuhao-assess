@@ -4,7 +4,7 @@
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">鍵位熱力圖</h3>
-          <p class="card-description">分析碼表的鍵位分布和使用頻率，可視化展示鍵位負擔。</p>
+          <p class="card-description">基於全碼加選重按鍵表分析鍵位分布和使用頻率，可視化展示鍵位負擔。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
           <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -25,8 +25,8 @@
     <!-- 热力图内容 -->
     <div v-else class="keyboard-heatmap-content">
       <!-- 键盘热力图 -->
-      <div class="keyboard-wrapper">
-        <div class="keyboard-layout" :style="{ transform: `scale(${keyboardScale})` }">
+      <div class="keyboard-wrapper" ref="keyboardWrapper">
+        <div class="keyboard-layout" ref="keyboardLayout" :style="{ transform: `scale(${keyboardScale})` }">
           <!-- 数字行 -->
           <div class="keyboard-row number-row">
             <KeyButton 
@@ -144,9 +144,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import KeyButton from './KeyButton.vue'
 import { useCollapse } from '../composables/useCollapse'
+import { codeTableProcessingService } from '../services'
 import type { CodeTable, KeyData, KeyInfo, AnalysisStats } from '../types/index'
 
 interface Props {
@@ -187,6 +188,110 @@ const loadCharFrequency = async () => {
 // 响应式数据
 const displayMode = ref<'load'>('load') // 固定为按键频率模式
 const keyboardScale = ref(1.0)
+const refreshTrigger = ref(0) // 用于强制刷新的触发器
+
+// 自适应缩放相关
+const keyboardWrapper = ref<HTMLElement>()
+const keyboardLayout = ref<HTMLElement>()
+
+// 计算自适应缩放
+const calculateAdaptiveScale = () => {
+  if (!keyboardWrapper.value || !keyboardLayout.value) return
+  
+  const wrapperWidth = keyboardWrapper.value.clientWidth
+  const layoutWidth = keyboardLayout.value.offsetWidth
+  
+  // 更激进的缩放策略：确保键盘占用容器的大部分宽度
+  if (layoutWidth > 0) {
+    const availableWidth = wrapperWidth - 20 // 减去最小边距
+    const scale = Math.min(1.5, availableWidth / layoutWidth) // 允许放大到1.5倍，确保充分利用空间
+    keyboardScale.value = Math.max(0.5, scale) // 最小缩放0.5倍
+  } else {
+    keyboardScale.value = 1.0
+  }
+}
+
+// 窗口大小变化监听
+const handleResize = () => {
+  calculateAdaptiveScale()
+}
+
+// 生命周期钩子
+onMounted(() => {
+  loadCharFrequency()
+  
+  // 延迟计算缩放，确保DOM已渲染
+  setTimeout(() => {
+    calculateAdaptiveScale()
+  }, 100)
+  
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
+
+// 监听分析状态变化，重新计算缩放
+watch(
+  () => props.analysisReady,
+  (newReady) => {
+    if (newReady) {
+      setTimeout(() => {
+        calculateAdaptiveScale()
+      }, 100)
+    }
+  }
+)
+
+// 获取处理后的码表（全码加选重按键表）
+const processedCodeTable = computed(() => {
+  // 依赖refreshTrigger来强制刷新
+  refreshTrigger.value
+  
+  if (!props.analysisReady) return new Map()
+  
+  const processedTables = codeTableProcessingService.getProcessedTables()
+  if (!processedTables) return new Map()
+  
+  // 调试：输出前100个末尾是下划线的编码
+  debugUnderscoreEndings(processedTables.fullWithSelection)
+  
+  // 使用全码加选重按键表，注意下划线代表空格
+  return processedTables.fullWithSelection
+})
+
+// 调试函数：分析末尾是下划线的编码
+const debugUnderscoreEndings = (codeTable: CodeTable) => {
+  const underscoreEndingCodes: string[] = []
+  
+  for (const [char, codes] of codeTable.entries()) {
+    for (const code of codes) {
+      if (code.endsWith('_')) {
+        underscoreEndingCodes.push(`${char}: ${code}`)
+      }
+    }
+  }
+  
+  // 删除调试输出，只保留isPrefix相关的追踪
+}
+
+// 监听码表变化，确保切换方案时热力图会刷新
+watch(
+  () => props.codeTable,
+  (newCodeTable) => {
+    if (props.analysisReady && newCodeTable.size > 0) {
+      // 触发刷新
+      refreshTrigger.value++
+      
+      // 重新计算缩放
+      setTimeout(() => {
+        calculateAdaptiveScale()
+      }, 100)
+    }
+  },
+  { deep: true }
+)
 
 // 键盘布局定义
 const numberRowKeys: KeyInfo[] = [
@@ -246,7 +351,7 @@ const rowMapping: Record<string, string> = {
 
 // 计算统计数据
 const stats = computed<AnalysisStats>(() => {
-  if (!props.analysisReady || props.codeTable.size === 0) {
+  if (!props.analysisReady || processedCodeTable.value.size === 0) {
     return {
       totalChars: 0,
       totalCodes: 0,
@@ -265,7 +370,7 @@ const stats = computed<AnalysisStats>(() => {
   let totalCodeLength = 0
 
   // 分析码表 - 使用字频权重
-  for (const [char, codes] of props.codeTable.entries()) {
+  for (const [char, codes] of processedCodeTable.value.entries()) {
     // 获取字符频率权重，默认为1
     const charWeight = charFrequency.value[char] || 1
     
@@ -274,17 +379,20 @@ const stats = computed<AnalysisStats>(() => {
       totalCodeLength += code.length
 
       // 统计每个按键的使用次数（应用字频权重）
+      // 注意：这里需要特殊处理下划线，将其视为空格键
       for (const key of code.toLowerCase()) {
-        keyDistribution.set(key, (keyDistribution.get(key) || 0) + charWeight)
+        const actualKey = key === '_' ? 'space' : key
+        
+        keyDistribution.set(actualKey, (keyDistribution.get(actualKey) || 0) + charWeight)
         
         // 统计手指负担
-        const finger = fingerMapping[key]
+        const finger = fingerMapping[actualKey]
         if (finger) {
           fingerLoad.set(finger, (fingerLoad.get(finger) || 0) + charWeight)
         }
         
         // 统计按排分布
-        const row = rowMapping[key]
+        const row = rowMapping[actualKey]
         if (row) {
           rowDistribution.set(row, (rowDistribution.get(row) || 0) + charWeight)
         }
@@ -309,7 +417,7 @@ const stats = computed<AnalysisStats>(() => {
   const rightPercentage = totalHandCount > 0 ? (rightHandCount / totalHandCount) * 100 : 0
 
   return {
-    totalChars: props.codeTable.size,
+    totalChars: processedCodeTable.value.size,
     totalCodes,
     avgCodeLength: totalCodes > 0 ? totalCodeLength / totalCodes : 0,
     keyDistribution,
@@ -370,30 +478,6 @@ const getKeyData = (key: string): KeyData => {
     position: { x: 0, y: 0 } // 简化版本，不需要精确位置
   }
 }
-
-// 监听窗口大小变化，调整键盘缩放
-const updateKeyboardScale = () => {
-  const container = document.querySelector('.keyboard-layout')
-  if (container) {
-    const containerWidth = container.parentElement?.clientWidth || 800
-    const keyboardWidth = 800 // 基础键盘宽度
-    const scale = Math.min(1.2, containerWidth / keyboardWidth) // 允许轻微放大，最多120%
-    keyboardScale.value = scale * 0.95 // 留很少的边距，充分利用空间
-  }
-}
-
-// 组件挂载时设置初始缩放，并监听窗口大小变化
-watch(() => props.analysisReady, (ready) => {
-  if (ready) {
-    setTimeout(updateKeyboardScale, 100)
-    window.addEventListener('resize', updateKeyboardScale)
-  }
-})
-
-// 组件挂载时加载字符频率数据
-onMounted(() => {
-  loadCharFrequency()
-})
 </script>
 
 <style scoped>
@@ -644,8 +728,10 @@ onMounted(() => {
 /* 键盘包装器 */
 .keyboard-wrapper {
   display: flex;
-  overflow-x: auto;
+  justify-content: center;
   padding: var(--spacing-md) 0;
+  overflow: hidden; /* 防止出现滚动条 */
+  width: 100%;
 }
 
 /* 键盘布局 */
@@ -653,10 +739,12 @@ onMounted(() => {
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
-  transform-origin: left top;
-  width: 100%;
-  min-width: 800px;
+  transform-origin: center top;
+  width: 95%; /* 使用容器的95%宽度 */
+  max-width: 1000px; /* 设置最大宽度避免过大 */
+  min-width: 320px; /* 设置最小宽度保证可用性 */
   border: 1px solid var(--color-border-secondary);
+  transition: transform 0.3s ease;
 }
 
 .keyboard-row {
@@ -746,12 +834,20 @@ onMounted(() => {
   text-align: right;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .keyboard-heatmap {
-    padding: var(--spacing-md);
+/* 大屏幕优化 */
+@media (min-width: 1200px) {
+  .keyboard-layout {
+    width: 90%; /* 大屏幕上使用90%宽度 */
+    max-width: 1200px; /* 增加最大宽度 */
   }
   
+  .keyboard-wrapper {
+    padding: var(--spacing-lg) 0; /* 增加垂直padding */
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
   .module-container {
     gap: var(--spacing-md);
   }
@@ -779,9 +875,19 @@ onMounted(() => {
     font-size: 1.1rem;
   }
   
+  .keyboard-wrapper {
+    padding: var(--spacing-sm) 0; /* 减少包装器的padding */
+  }
+  
   .keyboard-layout {
     padding: var(--spacing-md);
-    min-width: 600px;
+    width: 98% !important; /* 在平板上使用更多宽度 */
+    min-width: unset !important;
+    max-width: 100%;
+  }
+  
+  .stats-container {
+    padding: var(--spacing-md); /* 减少统计容器的padding */
   }
   
   .stats-grid {
@@ -794,10 +900,6 @@ onMounted(() => {
 }
 
 @media (max-width: 480px) {
-  .keyboard-heatmap {
-    padding: var(--spacing-sm);
-  }
-  
   .global-controls {
     padding: var(--spacing-sm);
   }
@@ -819,8 +921,22 @@ onMounted(() => {
     font-size: 1rem;
   }
   
+  .keyboard-wrapper {
+    padding: 0; /* 移除包装器padding */
+    margin: 0 calc(-1 * var(--spacing-md)); /* 负边距来抵消card-content的padding */
+  }
+  
   .keyboard-layout {
-    min-width: 400px;
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: 100%;
+    padding: var(--spacing-sm);
+    border-radius: 0; /* 移除圆角以避免在边缘的视觉问题 */
+    border-left: none;
+    border-right: none;
+  }
+  
+  .stats-container {
     padding: var(--spacing-sm);
   }
   
