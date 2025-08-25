@@ -4,7 +4,7 @@
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">方案對比</h3>
-          <p class="card-description">對比不同輸入法方案的重碼數據，支持內置方案和文件上傳。</p>
+          <p class="card-description">對比不同輸入法方案的各項數據，支持內置方案和文件上傳。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
           <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
