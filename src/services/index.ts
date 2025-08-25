@@ -56,6 +56,12 @@ export {
   getAllMaximumCandidates
 } from './maximumCandidatesService'
 
+// 導出碼表處理服務
+export {
+  CodeTableProcessingService,
+  codeTableProcessingService
+} from './codeTableProcessingService'
+
 // 重新導出相關類型
 export type {
   CodeTable,

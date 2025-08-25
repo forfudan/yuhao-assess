@@ -207,9 +207,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
-import { generateFullCodeTable, generateShortCodeTable } from '../services/codeTableCleanService'
 import { getDynamicDupRate } from '../services/analysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
+import { codeTableProcessingService } from '../services/codeTableProcessingService'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, CharFrequency } from '../types'
 
@@ -570,11 +570,20 @@ async function calculateAllMetrics() {
     // 使用提取的唯一字符代替原来的码表键
     const allChars = allUniqueChars
     
-    // 生成全码表和简码表
-    const fullCodeResult = generateFullCodeTable(props.codeTable)
-    const shortCodeResult = generateShortCodeTable(props.codeTable)
-    const fullCodeTable = fullCodeResult.codeTable
-    const shortCodeTable = shortCodeResult.codeTable
+    // 使用缓存的处理结果，而不是重新生成
+    const processedTables = codeTableProcessingService.getProcessedTables()
+    if (!processedTables) {
+      console.error('缓存的码表处理结果不可用，重新处理...')
+      codeTableProcessingService.processCodeTable(props.codeTable)
+      const newProcessedTables = codeTableProcessingService.getProcessedTables()
+      if (!newProcessedTables) {
+        console.error('无法处理码表')
+        return
+      }
+    }
+    
+    const fullCodeTable = processedTables?.full || new Map()
+    const shortCodeTable = processedTables?.short || new Map()
     
     // 加载所有字频数据
     const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyUnified] = await Promise.all([
