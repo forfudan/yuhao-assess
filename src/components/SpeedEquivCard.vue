@@ -1,11 +1,20 @@
 <template>
   <div class="speed-equiv-card">
     <div class="card-header">
-      <h3 class="card-title">全碼速度當量分析</h3>
-      <p class="card-description">分析輸入法的人體工學表現，計算基於字頻加權的按鍵組合速度當量</p>
+      <div class="header-content">
+        <div class="header-text">
+          <h3 class="card-title">全碼速度當量分析</h3>
+          <p class="card-description">分析輸入法的人體工學表現，計算基於字頻加權的按鍵組合速度當量</p>
+        </div>
+        <button @click="toggleCollapsed" class="collapse-button">
+          <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <div class="card-content">
+    <div v-show="!isCollapsed" class="card-content">
       <div v-if="isCalculating" class="loading">
         <div class="spinner"></div>
         <p>正在計算速度當量...</p>
@@ -79,6 +88,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, nextTick } from 'vue'
+import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { generateFullCodeTable } from '../services/codeTableCleanService'
@@ -95,6 +105,9 @@ const props = withDefaults(defineProps<Props>(), {
   codeTableName: '',
   initialPrefix: false
 })
+
+// 折叠功能
+const { isCollapsed, toggleCollapsed } = useCollapse()
 
 // 分析结果数据结构
 interface SpeedEquivResults {
@@ -375,6 +388,48 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* 卡片头部布局 */
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.header-text {
+  flex: 1;
+}
+
+/* 折叠按钮样式 */
+.collapse-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--spacing-lg);
+  backdrop-filter: blur(10px);
+}
+
+.collapse-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.collapse-button svg {
+  transition: transform 0.3s ease;
+}
+
+.collapse-button svg.rotated {
+  transform: rotate(180deg);
+}
+
+/* 原有样式 */
 .card-description a {
   color: rgba(255, 255, 255, 0.9);
   text-decoration: underline;

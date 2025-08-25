@@ -1,11 +1,20 @@
 <template>
   <div class="code-table-viewer code-analysis-card">
     <div class="card-header">
-      <h3 class="card-title">碼表分析</h3>
-      <p class="card-description">詳細分析碼表的基本信息。</p>
+      <div class="header-content">
+        <div class="header-text">
+          <h3 class="card-title">碼表分析</h3>
+          <p class="card-description">詳細分析碼表的基本信息。</p>
+        </div>
+        <button @click="toggleCollapsed" class="collapse-button">
+          <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </button>
+      </div>
     </div>
     
-    <div class="card-content">
+    <div v-show="!isCollapsed" class="card-content">
     
     <div v-if="!analysis" class="no-data">
       <p>請先上傳或選擇碼表進行分析</p>
@@ -52,7 +61,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
+import { useCollapse } from '../composables/useCollapse'
 import type { CodeTableAnalysis } from '../types/index'
 
 interface Props {
@@ -60,9 +70,54 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// 折叠功能
+const { isCollapsed, toggleCollapsed } = useCollapse()
 </script>
 
 <style scoped>
+/* 卡片头部布局 */
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.header-text {
+  flex: 1;
+}
+
+/* 折叠按钮样式 */
+.collapse-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--spacing-lg);
+  backdrop-filter: blur(10px);
+}
+
+.collapse-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.collapse-button svg {
+  transition: transform 0.3s ease;
+}
+
+.collapse-button svg.rotated {
+  transform: rotate(180deg);
+}
+
+/* 原有样式 */
 .code-table-viewer {
   background: white;
   border: 1px solid var(--color-border-primary);

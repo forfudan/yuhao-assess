@@ -44,6 +44,7 @@
         <div class="cards-container">
           <!-- 碼表上傳卡片 -->
           <CodeTableUploaderCard 
+            ref="uploaderCardRef"
             @upload-success="handleCodeTableUpload"
             @upload-error="handleUploadError"
             :upload-status="uploadStatus"
@@ -105,6 +106,9 @@ const uploadStatus = ref<UploadStatus | null>(null)
 const analysisData = ref<CodeTableAnalysis | null>(null)
 const analysisResults = ref(null)
 const uploadPrefixFlag = ref<boolean>(false)
+
+// 上传卡片引用
+const uploaderCardRef = ref()
 
 // 主題相關
 const isDarkMode = ref(false)
@@ -243,6 +247,13 @@ const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; f
   
   // 保存到本地存儲
   saveCodeTableData()
+  
+  // 码表分析成功后，自动折叠上传卡片
+  if (uploaderCardRef.value && typeof uploaderCardRef.value.collapse === 'function') {
+    setTimeout(() => {
+      uploaderCardRef.value.collapse()
+    }, 500) // 延迟500ms，让用户看到成功反馈
+  }
   
   uploadStatus.value = {
     type: 'success',

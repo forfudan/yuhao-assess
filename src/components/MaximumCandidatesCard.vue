@@ -1,11 +1,20 @@
 <template>
   <div class="maximum-candidates-card">
     <div class="card-header">
-      <h3 class="card-title">最大候選項個數</h3>
-      <p class="card-description">分析不同字符集下每個編碼的最大候選項個數。數字越小，翻頁次數越少。</p>
+      <div class="header-content">
+        <div class="header-text">
+          <h3 class="card-title">最大候選項個數</h3>
+          <p class="card-description">分析不同字符集下每個編碼的最大候選項個數。數字越小，翻頁次數越少。</p>
+        </div>
+        <button @click="toggleCollapsed" class="collapse-button">
+          <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </button>
+      </div>
     </div>
     
-    <div class="card-content">
+    <div v-show="!isCollapsed" class="card-content">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
         <p>計算中...</p>
@@ -104,6 +113,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, Teleport } from 'vue'
 import { getAllMaximumCandidates, type MaximumCandidatesResult } from '../services/maximumCandidatesService'
+import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable } from '../types'
 
 // Props
@@ -112,6 +122,9 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// 折叠功能
+const { isCollapsed, toggleCollapsed } = useCollapse()
 
 // 響應式數據
 const loading = ref(false)
@@ -228,6 +241,48 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 卡片头部布局 */
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.header-text {
+  flex: 1;
+}
+
+/* 折叠按钮样式 */
+.collapse-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--spacing-lg);
+  backdrop-filter: blur(10px);
+}
+
+.collapse-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.collapse-button svg {
+  transition: transform 0.3s ease;
+}
+
+.collapse-button svg.rotated {
+  transform: rotate(180deg);
+}
+
+/* 原有样式 */
 /* 載入和錯誤狀態 */
 .loading-state,
 .error-state {
