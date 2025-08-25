@@ -431,14 +431,6 @@ async function loadBuiltinConfig() {
   try {
     await builtinService.loadConfig()
     builtinTables.value = builtinService.getAvailableTables()
-    
-    // 设置默认选择的方案
-    if (builtinTables.value.length > 0) {
-      selectedBuiltinTable.value = 'yuhao-ming'  // 设置默认方案
-      
-      // 触发自动加载
-      await handleBuiltinTableChange()
-    }
   } catch (error) {
     console.error('載入內置碼表配置失敗:', error)
   }
