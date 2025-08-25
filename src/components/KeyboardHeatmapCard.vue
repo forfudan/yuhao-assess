@@ -828,10 +828,6 @@ const getKeyData = (key: string): KeyData => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .keyboard-heatmap {
-    padding: var(--spacing-md);
-  }
-  
   .module-container {
     gap: var(--spacing-md);
   }
@@ -859,9 +855,19 @@ const getKeyData = (key: string): KeyData => {
     font-size: 1.1rem;
   }
   
+  .keyboard-wrapper {
+    padding: var(--spacing-sm) 0; /* 减少包装器的padding */
+  }
+  
   .keyboard-layout {
     padding: var(--spacing-md);
-    min-width: 600px;
+    width: 100% !important; /* 强制适应容器宽度 */
+    min-width: unset !important; /* 移除最小宽度限制 */
+    max-width: 100%; /* 防止溢出 */
+  }
+  
+  .stats-container {
+    padding: var(--spacing-md); /* 减少统计容器的padding */
   }
   
   .stats-grid {
@@ -874,10 +880,6 @@ const getKeyData = (key: string): KeyData => {
 }
 
 @media (max-width: 480px) {
-  .keyboard-heatmap {
-    padding: var(--spacing-sm);
-  }
-  
   .global-controls {
     padding: var(--spacing-sm);
   }
@@ -899,8 +901,22 @@ const getKeyData = (key: string): KeyData => {
     font-size: 1rem;
   }
   
+  .keyboard-wrapper {
+    padding: 0; /* 移除包装器padding */
+    margin: 0 calc(-1 * var(--spacing-md)); /* 负边距来抵消card-content的padding */
+  }
+  
   .keyboard-layout {
-    min-width: 400px;
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: 100%;
+    padding: var(--spacing-sm);
+    border-radius: 0; /* 移除圆角以避免在边缘的视觉问题 */
+    border-left: none;
+    border-right: none;
+  }
+  
+  .stats-container {
     padding: var(--spacing-sm);
   }
   
