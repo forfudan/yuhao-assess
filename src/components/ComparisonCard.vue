@@ -321,6 +321,20 @@
             <div class="form-section">
               <h5>上傳碼表文件</h5>
               <p class="section-desc">選擇碼表格式並上傳 .txt 或 .csv 文件</p>
+              
+              <!-- 前綴碼選項 -->
+              <div class="prefix-toggle-section">
+                <label class="prefix-toggle">
+                  <input 
+                    type="checkbox" 
+                    v-model="uploadPrefixFlag"
+                    class="prefix-checkbox"
+                  >
+                  <span class="prefix-label">前綴碼方案</span>
+                  <span class="prefix-desc">（勾選表示這是前綴碼方案，影響空格鍵頻率計算）</span>
+                </label>
+              </div>
+              
               <div class="upload-area">
                 <input 
                   ref="fileInputCharCode"
@@ -432,6 +446,7 @@ const selectedBuiltinScheme = ref('')
 const availableBuiltinSchemes = ref<BuiltinScheme[]>([])
 const fileInputCharCode = ref<HTMLInputElement>()
 const fileInputCodeChar = ref<HTMLInputElement>()
+const uploadPrefixFlag = ref(false) // 用户上传文件时的前缀码标志
 
 // 排序相關狀態
 type SortDirection = 'desc' | 'asc' | 'none'
@@ -728,7 +743,7 @@ const loadCurrentUserScheme = async () => {
 }
 
 // 計算方案數據
-async function calculateSchemeData(codeTable: CodeTable): Promise<SchemeData> {
+async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Promise<SchemeData> {
   // 從碼表鍵中提取所有單個字符
   const allUniqueChars = new Set<string>()
   for (const key of codeTable.keys()) {
@@ -928,7 +943,7 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     const codeTable = parseCodeTableText(text, format)
     
     newScheme.codeTable = codeTable
-    newScheme.data = await calculateSchemeData(codeTable)
+    newScheme.data = await calculateSchemeData(codeTable, uploadPrefixFlag.value)
     newScheme.isCalculating = false
     
     // 立即保存數據
@@ -1439,6 +1454,47 @@ function clearAllSchemes() {
   gap: 12px;
   align-items: flex-end;
   flex-wrap: wrap;
+}
+
+.prefix-toggle-section {
+  margin-bottom: 15px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.prefix-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.prefix-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 2px solid #d1d5db;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prefix-checkbox:checked {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.prefix-label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.prefix-desc {
+  color: #6b7280;
+  font-size: 0.8rem;
 }
 
 .scheme-select,

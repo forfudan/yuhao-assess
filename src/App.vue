@@ -458,7 +458,12 @@ function calculateMaxCodeLength(codeTable: CodeTable): number {
 // 處理碼表上傳成功
 const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean }) => {
   codeTable.value = data.codeTable
-  codeTableName.value = data.tableKey || data.fileName.replace(/\.(txt|csv)$/, '') // 优先使用tableKey，用于内置方案前缀码检测
+  // 如果是内置方案，从fileName中提取名称（格式：内置方案：方案名）
+  if (data.tableKey && data.fileName.startsWith('內置方案：')) {
+    codeTableName.value = data.fileName.replace('內置方案：', '')
+  } else {
+    codeTableName.value = data.fileName.replace(/\.(txt|csv)$/, '')
+  }
   uploadPrefixFlag.value = data.isPrefix || false  // 设置用户上传时的前缀码标记
   
   // 计算最大码长（全局变量，计算一次后不再改变）
