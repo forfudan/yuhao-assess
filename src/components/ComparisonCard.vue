@@ -737,23 +737,10 @@ async function calculateSchemeData(codeTable: CodeTable): Promise<SchemeData> {
     }
   }
   
-  // 使用当前码表的已处理结果
-  const processedTables = codeTableProcessingService.getProcessedTables()
-  let fullCodeTable: CodeTable
-  
-  // 如果没有处理结果，说明是对比不同的方案，临时处理
-  if (!processedTables) {
-    console.log('对比方案码表，进行临时处理...')
-    codeTableProcessingService.processCodeTable(codeTable, {
-      isPrefix: false,  // 对比时使用默认参数
-      maxLength: 4      // 对比时使用默认参数
-    })
-    const newProcessedTables = codeTableProcessingService.getProcessedTables()
-    fullCodeTable = newProcessedTables?.full || new Map()
-  } else {
-    // 使用已有的处理结果（当前方案）
-    fullCodeTable = processedTables.full
-  }
+  // 为对比方案独立处理码表，不使用单例服务以避免干扰当前方案
+  const { generateFullCodeTable } = await import('../services/index')
+  const fullResult = generateFullCodeTable(codeTable)
+  const fullCodeTable = fullResult.codeTable
   
   // 加載所有字頻數據
   const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyUnified] = await Promise.all([
