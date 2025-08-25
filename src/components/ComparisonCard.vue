@@ -23,6 +23,20 @@
       </div>
       
       <div v-else>
+        <!-- Tab 切換器 -->
+        <div class="tabs-container">
+          <div class="tab-list">
+            <button 
+              v-for="tab in tabs" 
+              :key="tab.key"
+              :class="['tab-button', { 'active': activeTab === tab.key }]"
+              @click="activeTab = tab.key"
+            >
+              {{ tab.label }}
+            </button>
+          </div>
+        </div>
+
         <!-- 對比表格 -->
         <div class="comparison-table-container">
           <table class="comparison-table">
@@ -34,105 +48,113 @@
                     <span class="sort-arrow">{{ getSortArrow('name') }}</span>
                   </div>
                 </th>
-                <th class="metric-header sortable" @click="handleSort('dynamicDupRate')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>知乎動態選重率</span>
-                      <span class="sort-arrow">{{ getSortArrow('dynamicDupRate') }}</span>
+                
+                <!-- 動態選重 Tab 的列 -->
+                <template v-if="activeTab === 'dynamic'">
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRate')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>知乎動態選重率</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRate') }}</span>
+                      </div>
+                      <small>基於知乎字頻</small>
                     </div>
-                    <small>基於知乎字頻</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('dynamicDupRateSC')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>簡體動態選重率</span>
-                      <span class="sort-arrow">{{ getSortArrow('dynamicDupRateSC') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateSC')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>簡體動態選重率</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateSC') }}</span>
+                      </div>
+                      <small>基於簡體字頻</small>
                     </div>
-                    <small>基於簡體字頻</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('dynamicDupRateTC')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>繁體動態選重率</span>
-                      <span class="sort-arrow">{{ getSortArrow('dynamicDupRateTC') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateTC')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>繁體動態選重率</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateTC') }}</span>
+                      </div>
+                      <small>基於繁體字頻</small>
                     </div>
-                    <small>基於繁體字頻</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('dynamicDupRateUnified')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>聯合動態選重率</span>
-                      <span class="sort-arrow">{{ getSortArrow('dynamicDupRateUnified') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateUnified')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>聯合動態選重率</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateUnified') }}</span>
+                      </div>
+                      <small>基於繁簡聯合字頻</small>
                     </div>
-                    <small>基於繁簡聯合字頻</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('gb2312DuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>GB2312</span>
-                      <span class="sort-arrow">{{ getSortArrow('gb2312DuplicateChars') }}</span>
+                  </th>
+                </template>
+                
+                <!-- 靜態重碼 Tab 的列 -->
+                <template v-else-if="activeTab === 'static'">
+                  <th class="metric-header sortable" @click="handleSort('gb2312DuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>GB2312</span>
+                        <span class="sort-arrow">{{ getSortArrow('gb2312DuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('guoziDuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>國字常用</span>
-                      <span class="sort-arrow">{{ getSortArrow('guoziDuplicateChars') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('guoziDuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>國字常用</span>
+                        <span class="sort-arrow">{{ getSortArrow('guoziDuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('cjkBasicDuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>CJK基本</span>
-                      <span class="sort-arrow">{{ getSortArrow('cjkBasicDuplicateChars') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkBasicDuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>CJK基本</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkBasicDuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('cjkToADuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>到CJK-A</span>
-                      <span class="sort-arrow">{{ getSortArrow('cjkToADuplicateChars') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkToADuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>到CJK-A</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToADuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('cjkToBDuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>到CJK-B</span>
-                      <span class="sort-arrow">{{ getSortArrow('cjkToBDuplicateChars') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkToBDuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>到CJK-B</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToBDuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('cjkToFDuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>到CJK-F</span>
-                      <span class="sort-arrow">{{ getSortArrow('cjkToFDuplicateChars') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkToFDuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>到CJK-F</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToFDuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
-                <th class="metric-header sortable" @click="handleSort('cjkToIDuplicateChars')">
-                  <div class="metric-header-content">
-                    <div class="header-title">
-                      <span>到CJK-I</span>
-                      <span class="sort-arrow">{{ getSortArrow('cjkToIDuplicateChars') }}</span>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkToIDuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>到CJK-I</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToIDuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
                     </div>
-                    <small>重碼字數</small>
-                  </div>
-                </th>
+                  </th>
+                </template>
                 <th class="actions-header">操作</th>
               </tr>
             </thead>
@@ -145,105 +167,113 @@
                     <span v-else class="scheme-source">上傳方案</span>
                   </div>
                 </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatRate(scheme.data?.dynamicDupRate) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatRate(scheme.data?.dynamicDupRateSC) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatRate(scheme.data?.dynamicDupRateTC) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatRate(scheme.data?.dynamicDupRateUnified) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.gb2312DuplicateChars) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.guoziDuplicateChars) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.cjkBasicDuplicateChars) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.cjkToADuplicateChars) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.cjkToBDuplicateChars) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.cjkToFDuplicateChars) }}
-                  </span>
-                </td>
-                <td class="metric-cell">
-                  <div v-if="scheme.isCalculating" class="calculating">
-                    <div class="mini-spinner"></div>
-                    <span>計算中</span>
-                  </div>
-                  <span v-else class="metric-value">
-                    {{ formatNumber(scheme.data?.cjkToIDuplicateChars) }}
-                  </span>
-                </td>
+                
+                <!-- 動態選重 Tab 的數據列 -->
+                <template v-if="activeTab === 'dynamic'">
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamicDupRate) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamicDupRateSC) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamicDupRateTC) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamicDupRateUnified) }}
+                    </span>
+                  </td>
+                </template>
+                
+                <!-- 靜態重碼 Tab 的數據列 -->
+                <template v-else-if="activeTab === 'static'">
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.gb2312DuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.guoziDuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.cjkBasicDuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.cjkToADuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.cjkToBDuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.cjkToFDuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.cjkToIDuplicateChars) }}
+                    </span>
+                  </td>
+                </template>
                 <td class="actions-cell">
                   <button 
                     v-if="canRemoveScheme(scheme)" 
@@ -449,6 +479,13 @@ const availableBuiltinSchemes = ref<BuiltinScheme[]>([])
 const fileInputCharCode = ref<HTMLInputElement>()
 const fileInputCodeChar = ref<HTMLInputElement>()
 const uploadPrefixFlag = ref(false) // 用户上传文件时的前缀码标志
+
+// Tab 相關狀態
+const activeTab = ref<'dynamic' | 'static'>('dynamic')
+const tabs = [
+  { key: 'dynamic', label: '動態選重' },
+  { key: 'static', label: '靜態重碼' }
+] as const
 
 // 排序相關狀態
 type SortDirection = 'desc' | 'asc' | 'none'
@@ -1079,6 +1116,45 @@ function clearAllSchemes() {
 
 .collapse-button svg {
   transition: transform 0.3s ease;
+}
+
+.collapse-button svg.rotated {
+  transform: rotate(180deg);
+}
+
+/* Tab 样式 */
+.tabs-container {
+  margin-bottom: var(--spacing-lg);
+}
+
+.tab-list {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: var(--spacing-md);
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tab-button:hover {
+  color: #374151;
+  background-color: #f9fafb;
+}
+
+.tab-button.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  background-color: #eff6ff;
 }
 
 .collapse-button svg.rotated {
