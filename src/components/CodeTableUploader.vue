@@ -384,8 +384,19 @@ const processFile = async () => {
 // 載入內置碼表配置
 async function loadBuiltinConfig() {
   try {
+    console.log('🔍 [isPrefix追踪] 开始加载配置文件')
     await builtinService.loadConfig()
+    console.log('🔍 [isPrefix追踪] 配置文件加载完成')
     builtinTables.value = builtinService.getAvailableTables()
+    
+    // 设置默认选择的方案
+    if (builtinTables.value.length > 0) {
+      selectedBuiltinTable.value = 'yuhao-ming'  // 设置默认方案
+      console.log('🔍 [isPrefix追踪] 设置默认选择方案为:', selectedBuiltinTable.value)
+      
+      // 触发自动加载
+      await handleBuiltinTableChange()
+    }
   } catch (error) {
     console.error('載入內置碼表配置失敗:', error)
   }
@@ -393,13 +404,18 @@ async function loadBuiltinConfig() {
 
 // 處理內置碼表選擇變化
 async function handleBuiltinTableChange() {
+  console.log('🔍 [isPrefix追踪] handleBuiltinTableChange触发，选择的方案:', selectedBuiltinTable.value)
+  
   // 當選擇內置碼表時，清除檔案選擇
   if (selectedBuiltinTable.value) {
     selectedFile.value = null
     previewData.value = []
     
+    console.log('🔍 [isPrefix追踪] 准备调用loadBuiltinTable')
     // 自動載入內置碼表
     await loadBuiltinTable()
+  } else {
+    console.log('🔍 [isPrefix追踪] selectedBuiltinTable为空，不执行loadBuiltinTable')
   }
 }
 
@@ -410,12 +426,20 @@ async function loadBuiltinTable() {
   try {
     isUploading.value = true
     
+    console.log('🔍 [isPrefix追踪] 开始下载内置码表:', selectedBuiltinTable.value)
     const result = await builtinService.downloadCodeTable(selectedBuiltinTable.value)
+    console.log('🔍 [isPrefix追踪] 码表下载完成')
     
     // 获取内置方案的前缀码配置
     const tableConfig = builtinService.getTableConfig(selectedBuiltinTable.value)
-    const isBuiltinPrefix = tableConfig?.prefix || false
+    console.log('🔍 [isPrefix追踪] 方案key:', selectedBuiltinTable.value)
+    console.log('🔍 [isPrefix追踪] 获取到的配置对象:', tableConfig)
     
+    const isBuiltinPrefix = tableConfig?.prefix || false
+    console.log('🔍 [isPrefix追踪] 配置中的prefix属性:', tableConfig?.prefix)
+    console.log('🔍 [isPrefix追踪] 最终isBuiltinPrefix值:', isBuiltinPrefix)
+    
+    console.log('🔍 [isPrefix追踪] 准备发送uploadSuccess事件')
     emit('uploadSuccess', {
       codeTable: result.codeTable,
       fileName: `內置方案：${builtinTables.value.find(t => t.key === selectedBuiltinTable.value)?.name || selectedBuiltinTable.value}`,
@@ -423,6 +447,7 @@ async function loadBuiltinTable() {
       tableKey: selectedBuiltinTable.value,  // 添加tableKey用于前缀码检测
       isPrefix: isBuiltinPrefix  // 使用配置中的前缀码属性
     })
+    console.log('🔍 [isPrefix追踪] uploadSuccess事件已发送')
   } catch (error) {
     emit('uploadError', `載入內置碼表失敗: ${error instanceof Error ? error.message : String(error)}`)
   } finally {

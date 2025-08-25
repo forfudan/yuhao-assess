@@ -570,20 +570,15 @@ async function calculateAllMetrics() {
     // 使用提取的唯一字符代替原来的码表键
     const allChars = allUniqueChars
     
-    // 使用缓存的处理结果，而不是重新生成
+    // 使用缓存的处理结果，由App.vue统一处理
     const processedTables = codeTableProcessingService.getProcessedTables()
     if (!processedTables) {
-      console.error('缓存的码表处理结果不可用，重新处理...')
-      codeTableProcessingService.processCodeTable(props.codeTable)
-      const newProcessedTables = codeTableProcessingService.getProcessedTables()
-      if (!newProcessedTables) {
-        console.error('无法处理码表')
-        return
-      }
+      console.error('缓存的码表处理结果不可用，请先在App.vue中处理码表')
+      return
     }
     
-    const fullCodeTable = processedTables?.full || new Map()
-    const shortCodeTable = processedTables?.short || new Map()
+    const fullCodeTable = processedTables.full
+    const shortCodeTable = processedTables.short
     
     // 加载所有字频数据
     const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyUnified] = await Promise.all([

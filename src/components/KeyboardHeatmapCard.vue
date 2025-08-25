@@ -248,9 +248,27 @@ const processedCodeTable = computed(() => {
   const processedTables = codeTableProcessingService.getProcessedTables()
   if (!processedTables) return new Map()
   
+  // 调试：输出前100个末尾是下划线的编码
+  debugUnderscoreEndings(processedTables.fullWithSelection)
+  
   // 使用全码加选重按键表，注意下划线代表空格
   return processedTables.fullWithSelection
 })
+
+// 调试函数：分析末尾是下划线的编码
+const debugUnderscoreEndings = (codeTable: CodeTable) => {
+  const underscoreEndingCodes: string[] = []
+  
+  for (const [char, codes] of codeTable.entries()) {
+    for (const code of codes) {
+      if (code.endsWith('_')) {
+        underscoreEndingCodes.push(`${char}: ${code}`)
+      }
+    }
+  }
+  
+  // 删除调试输出，只保留isPrefix相关的追踪
+}
 
 // 监听码表变化，确保切换方案时热力图会刷新
 watch(

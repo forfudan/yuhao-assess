@@ -19,6 +19,7 @@ export interface ProcessedCodeTables {
 export class CodeTableProcessingService {
   private static instance: CodeTableProcessingService
   private processedTables: ProcessedCodeTables | null = null
+  private processingOptions: { isPrefix: boolean; maxLength: number } | null = null
 
   private constructor() {}
 
@@ -33,28 +34,25 @@ export class CodeTableProcessingService {
    * 处理原始码表，生成所有需要的派生码表
    */
   processCodeTable(originalCodeTable: CodeTable, options?: { isPrefix?: boolean, maxLength?: number }): ProcessedCodeTables {
-    console.log('开始处理码表...')
+    console.log('🔍 [isPrefix追踪] 处理服务收到参数:', options)
     
     // 生成全码表和简码表
     const fullResult = generateFullCodeTable(originalCodeTable)
     const shortResult = generateShortCodeTable(originalCodeTable)
     
     // 计算最大码长
-    const maxLength = options?.maxLength || this.calculateMaxCodeLength(fullResult.codeTable)
+    const maxLength = options?.maxLength || this.calculateMaxCodeLength(originalCodeTable)  // 使用原始码表计算
     const isPrefix = options?.isPrefix || false
     
-    console.log(`码表处理参数: maxLength=${maxLength}, isPrefix=${isPrefix}`)
-    console.log(`原始码表大小: ${originalCodeTable.size}`)
-    console.log(`全码表大小: ${fullResult.codeTable.size}`)
-    console.log(`简码表大小: ${shortResult.codeTable.size}`)
+    // 保存处理选项
+    this.processingOptions = { isPrefix, maxLength }
+    
+    console.log(`🔍 [isPrefix追踪] 最终处理参数: maxLength=${maxLength}, isPrefix=${isPrefix}`)
     
     // 生成两种加选重按键的码表
     // 无论全码表还是简码表，都使用相同的逻辑：根据是否前缀码决定是否补空格
     const fullWithSelection = this.generateCodeTableWithSelection(fullResult.codeTable, maxLength, isPrefix)
     const shortWithSelection = this.generateCodeTableWithSelection(shortResult.codeTable, maxLength, isPrefix)
-    
-    console.log(`处理后全码表大小: ${fullWithSelection.size}`)
-    console.log(`处理后简码表大小: ${shortWithSelection.size}`)
     
     this.processedTables = {
       original: originalCodeTable,
@@ -64,8 +62,39 @@ export class CodeTableProcessingService {
       shortWithSelection: shortWithSelection
     }
     
-    console.log('码表处理完成')
+    console.log('🔍 [isPrefix追踪] 码表处理完成')
     return this.processedTables
+  }
+
+  private debugUnderscoreInFullWithSelection(fullWithSelection: CodeTable) {
+    console.log('=== 全码加选重按键表调试 ===')
+    const underscoreCodes: string[] = []
+    const allCodes: string[] = []
+    
+    for (const [char, codes] of Object.entries(fullWithSelection)) {
+      for (const code of codes) {
+        allCodes.push(`${char}: ${code}`)
+        if (code.endsWith('_')) {
+          underscoreCodes.push(`${char}: ${code}`)
+          if (underscoreCodes.length >= 10) break
+        }
+      }
+      if (underscoreCodes.length >= 10 && allCodes.length >= 100) break
+    }
+    
+    // 输出前10个下划线编码
+    console.log('前10个末尾是下划线的编码:')
+    underscoreCodes.forEach((item, index) => {
+      console.log(`${index + 1}. ${item}`)
+    })
+    
+    // 输出前100个所有编码
+    console.log('前100个全码加选重编码:')
+    allCodes.slice(0, 100).forEach((item, index) => {
+      console.log(`${index + 1}. ${item}`)
+    })
+    
+    console.log('=== 全码加选重按键表调试结束 ===')
   }
 
   /**
@@ -73,6 +102,10 @@ export class CodeTableProcessingService {
    */
   getProcessedTables(): ProcessedCodeTables | null {
     return this.processedTables
+  }
+
+  getProcessingOptions(): { isPrefix: boolean; maxLength: number } | null {
+    return this.processingOptions
   }
 
   /**

@@ -192,6 +192,7 @@ const uploadStatus = ref<UploadStatus | null>(null)
 const analysisData = ref<CodeTableAnalysis | null>(null)
 const analysisResults = ref(null)
 const uploadPrefixFlag = ref<boolean>(false)
+const globalMaxLength = ref<number>(4) // 全局最大码长，计算一次后不再改变
 
 // 上传卡片引用
 const uploaderCardRef = ref()
@@ -292,6 +293,10 @@ const isDarkMode = ref(false)
 
 // 初始化主題和數據恢復
 onMounted(() => {
+  // 临时清除localStorage进行调试
+  console.log('🔍 [isPrefix追踪] 清除localStorage中的旧数据进行调试')
+  localStorage.removeItem('savedCodeTable')
+  
   // 初始化主題，默認淺色模式
   const savedTheme = localStorage.getItem('theme')
   isDarkMode.value = savedTheme === 'dark'
@@ -319,9 +324,13 @@ const saveCodeTableData = () => {
     const data = {
       codeTable: Array.from(codeTable.value.entries()),
       analysisData: analysisData.value,
+      codeTableName: codeTableName.value,
+      uploadPrefixFlag: uploadPrefixFlag.value,
+      globalMaxLength: globalMaxLength.value,
       timestamp: Date.now()
     }
     localStorage.setItem('savedCodeTable', JSON.stringify(data))
+    console.log('🔍 [isPrefix追踪] 保存码表数据，isPrefix:', uploadPrefixFlag.value)
   }
 }
 
@@ -339,10 +348,25 @@ const restoreCodeTableData = () => {
         return
       }
       
+      console.log('🔍 [isPrefix追踪] 从localStorage恢复数据')
+      console.log('🔍 [isPrefix追踪] 恢复的isPrefix:', data.uploadPrefixFlag)
+      console.log('🔍 [isPrefix追踪] 恢复的codeTableName:', data.codeTableName)
+      
       // 恢復碼表數據
       codeTable.value = new Map(data.codeTable)
       analysisData.value = data.analysisData
+      codeTableName.value = data.codeTableName || ''
+      uploadPrefixFlag.value = data.uploadPrefixFlag || false
+      globalMaxLength.value = data.globalMaxLength || 4
+      
+      // 重新处理码表以确保processing service有正确的数据
+      codeTableProcessingService.processCodeTable(codeTable.value, {
+        isPrefix: uploadPrefixFlag.value,
+        maxLength: globalMaxLength.value
+      })
+      
       analysisReady.value = true
+      console.log('🔍 [isPrefix追踪] localStorage数据恢复完成，重新处理码表')
     }
   } catch (error) {
     console.error('恢復碼表數據失敗:', error)
@@ -412,17 +436,58 @@ function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
   }
 }
 
+// 计算最大码长的测试字符
+const TEST_CHARS = ['灌', '瓣', '璧', '豁', '糯', '籍', '矗', '瓤', '嚼', '瞻', '覆', '馨', '徽', '警', '繁', '霜', '霞']
+
+// 计算最大码长
+function calculateMaxCodeLength(codeTable: CodeTable): number {
+  let maxLength = 0
+  
+  // 首先尝试使用测试字符
+  for (const char of TEST_CHARS) {
+    const codes = codeTable.get(char)
+    if (codes && codes.length > 0) {
+      const codeLength = codes[0].length
+      maxLength = Math.max(maxLength, codeLength)
+    }
+  }
+  
+  // 如果测试字符没有找到合适的结果，遍历所有字符
+  if (maxLength === 0) {
+    for (const codes of codeTable.values()) {
+      if (codes && codes.length > 0) {
+        const codeLength = codes[0].length
+        maxLength = Math.max(maxLength, codeLength)
+      }
+    }
+  }
+  
+  return maxLength || 4 // 默认4位
+}
+
 // 處理碼表上傳成功
 const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean }) => {
-  console.log('开始处理上传的码表...')
+  console.log('🔍 [isPrefix追踪] App.vue收到上传数据')
+  console.log('🔍 [isPrefix追踪] 数据中的isPrefix:', data.isPrefix)
+  console.log('🔍 [isPrefix追踪] 数据中的tableKey:', data.tableKey)
   
   codeTable.value = data.codeTable
   codeTableName.value = data.tableKey || data.fileName.replace(/\.(txt|csv)$/, '') // 优先使用tableKey，用于内置方案前缀码检测
   uploadPrefixFlag.value = data.isPrefix || false  // 设置用户上传时的前缀码标记
   
+  console.log('🔍 [isPrefix追踪] 设置uploadPrefixFlag为:', uploadPrefixFlag.value)
+  
+  // 计算最大码长（全局变量，计算一次后不再改变）
+  globalMaxLength.value = calculateMaxCodeLength(data.codeTable)
+  console.log(`🔍 [isPrefix追踪] 计算得到的全局最大码长: ${globalMaxLength.value}`)
+  
+  const finalIsPrefix = data.isPrefix || false
+  console.log('🔍 [isPrefix追踪] 最终传递给处理服务的isPrefix:', finalIsPrefix)
+  
   // 立即处理码表，生成所有派生版本
   codeTableProcessingService.processCodeTable(data.codeTable, {
-    isPrefix: data.isPrefix || false
+    isPrefix: finalIsPrefix,
+    maxLength: globalMaxLength.value
   })
   
   analysisReady.value = true
