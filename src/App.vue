@@ -17,16 +17,20 @@
         <div class="header-content">
           <div class="logo">
             <h1>宇浩測評網</h1>
-            <span class="subtitle">輸入法性能測評工具</span>
           </div>
-          <nav class="nav">
-            <a href="https://shurufa.app" target="_blank" class="nav-link">
-              宇浩輸入法
-            </a>
-            <a href="https://github.com/forfudan/yu" target="_blank" class="nav-link">
-              GitHub
-            </a>
-          </nav>
+          <div class="header-actions">
+            <button @click="toggleAllCards" class="action-button" :title="allCardsCollapsed ? '展開所有卡片' : '摺疊所有卡片'">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path v-if="allCardsCollapsed" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+                <path v-else d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+              </svg>
+            </button>
+            <button @click="toggleCardDirectory" class="action-button" title="卡片目錄">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </header>
@@ -34,6 +38,55 @@
     <!-- 主要內容區域 - 設計為單列模塊布局 -->
     <main class="main">
       <div class="container">
+        <!-- 卡片目录 -->
+        <div v-if="showCardDirectory" class="card-directory">
+          <div class="directory-header">
+            <h3>卡片目錄</h3>
+            <button @click="toggleCardDirectory" class="close-button">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="directory-list">
+            <div class="directory-item">
+              <span class="directory-icon">📤</span>
+              <span class="directory-title">碼表上傳</span>
+              <span class="directory-description">上傳輸入法碼表文件</span>
+            </div>
+            <div v-if="analysisReady" class="directory-item">
+              <span class="directory-icon">🔢</span>
+              <span class="directory-title">重碼數據分析</span>
+              <span class="directory-description">分析重碼率和選重率</span>
+            </div>
+            <div v-if="analysisReady" class="directory-item">
+              <span class="directory-icon">📊</span>
+              <span class="directory-title">最大候選項個數</span>
+              <span class="directory-description">分析候選項數量分布</span>
+            </div>
+            <div v-if="analysisReady" class="directory-item">
+              <span class="directory-icon">⚡</span>
+              <span class="directory-title">全碼速度當量分析</span>
+              <span class="directory-description">分析按鍵組合速度</span>
+            </div>
+            <div v-if="analysisReady" class="directory-item">
+              <span class="directory-icon">🆚</span>
+              <span class="directory-title">方案對比</span>
+              <span class="directory-description">對比不同輸入法方案</span>
+            </div>
+            <div v-if="analysisReady" class="directory-item">
+              <span class="directory-icon">⌨️</span>
+              <span class="directory-title">鍵位熱力圖</span>
+              <span class="directory-description">可視化鍵位分布</span>
+            </div>
+            <div v-if="analysisReady" class="directory-item">
+              <span class="directory-icon">📋</span>
+              <span class="directory-title">碼表分析</span>
+              <span class="directory-description">碼表基本信息統計</span>
+            </div>
+          </div>
+        </div>
+
         <!-- 
          卡片容器 
          所有的卡片使用統一的樣式：
@@ -51,22 +104,50 @@
           />
 
           <!-- 重碼數據分析卡片 -->
-          <DuplicateAnalysisCard v-if="analysisReady" :code-table="codeTable" />
+          <DuplicateAnalysisCard 
+            v-if="analysisReady" 
+            ref="duplicateAnalysisCardRef"
+            :code-table="codeTable" 
+          />
 
           <!-- 最大候選個數卡片 -->
-          <MaximumCandidatesCard v-if="analysisReady" :code-table="codeTable" />
+          <MaximumCandidatesCard 
+            v-if="analysisReady" 
+            ref="maximumCandidatesCardRef"
+            :code-table="codeTable" 
+          />
 
           <!-- 速度當量卡片 -->
-          <SpeedEquivCard v-if="analysisReady" :code-table="codeTable" :code-table-name="codeTableName" :initial-prefix="uploadPrefixFlag" />
+          <SpeedEquivCard 
+            v-if="analysisReady" 
+            ref="speedEquivCardRef"
+            :code-table="codeTable" 
+            :code-table-name="codeTableName" 
+            :initial-prefix="uploadPrefixFlag" 
+          />
 
           <!-- 方案對比卡片 -->
-          <ComparisonCard v-if="analysisReady" :currentCodeTable="codeTable" :currentCodeTableName="codeTableName" />
+          <ComparisonCard 
+            v-if="analysisReady" 
+            ref="comparisonCardRef"
+            :currentCodeTable="codeTable" 
+            :currentCodeTableName="codeTableName" 
+          />
 
           <!-- 鍵位熱力圖卡片 -->
-          <KeyboardHeatmapCard v-if="analysisReady" :code-table="codeTable" :analysis-ready="analysisReady" />
+          <KeyboardHeatmapCard 
+            v-if="analysisReady" 
+            ref="keyboardHeatmapCardRef"
+            :code-table="codeTable" 
+            :analysis-ready="analysisReady" 
+          />
 
           <!-- 碼表分析卡片 -->
-          <CodeTableAnalysisCard v-if="analysisReady" :analysis="analysisData" />
+          <CodeTableAnalysisCard 
+            v-if="analysisReady" 
+            ref="codeTableAnalysisCardRef"
+            :analysis="analysisData" 
+          />
         </div>
       </div>
     </main>
@@ -109,6 +190,52 @@ const uploadPrefixFlag = ref<boolean>(false)
 
 // 上传卡片引用
 const uploaderCardRef = ref()
+const duplicateAnalysisCardRef = ref()
+const maximumCandidatesCardRef = ref()
+const speedEquivCardRef = ref()
+const comparisonCardRef = ref()
+const keyboardHeatmapCardRef = ref()
+const codeTableAnalysisCardRef = ref()
+
+// 卡片目录和折叠状态
+const showCardDirectory = ref(false)
+const allCardsCollapsed = ref(false)
+
+// 切换卡片目录显示
+const toggleCardDirectory = () => {
+  showCardDirectory.value = !showCardDirectory.value
+}
+
+// 切换所有卡片的折叠状态
+const toggleAllCards = () => {
+  allCardsCollapsed.value = !allCardsCollapsed.value
+  
+  // 获取所有卡片的引用
+  const cardRefs = [
+    uploaderCardRef.value,
+    duplicateAnalysisCardRef.value,
+    maximumCandidatesCardRef.value,
+    speedEquivCardRef.value,
+    comparisonCardRef.value,
+    keyboardHeatmapCardRef.value,
+    codeTableAnalysisCardRef.value
+  ]
+  
+  // 根据状态折叠或展开所有卡片
+  cardRefs.forEach(cardRef => {
+    if (cardRef) {
+      if (allCardsCollapsed.value) {
+        if (typeof cardRef.collapse === 'function') {
+          cardRef.collapse()
+        }
+      } else {
+        if (typeof cardRef.expand === 'function') {
+          cardRef.expand()
+        }
+      }
+    }
+  })
+}
 
 // 主題相關
 const isDarkMode = ref(false)
@@ -305,29 +432,108 @@ const handleUploadError = (error: string) => {
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--color-primary);
-  margin-bottom: var(--spacing-xs);
+  margin: 0; /* 移除下边距，因为删除了副标题 */
 }
 
-.subtitle {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-}
-
-.nav {
+/* 头部操作按钮 */
+.header-actions {
   display: flex;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
   align-items: center;
 }
 
-.nav-link {
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease-in-out;
+.action-button {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 8px;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.nav-link:hover {
-  color: var(--color-primary);
+.action-button:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: scale(1.05);
+}
+
+/* 卡片目录样式 */
+.card-directory {
+  background: var(--color-bg-secondary);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: var(--spacing-xl);
+  overflow: hidden;
+}
+
+.directory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+}
+
+.directory-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.close-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 6px;
+  padding: 6px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.directory-list {
+  padding: var(--spacing-lg);
+}
+
+.directory-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.directory-item:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.directory-icon {
+  font-size: 1.25rem;
+  margin-right: var(--spacing-md);
+}
+
+.directory-title {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-right: var(--spacing-md);
+  min-width: 140px;
+}
+
+.directory-description {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
 }
 
 /* 主要内容区域 - 卡片布局 */
@@ -389,6 +595,33 @@ const handleUploadError = (error: string) => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .header-actions {
+    gap: var(--spacing-sm);
+  }
+  
+  .action-button {
+    padding: 6px;
+  }
+  
+  .directory-header {
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+  
+  .directory-list {
+    padding: var(--spacing-md);
+  }
+  
+  .directory-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .directory-title {
+    min-width: auto;
+    margin-bottom: var(--spacing-xs);
+  }
+  
   .main {
     padding: var(--spacing-lg) 0;
   }

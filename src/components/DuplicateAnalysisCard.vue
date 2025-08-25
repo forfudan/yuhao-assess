@@ -223,7 +223,14 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // 折叠功能
-const { isCollapsed, toggleCollapsed } = useCollapse()
+const { isCollapsed, toggleCollapsed, collapse, expand } = useCollapse()
+
+// 暴露折叠方法给父组件
+defineExpose({
+  collapse,
+  expand,
+  toggle: toggleCollapsed
+})
 
 // 双值数据结构
 interface DualValue {
