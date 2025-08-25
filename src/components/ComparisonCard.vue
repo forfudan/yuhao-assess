@@ -282,103 +282,105 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- 添加方案表單 -->
-      <div v-if="showAddForm" class="add-form-overlay">
-        <div class="add-form">
-          <div class="form-header">
-            <h4>添加對比方案</h4>
-            <button @click="cancelAdd" class="close-btn">✕</button>
+  <!-- 添加方案表單 - 使用 Teleport 確保浮在最上層 -->
+  <Teleport to="body">
+    <div v-if="showAddForm" class="add-form-overlay">
+      <div class="add-form">
+        <div class="form-header">
+          <h4>添加對比方案</h4>
+          <button @click="cancelAdd" class="close-btn">✕</button>
+        </div>
+        
+        <div class="form-content">
+          <!-- 內置方案選項 -->
+          <div class="form-section">
+            <h5>內置方案</h5>
+            <p class="section-desc">選擇預設的輸入法方案</p>
+            <div class="builtin-options">
+              <select v-model="selectedBuiltinScheme" @change="onBuiltinSchemeSelect" class="scheme-select">
+                <option value="">請選擇內置方案</option>
+                <option v-for="scheme in availableBuiltinSchemes" :key="scheme.id" :value="scheme.id">
+                  {{ scheme.name }}
+                </option>
+              </select>
+              <button 
+                @click="addAllBuiltinSchemes" 
+                :disabled="isAdding || availableBuiltinSchemes.length === 0"
+                class="add-all-btn"
+              >
+                選擇所有
+              </button>
+            </div>
           </div>
-          
-          <div class="form-content">
-            <!-- 內置方案選項 -->
-            <div class="form-section">
-              <h5>內置方案</h5>
-              <p class="section-desc">選擇預設的輸入法方案</p>
-              <div class="builtin-options">
-                <select v-model="selectedBuiltinScheme" @change="onBuiltinSchemeSelect" class="scheme-select">
-                  <option value="">請選擇內置方案</option>
-                  <option v-for="scheme in availableBuiltinSchemes" :key="scheme.id" :value="scheme.id">
-                    {{ scheme.name }}
-                  </option>
-                </select>
-                <button 
-                  @click="addAllBuiltinSchemes" 
-                  :disabled="isAdding || availableBuiltinSchemes.length === 0"
-                  class="add-all-btn"
-                >
-                  選擇所有
-                </button>
-              </div>
-            </div>
 
-            <div class="form-divider">
-              <span>或</span>
-            </div>
+          <div class="form-divider">
+            <span>或</span>
+          </div>
 
-            <!-- 文件上傳選項 -->
-            <div class="form-section">
-              <h5>上傳碼表文件</h5>
-              <p class="section-desc">選擇碼表格式並上傳 .txt 或 .csv 文件</p>
-              
-              <!-- 前綴碼選項 -->
-              <div class="prefix-toggle-section">
-                <label class="prefix-toggle">
-                  <input 
-                    type="checkbox" 
-                    v-model="uploadPrefixFlag"
-                    class="prefix-checkbox"
-                  >
-                  <span class="prefix-label">前綴碼方案</span>
-                  <span class="prefix-desc">（勾選表示這是前綴碼方案，影響空格鍵頻率計算）</span>
-                </label>
-              </div>
-              
-              <div class="upload-area">
+          <!-- 文件上傳選項 -->
+          <div class="form-section">
+            <h5>上傳碼表文件</h5>
+            <p class="section-desc">選擇碼表格式並上傳 .txt 或 .csv 文件</p>
+            
+            <!-- 前綴碼選項 -->
+            <div class="prefix-toggle-section">
+              <label class="prefix-toggle">
                 <input 
-                  ref="fileInputCharCode"
-                  type="file" 
-                  @change="(e) => handleFileUpload(e, 'char_first')" 
-                  accept=".txt,.csv"
-                  class="file-input"
-                  :disabled="isAdding"
-                  style="display: none;"
+                  type="checkbox" 
+                  v-model="uploadPrefixFlag"
+                  class="prefix-checkbox"
                 >
-                <input 
-                  ref="fileInputCodeChar"
-                  type="file" 
-                  @change="(e) => handleFileUpload(e, 'code_first')" 
-                  accept=".txt,.csv"
-                  class="file-input"
-                  :disabled="isAdding"
-                  style="display: none;"
-                >
-                <button 
-                  @click="triggerFileUpload('char_first')" 
-                  class="upload-btn"
-                  :disabled="isAdding"
-                >
-                  漢字-編碼格式
-                </button>
-                <button 
-                  @click="triggerFileUpload('code_first')" 
-                  class="upload-btn"
-                  :disabled="isAdding"
-                >
-                  編碼-漢字格式
-                </button>
-              </div>
+                <span class="prefix-label">前綴碼方案</span>
+                <span class="prefix-desc">（勾選表示這是前綴碼方案，影響空格鍵頻率計算）</span>
+              </label>
+            </div>
+            
+            <div class="upload-area">
+              <input 
+                ref="fileInputCharCode"
+                type="file" 
+                @change="(e) => handleFileUpload(e, 'char_first')" 
+                accept=".txt,.csv"
+                class="file-input"
+                :disabled="isAdding"
+                style="display: none;"
+              >
+              <input 
+                ref="fileInputCodeChar"
+                type="file" 
+                @change="(e) => handleFileUpload(e, 'code_first')" 
+                accept=".txt,.csv"
+                class="file-input"
+                :disabled="isAdding"
+                style="display: none;"
+              >
+              <button 
+                @click="triggerFileUpload('char_first')" 
+                class="upload-btn"
+                :disabled="isAdding"
+              >
+                漢字-編碼格式
+              </button>
+              <button 
+                @click="triggerFileUpload('code_first')" 
+                class="upload-btn"
+                :disabled="isAdding"
+              >
+                編碼-漢字格式
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
 import { getDynamicDupRate } from '../services/analysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
@@ -1365,27 +1367,54 @@ function clearAllSchemes() {
 
 /* 添加表單覆蓋層 */
 .add-form-overlay {
-  position: absolute;
+  position: fixed; /* 固定定位，相对于视口 */
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6); /* 更深的背景色 */
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  min-height: 400px; /* 確保有足夠的高度 */
+  z-index: 999999; /* 极高的z-index值确保在最上层 */
+  backdrop-filter: blur(4px); /* 背景模糊效果 */
+  animation: fadeIn 0.2s ease-out; /* 淡入动画 */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .add-form {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px; /* 更大的圆角 */
   width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
+  max-width: 600px; /* 增大最大宽度 */
+  max-height: 85vh; /* 调整最大高度 */
   overflow-y: auto;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.05); /* 多层阴影效果 */
+  transform: scale(1);
+  animation: slideIn 0.3s ease-out; /* 滑入动画 */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* 微妙的边框 */
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .form-header {
