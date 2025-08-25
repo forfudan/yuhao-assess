@@ -555,6 +555,7 @@ interface Scheme {
   codeTable?: CodeTable
   isBuiltin: boolean
   isCalculating: boolean
+  isPrefix?: boolean
   data?: SchemeData
 }
 
@@ -625,12 +626,21 @@ const calculateMissingData = async (scheme: Scheme) => {
       scheme.data = {}
     }
     
+    // 檢查是否為主方案（不可刪除的方案）
+    const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
+    
     if (activeTab.value === 'dynamic' && !scheme.data.dynamic) {
-      scheme.data.dynamic = await calculateDynamicData(scheme.codeTable)
+      scheme.data.dynamic = await calculateDynamicData(scheme.codeTable, scheme.isPrefix)
     } else if (activeTab.value === 'static' && !scheme.data.static) {
-      scheme.data.static = await calculateStaticData(scheme.codeTable)
+      scheme.data.static = await calculateStaticData(scheme.codeTable, scheme.isPrefix)
     } else if (activeTab.value === 'speedEquiv' && !scheme.data.speedEquiv) {
-      scheme.data.speedEquiv = await calculateSpeedEquivData(scheme.codeTable)
+      if (isMainScheme) {
+        // 主方案使用全局已處理的碼表
+        scheme.data.speedEquiv = await calculateMainSchemeSpeedEquivData()
+      } else {
+        // 新增方案使用獨立計算
+        scheme.data.speedEquiv = await calculateSpeedEquivData(scheme.codeTable, scheme.isPrefix)
+      }
     }
   } catch (error) {
     console.error(`計算方案 ${scheme.name} 的數據失敗:`, error)
@@ -928,17 +938,22 @@ const loadCurrentUserScheme = async () => {
     // 使用實際的方案名稱，如果沒有則使用默認名稱
     const schemeName = props.currentCodeTableName || '用戶方案'
     
+    // 獲取全局的前綴碼信息
+    const processingOptions = codeTableProcessingService.getProcessingOptions()
+    const globalIsPrefix = processingOptions?.isPrefix || false
+    
     currentUserScheme.value = {
       id: `current-${Date.now()}`,
       name: schemeName,
       codeTable: props.currentCodeTable,
       isBuiltin: false,
       isCalculating: true,
+      isPrefix: globalIsPrefix,  // 使用全局的前綴碼設置
       data: undefined
     }
     // 異步計算數據
     try {
-      const data = await calculateSchemeData(props.currentCodeTable)
+      const data = await calculateSchemeData(props.currentCodeTable, globalIsPrefix)
       currentUserScheme.value.data = data
       currentUserScheme.value.isCalculating = false
     } catch (error) {
@@ -1011,12 +1026,25 @@ async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Prom
   }
 }
 
-// 計算速度當量數據
+// 計算速度當量數據（對比方案用）
 async function calculateSpeedEquivData(codeTable: CodeTable, isPrefix = false): Promise<SpeedEquivData> {
   try {
-    // 使用 codeTableProcessingService 處理碼表
-    const processedTables = codeTableProcessingService.processCodeTable(codeTable, { isPrefix })
-    const processedCodeTable = processedTables.fullWithSelection
+    // 獨立處理碼表，不使用全局單例服務
+    const { generateFullCodeTable } = await import('../services/index')
+    const fullResult = generateFullCodeTable(codeTable)
+    const fullCodeTable = fullResult.codeTable
+    
+    // 計算最大碼長
+    let maxLength = 0
+    for (const [, codes] of codeTable.entries()) {
+      for (const code of codes) {
+        maxLength = Math.max(maxLength, code.length)
+      }
+    }
+    maxLength = maxLength || 4
+    
+    // 生成加選重鍵的碼表
+    const processedCodeTable = generateCodeTableWithSelection(fullCodeTable, maxLength, isPrefix)
     
     // 加載當量表
     const response = await fetch('/data/equivTable.json')
@@ -1056,6 +1084,123 @@ async function calculateSpeedEquivData(codeTable: CodeTable, isPrefix = false): 
       unifiedEquiv: 0
     }
   }
+}
+
+// 計算主方案速度當量數據（使用全局已處理的碼表）
+async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
+  try {
+    // 使用全局已處理的碼表
+    const processedTables = codeTableProcessingService.getProcessedTables()
+    if (!processedTables) {
+      throw new Error('無法獲取已處理的碼表')
+    }
+    
+    const processedCodeTable = processedTables.fullWithSelection
+    
+    // 加載當量表
+    const response = await fetch('/data/equivTable.json')
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const equivTableData = await response.json()
+    const equivTable = equivTableData.data || {}
+    
+    // 加載各種字頻表
+    const builtinService = new BuiltinCodeTableService()
+    const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
+      builtinService.loadCharFrequency(),
+      builtinService.loadCharFrequencySC(),
+      builtinService.loadCharFrequencyTC(),
+      builtinService.loadCharFrequencyUnified()
+    ])
+    
+    // 計算各種字頻下的速度當量
+    const zhihuEquiv = calculateSpeedEquiv(processedCodeTable, zhihuFreq, equivTable)
+    const scEquiv = calculateSpeedEquiv(processedCodeTable, scFreq, equivTable)
+    const tcEquiv = calculateSpeedEquiv(processedCodeTable, tcFreq, equivTable)
+    const unifiedEquiv = calculateSpeedEquiv(processedCodeTable, unifiedFreq, equivTable)
+    
+    return {
+      zhihuEquiv,
+      scEquiv,
+      tcEquiv,
+      unifiedEquiv
+    }
+  } catch (error) {
+    console.error('主方案速度當量計算失敗:', error)
+    return {
+      zhihuEquiv: 0,
+      scEquiv: 0,
+      tcEquiv: 0,
+      unifiedEquiv: 0
+    }
+  }
+}
+
+// 獨立的碼表選重鍵處理函數（不依賴全局服務）
+function generateCodeTableWithSelection(
+  codeTable: CodeTable,
+  maxLength: number, 
+  isPrefix: boolean
+): CodeTable {
+  const result = new Map<string, string[]>()
+  
+  // 統計每個編碼的候選字符數量
+  const codeToChars = new Map<string, string[]>()
+  
+  for (const [char, codes] of codeTable.entries()) {
+    for (const code of codes) {
+      let processedCode = code
+      
+      // 如果不是前綴碼且編碼長度小於最大長度，補充下劃線
+      if (!isPrefix && code.length < maxLength) {
+        processedCode = code + '_'.repeat(maxLength - code.length)
+      }
+      
+      if (!codeToChars.has(processedCode)) {
+        codeToChars.set(processedCode, [])
+      }
+      codeToChars.get(processedCode)!.push(char)
+    }
+  }
+  
+  // 為每個字符生成最終編碼（包含選重鍵）
+  for (const [char, codes] of codeTable.entries()) {
+    const processedCodes: string[] = []
+    
+    for (const code of codes) {
+      let processedCode = code
+      
+      // 如果不是前綴碼且編碼長度小於最大長度，補充下劃線
+      if (!isPrefix && code.length < maxLength) {
+        processedCode = code + '_'.repeat(maxLength - code.length)
+      }
+      
+      const candidates = codeToChars.get(processedCode) || []
+      const charIndex = candidates.indexOf(char)
+      
+      // 添加選重鍵
+      if (charIndex === 0) {
+        // 第一候選，不加選重鍵
+        processedCodes.push(processedCode)
+      } else if (charIndex === 1) {
+        // 第二候選，加分號
+        processedCodes.push(processedCode + ';')
+      } else if (charIndex === 2) {
+        // 第三候選，加單引號
+        processedCodes.push(processedCode + "'")
+      } else {
+        // 更多候選，使用數字鍵（簡化處理）
+        processedCodes.push(processedCode + (charIndex + 1).toString())
+      }
+    }
+    
+    if (processedCodes.length > 0) {
+      result.set(char, processedCodes)
+    }
+  }
+  
+  return result
 }
 
 // 計算編碼對的頻率分佈
@@ -1133,11 +1278,15 @@ async function addBuiltinScheme() {
   isAdding.value = true
   
   try {
+    // 獲取方案配置信息
+    const schemeConfig = await builtinService.getBuiltinCodeTable(selectedBuiltinScheme.value)
+    
     const newScheme: Scheme = {
       id: `builtin_${selectedBuiltinScheme.value}_${Date.now()}`,
       name: builtinScheme.name,
       isBuiltin: true,
-      isCalculating: true
+      isCalculating: true,
+      isPrefix: schemeConfig?.prefix || false  // 從配置中獲取前綴碼屬性
     }
     
     additionalSchemes.value.push(newScheme)
@@ -1150,11 +1299,11 @@ async function addBuiltinScheme() {
     // 只計算當前Tab需要的數據
     newScheme.data = {}
     if (activeTab.value === 'dynamic') {
-      newScheme.data.dynamic = await calculateDynamicData(result.codeTable)
+      newScheme.data.dynamic = await calculateDynamicData(result.codeTable, newScheme.isPrefix)
     } else if (activeTab.value === 'static') {
-      newScheme.data.static = await calculateStaticData(result.codeTable)
+      newScheme.data.static = await calculateStaticData(result.codeTable, newScheme.isPrefix)
     } else if (activeTab.value === 'speedEquiv') {
-      newScheme.data.speedEquiv = await calculateSpeedEquivData(result.codeTable)
+      newScheme.data.speedEquiv = await calculateSpeedEquivData(result.codeTable, newScheme.isPrefix)
     }
     
     newScheme.isCalculating = false
@@ -1203,11 +1352,15 @@ async function addAllBuiltinSchemes() {
     // 逐個添加方案
     for (const builtinScheme of schemesToAdd) {
       try {
+        // 獲取方案配置信息
+        const schemeConfig = await builtinService.getBuiltinCodeTable(builtinScheme.id)
+        
         const newScheme: Scheme = {
           id: `builtin_${builtinScheme.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: builtinScheme.name,
           isBuiltin: true,
-          isCalculating: true
+          isCalculating: true,
+          isPrefix: schemeConfig?.prefix || false  // 從配置中獲取前綴碼屬性
         }
         
         additionalSchemes.value.push(newScheme)
@@ -1219,11 +1372,11 @@ async function addAllBuiltinSchemes() {
         // 只計算當前Tab需要的數據
         newScheme.data = {}
         if (activeTab.value === 'dynamic') {
-          newScheme.data.dynamic = await calculateDynamicData(result.codeTable)
+          newScheme.data.dynamic = await calculateDynamicData(result.codeTable, newScheme.isPrefix)
         } else if (activeTab.value === 'static') {
-          newScheme.data.static = await calculateStaticData(result.codeTable)
+          newScheme.data.static = await calculateStaticData(result.codeTable, newScheme.isPrefix)
         } else if (activeTab.value === 'speedEquiv') {
-          newScheme.data.speedEquiv = await calculateSpeedEquivData(result.codeTable)
+          newScheme.data.speedEquiv = await calculateSpeedEquivData(result.codeTable, newScheme.isPrefix)
         }
         
         newScheme.isCalculating = false
@@ -1273,7 +1426,8 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
       id: `upload_${Date.now()}`,
       name: file.name.replace(/\.(txt|csv)$/, ''),
       isBuiltin: false,
-      isCalculating: true
+      isCalculating: true,
+      isPrefix: uploadPrefixFlag.value  // 使用上傳時的前綴碼設置
     }
     
     additionalSchemes.value.push(newScheme)
