@@ -1,5 +1,5 @@
 <template>
-  <div class="code-table-uploader card">
+  <div class="code-table-uploader upload-card">
     <div class="card-header">
       <h3 class="card-title">碼表上傳</h3>
       <p class="card-description">上傳您的輸入法碼表文件進行性能分析。支持"字符-編碼"和"編碼-字符"兩種格式。</p>

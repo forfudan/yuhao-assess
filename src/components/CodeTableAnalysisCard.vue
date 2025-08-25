@@ -1,5 +1,5 @@
 <template>
-  <div class="code-table-viewer card">
+  <div class="code-table-viewer code-analysis-card">
     <div class="card-header">
       <h3 class="card-title">碼表分析</h3>
       <p class="card-description">詳細分析碼表的基本信息。</p>

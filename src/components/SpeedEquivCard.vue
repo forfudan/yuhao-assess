@@ -1,7 +1,7 @@
 <template>
   <div class="speed-equiv-card">
     <div class="card-header">
-      <h3>全碼速度當量分析</h3>
+      <h3 class="card-title">全碼速度當量分析</h3>
       <p class="card-description">分析輸入法的人體工學表現，計算基於字頻加權的按鍵組合速度當量</p>
     </div>
 
@@ -375,33 +375,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.speed-equiv-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  margin-bottom: 20px;
-}
-
-.card-header {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: white;
-  padding: 20px;
-}
-
-.card-header h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.card-description {
-  margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
-  line-height: 1.4;
-}
-
 .card-description a {
   color: rgba(255, 255, 255, 0.9);
   text-decoration: underline;
@@ -409,10 +382,6 @@ onMounted(async () => {
 
 .card-description a:hover {
   color: white;
-}
-
-.card-content {
-  padding: 25px;
 }
 
 .loading {
@@ -579,14 +548,6 @@ onMounted(async () => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .card-header {
-    padding: 15px;
-  }
-  
-  .card-content {
-    padding: 15px;
-  }
-  
   .metrics-table {
     font-size: 0.75rem;
   }

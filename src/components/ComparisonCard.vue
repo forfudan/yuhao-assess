@@ -1,5 +1,5 @@
 <template>
-  <div class="comparison-card card">
+  <div class="comparison-card">
     <div class="card-header">
       <h3 class="card-title">方案對比</h3>
       <p class="card-description">對比不同輸入法方案的重碼數據，支持內置方案和文件上傳。</p>
@@ -1005,37 +1005,6 @@ function clearAllSchemes() {
 </script>
 
 <style scoped>
-.comparison-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  margin: 20px 0;
-  position: relative; /* 添加相對定位 */
-}
-
-.card-header {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  padding: 20px 25px;
-}
-
-.card-header h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.card-description {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 0.875rem;
-}
-
-.card-content {
-  padding: 25px;
-}
-
 /* 空狀態樣式 */
 .empty-state {
   text-align: center;

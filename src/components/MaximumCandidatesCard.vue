@@ -1,7 +1,7 @@
 <template>
   <div class="maximum-candidates-card">
     <div class="card-header">
-      <h3>最大候選項個數</h3>
+      <h3 class="card-title">最大候選項個數</h3>
       <p class="card-description">分析不同字符集下每個編碼的最大候選項個數。數字越小，翻頁次數越少。</p>
     </div>
     
@@ -228,36 +228,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.maximum-candidates-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  margin: 20px 0;
-}
-
-.card-header {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
-  padding: 20px 25px;
-}
-
-.card-header h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.card-description {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 0.875rem;
-}
-
-.card-content {
-  padding: 25px;
-}
-
 /* 載入和錯誤狀態 */
 .loading-state,
 .error-state {
@@ -314,7 +284,9 @@ onMounted(() => {
 
 /* 結果容器 */
 .results-container {
-  space-y: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 /* 表格樣式 */

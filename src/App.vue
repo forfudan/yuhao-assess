@@ -37,12 +37,13 @@
         <!-- 
          卡片容器 
          所有的卡片使用統一的樣式：
-         - 統一的標題底色樣式（漸變色），但各個卡片的漸變色可不同
+         - 統一的標題底色樣式（漸變色），但各個卡片的漸變色可不同。
          - 統一的卡片標題及標題下方信息行的字體和大小。
+         - 統一的卡片樣式（圓角大小、背景色、陰影效果等）。
         -->
         <div class="cards-container">
           <!-- 碼表上傳卡片 -->
-          <CodeTableUploader 
+          <CodeTableUploaderCard 
             @upload-success="handleCodeTableUpload"
             @upload-error="handleUploadError"
             :upload-status="uploadStatus"
@@ -61,10 +62,10 @@
           <ComparisonCard v-if="analysisReady" :currentCodeTable="codeTable" :currentCodeTableName="codeTableName" />
 
           <!-- 鍵位熱力圖卡片 -->
-          <KeyboardHeatmap v-if="analysisReady" :code-table="codeTable" :analysis-ready="analysisReady" />
+          <KeyboardHeatmapCard v-if="analysisReady" :code-table="codeTable" :analysis-ready="analysisReady" />
 
           <!-- 碼表分析卡片 -->
-          <CodeTableViewer v-if="analysisReady" :analysis="analysisData" />
+          <CodeTableAnalysisCard v-if="analysisReady" :analysis="analysisData" />
         </div>
       </div>
     </main>
@@ -87,9 +88,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
-import CodeTableUploader from './components/CodeTableUploader.vue'
-import KeyboardHeatmap from './components/KeyboardHeatmap.vue'
-import CodeTableViewer from './components/CodeTableViewer.vue'
+import CodeTableUploaderCard from './components/CodeTableUploaderCard.vue'
+import KeyboardHeatmapCard from './components/KeyboardHeatmapCard.vue'
+import CodeTableAnalysisCard from './components/CodeTableAnalysisCard.vue'
 import DuplicateAnalysisCard from './components/DuplicateAnalysisCard.vue'
 import MaximumCandidatesCard from './components/MaximumCandidatesCard.vue'
 import ComparisonCard from './components/ComparisonCard.vue'
@@ -332,48 +333,6 @@ const handleUploadError = (error: string) => {
   width: 100%;
 }
 
-/* 统一的卡片样式 */
-.card {
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--color-border-primary);
-  overflow: hidden;
-  transition: all 0.3s ease;
-  width: 100%;
-}
-
-.card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  transform: translateY(-2px);
-}
-
-/* 卡片头部 */
-.card-header {
-  padding: var(--spacing-md) var(--spacing-xl);
-  background-color: var(--color-bg-primary);
-  border-bottom: 1px solid var(--color-border-primary);
-}
-
-.card-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-/* 卡片内容 */
-.card-content {
-  padding: var(--spacing-lg);
-}
-
-.card-description {
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-md);
-  line-height: 1.6;
-  font-size: 0.95rem;
-}
-
 /* 页脚样式 */
 .footer {
   background-color: var(--color-bg-primary);
@@ -432,18 +391,6 @@ const handleUploadError = (error: string) => {
     gap: var(--spacing-lg);
   }
   
-  .card-header {
-    padding: var(--spacing-lg);
-  }
-  
-  .card-content {
-    padding: var(--spacing-lg);
-  }
-  
-  .card-title {
-    font-size: 1.2rem;
-  }
-  
   .header-content {
     flex-direction: column;
     gap: var(--spacing-md);
@@ -456,6 +403,139 @@ const handleUploadError = (error: string) => {
   
   .nav {
     justify-content: center;
+  }
+}
+</style>
+
+<!-- 全局卡片样式 -->
+<style>
+/* 各个卡片组件的外层容器样式 */
+.duplicate-analysis-card,
+.maximum-candidates-card,
+.speed-equiv-card,
+.comparison-card,
+.code-table-uploader,
+.keyboard-heatmap,
+.code-table-viewer {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px; /* 确保外层容器有圆角 */
+}
+
+.duplicate-analysis-card:hover,
+.maximum-candidates-card:hover,
+.speed-equiv-card:hover,
+.comparison-card:hover,
+.code-table-uploader:hover,
+.keyboard-heatmap:hover,
+.code-table-viewer:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* 卡片头部 - 统一渐变背景 */
+.card-header {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  position: relative;
+  margin: 0;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.duplicate-analysis-card:hover .card-header::before,
+.maximum-candidates-card:hover .card-header::before,
+.speed-equiv-card:hover .card-header::before,
+.comparison-card:hover .card-header::before,
+.code-table-uploader:hover .card-header::before,
+.keyboard-heatmap:hover .card-header::before,
+.code-table-viewer:hover .card-header::before {
+  opacity: 1;
+}
+
+/* 卡片标题 - 统一字体样式 */
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  margin-bottom: var(--spacing-xs);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* 卡片描述 - 统一字体样式 */
+.card-description {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+/* 卡片内容 */
+.card-content {
+  padding: var(--spacing-xl);
+  background-color: var(--color-bg-secondary);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* 不同卡片的渐变色主题 - 更优雅的配色 */
+.upload-card .card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.duplicate-analysis-card .card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.maximum-candidates-card .card-header {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.speed-equiv-card .card-header {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.comparison-card .card-header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.keyboard-heatmap-card .card-header {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+}
+
+.code-analysis-card .card-header {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .card-header {
+    padding: var(--spacing-lg);
+  }
+  
+  .card-content {
+    padding: var(--spacing-lg);
+  }
+  
+  .card-title {
+    font-size: 1.2rem;
   }
 }
 
