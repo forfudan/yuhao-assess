@@ -1,11 +1,20 @@
 <template>
   <div class="comparison-card">
     <div class="card-header">
-      <h3>數據對比</h3>
-      <p class="card-description">對比不同輸入法方案的全碼重碼數據</p>
+      <div class="header-content">
+        <div class="header-text">
+          <h3 class="card-title">方案對比</h3>
+          <p class="card-description">對比不同輸入法方案的重碼數據，支持內置方案和文件上傳。</p>
+        </div>
+        <button @click="toggleCollapsed" class="collapse-button">
+          <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <div class="card-content">
+    <div v-show="!isCollapsed" class="card-content">
       <div v-if="!hasAnyScheme" class="empty-state">
         <div class="empty-icon">📊</div>
         <h4>開始方案對比</h4>
@@ -360,6 +369,7 @@ import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '..
 import { generateFullCodeTable, generateShortCodeTable } from '../services/codeTableCleanService'
 import { getDynamicDupRate } from '../services/analysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
+import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, CharFrequency } from '../types'
 
 // Props
@@ -369,6 +379,17 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// 折叠功能
+const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
+
+// 暴露折叠方法给父组件
+defineExpose({
+  collapse,
+  expand,
+  toggle: toggleCollapsed,
+  getCollapsedState
+})
 
 // 定義方案數據接口
 interface SchemeData {
@@ -1005,37 +1026,48 @@ function clearAllSchemes() {
 </script>
 
 <style scoped>
-.comparison-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  margin: 20px 0;
-  position: relative; /* 添加相對定位 */
+/* 卡片头部布局 */
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
 }
 
-.card-header {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+.header-text {
+  flex: 1;
+}
+
+/* 折叠按钮样式 */
+.collapse-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
   color: white;
-  padding: 20px 25px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--spacing-lg);
+  backdrop-filter: blur(10px);
 }
 
-.card-header h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+.collapse-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
-.card-description {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 0.875rem;
+.collapse-button svg {
+  transition: transform 0.3s ease;
 }
 
-.card-content {
-  padding: 25px;
+.collapse-button svg.rotated {
+  transform: rotate(180deg);
 }
 
+/* 原有样式 */
 /* 空狀態樣式 */
 .empty-state {
   text-align: center;

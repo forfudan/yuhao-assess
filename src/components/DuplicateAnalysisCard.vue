@@ -1,11 +1,20 @@
 <template>
-  <div class="duplicate-analysis-card">
+  <div class="duplicate-analysis-card" :id="id">
     <div class="card-header">
-      <h3>重碼數據分析</h3>
-      <p class="card-description">分析不同字符集下的重碼情況，計算靜態重碼率和動態選重率。閱讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
+      <div class="header-content">
+        <div class="header-text">
+          <h3 class="card-title">重碼數據分析</h3>
+          <p class="card-description">分析不同字符集下的重碼情況，計算靜態重碼率和動態選重率。閱讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
+        </div>
+        <button @click="toggleCollapsed" class="collapse-button">
+          <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <div class="card-content">
+    <div v-show="!isCollapsed" class="card-content">
       <div v-if="isCalculating" class="loading">
         <div class="spinner"></div>
         <p>正在計算重碼數據...</p>
@@ -201,15 +210,28 @@ import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '..
 import { generateFullCodeTable, generateShortCodeTable } from '../services/codeTableCleanService'
 import { getDynamicDupRate } from '../services/analysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
+import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, CharFrequency } from '../types'
 
 // Props
 interface Props {
   codeTable?: CodeTable
+  id?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   codeTable: () => new Map()
+})
+
+// 折叠功能
+const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
+
+// 暴露折叠方法给父组件
+defineExpose({
+  collapse,
+  expand,
+  toggle: toggleCollapsed,
+  getCollapsedState
 })
 
 // 双值数据结构
@@ -668,33 +690,48 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.duplicate-analysis-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  margin-bottom: 20px;
+/* 卡片头部布局 */
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
 }
 
-.card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.header-text {
+  flex: 1;
+}
+
+/* 折叠按钮样式 */
+.collapse-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
   color: white;
-  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--spacing-lg);
+  backdrop-filter: blur(10px);
 }
 
-.card-header h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+.collapse-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
-.card-description {
-  margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
-  line-height: 1.4;
+.collapse-button svg {
+  transition: transform 0.3s ease;
 }
 
+.collapse-button svg.rotated {
+  transform: rotate(180deg);
+}
+
+/* 原有样式 */
 .card-description a {
   color: rgba(255, 255, 255, 0.9);
   text-decoration: underline;
@@ -702,10 +739,6 @@ onMounted(() => {
 
 .card-description a:hover {
   color: white;
-}
-
-.card-content {
-  padding: 25px;
 }
 
 .loading {
@@ -808,11 +841,6 @@ onMounted(() => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .card-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
   .controls {
     justify-content: center;
   }

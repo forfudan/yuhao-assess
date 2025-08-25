@@ -17,185 +17,141 @@
         <div class="header-content">
           <div class="logo">
             <h1>宇浩測評網</h1>
-            <span class="subtitle">輸入法性能測評工具</span>
           </div>
-          <nav class="nav">
-            <a href="https://shurufa.app" target="_blank" class="nav-link">
-              宇浩輸入法
-            </a>
-            <a href="https://github.com/forfudan/yu" target="_blank" class="nav-link">
-              GitHub
-            </a>
-            <!-- 全局折叠控制按钮 -->
-            <button 
-              class="global-toggle-btn-header"
-              @click="toggleAllModules"
-              :title="allModulesCollapsed ? '展開全部' : '折疊全部'"
-            >
-              <span class="btn-icon">{{ allModulesCollapsed ? '📂' : '📁' }}</span>
-              <span class="btn-text">{{ allModulesCollapsed ? '展開全部' : '折疊全部' }}</span>
+          <div class="header-actions">
+            <button @click="toggleAllCards" class="action-button" :title="allCardsCollapsed ? '展開所有卡片' : '摺疊所有卡片'">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path v-if="allCardsCollapsed" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+                <path v-else d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+              </svg>
             </button>
-          </nav>
+            <button @click="toggleCardDirectory" class="action-button" title="快速導航">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </header>
 
+    <!-- 悬浮导航菜单 -->
+    <Transition name="dropdown">
+      <div v-if="showCardDirectory" class="floating-navigation">
+        <div class="nav-dropdown">
+          <div class="nav-header">
+            <span class="nav-header-title">快速導航</span>
+          </div>
+          <div class="nav-menu">
+            <a @click="scrollToCard('uploader')" class="nav-item">
+              <span class="nav-icon">📤</span>
+              <span class="nav-title">碼表上傳</span>
+            </a>
+            <a v-if="analysisReady" @click="scrollToCard('duplicate')" class="nav-item">
+              <span class="nav-icon">🔢</span>
+              <span class="nav-title">重碼數據分析</span>
+            </a>
+            <a v-if="analysisReady" @click="scrollToCard('maximum')" class="nav-item">
+              <span class="nav-icon">📊</span>
+              <span class="nav-title">最大候選項個數</span>
+            </a>
+            <a v-if="analysisReady" @click="scrollToCard('speed')" class="nav-item">
+              <span class="nav-icon">⚡</span>
+              <span class="nav-title">全碼速度當量分析</span>
+            </a>
+            <a v-if="analysisReady" @click="scrollToCard('comparison')" class="nav-item">
+              <span class="nav-icon">🆚</span>
+              <span class="nav-title">方案對比</span>
+            </a>
+            <a v-if="analysisReady" @click="scrollToCard('heatmap')" class="nav-item">
+              <span class="nav-icon">⌨️</span>
+              <span class="nav-title">鍵位熱力圖</span>
+            </a>
+            <a v-if="analysisReady" @click="scrollToCard('analysis')" class="nav-item">
+              <span class="nav-icon">📋</span>
+              <span class="nav-title">碼表分析</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 遮罩层 -->
+    <Transition name="fade">
+      <div v-if="showCardDirectory" class="nav-overlay" @click="toggleCardDirectory"></div>
+    </Transition>
+
     <!-- 主要內容區域 - 設計為單列模塊布局 -->
     <main class="main">
       <div class="container">
-        <!-- 模块容器 -->
-        <div class="module-container">
-          <!-- 碼表上傳模塊 -->
-          <div class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">碼表上傳</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('upload')"
-                :title="modules.upload.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.upload.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <div v-show="!modules.upload.collapsed" class="module-content">
-              <p class="module-description">
-                上傳您的輸入法碼表文件進行性能分析。支持"字符-編碼"和"編碼-字符"兩種格式。
-              </p>
-              
-              <CodeTableUploader 
-                @upload-success="handleCodeTableUpload"
-                @upload-error="handleUploadError"
-              />
-              
-              <!-- 上傳狀態顯示 -->
-              <div v-if="uploadStatus" class="upload-status" :class="uploadStatus.type">
-                <span class="status-icon">
-                  {{ uploadStatus.type === 'success' ? '✓' : '✗' }}
-                </span>
-                {{ uploadStatus.message }}
-              </div>
-            </div>
-          </div>
+        <!-- 
+         卡片容器 
+         所有的卡片使用統一的樣式：
+         - 統一的標題底色樣式（漸變色），但各個卡片的漸變色可不同。
+         - 統一的卡片標題及標題下方信息行的字體和大小。
+         - 統一的卡片樣式（圓角大小、背景色、陰影效果等）。
+        -->
+        <div class="cards-container">
+          <!-- 碼表上傳卡片 -->
+          <CodeTableUploaderCard 
+            id="card-uploader"
+            ref="uploaderCardRef"
+            @upload-success="handleCodeTableUpload"
+            @upload-error="handleUploadError"
+            :upload-status="uploadStatus"
+          />
 
+          <!-- 重碼數據分析卡片 -->
+          <DuplicateAnalysisCard 
+            v-if="analysisReady" 
+            id="card-duplicate"
+            ref="duplicateAnalysisCardRef"
+            :code-table="codeTable" 
+          />
 
-          <!-- 重碼信息模塊 -->
-          <div v-if="analysisReady" class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">重碼信息</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('duplicate')"
-                :title="modules.duplicate.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.duplicate.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <!--重碼數據分析卡片-->
-            <div v-show="!modules.duplicate.collapsed" class="module-content">
-              <DuplicateAnalysisCard :code-table="codeTable" />
-            </div>
-            <!--最大候選個數卡片-->
-            <div v-show="!modules.duplicate.collapsed" class="module-content">
-              <MaximumCandidatesCard :code-table="codeTable" />
-            </div>
-          </div>
+          <!-- 最大候選個數卡片 -->
+          <MaximumCandidatesCard 
+            v-if="analysisReady" 
+            id="card-maximum"
+            ref="maximumCandidatesCardRef"
+            :code-table="codeTable" 
+          />
 
-          <!-- 人體工學模塊 -->
-          <div v-if="analysisReady" class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">人體工學</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('ergonomics')"
-                :title="modules.ergonomics.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.ergonomics.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <!--速度當量卡片-->
-            <div v-show="!modules.ergonomics.collapsed" class="module-content">
-              <SpeedEquivCard :code-table="codeTable" :code-table-name="codeTableName" :initial-prefix="uploadPrefixFlag" />
-            </div>
-          </div>
+          <!-- 速度當量卡片 -->
+          <SpeedEquivCard 
+            v-if="analysisReady" 
+            id="card-speed"
+            ref="speedEquivCardRef"
+            :code-table="codeTable" 
+            :code-table-name="codeTableName" 
+            :initial-prefix="uploadPrefixFlag" 
+          />
 
-          <!-- 方案對比模塊 -->
-          <div v-if="analysisReady" class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">方案對比</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('duplicate')"
-                :title="modules.duplicate.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.duplicate.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <div v-show="!modules.duplicate.collapsed" class="module-content">
-              <p class="module-description">
-                對比不同輸入法方案的重碼數據，支持內置方案和文件上傳。
-              </p>
-              <ComparisonCard :currentCodeTable="codeTable" :currentCodeTableName="codeTableName" />
-            </div>
-          </div>
+          <!-- 方案對比卡片 -->
+          <ComparisonCard 
+            v-if="analysisReady" 
+            id="card-comparison"
+            ref="comparisonCardRef"
+            :currentCodeTable="codeTable" 
+            :currentCodeTableName="codeTableName" 
+          />
 
-          <!-- 鍵位熱力圖模塊 -->
-          <div v-if="analysisReady" class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">鍵位熱力圖</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('heatmap')"
-                :title="modules.heatmap.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.heatmap.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <div v-show="!modules.heatmap.collapsed" class="module-content">
-              <p class="module-description">
-                分析碼表的鍵位分布和使用頻率，可視化展示鍵位負擔。
-              </p>
-              
-              <KeyboardHeatmap 
-                :code-table="codeTable"
-                :analysis-ready="analysisReady"
-              />
-            </div>
-          </div>
+          <!-- 鍵位熱力圖卡片 -->
+          <KeyboardHeatmapCard 
+            v-if="analysisReady" 
+            id="card-heatmap"
+            ref="keyboardHeatmapCardRef"
+            :code-table="codeTable" 
+            :analysis-ready="analysisReady" 
+          />
 
-          <!-- 碼表分析模塊 -->
-          <div v-if="analysisReady" class="module-card">
-            <div class="module-header">
-              <h3 class="module-title">碼表分析</h3>
-              <button 
-                class="toggle-button"
-                @click="toggleModule('analysis')"
-                :title="modules.analysis.collapsed ? '展開' : '收起'"
-              >
-                <span class="toggle-icon" :class="{ 'collapsed': modules.analysis.collapsed }">
-                  ▼
-                </span>
-              </button>
-            </div>
-            <div v-show="!modules.analysis.collapsed" class="module-content">
-              <p class="module-description">
-                詳細分析碼表的基本信息。
-              </p>
-              
-              <CodeTableViewer 
-                :analysis="analysisData"
-              />
-            </div>
-          </div>
+          <!-- 碼表分析卡片 -->
+          <CodeTableAnalysisCard 
+            v-if="analysisReady" 
+            id="card-analysis"
+            ref="codeTableAnalysisCardRef"
+            :analysis="analysisData" 
+          />
         </div>
       </div>
     </main>
@@ -218,9 +174,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
-import CodeTableUploader from './components/CodeTableUploader.vue'
-import KeyboardHeatmap from './components/KeyboardHeatmap.vue'
-import CodeTableViewer from './components/CodeTableViewer.vue'
+import CodeTableUploaderCard from './components/CodeTableUploaderCard.vue'
+import KeyboardHeatmapCard from './components/KeyboardHeatmapCard.vue'
+import CodeTableAnalysisCard from './components/CodeTableAnalysisCard.vue'
 import DuplicateAnalysisCard from './components/DuplicateAnalysisCard.vue'
 import MaximumCandidatesCard from './components/MaximumCandidatesCard.vue'
 import ComparisonCard from './components/ComparisonCard.vue'
@@ -236,36 +192,102 @@ const analysisData = ref<CodeTableAnalysis | null>(null)
 const analysisResults = ref(null)
 const uploadPrefixFlag = ref<boolean>(false)
 
-// 主題相關
-const isDarkMode = ref(false)
+// 上传卡片引用
+const uploaderCardRef = ref()
+const duplicateAnalysisCardRef = ref()
+const maximumCandidatesCardRef = ref()
+const speedEquivCardRef = ref()
+const comparisonCardRef = ref()
+const keyboardHeatmapCardRef = ref()
+const codeTableAnalysisCardRef = ref()
 
-// 模块折叠状态管理
-const modules = ref({
-  upload: { collapsed: false },
-  heatmap: { collapsed: false },
-  analysis: { collapsed: false },
-  duplicate: { collapsed: false },
-  ergonomics: { collapsed: false },
-  comparison: { collapsed: false }
-})
+// 卡片目录和折叠状态
+const showCardDirectory = ref(false)
+const allCardsCollapsed = ref(false)
 
-// 切换模块折叠状态
-const toggleModule = (moduleKey: keyof typeof modules.value) => {
-  modules.value[moduleKey].collapsed = !modules.value[moduleKey].collapsed
+// 切换卡片目录显示
+const toggleCardDirectory = () => {
+  showCardDirectory.value = !showCardDirectory.value
 }
 
-// 计算是否所有模块都已折叠
-const allModulesCollapsed = computed(() => {
-  return Object.values(modules.value).every(module => module.collapsed)
-})
+// 滚动到指定卡片
+const scrollToCard = (cardId: string) => {
+  const element = document.getElementById(`card-${cardId}`)
+  if (element) {
+    // 先关闭导航菜单
+    showCardDirectory.value = false
+    
+    // 延迟滚动，让菜单先关闭
+    setTimeout(() => {
+      element.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest'
+      })
+      
+      // 滚动完成后，检查并展开卡片（如果是收起状态）
+      setTimeout(() => {
+        expandCardIfCollapsed(cardId)
+      }, 800) // 等待滚动动画完成
+    }, 150)
+  }
+}
 
-// 全部展开/折叠
-const toggleAllModules = () => {
-  const targetState = !allModulesCollapsed.value
-  Object.keys(modules.value).forEach(key => {
-    modules.value[key as keyof typeof modules.value].collapsed = targetState
+// 如果卡片是收起状态，则展开它
+const expandCardIfCollapsed = (cardId: string) => {
+  const cardRefMap: Record<string, any> = {
+    'uploader': uploaderCardRef.value,
+    'duplicate': duplicateAnalysisCardRef.value,
+    'maximum': maximumCandidatesCardRef.value,
+    'speed': speedEquivCardRef.value,
+    'comparison': comparisonCardRef.value,
+    'heatmap': keyboardHeatmapCardRef.value,
+    'analysis': codeTableAnalysisCardRef.value
+  }
+  
+  const cardRef = cardRefMap[cardId]
+  if (cardRef && typeof cardRef.getCollapsedState === 'function' && typeof cardRef.expand === 'function') {
+    // 检查卡片是否是收起状态
+    const isCollapsed = cardRef.getCollapsedState()
+    if (isCollapsed) {
+      cardRef.expand()
+    }
+  }
+}
+
+// 切换所有卡片的折叠状态
+const toggleAllCards = () => {
+  allCardsCollapsed.value = !allCardsCollapsed.value
+  
+  // 获取所有卡片的引用
+  const cardRefs = [
+    uploaderCardRef.value,
+    duplicateAnalysisCardRef.value,
+    maximumCandidatesCardRef.value,
+    speedEquivCardRef.value,
+    comparisonCardRef.value,
+    keyboardHeatmapCardRef.value,
+    codeTableAnalysisCardRef.value
+  ]
+  
+  // 根据状态折叠或展开所有卡片
+  cardRefs.forEach(cardRef => {
+    if (cardRef) {
+      if (allCardsCollapsed.value) {
+        if (typeof cardRef.collapse === 'function') {
+          cardRef.collapse()
+        }
+      } else {
+        if (typeof cardRef.expand === 'function') {
+          cardRef.expand()
+        }
+      }
+    }
   })
 }
+
+// 主題相關
+const isDarkMode = ref(false)
 
 // 初始化主題和數據恢復
 onMounted(() => {
@@ -320,9 +342,6 @@ const restoreCodeTableData = () => {
       codeTable.value = new Map(data.codeTable)
       analysisData.value = data.analysisData
       analysisReady.value = true
-      
-      // 自動隱藏上傳模塊
-      modules.value.upload.collapsed = true
     }
   } catch (error) {
     console.error('恢復碼表數據失敗:', error)
@@ -405,8 +424,12 @@ const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; f
   // 保存到本地存儲
   saveCodeTableData()
   
-  // 自動隱藏碼表上傳模塊
-  modules.value.upload.collapsed = true
+  // 码表分析成功后，自动折叠上传卡片
+  if (uploaderCardRef.value && typeof uploaderCardRef.value.collapse === 'function') {
+    setTimeout(() => {
+      uploaderCardRef.value.collapse()
+    }, 500) // 延迟500ms，让用户看到成功反馈
+  }
   
   uploadStatus.value = {
     type: 'success',
@@ -458,189 +481,149 @@ const handleUploadError = (error: string) => {
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--color-primary);
-  margin-bottom: var(--spacing-xs);
+  margin: 0; /* 移除下边距，因为删除了副标题 */
 }
 
-.subtitle {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-}
-
-.nav {
+/* 头部操作按钮 */
+.header-actions {
   display: flex;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
   align-items: center;
 }
 
-.nav-link {
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease-in-out;
-}
-
-.nav-link:hover {
+.action-button {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 8px;
   color: var(--color-primary);
-}
-
-/* 头部的全局折叠按钮 */
-.global-toggle-btn-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-left: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.global-toggle-btn-header:hover {
-  background-color: var(--color-primary-dark);
-  transform: translateY(-1px);
+.action-button:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: scale(1.05);
 }
 
-.global-toggle-btn-header .btn-icon {
+/* 悬浮导航菜单样式 */
+.floating-navigation {
+  position: fixed;
+  top: 80px; /* 从header下方开始 */
+  right: 20px; /* 对齐右侧按钮 */
+  z-index: 1000;
+  transform-origin: top right;
+}
+
+.nav-dropdown {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  min-width: 280px;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.nav-header {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
   font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
 }
 
-.global-toggle-btn-header .btn-text {
-  font-size: 0.8rem;
+.nav-menu {
+  padding: var(--spacing-sm) 0;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
-/* 主要内容区域 - 重新设计为单列布局 */
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background: rgba(59, 130, 246, 0.06);
+  color: var(--color-primary);
+  padding-left: calc(var(--spacing-lg) + 4px);
+}
+
+.nav-icon {
+  font-size: 1.1rem;
+  margin-right: var(--spacing-md);
+  min-width: 20px;
+  text-align: center;
+}
+
+.nav-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* 遮罩层样式 */
+.nav-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 999;
+  backdrop-filter: blur(2px);
+}
+
+/* 下拉动画 */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdown-enter-from {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+}
+
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+}
+
+/* 遮罩层淡入淡出动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 主要内容区域 - 卡片布局 */
 .main {
   padding: var(--spacing-2xl) 0;
   min-height: calc(100vh - 200px);
 }
 
-/* 模块容器 - 单列布局 */
-.module-container {
+/* 卡片容器 - 单列布局 */
+.cards-container {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
   width: 100%;
-}
-
-/* 统一的模块卡片样式 */
-.module-card {
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--color-border-primary);
-  overflow: hidden;
-  transition: all 0.3s ease;
-  width: 100%;
-}
-
-.module-card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  transform: translateY(-2px);
-}
-
-/* 模块头部 */
-.module-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-md) var(--spacing-xl);
-  background-color: var(--color-bg-primary);
-  border-bottom: 1px solid var(--color-border-primary);
-}
-
-.module-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-/* 折叠/展开按钮 */
-.toggle-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 36px;
-  min-height: 36px;
-}
-
-.toggle-button:hover {
-  background-color: var(--color-bg-secondary);
-}
-
-.toggle-icon {
-  font-size: 1rem;
-  color: var(--color-text-secondary);
-  transition: transform 0.3s ease;
-  transform-origin: center;
-}
-
-.toggle-icon.collapsed {
-  transform: rotate(-90deg);
-}
-
-/* 模块内容 */
-.module-content {
-  padding: var(--spacing-lg);
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.module-description {
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-md);
-  line-height: 1.6;
-  font-size: 0.95rem;
-}
-
-/* 上传状态样式 */
-.upload-status {
-  margin-top: var(--spacing-lg);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  font-weight: 500;
-  animation: slideIn 0.3s ease-out;
-}
-
-.upload-status.success {
-  background-color: #dcfce7;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-}
-
-.upload-status.error {
-  background-color: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
-}
-
-.status-icon {
-  font-weight: bold;
-  font-size: 1.1rem;
 }
 
 /* 页脚样式 */
@@ -688,39 +671,52 @@ const handleUploadError = (error: string) => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .header-actions {
+    gap: var(--spacing-sm);
+  }
+  
+  .action-button {
+    padding: 6px;
+  }
+  
+  .directory-header {
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+  
+  .directory-list {
+    padding: var(--spacing-md);
+  }
+  
+  .floating-navigation {
+    right: 10px;
+    left: 10px;
+    top: 70px;
+  }
+  
+  .nav-dropdown {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .nav-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  .nav-title {
+    font-size: 0.85rem;
+  }
+  
   .main {
     padding: var(--spacing-lg) 0;
   }
   
-  .global-controls {
-    padding: var(--spacing-lg);
-    flex-direction: column;
+  .container {
+    max-width: 100%;
+    padding: 0 var(--spacing-md);
+  }
+  
+  .cards-container {
     gap: var(--spacing-lg);
-    text-align: center;
-  }
-  
-  .page-title {
-    font-size: 1.5rem;
-  }
-  
-  .global-toggle-btn {
-    padding: var(--spacing-sm) var(--spacing-md);
-  }
-  
-  .module-container {
-    gap: var(--spacing-lg);
-  }
-  
-  .module-header {
-    padding: var(--spacing-lg);
-  }
-  
-  .module-content {
-    padding: var(--spacing-lg);
-  }
-  
-  .module-title {
-    font-size: 1.2rem;
   }
   
   .header-content {
@@ -737,29 +733,150 @@ const handleUploadError = (error: string) => {
     justify-content: center;
   }
 }
+</style>
+
+<!-- 全局卡片样式 -->
+<style>
+/* 各个卡片组件的外层容器样式 */
+.duplicate-analysis-card,
+.maximum-candidates-card,
+.speed-equiv-card,
+.comparison-card,
+.code-table-uploader,
+.keyboard-heatmap,
+.code-table-viewer {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px; /* 确保外层容器有圆角 */
+}
+
+.duplicate-analysis-card:hover,
+.maximum-candidates-card:hover,
+.speed-equiv-card:hover,
+.comparison-card:hover,
+.code-table-uploader:hover,
+.keyboard-heatmap:hover,
+.code-table-viewer:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* 卡片头部 - 统一渐变背景 */
+.card-header {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  position: relative;
+  margin: 0;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.duplicate-analysis-card:hover .card-header::before,
+.maximum-candidates-card:hover .card-header::before,
+.speed-equiv-card:hover .card-header::before,
+.comparison-card:hover .card-header::before,
+.code-table-uploader:hover .card-header::before,
+.keyboard-heatmap:hover .card-header::before,
+.code-table-viewer:hover .card-header::before {
+  opacity: 1;
+}
+
+/* 卡片标题 - 统一字体样式 */
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  margin-bottom: var(--spacing-xs);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* 卡片描述 - 统一字体样式 */
+.card-description {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+/* 卡片内容 */
+.card-content {
+  padding: var(--spacing-xl);
+  background-color: var(--color-bg-secondary);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* 不同卡片的渐变色主题 - 更优雅的配色 */
+.upload-card .card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.duplicate-analysis-card .card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.maximum-candidates-card .card-header {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.speed-equiv-card .card-header {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.comparison-card .card-header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.keyboard-heatmap .card-header {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+}
+
+.code-table-viewer .card-header {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .card-header {
+    padding: var(--spacing-lg);
+  }
+  
+  .card-content {
+    padding: var(--spacing-lg);
+  }
+  
+  .card-title {
+    font-size: 1.2rem;
+  }
+}
 
 @media (max-width: 480px) {
-  .global-controls {
+  .card-header {
     padding: var(--spacing-md);
   }
   
-  .page-title {
-    font-size: 1.3rem;
-  }
-  
-  .btn-text {
-    display: none; /* 在小屏幕上只显示图标 */
-  }
-  
-  .module-header {
+  .card-content {
     padding: var(--spacing-md);
   }
   
-  .module-content {
-    padding: var(--spacing-md);
-  }
-  
-  .module-title {
+  .card-title {
     font-size: 1.1rem;
   }
 }

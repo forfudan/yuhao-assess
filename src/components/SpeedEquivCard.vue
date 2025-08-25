@@ -1,11 +1,20 @@
 <template>
   <div class="speed-equiv-card">
     <div class="card-header">
-      <h3>全碼速度當量分析</h3>
-      <p class="card-description">分析輸入法的人體工學表現，計算基於字頻加權的按鍵組合速度當量</p>
+      <div class="header-content">
+        <div class="header-text">
+          <h3 class="card-title">全碼速度當量分析</h3>
+          <p class="card-description">分析輸入法的人體工學表現，計算基於字頻加權的按鍵組合速度當量</p>
+        </div>
+        <button @click="toggleCollapsed" class="collapse-button">
+          <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <div class="card-content">
+    <div v-show="!isCollapsed" class="card-content">
       <div v-if="isCalculating" class="loading">
         <div class="spinner"></div>
         <p>正在計算速度當量...</p>
@@ -79,6 +88,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, nextTick } from 'vue'
+import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { generateFullCodeTable } from '../services/codeTableCleanService'
@@ -94,6 +104,17 @@ const props = withDefaults(defineProps<Props>(), {
   codeTable: () => new Map(),
   codeTableName: '',
   initialPrefix: false
+})
+
+// 折叠功能
+const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
+
+// 暴露折叠方法给父组件
+defineExpose({
+  collapse,
+  expand,
+  toggle: toggleCollapsed,
+  getCollapsedState
 })
 
 // 分析结果数据结构
@@ -375,33 +396,48 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.speed-equiv-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  margin-bottom: 20px;
+/* 卡片头部布局 */
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
 }
 
-.card-header {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+.header-text {
+  flex: 1;
+}
+
+/* 折叠按钮样式 */
+.collapse-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
   color: white;
-  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--spacing-lg);
+  backdrop-filter: blur(10px);
 }
 
-.card-header h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+.collapse-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
-.card-description {
-  margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
-  line-height: 1.4;
+.collapse-button svg {
+  transition: transform 0.3s ease;
 }
 
+.collapse-button svg.rotated {
+  transform: rotate(180deg);
+}
+
+/* 原有样式 */
 .card-description a {
   color: rgba(255, 255, 255, 0.9);
   text-decoration: underline;
@@ -409,10 +445,6 @@ onMounted(async () => {
 
 .card-description a:hover {
   color: white;
-}
-
-.card-content {
-  padding: 25px;
 }
 
 .loading {
@@ -579,14 +611,6 @@ onMounted(async () => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .card-header {
-    padding: 15px;
-  }
-  
-  .card-content {
-    padding: 15px;
-  }
-  
   .metrics-table {
     font-size: 0.75rem;
   }

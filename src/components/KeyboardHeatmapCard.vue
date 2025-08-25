@@ -1,5 +1,20 @@
 <template>
   <div class="keyboard-heatmap">
+    <div class="card-header">
+      <div class="header-content">
+        <div class="header-text">
+          <h3 class="card-title">鍵位熱力圖</h3>
+          <p class="card-description">分析碼表的鍵位分布和使用頻率，可視化展示鍵位負擔。</p>
+        </div>
+        <button @click="toggleCollapsed" class="collapse-button">
+          <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <div v-show="!isCollapsed" class="card-content">
     <!-- 分析状态 -->
     <div v-if="!analysisReady" class="analysis-placeholder">
       <div class="placeholder-icon">⌨️</div>
@@ -124,12 +139,14 @@
         </div>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import KeyButton from './KeyButton.vue'
+import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, KeyData, KeyInfo, AnalysisStats } from '../types/index'
 
 interface Props {
@@ -138,6 +155,17 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// 折叠功能
+const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
+
+// 暴露折叠方法给父组件
+defineExpose({
+  collapse,
+  expand,
+  toggle: toggleCollapsed,
+  getCollapsedState
+})
 
 // 字符频率数据
 const charFrequency = ref<Record<string, number>>({})
@@ -369,12 +397,45 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 主容器 */
-.keyboard-heatmap {
+/* 卡片头部布局 */
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--spacing-lg);
+}
+
+.header-text {
+  flex: 1;
+}
+
+/* 折叠按钮样式 */
+.collapse-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--spacing-lg);
+  backdrop-filter: blur(10px);
+}
+
+.collapse-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.collapse-button svg {
+  transition: transform 0.3s ease;
+}
+
+.collapse-button svg.rotated {
+  transform: rotate(180deg);
 }
 
 /* 分析占位符 */
