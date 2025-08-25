@@ -429,15 +429,12 @@ const processFile = async () => {
 // 載入內置碼表配置
 async function loadBuiltinConfig() {
   try {
-    console.log('🔍 [isPrefix追踪] CodeTableUploaderCard开始加载配置')
     await builtinService.loadConfig()
-    console.log('🔍 [isPrefix追踪] CodeTableUploaderCard配置加载完成')
     builtinTables.value = builtinService.getAvailableTables()
     
     // 设置默认选择的方案
     if (builtinTables.value.length > 0) {
       selectedBuiltinTable.value = 'yuhao-ming'  // 设置默认方案
-      console.log('🔍 [isPrefix追踪] CodeTableUploaderCard设置默认方案:', selectedBuiltinTable.value)
       
       // 触发自动加载
       await handleBuiltinTableChange()
@@ -466,19 +463,14 @@ async function loadBuiltinTable() {
   try {
     isUploading.value = true
     
-    console.log('🔍 [isPrefix追踪] CodeTableUploaderCard开始下载码表:', selectedBuiltinTable.value)
     const result = await builtinService.downloadCodeTable(selectedBuiltinTable.value)
     
     // 获取内置方案的前缀码配置
     const tableConfig = builtinService.getTableConfig(selectedBuiltinTable.value)
-    console.log('🔍 [isPrefix追踪] CodeTableUploaderCard获取配置:', tableConfig)
-    
     const isBuiltinPrefix = tableConfig?.prefix || false
-    console.log('🔍 [isPrefix追踪] CodeTableUploaderCard解析prefix:', isBuiltinPrefix)
     
     // 更新前缀码按钮状态以反映配置
     isPrefixCode.value = isBuiltinPrefix
-    console.log('🔍 [isPrefix追踪] CodeTableUploaderCard更新按钮状态:', isPrefixCode.value)
     
     emit('uploadSuccess', {
       codeTable: result.codeTable,
@@ -487,7 +479,6 @@ async function loadBuiltinTable() {
       tableKey: selectedBuiltinTable.value,  // 添加tableKey用于前缀码检测
       isPrefix: isBuiltinPrefix  // 使用配置中的前缀码属性
     })
-    console.log('🔍 [isPrefix追踪] CodeTableUploaderCard发送uploadSuccess，isPrefix:', isBuiltinPrefix)
   } catch (error) {
     emit('uploadError', `載入內置碼表失敗: ${error instanceof Error ? error.message : String(error)}`)
   } finally {

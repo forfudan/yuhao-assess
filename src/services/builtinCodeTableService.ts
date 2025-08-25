@@ -141,18 +141,10 @@ export class BuiltinCodeTableService {
 
   // 根據key獲取內置碼表配置
   getTableConfig(key: string): BuiltinCodeTable | null {
-    console.log('🔍 [isPrefix追踪] getTableConfig调用，key:', key)
-    console.log('🔍 [isPrefix追踪] config对象是否存在:', !!this.config)
-    
     if (!this.config) {
-      console.log('🔍 [isPrefix追踪] 配置为null，返回null')
       return null
     }
-    
-    const found = this.config.builtinCodeTables.find(table => table.key === key)
-    console.log('🔍 [isPrefix追踪] 查找结果:', found ? `找到配置，prefix=${found.prefix}` : '未找到配置')
-    
-    return found || null
+    return this.config.builtinCodeTables.find(table => table.key === key) || null
   }
 
   // 根據key獲取內置碼表

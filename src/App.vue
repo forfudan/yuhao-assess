@@ -293,10 +293,6 @@ const isDarkMode = ref(false)
 
 // 初始化主題和數據恢復
 onMounted(() => {
-  // 临时清除localStorage进行调试
-  console.log('🔍 [isPrefix追踪] 清除localStorage中的旧数据进行调试')
-  localStorage.removeItem('savedCodeTable')
-  
   // 初始化主題，默認淺色模式
   const savedTheme = localStorage.getItem('theme')
   isDarkMode.value = savedTheme === 'dark'
@@ -330,7 +326,6 @@ const saveCodeTableData = () => {
       timestamp: Date.now()
     }
     localStorage.setItem('savedCodeTable', JSON.stringify(data))
-    console.log('🔍 [isPrefix追踪] 保存码表数据，isPrefix:', uploadPrefixFlag.value)
   }
 }
 
@@ -348,10 +343,6 @@ const restoreCodeTableData = () => {
         return
       }
       
-      console.log('🔍 [isPrefix追踪] 从localStorage恢复数据')
-      console.log('🔍 [isPrefix追踪] 恢复的isPrefix:', data.uploadPrefixFlag)
-      console.log('🔍 [isPrefix追踪] 恢复的codeTableName:', data.codeTableName)
-      
       // 恢復碼表數據
       codeTable.value = new Map(data.codeTable)
       analysisData.value = data.analysisData
@@ -366,7 +357,6 @@ const restoreCodeTableData = () => {
       })
       
       analysisReady.value = true
-      console.log('🔍 [isPrefix追踪] localStorage数据恢复完成，重新处理码表')
     }
   } catch (error) {
     console.error('恢復碼表數據失敗:', error)
@@ -467,26 +457,16 @@ function calculateMaxCodeLength(codeTable: CodeTable): number {
 
 // 處理碼表上傳成功
 const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean }) => {
-  console.log('🔍 [isPrefix追踪] App.vue收到上传数据')
-  console.log('🔍 [isPrefix追踪] 数据中的isPrefix:', data.isPrefix)
-  console.log('🔍 [isPrefix追踪] 数据中的tableKey:', data.tableKey)
-  
   codeTable.value = data.codeTable
   codeTableName.value = data.tableKey || data.fileName.replace(/\.(txt|csv)$/, '') // 优先使用tableKey，用于内置方案前缀码检测
   uploadPrefixFlag.value = data.isPrefix || false  // 设置用户上传时的前缀码标记
   
-  console.log('🔍 [isPrefix追踪] 设置uploadPrefixFlag为:', uploadPrefixFlag.value)
-  
   // 计算最大码长（全局变量，计算一次后不再改变）
   globalMaxLength.value = calculateMaxCodeLength(data.codeTable)
-  console.log(`🔍 [isPrefix追踪] 计算得到的全局最大码长: ${globalMaxLength.value}`)
-  
-  const finalIsPrefix = data.isPrefix || false
-  console.log('🔍 [isPrefix追踪] 最终传递给处理服务的isPrefix:', finalIsPrefix)
   
   // 立即处理码表，生成所有派生版本
   codeTableProcessingService.processCodeTable(data.codeTable, {
-    isPrefix: finalIsPrefix,
+    isPrefix: data.isPrefix || false,
     maxLength: globalMaxLength.value
   })
   
@@ -497,8 +477,6 @@ const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; f
   
   // 保存到本地存儲
   saveCodeTableData()
-  
-  console.log('码表处理完成，各个组件可以使用缓存的处理结果')
   
   // 码表分析成功后，自动折叠上传卡片
   if (uploaderCardRef.value && typeof uploaderCardRef.value.collapse === 'function') {

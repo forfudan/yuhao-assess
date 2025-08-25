@@ -34,8 +34,6 @@ export class CodeTableProcessingService {
    * 处理原始码表，生成所有需要的派生码表
    */
   processCodeTable(originalCodeTable: CodeTable, options?: { isPrefix?: boolean, maxLength?: number }): ProcessedCodeTables {
-    console.log('🔍 [isPrefix追踪] 处理服务收到参数:', options)
-    
     // 生成全码表和简码表
     const fullResult = generateFullCodeTable(originalCodeTable)
     const shortResult = generateShortCodeTable(originalCodeTable)
@@ -46,8 +44,6 @@ export class CodeTableProcessingService {
     
     // 保存处理选项
     this.processingOptions = { isPrefix, maxLength }
-    
-    console.log(`🔍 [isPrefix追踪] 最终处理参数: maxLength=${maxLength}, isPrefix=${isPrefix}`)
     
     // 生成两种加选重按键的码表
     // 无论全码表还是简码表，都使用相同的逻辑：根据是否前缀码决定是否补空格
@@ -62,7 +58,6 @@ export class CodeTableProcessingService {
       shortWithSelection: shortWithSelection
     }
     
-    console.log('🔍 [isPrefix追踪] 码表处理完成')
     return this.processedTables
   }
 
