@@ -1,5 +1,5 @@
 <template>
-  <div class="comparison-card">
+  <div class="comparison-card" v-bind="$attrs">
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
@@ -490,6 +490,11 @@
 </template>
 
 <script setup lang="ts">
+// 禁用自動屬性繼承，因為我們有多個根節點（包括 Teleport）
+defineOptions({
+  inheritAttrs: false
+})
+
 import { ref, computed, onMounted, watch, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
 import { getDynamicDupRate } from '../services/duplicateAnalysisService'
@@ -600,70 +605,6 @@ const tabs = [
   { key: 'static', label: '靜態重碼' },
   { key: 'speedEquiv', label: '速度當量' }
 ] as const
-
-// 確保當前 Tab 的數據已加載
-const ensureCurrentTabDataLoaded = async () => {
-  const schemes = allSchemes.value
-  const pendingCalculations: Promise<void>[] = []
-  
-  for (const scheme of schemes) {
-    if (!scheme.codeTable || scheme.isCalculating) continue
-    
-    let needsCalculation = false
-    if (activeTab.value === 'dynamic') {
-      needsCalculation = !scheme.data?.dynamic
-    } else if (activeTab.value === 'static') {
-      needsCalculation = !scheme.data?.static
-    } else if (activeTab.value === 'speedEquiv') {
-      needsCalculation = !scheme.data?.speedEquiv
-    }
-    
-    if (needsCalculation) {
-      pendingCalculations.push(calculateMissingData(scheme))
-    }
-  }
-  
-  await Promise.all(pendingCalculations)
-}
-
-// 為方案計算缺失的數據
-const calculateMissingData = async (scheme: Scheme) => {
-  if (!scheme.codeTable || scheme.isCalculating) return
-  
-  scheme.isCalculating = true
-  
-  try {
-    if (!scheme.data) {
-      scheme.data = {}
-    }
-    
-    // 檢查是否為主方案（不可刪除的方案）
-    const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
-    
-    if (activeTab.value === 'dynamic' && !scheme.data.dynamic) {
-      scheme.data.dynamic = await calculateDynamicData(scheme.codeTable, scheme.isPrefix)
-    } else if (activeTab.value === 'static' && !scheme.data.static) {
-      scheme.data.static = await calculateStaticData(scheme.codeTable, scheme.isPrefix)
-    } else if (activeTab.value === 'speedEquiv' && !scheme.data.speedEquiv) {
-      if (isMainScheme) {
-        // 主方案使用全局已處理的碼表
-        scheme.data.speedEquiv = await calculateMainSchemeSpeedEquivData()
-      } else {
-        // 新增方案使用獨立計算
-        scheme.data.speedEquiv = await calculateSpeedEquivData(scheme.codeTable, scheme.isPrefix)
-      }
-    }
-  } catch (error) {
-    console.error(`計算方案 ${scheme.name} 的數據失敗:`, error)
-  } finally {
-    scheme.isCalculating = false
-  }
-}
-
-// 惰性計算：監聽 Tab 切換
-watch(activeTab, async (newTab) => {
-  await ensureCurrentTabDataLoaded()
-}, { immediate: true })
 
 // 排序相關狀態
 type SortDirection = 'desc' | 'asc' | 'none'
@@ -801,6 +742,70 @@ const allSchemes = computed(() => {
 
 // 計算屬性 - 是否有任何方案
 const hasAnyScheme = computed(() => allSchemes.value.length > 0)
+
+// 確保當前 Tab 的數據已加載
+const ensureCurrentTabDataLoaded = async () => {
+  const schemes = allSchemes.value
+  const pendingCalculations: Promise<void>[] = []
+  
+  for (const scheme of schemes) {
+    if (!scheme.codeTable || scheme.isCalculating) continue
+    
+    let needsCalculation = false
+    if (activeTab.value === 'dynamic') {
+      needsCalculation = !scheme.data?.dynamic
+    } else if (activeTab.value === 'static') {
+      needsCalculation = !scheme.data?.static
+    } else if (activeTab.value === 'speedEquiv') {
+      needsCalculation = !scheme.data?.speedEquiv
+    }
+    
+    if (needsCalculation) {
+      pendingCalculations.push(calculateMissingData(scheme))
+    }
+  }
+  
+  await Promise.all(pendingCalculations)
+}
+
+// 為方案計算缺失的數據
+const calculateMissingData = async (scheme: Scheme) => {
+  if (!scheme.codeTable || scheme.isCalculating) return
+  
+  scheme.isCalculating = true
+  
+  try {
+    if (!scheme.data) {
+      scheme.data = {}
+    }
+    
+    // 檢查是否為主方案（不可刪除的方案）
+    const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
+    
+    if (activeTab.value === 'dynamic' && !scheme.data.dynamic) {
+      scheme.data.dynamic = await calculateDynamicData(scheme.codeTable, scheme.isPrefix)
+    } else if (activeTab.value === 'static' && !scheme.data.static) {
+      scheme.data.static = await calculateStaticData(scheme.codeTable, scheme.isPrefix)
+    } else if (activeTab.value === 'speedEquiv' && !scheme.data.speedEquiv) {
+      if (isMainScheme) {
+        // 主方案使用全局已處理的碼表
+        scheme.data.speedEquiv = await calculateMainSchemeSpeedEquivData()
+      } else {
+        // 新增方案使用獨立計算
+        scheme.data.speedEquiv = await calculateSpeedEquivData(scheme.codeTable, scheme.isPrefix)
+      }
+    }
+  } catch (error) {
+    console.error(`計算方案 ${scheme.name} 的數據失敗:`, error)
+  } finally {
+    scheme.isCalculating = false
+  }
+}
+
+// 惰性計算：監聽 Tab 切換
+watch(activeTab, async (newTab) => {
+  await ensureCurrentTabDataLoaded()
+}, { immediate: true })
 
 // 排序函數
 const handleSort = (column: SortColumn) => {
