@@ -210,6 +210,13 @@ import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '..
 import { getDynamicDupRate } from '../services/analysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
+import { 
+  loadCharFrequency,
+  loadCharFrequencySC,
+  loadCharFrequencyTC,
+  loadCharFrequencyUnified,
+  createTooltipManager 
+} from '../services/utilsService'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, CharFrequency } from '../types'
 
@@ -295,72 +302,8 @@ const isCalculating = ref(false)
 const analysisResults = ref<AnalysisResults | null>(null)
 const builtinService = new BuiltinCodeTableService()
 
-// 工具提示相关
-const tooltipVisible = ref(false)
-const tooltipText = ref('')
-const tooltipStyle = ref({})
-
-// 显示自定义工具提示
-const showTooltip = (event: MouseEvent, text: string) => {
-  tooltipText.value = text
-  tooltipVisible.value = true
-  
-  const rect = (event.target as HTMLElement).getBoundingClientRect()
-  const tooltipLeft = Math.min(rect.left, window.innerWidth - 320)
-  const tooltipTop = rect.bottom + 8
-  
-  tooltipStyle.value = {
-    position: 'fixed',
-    left: `${tooltipLeft}px`,
-    top: `${tooltipTop}px`,
-    zIndex: 9999
-  }
-}
-
-// 隐藏工具提示
-const hideTooltip = () => {
-  tooltipVisible.value = false
-}
-
-// 加载字频数据
-async function loadCharFrequency(): Promise<CharFrequency> {
-  try {
-    return await builtinService.loadCharFrequency()
-  } catch (error) {
-    console.error('加载知乎字频数据失败:', error)
-    return {}
-  }
-}
-
-// 加载简体字频数据
-async function loadCharFrequencySC(): Promise<CharFrequency> {
-  try {
-    return await builtinService.loadCharFrequencySC()
-  } catch (error) {
-    console.error('加载简体字频数据失败:', error)
-    return {}
-  }
-}
-
-// 加载繁体字频数据
-async function loadCharFrequencyTC(): Promise<CharFrequency> {
-  try {
-    return await builtinService.loadCharFrequencyTC()
-  } catch (error) {
-    console.error('加载繁体字频数据失败:', error)
-    return {}
-  }
-}
-
-// 加载繁简联合字频数据
-async function loadCharFrequencyUnified(): Promise<CharFrequency> {
-  try {
-    return await builtinService.loadCharFrequencyUnified()
-  } catch (error) {
-    console.error('加载繁简联合字频数据失败:', error)
-    return {}
-  }
-}
+// 工具提示管理器
+const { tooltipVisible, tooltipText, tooltipStyle, showTooltip, hideTooltip } = createTooltipManager()
 
 // 计算字符集的重码字符数和重码组数（支持双码表）
 async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Set<string>, fullCodeTable: CodeTable, shortCodeTable: CodeTable) {

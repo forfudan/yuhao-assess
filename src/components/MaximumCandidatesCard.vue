@@ -102,6 +102,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, Teleport } from 'vue'
 import { getAllMaximumCandidates, type MaximumCandidatesResult } from '../services/maximumCandidatesService'
+import { createTooltipManager, getCharacterTooltip } from '../services/utilsService'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable } from '../types'
 
@@ -129,10 +130,9 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const analysisResults = ref<Record<string, MaximumCandidatesResult> | null>(null)
 
-// 工具提示相關
-const tooltipVisible = ref(false)
+// 工具提示管理器
+const { tooltipVisible, tooltipText, tooltipStyle, showTooltip: showTooltipBase, hideTooltip } = createTooltipManager()
 const tooltipChars = ref('')
-const tooltipStyle = ref({})
 
 // 字符集信息映射
 const charsetInfo = {
@@ -171,35 +171,11 @@ const tableData = computed(() => {
   }))
 })
 
-// 生成字符工具提示文本
-const getCharacterTooltip = (chars: string[]) => {
-  return `該編碼對應的漢字：${chars.join('')}`
-}
-
-// 顯示自定義工具提示
+// 生成字符工具提示文本（适配器）
 const showTooltip = (event: MouseEvent, chars: string[]) => {
-  console.log('showTooltip called with chars:', chars)
   tooltipChars.value = chars.join('')
-  tooltipVisible.value = true
-  
-  const rect = (event.target as HTMLElement).getBoundingClientRect()
-  const tooltipLeft = Math.min(rect.left, window.innerWidth - 320) // 确保不超出右边界
-  const tooltipTop = rect.bottom + 8
-  
-  tooltipStyle.value = {
-    position: 'fixed',
-    left: `${tooltipLeft}px`,
-    top: `${tooltipTop}px`,
-    zIndex: 9999
-  }
-  console.log('Tooltip visible:', tooltipVisible.value, 'chars:', tooltipChars.value)
-  console.log('Tooltip position:', tooltipStyle.value)
-}
-
-// 隱藏工具提示
-const hideTooltip = () => {
-  console.log('hideTooltip called')
-  tooltipVisible.value = false
+  const tooltipText = `該編碼對應的漢字：${chars.join('')}`
+  showTooltipBase(event, tooltipText)
 }
 
 // 計算分析數據

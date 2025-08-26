@@ -495,6 +495,18 @@ import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '..
 import { getDynamicDupRate } from '../services/analysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
+import { 
+  formatRate, 
+  formatNumber, 
+  formatEquiv, 
+  loadCharFrequency,
+  loadCharFrequencySC,
+  loadCharFrequencyTC,
+  loadCharFrequencyUnified,
+  loadAllCharFrequencies,
+  calculateSpeedEquivFromCodeTable,
+  calculateCodePairFrequencies
+} from '../services/utilsService'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, CharFrequency } from '../types'
 
@@ -786,19 +798,6 @@ const allSchemes = computed(() => {
 // 計算屬性 - 是否有任何方案
 const hasAnyScheme = computed(() => allSchemes.value.length > 0)
 
-// 格式化函數
-const formatRate = (rate?: number) => {
-  return rate ? (rate * 10000).toFixed(2) + '‱' : '-'
-}
-
-const formatNumber = (num?: number) => {
-  return num ? num.toLocaleString() : '-'
-}
-
-const formatEquiv = (equiv?: number) => {
-  return equiv ? equiv.toFixed(4) : '-'
-}
-
 // 排序函數
 const handleSort = (column: SortColumn) => {
   if (sortColumn.value === column) {
@@ -828,43 +827,6 @@ const getSortArrow = (column: SortColumn) => {
     return '⇅'
   }
   return sortDirection.value === 'desc' ? '↓' : '↑'
-}
-
-// 加载字频数据
-async function loadCharFrequency(): Promise<CharFrequency> {
-  try {
-    return await builtinService.loadCharFrequency()
-  } catch (error) {
-    console.error('加载知乎字频数据失败:', error)
-    return {}
-  }
-}
-
-async function loadCharFrequencySC(): Promise<CharFrequency> {
-  try {
-    return await builtinService.loadCharFrequencySC()
-  } catch (error) {
-    console.error('加载简体字频数据失败:', error)
-    return {}
-  }
-}
-
-async function loadCharFrequencyTC(): Promise<CharFrequency> {
-  try {
-    return await builtinService.loadCharFrequencyTC()
-  } catch (error) {
-    console.error('加载繁体字频数据失败:', error)
-    return {}
-  }
-}
-
-async function loadCharFrequencyUnified(): Promise<CharFrequency> {
-  try {
-    return await builtinService.loadCharFrequencyUnified()
-  } catch (error) {
-    console.error('加载繁简联合字频数据失败:', error)
-    return {}
-  }
 }
 
 // 计算字符集的重码字符数
@@ -1064,10 +1026,10 @@ async function calculateSpeedEquivData(codeTable: CodeTable, isPrefix = false): 
     ])
     
     // 計算各種字頻下的速度當量
-    const zhihuEquiv = calculateSpeedEquiv(processedCodeTable, zhihuFreq, equivTable)
-    const scEquiv = calculateSpeedEquiv(processedCodeTable, scFreq, equivTable)
-    const tcEquiv = calculateSpeedEquiv(processedCodeTable, tcFreq, equivTable)
-    const unifiedEquiv = calculateSpeedEquiv(processedCodeTable, unifiedFreq, equivTable)
+    const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
+    const scEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, scFreq, equivTable)
+    const tcEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tcFreq, equivTable)
+    const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
     
     return {
       zhihuEquiv,
@@ -1115,10 +1077,10 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
     ])
     
     // 計算各種字頻下的速度當量
-    const zhihuEquiv = calculateSpeedEquiv(processedCodeTable, zhihuFreq, equivTable)
-    const scEquiv = calculateSpeedEquiv(processedCodeTable, scFreq, equivTable)
-    const tcEquiv = calculateSpeedEquiv(processedCodeTable, tcFreq, equivTable)
-    const unifiedEquiv = calculateSpeedEquiv(processedCodeTable, unifiedFreq, equivTable)
+    const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
+    const scEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, scFreq, equivTable)
+    const tcEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tcFreq, equivTable)
+    const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
     
     return {
       zhihuEquiv,
@@ -1201,51 +1163,6 @@ function generateCodeTableWithSelection(
   }
   
   return result
-}
-
-// 計算編碼對的頻率分佈
-function calculateCodePairFrequencies(
-  codeTable: CodeTable, 
-  charFrequency: Record<string, number>
-): Record<string, number> {
-  const pairFrequencies: Record<string, number> = {}
-  
-  for (const [char, codes] of codeTable.entries()) {
-    const frequency = charFrequency[char] || 0
-    if (frequency === 0 || codes.length === 0) continue
-    
-    const code = codes[0] // 使用第一個編碼
-    
-    // 生成所有相鄰的編碼對
-    for (let i = 0; i < code.length - 1; i++) {
-      const pair = code.substring(i, i + 2)
-      pairFrequencies[pair] = (pairFrequencies[pair] || 0) + frequency
-    }
-  }
-  
-  return pairFrequencies
-}
-
-// 計算速度當量
-function calculateSpeedEquiv(
-  codeTable: CodeTable,
-  charFrequency: Record<string, number>,
-  equivTable: Record<string, number>
-): number {
-  const pairFrequencies = calculateCodePairFrequencies(codeTable, charFrequency)
-  
-  let totalWeightedEquiv = 0
-  let totalFrequency = 0
-  
-  for (const [pair, frequency] of Object.entries(pairFrequencies)) {
-    const equiv = equivTable[pair]
-    if (equiv !== undefined) {
-      totalWeightedEquiv += equiv * frequency
-      totalFrequency += frequency
-    }
-  }
-  
-  return totalFrequency > 0 ? totalWeightedEquiv / totalFrequency : 0
 }
 
 // 已废弃：保留兼容性，但推荐使用分离的函数

@@ -23,6 +23,23 @@ export {
   getCodeTableStats
 } from './codeTableCleanService'
 
+// 導出通用工具函數
+export {
+  formatRate,
+  formatNumber,
+  formatEquiv,
+  loadCharFrequency,
+  loadCharFrequencySC,
+  loadCharFrequencyTC,
+  loadCharFrequencyUnified,
+  loadAllCharFrequencies,
+  calculateSpeedEquiv,
+  calculateSpeedEquivFromCodeTable,
+  calculateCodePairFrequencies,
+  createTooltipManager,
+  getCharacterTooltip
+} from './utilsService'
+
 // 導出字符集服務
 export {
   isInGB2312,
