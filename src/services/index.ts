@@ -1,19 +1,22 @@
 /**
- * 分析服務模塊導出
+ * 服务模块导出
  * 
- * 統一導出所有分析相關的函數和類型
+ * 统一导出所有服务模块的函数和类型
  */
 
-// 導出主要分析函數
+// 导出分析服务
 export {
   getStaticDupRate,
   getDynamicDupRate,
   calculateCodeTableMetrics,
   codeTableToEntries,
-  filterCharFrequency
+  filterCharFrequency,
+  calculateCodePairFrequencies,
+  calculateSpeedEquiv,
+  calculateSpeedEquivFromCodeTable
 } from './analysisService'
 
-// 導出碼表清理函數
+// 导出码表处理服务
 export {
   cleanCodeTable,
   generateFullCodeTable,
@@ -23,24 +26,26 @@ export {
   getCodeTableStats
 } from './codeTableCleanService'
 
-// 導出通用工具函數
+// 导出数据服务
 export {
-  formatRate,
-  formatNumber,
-  formatEquiv,
   loadCharFrequency,
   loadCharFrequencySC,
   loadCharFrequencyTC,
   loadCharFrequencyUnified,
   loadAllCharFrequencies,
-  calculateSpeedEquiv,
-  calculateSpeedEquivFromCodeTable,
-  calculateCodePairFrequencies,
+  loadEquivTable
+} from './dataService'
+
+// 导出UI服务
+export {
+  formatRate,
+  formatNumber,
+  formatEquiv,
   createTooltipManager,
   getCharacterTooltip
-} from './utilsService'
+} from './uiService'
 
-// 導出字符集服務
+// 导出字符集服务
 export {
   isInGB2312,
   isInGuozi,
@@ -55,39 +60,40 @@ export {
   isInCJKToH,
   isInCJKToI,
   charsetCheckers,
-  charsetInfo
+  charsetInfo,
+  getCharsetSize,
+  getTheoreticalCharsetSize,
+  generateCharset
 } from './charsetService'
 
-// 導出重碼分析函數
+// 导出重复分析服务
 export {
   calculateCharsetDuplicates,
-  generateDuplicateReport,
-  formatDuplicateReport,
-  exportDuplicateReportJSON,
-  exportDuplicateReportCSV
+  type DuplicateStats,
+  type DuplicateReport
 } from './duplicateAnalysisService'
 
-// 導出最大候選項分析函數
+// 导出最大候选数服务
 export {
   getMaximumCandidates,
-  getAllMaximumCandidates
+  getAllMaximumCandidates,
+  type MaximumCandidatesResult
 } from './maximumCandidatesService'
 
-// 導出碼表處理服務
+// 导出内置码表服务
 export {
-  CodeTableProcessingService,
-  codeTableProcessingService
-} from './codeTableProcessingService'
+  BuiltinCodeTableService,
+  builtinCodeTableService
+} from './builtinCodeTableService'
 
-// 重新導出相關類型
+// 导出码表处理服务
+export { codeTableProcessingService } from './codeTableProcessingService'
+
+// 导出类型
 export type {
-  CodeTable,
-  CharFrequency,
-  CodeTableEntry,
   AnalysisParams,
   CodeTableMetrics,
   CharsetType,
-  DuplicateStats,
   CodeTableCleanOptions,
   CleanResult
 } from '../types/index'

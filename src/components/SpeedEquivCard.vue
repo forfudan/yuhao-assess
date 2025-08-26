@@ -82,11 +82,11 @@ import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
+import { loadAllCharFrequencies } from '../services/dataService'
 import { 
-  loadAllCharFrequencies,
   calculateSpeedEquiv,
   calculateCodePairFrequencies 
-} from '../services/utilsService'
+} from '../services/analysisService'
 
 // Props
 interface Props {

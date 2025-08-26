@@ -498,15 +498,19 @@ import { codeTableProcessingService } from '../services/codeTableProcessingServi
 import { 
   formatRate, 
   formatNumber, 
-  formatEquiv, 
+  formatEquiv
+} from '../services/uiService'
+import { 
   loadCharFrequency,
   loadCharFrequencySC,
   loadCharFrequencyTC,
   loadCharFrequencyUnified,
-  loadAllCharFrequencies,
+  loadAllCharFrequencies
+} from '../services/dataService'
+import {
   calculateSpeedEquivFromCodeTable,
   calculateCodePairFrequencies
-} from '../services/utilsService'
+} from '../services/analysisService'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, CharFrequency } from '../types'
 

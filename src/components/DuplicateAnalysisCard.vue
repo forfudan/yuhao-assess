@@ -214,9 +214,9 @@ import {
   loadCharFrequency,
   loadCharFrequencySC,
   loadCharFrequencyTC,
-  loadCharFrequencyUnified,
-  createTooltipManager 
-} from '../services/utilsService'
+  loadCharFrequencyUnified
+} from '../services/dataService'
+import { createTooltipManager } from '../services/uiService'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, CharFrequency } from '../types'
 

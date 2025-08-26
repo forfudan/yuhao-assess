@@ -102,7 +102,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, Teleport } from 'vue'
 import { getAllMaximumCandidates, type MaximumCandidatesResult } from '../services/maximumCandidatesService'
-import { createTooltipManager, getCharacterTooltip } from '../services/utilsService'
+import { createTooltipManager, getCharacterTooltip } from '../services/uiService'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable } from '../types'
 
