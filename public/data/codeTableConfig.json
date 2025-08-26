@@ -12,8 +12,8 @@
       "website": "https://shurufa.app/",
       "category": "形碼",
       "tags": ["形碼", "前綴碼", "五碼"],
-      "enabled": true,
-      "prefix": true
+      "prefix": true,
+      "enabled": true
     },
     {
       "key": "yuhao-joy",
@@ -24,6 +24,7 @@
       "website": "https://shurufa.app/",
       "category": "形碼",
       "tags": ["形碼", "定長", "四碼"],
+      "prefix": false,
       "enabled": true
     },
     {
@@ -35,6 +36,7 @@
       "website": "https://shurufa.app/",
       "category": "形碼",
       "tags": ["形碼", "定長", "四碼"],
+      "prefix": false,
       "enabled": true
     },
     {
@@ -46,6 +48,7 @@
       "website": "https://shurufa.app/",
       "category": "形碼",
       "tags": ["形碼", "定長", "四碼"],
+      "prefix": false,
       "enabled": true
     },
     {
@@ -57,6 +60,7 @@
       "website": "http://soongsky.com/sky/",
       "category": "形碼",
       "tags": ["形碼", "表形碼", "定長", "四碼"],
+      "prefix": false,
       "enabled": true
     }
   ],
