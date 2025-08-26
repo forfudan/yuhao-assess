@@ -729,6 +729,14 @@ interface SchemeData {
   speedEquiv?: SpeedEquivData
 }
 
+// 預處理的數據結構
+interface ProcessedData {
+  fullCodeTable: CodeTable          // 全碼表
+  allUniqueChars: Set<string>       // 所有唯一字符
+  charsetMap: Map<CharsetType, Set<string>>  // 字符集映射
+  maxLength: number                 // 最大碼長
+}
+
 // 定義方案接口
 interface Scheme {
   id: string
@@ -741,6 +749,8 @@ interface Scheme {
   // 元數據字段
   source?: string // 來源（文件名或內置方案ID）
   uploadedAt?: Date // 上傳時間
+  // 預處理數據（添加方案時計算一次）
+  processedData?: ProcessedData
 }
 
 // 定義內置方案接口
@@ -974,22 +984,27 @@ const calculateMissingData = async (scheme: Scheme) => {
       scheme.data = {}
     }
     
+    // 如果沒有預處理數據，先進行預處理
+    if (!scheme.processedData) {
+      scheme.processedData = await preprocessCodeTableData(scheme.codeTable, scheme.isPrefix)
+    }
+    
     // 檢查是否為主方案（不可刪除的方案）
     const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
     
     if (activeTab.value === 'dynamic' && !scheme.data.dynamic) {
-      scheme.data.dynamic = await calculateDynamicData(scheme.codeTable, scheme.isPrefix)
+      scheme.data.dynamic = await calculateDynamicDataOptimized(scheme)
     } else if (activeTab.value === 'static' && !scheme.data.static) {
-      scheme.data.static = await calculateStaticData(scheme.codeTable, scheme.isPrefix)
+      scheme.data.static = await calculateStaticData(scheme)
     } else if (activeTab.value === 'maxCandidates' && !scheme.data.maxCandidates) {
-      scheme.data.maxCandidates = await calculateMaxCandidatesData(scheme.codeTable, scheme.isPrefix)
+      scheme.data.maxCandidates = await calculateMaxCandidatesData(scheme)
     } else if (activeTab.value === 'speedEquiv' && !scheme.data.speedEquiv) {
       if (isMainScheme) {
         // 主方案使用全局已處理的碼表
         scheme.data.speedEquiv = await calculateMainSchemeSpeedEquivData()
       } else {
-        // 新增方案使用獨立計算
-        scheme.data.speedEquiv = await calculateSpeedEquivData(scheme.codeTable, scheme.isPrefix)
+        // 新增方案使用優化計算
+        scheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(scheme)
       }
     }
   } catch (error) {
@@ -1073,6 +1088,66 @@ const getSortArrow = (column: SortColumn) => {
     return '⇅'
   }
   return sortDirection.value === 'desc' ? '↓' : '↑'
+}
+
+// 預處理碼表數據（添加方案時執行一次）
+async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): Promise<ProcessedData> {
+  console.time('碼表預處理')
+  
+  // 1. 從碼表鍵中提取所有單個字符
+  console.time('提取唯一字符')
+  const allUniqueChars = new Set<string>()
+  for (const key of codeTable.keys()) {
+    for (const char of key) {
+      allUniqueChars.add(char)
+    }
+  }
+  console.timeEnd('提取唯一字符')
+  
+  // 2. 生成全碼表
+  console.time('生成全碼表')
+  const { generateFullCodeTable } = await import('../services/codeTableCleanService')
+  const fullResult = generateFullCodeTable(codeTable)
+  const fullCodeTable = fullResult.codeTable
+  console.timeEnd('生成全碼表')
+  
+  // 3. 計算最大碼長
+  console.time('計算最大碼長')
+  let maxLength = 0
+  for (const [, codes] of codeTable.entries()) {
+    for (const code of codes) {
+      maxLength = Math.max(maxLength, code.length)
+    }
+  }
+  console.timeEnd('計算最大碼長')
+  
+  // 4. 並行生成所有字符集
+  console.time('生成所有字符集')
+  const charsetTypes: CharsetType[] = [
+    'gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_i'
+  ]
+  
+  const charsetPromises = charsetTypes.map(async (type) => {
+    const charset = await generateCharset(type, allUniqueChars)
+    return { type, charset }
+  })
+  const charsetResults = await Promise.all(charsetPromises)
+  
+  // 建立字符集映射
+  const charsetMap = new Map<CharsetType, Set<string>>()
+  charsetResults.forEach(({ type, charset }) => {
+    charsetMap.set(type, charset)
+  })
+  console.timeEnd('生成所有字符集')
+  
+  console.timeEnd('碼表預處理')
+  
+  return {
+    fullCodeTable,
+    allUniqueChars,
+    charsetMap,
+    maxLength
+  }
 }
 
 // 計算字符集的重碼字符數
@@ -1200,41 +1275,15 @@ async function calculateDynamicData(codeTable: CodeTable, isPrefix = false): Pro
   }
 }
 
-// 計算靜態重碼數據（對比方案用）
-async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Promise<StaticData> {
-  console.time('靜態重碼計算')
+// 計算靜態重碼數據（使用預處理的數據）- 高性能版本  
+async function calculateStaticData(scheme: Scheme): Promise<StaticData> {
+  console.time(`靜態重碼計算-${scheme.name}`)
   
-  // 從碼表鍵中提取所有單個字符（只做一次）
-  const allUniqueChars = new Set<string>()
-  for (const key of codeTable.keys()) {
-    for (const char of key) {
-      allUniqueChars.add(char)
-    }
+  if (!scheme.processedData) {
+    throw new Error('方案缺少預處理數據')
   }
-
-  // 為對比方案獨立處理碼表，不使用單例服務以避免干擾當前方案（只做一次）
-  const { generateFullCodeTable } = await import('../services/codeTableCleanService')
-  const fullResult = generateFullCodeTable(codeTable)
-  const fullCodeTable = fullResult.codeTable
   
-  // 預先生成所有需要的字符集（並行處理）
-  const charsetTypes: CharsetType[] = [
-    'gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_i'
-  ]
-  
-  console.time('生成字符集')
-  const charsetPromises = charsetTypes.map(async (type) => {
-    const charset = await generateCharset(type, allUniqueChars)
-    return { type, charset }
-  })
-  const charsetResults = await Promise.all(charsetPromises)
-  console.timeEnd('生成字符集')
-  
-  // 建立字符集映射
-  const charsetMap = new Map<CharsetType, Set<string>>()
-  charsetResults.forEach(({ type, charset }) => {
-    charsetMap.set(type, charset)
-  })
+  const { fullCodeTable, charsetMap } = scheme.processedData
   
   // 優化的重碼計算函數
   const calculateCharsetDuplicatesOptimized = (charset: Set<string>) => {
@@ -1261,7 +1310,7 @@ async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Prom
     return fullDuplicateChars
   }
   
-  // 並行計算各字符集的重碼統計
+  // 計算各字符集的重碼統計
   console.time('計算各字符集重碼')
   const results = {
     gb2312DuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('gb2312')!),
@@ -1274,62 +1323,111 @@ async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Prom
   }
   console.timeEnd('計算各字符集重碼')
   
-  console.timeEnd('靜態重碼計算')
+  console.timeEnd(`靜態重碼計算-${scheme.name}`)
   return results
 }
 
-// 計算最大候選項數據（對比方案用）- 優化版本
-async function calculateMaxCandidatesData(codeTable: CodeTable, isPrefix = false): Promise<MaxCandidatesData> {
-  try {
-    console.time('最大候選計算')
-    
-    // 從碼表鍵中提取所有單個字符（只做一次）
-    const allUniqueChars = new Set<string>()
-    for (const key of codeTable.keys()) {
-      for (const char of key) {
-        allUniqueChars.add(char)
-      }
-    }
+// 計算動態重碼數據（使用預處理的數據）- 高性能版本
+async function calculateDynamicDataOptimized(scheme: Scheme): Promise<DynamicData> {
+  console.time(`動態重碼計算-${scheme.name}`)
+  
+  if (!scheme.processedData) {
+    throw new Error('方案缺少預處理數據')
+  }
+  
+  const { fullCodeTable } = scheme.processedData
+  
+  // 加載所有字頻數據
+  const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyUnified] = await Promise.all([
+    loadCharFrequency(),
+    loadCharFrequencySC(),
+    loadCharFrequencyTC(),
+    loadCharFrequencyUnified()
+  ])
+  
+  // 計算各種動態選重率（只計算全碼）
+  const dynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency)
+  const dynamicDupRateSC = getDynamicDupRate(fullCodeTable, charFrequencySC)
+  const dynamicDupRateTC = getDynamicDupRate(fullCodeTable, charFrequencyTC)
+  const dynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
+  
+  console.timeEnd(`動態重碼計算-${scheme.name}`)
+  return {
+    dynamicDupRate,
+    dynamicDupRateSC,
+    dynamicDupRateTC,
+    dynamicDupRateUnified
+  }
+}
 
-    // 生成全碼表（只做一次）
-    const { generateFullCodeTable } = await import('../services/codeTableCleanService')
-    const fullResult = generateFullCodeTable(codeTable)
-    const fullCodeTable = fullResult.codeTable
+// 計算速度當量數據（使用預處理的數據）- 高性能版本  
+async function calculateSpeedEquivDataOptimized(scheme: Scheme): Promise<SpeedEquivData> {
+  console.time(`速度當量計算-${scheme.name}`)
+  
+  if (!scheme.processedData) {
+    throw new Error('方案缺少預處理數據')
+  }
+  
+  try {
+    const { fullCodeTable, maxLength } = scheme.processedData
     
-    // 預先生成所有需要的字符集（並行處理）
-    const charsetTypes: CharsetType[] = [
-      'gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_i'
-    ]
+    // 生成加選重鍵的碼表
+    const processedCodeTable = generateCodeTableWithSelection(fullCodeTable, maxLength, scheme.isPrefix)
     
-    console.time('生成字符集')
-    const charsetPromises = charsetTypes.map(async (type) => {
-      const charset = await generateCharset(type, allUniqueChars)
-      return { type, charset }
-    })
-    const charsetResults = await Promise.all(charsetPromises)
-    console.timeEnd('生成字符集')
-    
-    // 建立字符集映射
-    const charsetMap = new Map<CharsetType, Set<string>>()
-    charsetResults.forEach(({ type, charset }) => {
-      charsetMap.set(type, charset)
-    })
-    
-    // 預先計算所有編碼到字符的映射（只做一次）
-    console.time('建立編碼映射')
-    const allCodeToChars = new Map<string, string[]>()
-    for (const [char, codes] of fullCodeTable.entries()) {
-      if (codes && codes.length > 0) {
-        const code = codes[0] // 使用第一個編碼（全碼）
-        if (!allCodeToChars.has(code)) {
-          allCodeToChars.set(code, [])
-        }
-        allCodeToChars.get(code)!.push(char)
-      }
+    // 加載當量表
+    const response = await fetch('/data/equivTable.json')
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
-    console.timeEnd('建立編碼映射')
+    const equivTableData = await response.json()
+    const equivTable = equivTableData.data || {}
     
-    // 為每個字符集計算最大候選項（重用預處理的數據）
+    // 加載各種字頻表
+    const builtinService = new BuiltinCodeTableService()
+    const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
+      builtinService.loadCharFrequency(),
+      builtinService.loadCharFrequencySC(),
+      builtinService.loadCharFrequencyTC(),
+      builtinService.loadCharFrequencyUnified()
+    ])
+    
+    // 計算各種字頻下的速度當量
+    const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
+    const scEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, scFreq, equivTable)
+    const tcEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tcFreq, equivTable)
+    const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
+    
+    console.timeEnd(`速度當量計算-${scheme.name}`)
+    return {
+      zhihuEquiv,
+      scEquiv,
+      tcEquiv,
+      unifiedEquiv
+    }
+  } catch (error) {
+    console.error('速度當量計算失敗:', error)
+    console.timeEnd(`速度當量計算-${scheme.name}`)
+    return {
+      zhihuEquiv: 0,
+      scEquiv: 0,
+      tcEquiv: 0,
+      unifiedEquiv: 0
+    }
+  }
+}
+
+// 計算最大候選項數據（使用預處理的數據）- 高性能版本
+async function calculateMaxCandidatesData(scheme: Scheme): Promise<MaxCandidatesData> {
+  try {
+    console.time(`最大候選計算-${scheme.name}`)
+    
+    if (!scheme.processedData) {
+      throw new Error('方案缺少預處理數據')
+    }
+    
+    const { fullCodeTable, charsetMap } = scheme.processedData
+    
+    // 為每個字符集計算最大候選項（直接使用預處理的數據）
     console.time('計算各字符集最大候選')
     const calculateMaxForCharset = (charset: Set<string>) => {
       const codeToChars = new Map<string, string[]>()
@@ -1368,7 +1466,7 @@ async function calculateMaxCandidatesData(codeTable: CodeTable, isPrefix = false
     }
     console.timeEnd('計算各字符集最大候選')
     
-    console.timeEnd('最大候選計算')
+    console.timeEnd(`最大候選計算-${scheme.name}`)
     return results
   } catch (error) {
     console.error('計算最大候選項數據失敗:', error)
@@ -1562,10 +1660,24 @@ function generateCodeTableWithSelection(
 }
 
 // 已废弃：保留兼容性，但推荐使用分离的函数
+// 這個函數將被移除，因為現在使用預處理的架構
 async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Promise<SchemeData> {
+  // 創建臨時方案來使用新的計算邏輯
+  const tempScheme: Scheme = {
+    id: 'temp',
+    name: 'temp',
+    codeTable,
+    isBuiltin: false,
+    isCalculating: false,
+    isPrefix
+  }
+  
+  // 進行預處理
+  tempScheme.processedData = await preprocessCodeTableData(codeTable, isPrefix)
+  
   const [dynamic, static_] = await Promise.all([
-    calculateDynamicData(codeTable, isPrefix),
-    calculateStaticData(codeTable, isPrefix)
+    calculateDynamicDataOptimized(tempScheme),
+    calculateStaticData(tempScheme)
   ])
   
   return {
@@ -1607,20 +1719,23 @@ async function addBuiltinScheme() {
     additionalSchemes.value.push(newScheme)
     showAddForm.value = false
     
-    // 載入碼表並計算當前Tab的數據
+    // 載入碼表並預處理數據
     const result = await builtinService.downloadCodeTable(selectedBuiltinScheme.value)
     newScheme.codeTable = result.codeTable
+    
+    // 預處理碼表數據（只做一次）
+    newScheme.processedData = await preprocessCodeTableData(result.codeTable, newScheme.isPrefix)
     
     // 只計算當前Tab需要的數據
     newScheme.data = {}
     if (activeTab.value === 'dynamic') {
-      newScheme.data.dynamic = await calculateDynamicData(result.codeTable, newScheme.isPrefix)
+      newScheme.data.dynamic = await calculateDynamicDataOptimized(newScheme)
     } else if (activeTab.value === 'static') {
-      newScheme.data.static = await calculateStaticData(result.codeTable, newScheme.isPrefix)
+      newScheme.data.static = await calculateStaticData(newScheme)
     } else if (activeTab.value === 'maxCandidates') {
-      newScheme.data.maxCandidates = await calculateMaxCandidatesData(result.codeTable, newScheme.isPrefix)
+      newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
     } else if (activeTab.value === 'speedEquiv') {
-      newScheme.data.speedEquiv = await calculateSpeedEquivData(result.codeTable, newScheme.isPrefix)
+      newScheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(newScheme)
     }
     
     newScheme.isCalculating = false
@@ -1684,20 +1799,23 @@ async function addAllBuiltinSchemes() {
         
         additionalSchemes.value.push(newScheme)
         
-        // 載入碼表並計算當前Tab的數據
+        // 載入碼表並預處理數據
         const result = await builtinService.downloadCodeTable(builtinScheme.id)
         newScheme.codeTable = result.codeTable
+        
+        // 預處理碼表數據（只做一次）
+        newScheme.processedData = await preprocessCodeTableData(result.codeTable, newScheme.isPrefix)
         
         // 只計算當前Tab需要的數據
         newScheme.data = {}
         if (activeTab.value === 'dynamic') {
-          newScheme.data.dynamic = await calculateDynamicData(result.codeTable, newScheme.isPrefix)
+          newScheme.data.dynamic = await calculateDynamicDataOptimized(newScheme)
         } else if (activeTab.value === 'static') {
-          newScheme.data.static = await calculateStaticData(result.codeTable, newScheme.isPrefix)
+          newScheme.data.static = await calculateStaticData(newScheme)
         } else if (activeTab.value === 'maxCandidates') {
-          newScheme.data.maxCandidates = await calculateMaxCandidatesData(result.codeTable, newScheme.isPrefix)
+          newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
         } else if (activeTab.value === 'speedEquiv') {
-          newScheme.data.speedEquiv = await calculateSpeedEquivData(result.codeTable, newScheme.isPrefix)
+          newScheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(newScheme)
         }
         
         newScheme.isCalculating = false
@@ -1762,16 +1880,19 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     
     newScheme.codeTable = codeTable
     
+    // 預處理碼表數據（只做一次）
+    newScheme.processedData = await preprocessCodeTableData(codeTable, newScheme.isPrefix)
+    
     // 只計算當前Tab需要的數據
     newScheme.data = {}
     if (activeTab.value === 'dynamic') {
-      newScheme.data.dynamic = await calculateDynamicData(codeTable, newScheme.isPrefix)
+      newScheme.data.dynamic = await calculateDynamicDataOptimized(newScheme)
     } else if (activeTab.value === 'static') {
-      newScheme.data.static = await calculateStaticData(codeTable, newScheme.isPrefix)
+      newScheme.data.static = await calculateStaticData(newScheme)
     } else if (activeTab.value === 'maxCandidates') {
-      newScheme.data.maxCandidates = await calculateMaxCandidatesData(codeTable, newScheme.isPrefix)
+      newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
     } else if (activeTab.value === 'speedEquiv') {
-      newScheme.data.speedEquiv = await calculateSpeedEquivData(codeTable, newScheme.isPrefix)
+      newScheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(newScheme)
     }
     
     newScheme.isCalculating = false
