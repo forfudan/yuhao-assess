@@ -185,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import CodeTableUploaderCard from './components/CodeTableUploaderCard.vue'
 import KeyboardHeatmapCard from './components/KeyboardHeatmapCard.vue'
 import CodeTableAnalysisCard from './components/CodeTableAnalysisCard.vue'
@@ -469,23 +469,34 @@ function calculateMaxCodeLength(codeTable: CodeTable): number {
 
 // 處理碼表上傳成功
 const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean }) => {
+  console.log('[App] 開始處理碼表上傳:', data.fileName, data.codeTable.size)
+  
+  // 先計算最大碼長
+  const maxLength = calculateMaxCodeLength(data.codeTable)
+  
+  // 立即处理码表，生成所有派生版本（包含字频优化）
+  console.log('[App] 開始處理碼表...')
+  await codeTableProcessingService.processCodeTable(data.codeTable, {
+    isPrefix: data.isPrefix || false,
+    maxLength: maxLength
+  })
+  console.log('[App] 碼表處理完成')
+  
+  // 確保處理完全完成後，再更新響應式數據
+  await nextTick()
+  
+  // 處理完成後，再更新響應式數據（這會觸發 ComparisonCard 的監聽器）
+  console.log('[App] 更新響應式數據...')
   codeTable.value = data.codeTable
+  globalMaxLength.value = maxLength
+  uploadPrefixFlag.value = data.isPrefix || false
+  
   // 如果是内置方案，从fileName中提取名称（格式：内置方案：方案名）
   if (data.tableKey && data.fileName.startsWith('內置方案：')) {
     codeTableName.value = data.fileName.replace('內置方案：', '')
   } else {
     codeTableName.value = data.fileName.replace(/\.(txt|csv)$/, '')
   }
-  uploadPrefixFlag.value = data.isPrefix || false  // 设置用户上传时的前缀码标记
-  
-  // 计算最大码长（全局变量，计算一次后不再改变）
-  globalMaxLength.value = calculateMaxCodeLength(data.codeTable)
-  
-  // 立即处理码表，生成所有派生版本（包含字频优化）
-  await codeTableProcessingService.processCodeTable(data.codeTable, {
-    isPrefix: data.isPrefix || false,
-    maxLength: globalMaxLength.value
-  })
   
   analysisReady.value = true
   
@@ -494,6 +505,8 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
   
   // 保存到本地存儲
   saveCodeTableData()
+  
+  console.log('[App] 碼表上傳處理完成')
   
   // 码表分析成功后，自动滚动到第一个分析卡片
   setTimeout(() => {

@@ -1,6 +1,5 @@
 /**
  * UI 服務
- * 
  * 負責UI相關的功能，包括格式化、工具提示等
  */
 
@@ -11,12 +10,12 @@ import { ref } from 'vue'
 // =============================================================================
 
 /**
- * 格式化比率為萬分比
+ * 格式化比率為萬分比顯示
  * @param rate 比率值 (0-1)
  * @returns 格式化的萬分比字符串
  */
 export const formatRate = (rate?: number): string => {
-  return rate ? (rate * 10000).toFixed(2) + '‱' : '-'
+  return rate !== undefined && rate !== null ? (rate * 10000).toFixed(2) + '‱' : '-'
 }
 
 /**
@@ -25,7 +24,7 @@ export const formatRate = (rate?: number): string => {
  * @returns 格式化的數字字符串
  */
 export const formatNumber = (num?: number): string => {
-  return num ? num.toLocaleString() : '-'
+  return num !== undefined && num !== null ? num.toLocaleString() : '-'
 }
 
 /**
@@ -34,7 +33,7 @@ export const formatNumber = (num?: number): string => {
  * @returns 格式化的當量字符串
  */
 export const formatEquiv = (equiv?: number): string => {
-  return equiv ? equiv.toFixed(4) : '-'
+  return equiv !== undefined && equiv !== null ? equiv.toFixed(4) : '-'
 }
 
 // =============================================================================

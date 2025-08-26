@@ -1474,6 +1474,13 @@ onUnmounted(() => {
 
 // 監聽當前方案變化
 watch(() => [props.currentCodeTable, props.currentCodeTableName], ([newCodeTable, newCodeTableName]) => {
+  console.log('[ComparisonCard] 監聽器觸發:', {
+    hasCodeTable: !!newCodeTable,
+    codeTableSize: (newCodeTable as CodeTable)?.size,
+    codeTableName: newCodeTableName,
+    hasProcessedTables: !!codeTableProcessingService.getProcessedTables()
+  })
+  
   if (newCodeTable) {
     loadCurrentUserScheme()
   } else {
@@ -1509,27 +1516,24 @@ const loadCurrentUserScheme = async () => {
       data: undefined
     }
     
-    // 预处理数据并计算收字数
+    // 预处理数据并计算收字数（這會復用 codeTableProcessingService 的緩存）
     currentUserScheme.value.processedData = await preprocessCodeTableData(props.currentCodeTable, globalIsPrefix)
     currentUserScheme.value.charCount = await calculateCharCount(props.currentCodeTable)
     
-    // 异步计算当前Tab的数据
-    try {
-      currentUserScheme.value.data = {}
-      if (activeTab.value === 'dynamic') {
-        currentUserScheme.value.data.dynamic = await calculateDynamicData(currentUserScheme.value)
-      } else if (activeTab.value === 'static') {
-        currentUserScheme.value.data.static = await calculateStaticData(currentUserScheme.value)
-      } else if (activeTab.value === 'maxCandidates') {
-        currentUserScheme.value.data.maxCandidates = await calculateMaxCandidatesData(currentUserScheme.value)
-      } else if (activeTab.value === 'speedEquiv') {
-        currentUserScheme.value.data.speedEquiv = await calculateSpeedEquivData(currentUserScheme.value)
-      }
-      currentUserScheme.value.isCalculating = false
-    } catch (error) {
-      console.error('Failed to calculate current scheme data:', error)
-      currentUserScheme.value.isCalculating = false
+    // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
+    currentUserScheme.value.data = {}
+    
+    // 高優先級：立即計算當前Tab數據
+    await scheduleCalculation(currentUserScheme.value, activeTab.value, 'high')
+    
+    // 低優先級：安排其他Tab的後台計算
+    const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+    const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
+    for (const tab of otherTabs) {
+      scheduleCalculation(currentUserScheme.value, tab, 'low')
     }
+    
+    currentUserScheme.value.isCalculating = false
   }
 }
 
