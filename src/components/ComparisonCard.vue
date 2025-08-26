@@ -621,11 +621,12 @@ defineOptions({
   inheritAttrs: false
 })
 
-import { ref, computed, onMounted, watch, nextTick, Teleport } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
 import { getDynamicDupRate } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
+import { calculateCharCountOptimized, calculateAllMaxCandidatesOptimized, calculateStaticDuplicatesOptimized, clearCache } from '../services/optimizedCalculationService'
 import { 
   formatRate, 
   formatNumber, 
@@ -1182,28 +1183,10 @@ async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): 
   }
 }
 
-// 計算碼表中的字符總數（與CJK到I區取交集）
+// 計算碼表中的字符總數（與CJK到I區取交集）- 优化版本
 async function calculateCharCount(codeTable: CodeTable): Promise<number> {
-  // 提取码表中的所有字符
-  const codeTableChars = new Set<string>()
-  for (const key of codeTable.keys()) {
-    for (const char of key) {
-      codeTableChars.add(char)
-    }
-  }
-  
-  // 生成CJK到I区的标准字符集
-  const cjkToICharset = await generateCharset('cjk_to_i', codeTableChars)
-  
-  // 计算交集
-  let intersectionCount = 0
-  for (const char of codeTableChars) {
-    if (cjkToICharset.has(char)) {
-      intersectionCount++
-    }
-  }
-  
-  return intersectionCount
+  // 使用优化的流式处理，避免创建大Set和重复字符集生成
+  return calculateCharCountOptimized(codeTable)
 }
 
 // 計算字符集的重碼字符數
@@ -1252,6 +1235,11 @@ onMounted(async () => {
   } catch (error) {
     console.error('載入內置方案列表失敗:', error)
   }
+})
+
+// 組件卸載時清理缓存
+onUnmounted(() => {
+  clearCache()
 })
 
 // 監聽當前方案變化
@@ -1344,7 +1332,7 @@ async function calculateDynamicData(codeTable: CodeTable, isPrefix = false): Pro
   }
 }
 
-// 計算靜態重碼數據（使用預處理的數據）- 高性能版本  
+// 計算靜態重碼數據（使用預處理的數據）- 优化版本  
 async function calculateStaticData(scheme: Scheme): Promise<StaticData> {
   console.time(`靜態重碼計算-${scheme.name}`)
   
@@ -1354,46 +1342,21 @@ async function calculateStaticData(scheme: Scheme): Promise<StaticData> {
   
   const { fullCodeTable, charsetMap } = scheme.processedData
   
-  // 優化的重碼計算函數
-  const calculateCharsetDuplicatesOptimized = (charset: Set<string>) => {
-    const fullCodeToChars = new Map<string, string[]>()
-    
-    for (const char of charset) {
-      const codes = fullCodeTable.get(char)
-      if (codes && codes.length > 0) {
-        const code = codes[0]
-        if (!fullCodeToChars.has(code)) {
-          fullCodeToChars.set(code, [])
-        }
-        fullCodeToChars.get(code)!.push(char)
-      }
-    }
-    
-    let fullDuplicateChars = 0
-    for (const chars of fullCodeToChars.values()) {
-      if (chars.length > 1) {
-        fullDuplicateChars += chars.length
-      }
-    }
-    
-    return fullDuplicateChars
-  }
-  
-  // 計算各字符集的重碼統計
+  // 使用優化的批量重碼計算
   console.time(`計算各字符集重碼-${scheme.name}`)
-  const results = {
-    gb2312DuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('gb2312')!),
-    guoziDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('guozi')!),
-    cjkBasicDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('cjk_basic')!),
-    cjkToADuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('cjk_to_a')!),
-    cjkToBDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('cjk_to_b')!),
-    cjkToFDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('cjk_to_f')!),
-    cjkToIDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('cjk_to_i')!)
-  }
+  const results = calculateStaticDuplicatesOptimized(fullCodeTable, charsetMap)
   console.timeEnd(`計算各字符集重碼-${scheme.name}`)
   
   console.timeEnd(`靜態重碼計算-${scheme.name}`)
-  return results
+  return {
+    gb2312DuplicateChars: results.gb2312DuplicateChars || 0,
+    guoziDuplicateChars: results.guoziDuplicateChars || 0,
+    cjkBasicDuplicateChars: results.cjk_basicDuplicateChars || 0,
+    cjkToADuplicateChars: results.cjk_to_aDuplicateChars || 0,
+    cjkToBDuplicateChars: results.cjk_to_bDuplicateChars || 0,
+    cjkToFDuplicateChars: results.cjk_to_fDuplicateChars || 0,
+    cjkToIDuplicateChars: results.cjk_to_iDuplicateChars || 0
+  }
 }
 
 // 計算動態重碼數據（使用預處理的數據）- 高性能版本
@@ -1485,7 +1448,7 @@ async function calculateSpeedEquivDataOptimized(scheme: Scheme): Promise<SpeedEq
   }
 }
 
-// 計算最大候選項數據（使用預處理的數據）- 高性能版本
+// 計算最大候選項數據（使用預處理的數據）- 优化版本
 async function calculateMaxCandidatesData(scheme: Scheme): Promise<MaxCandidatesData> {
   try {
     console.time(`最大候選計算-${scheme.name}`)
@@ -1496,51 +1459,21 @@ async function calculateMaxCandidatesData(scheme: Scheme): Promise<MaxCandidates
 
     const { fullCodeTable, charsetMap } = scheme.processedData
     
-    // 為每個字符集計算最大候選項（直接使用預處理的數據）
+    // 使用優化的批量計算，一次性處理所有字符集
     console.time(`計算各字符集最大候選-${scheme.name}`)
-    const calculateMaxForCharset = async (charset: Set<string>) => {
-      const codeToChars = new Map<string, string[]>()
-      
-      // 只處理當前字符集中的字符
-      for (const char of charset) {
-        const codes = fullCodeTable.get(char)
-        if (codes && codes.length > 0) {
-          const code = codes[0]
-          if (!codeToChars.has(code)) {
-            codeToChars.set(code, [])
-          }
-          codeToChars.get(code)!.push(char)
-        }
-      }
-      
-      // 使用 nextTick 確保 Vue 有機會更新 DOM
-      await nextTick()
-      
-      // 找出最大候選項個數
-      let maxCount = 0
-      for (const chars of codeToChars.values()) {
-        if (chars.length > maxCount) {
-          maxCount = chars.length
-        }
-      }
-      
-      return maxCount
-    }
-
-    // 逐個計算字符集，給UI更新的機會
-    const results = {
-      gb2312MaxCount: await calculateMaxForCharset(charsetMap.get('gb2312')!),
-      guoziMaxCount: await calculateMaxForCharset(charsetMap.get('guozi')!),
-      cjkBasicMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_basic')!),
-      cjkToAMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_a')!),
-      cjkToBMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_b')!),
-      cjkToFMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_f')!),
-      cjkToIMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_i')!)
-    }
+    const results = calculateAllMaxCandidatesOptimized(fullCodeTable, charsetMap)
     console.timeEnd(`計算各字符集最大候選-${scheme.name}`)
     
     console.timeEnd(`最大候選計算-${scheme.name}`)
-    return results
+    return {
+      gb2312MaxCount: results.gb2312MaxCount || 0,
+      guoziMaxCount: results.guoziMaxCount || 0,
+      cjkBasicMaxCount: results.cjk_basicMaxCount || 0,
+      cjkToAMaxCount: results.cjk_to_aMaxCount || 0,
+      cjkToBMaxCount: results.cjk_to_bMaxCount || 0,
+      cjkToFMaxCount: results.cjk_to_fMaxCount || 0,
+      cjkToIMaxCount: results.cjk_to_iMaxCount || 0
+    }
   } catch (error) {
     console.error('計算最大候選項數據失敗:', error)
     return {
