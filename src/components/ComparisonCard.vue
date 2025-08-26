@@ -806,6 +806,7 @@ const saveComparisonData = () => {
         isBuiltin: scheme.isBuiltin,
         isPrefix: scheme.isPrefix, // 保存前綴碼設置
         data: scheme.data,
+        charCount: scheme.charCount, // 保存收字數
         codeTableSize: scheme.codeTable?.size || 0,
         // 保存內置方案的 key 用於重新載入
         builtinKey: scheme.isBuiltin ? scheme.id.split('_')[1] : undefined,
@@ -864,9 +865,25 @@ const loadComparisonData = async () => {
             isCalculating: false,
             isPrefix: correctIsPrefix, // 使用正確的前綴碼設置
             data: savedScheme.data,
+            charCount: savedScheme.charCount, // 恢復收字數
             codeTable,
             source: savedScheme.source,
             uploadedAt: savedScheme.uploadedAt ? new Date(savedScheme.uploadedAt) : undefined
+          }
+          
+          // 如果沒有保存的charCount或codeTable，異步計算
+          if ((!savedScheme.charCount || !codeTable) && savedScheme.isBuiltin && savedScheme.builtinKey) {
+            // 對於內置方案，如果缺少charCount，後續重新計算
+            setTimeout(async () => {
+              if (restoredScheme.codeTable && !restoredScheme.charCount) {
+                try {
+                  restoredScheme.charCount = await calculateCharCount(restoredScheme.codeTable)
+                  saveComparisonData() // 保存更新後的數據
+                } catch (error) {
+                  console.error(`計算方案 ${restoredScheme.name} 收字數失敗:`, error)
+                }
+              }
+            }, 100)
           }
           
           additionalSchemes.value.push(restoredScheme)
