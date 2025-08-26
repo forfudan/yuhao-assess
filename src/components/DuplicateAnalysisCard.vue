@@ -207,7 +207,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
-import { getDynamicDupRate } from '../services/analysisService'
+import { getDynamicDupRate } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
 import { 

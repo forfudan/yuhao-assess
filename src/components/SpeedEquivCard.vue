@@ -83,10 +83,10 @@ import type { CodeTable } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
 import { loadAllCharFrequencies } from '../services/dataService'
-import { 
+import {
   calculateSpeedEquiv,
   calculateCodePairFrequencies 
-} from '../services/analysisService'
+} from '../services/speedAnalysisService'
 
 // Props
 interface Props {

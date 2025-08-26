@@ -492,7 +492,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
-import { getDynamicDupRate } from '../services/analysisService'
+import { getDynamicDupRate } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
 import { 
@@ -510,7 +510,7 @@ import {
 import {
   calculateSpeedEquivFromCodeTable,
   calculateCodePairFrequencies
-} from '../services/analysisService'
+} from '../services/speedAnalysisService'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, CharFrequency } from '../types'
 

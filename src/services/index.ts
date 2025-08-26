@@ -1,20 +1,21 @@
 /**
- * 服务模块导出
- * 
- * 统一导出所有服务模块的函数和类型
+ * 服务模块统一导出
  */
 
-// 导出分析服务
+// 重码分析服务
 export {
   getStaticDupRate,
   getDynamicDupRate,
-  calculateCodeTableMetrics,
-  codeTableToEntries,
-  filterCharFrequency,
+  calculateCharsetDuplicates,
+  type DuplicateStats
+} from './duplicateAnalysisService'
+
+// 速度分析服务
+export {
   calculateCodePairFrequencies,
   calculateSpeedEquiv,
   calculateSpeedEquivFromCodeTable
-} from './analysisService'
+} from './speedAnalysisService'
 
 // 导出码表处理服务
 export {
@@ -65,13 +66,6 @@ export {
   getTheoreticalCharsetSize,
   generateCharset
 } from './charsetService'
-
-// 导出重复分析服务
-export {
-  calculateCharsetDuplicates,
-  type DuplicateStats,
-  type DuplicateReport
-} from './duplicateAnalysisService'
 
 // 导出最大候选数服务
 export {

@@ -29,9 +29,9 @@ export const formatNumber = (num?: number): string => {
 }
 
 /**
- * 格式化等效值，保留小数位
- * @param equiv 等效值
- * @returns 格式化的等效值字符串
+ * 格式化當量，保留小数位
+ * @param equiv 當量
+ * @returns 格式化的當量字符串
  */
 export const formatEquiv = (equiv?: number): string => {
   return equiv ? equiv.toFixed(4) : '-'

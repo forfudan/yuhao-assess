@@ -1,69 +1,69 @@
 /**
- * 数据服务
+ * 數據服務
  * 
- * 负责加载各种数据文件，包括字频数据、等效值表等
+ * 負責加載各種數據文件，包括字頻數據、當量表等
  */
 
 import type { CharFrequency } from '../types'
 import { BuiltinCodeTableService } from './builtinCodeTableService'
 
 // =============================================================================
-// 字频数据加载
+// 字頻數據加載
 // =============================================================================
 
 const builtinService = new BuiltinCodeTableService()
 
 /**
- * 加载知乎字频数据
+ * 加載知乎字頻數據
  */
 export async function loadCharFrequency(): Promise<CharFrequency> {
   try {
     return await builtinService.loadCharFrequency()
   } catch (error) {
-    console.error('加载知乎字频数据失败:', error)
+    console.error('加載知乎字頻數據失敗:', error)
     throw error
   }
 }
 
 /**
- * 加载简体字频数据
+ * 加載簡體字頻數據
  */
 export async function loadCharFrequencySC(): Promise<CharFrequency> {
   try {
     return await builtinService.loadCharFrequencySC()
   } catch (error) {
-    console.error('加载简体字频数据失败:', error)
+    console.error('加載簡體字頻數據失敗:', error)
     throw error
   }
 }
 
 /**
- * 加载繁体字频数据
+ * 加載繁體字頻數據
  */
 export async function loadCharFrequencyTC(): Promise<CharFrequency> {
   try {
     return await builtinService.loadCharFrequencyTC()
   } catch (error) {
-    console.error('加载繁体字频数据失败:', error)
+    console.error('加載繁體字頻數據失敗:', error)
     throw error
   }
 }
 
 /**
- * 加载统一字频数据
+ * 加載統一字頻數據
  */
 export async function loadCharFrequencyUnified(): Promise<CharFrequency> {
   try {
     return await builtinService.loadCharFrequencyUnified()
   } catch (error) {
-    console.error('加载统一字频数据失败:', error)
+    console.error('加載統一字頻數據失敗:', error)
     throw error
   }
 }
 
 /**
- * 并行加载所有字频数据
- * @returns 包含所有字频数据的对象
+ * 並行加載所有字頻數據
+ * @returns 包含所有字頻數據的對象
  */
 export async function loadAllCharFrequencies() {
   const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
@@ -82,11 +82,11 @@ export async function loadAllCharFrequencies() {
 }
 
 // =============================================================================
-// 等效值表加载
+// 當量表加載
 // =============================================================================
 
 /**
- * 加载等效值表数据
+ * 加載當量表數據
  */
 export async function loadEquivTable(): Promise<Record<string, number>> {
   try {

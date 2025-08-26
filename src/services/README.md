@@ -15,7 +15,7 @@ Services 文件夾包含應用的業務邏輯和數據處理模塊，按功能�
 - `getStaticDupRate()` - 計算靜態重碼率
 - `getDynamicDupRate()` - 計算動態重碼率
 - `calculateCodeTableMetrics()` - 計算碼表綜合指標
-- `calculateSpeedEquiv()` - 計算速度等效值
+- `calculateSpeedEquiv()` - 計算速度當量
 - `calculateCodePairFrequencies()` - 計算碼對頻率
 - `filterCharFrequency()` - 字頻數據過濾
 
@@ -30,7 +30,7 @@ Services 文件夾包含應用的業務邏輯和數據處理模塊，按功能�
 - `loadCharFrequencyTC()` - 加載繁體字頻數據
 - `loadCharFrequencyUnified()` - 加載統一字頻數據
 - `loadAllCharFrequencies()` - 並行加載所有字頻數據
-- `loadEquivTable()` - 加載等效值表
+- `loadEquivTable()` - 加載當量表
 
 ### `uiService.ts` - UI 服務
 
@@ -40,7 +40,7 @@ Services 文件夾包含應用的業務邏輯和數據處理模塊，按功能�
 
 - `formatRate()` - 格式化比率為萬分比
 - `formatNumber()` - 格式化數字（千位分隔符）
-- `formatEquiv()` - 格式化等效值
+- `formatEquiv()` - 格式化當量
 - `createTooltipManager()` - 創建工具提示管理器
 - `getCharacterTooltip()` - 獲取字符提示文本
 
