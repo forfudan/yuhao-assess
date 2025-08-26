@@ -34,7 +34,9 @@ export {
   loadCharFrequencyTC,
   loadCharFrequencyUnified,
   loadAllCharFrequencies,
-  loadEquivTable
+  loadEquivTable,
+  getFrequencyCharsUnion,
+  clearFrequencyCharsCache
 } from './dataService'
 
 // 導出UI服務

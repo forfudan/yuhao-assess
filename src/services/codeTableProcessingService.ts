@@ -4,6 +4,7 @@
  */
 
 import { generateFullCodeTable, generateShortCodeTable } from './codeTableCleanService'
+import { getFrequencyCharsUnion } from './dataService'
 import type { CodeTable } from '../types'
 
 // 处理后的码表结果接口
@@ -33,7 +34,7 @@ export class CodeTableProcessingService {
   /**
    * 处理原始码表，生成所有需要的派生码表
    */
-  processCodeTable(originalCodeTable: CodeTable, options?: { isPrefix?: boolean, maxLength?: number }): ProcessedCodeTables {
+  async processCodeTable(originalCodeTable: CodeTable, options?: { isPrefix?: boolean, maxLength?: number }): Promise<ProcessedCodeTables> {
     // 生成全码表和简码表
     const fullResult = generateFullCodeTable(originalCodeTable)
     const shortResult = generateShortCodeTable(originalCodeTable)
@@ -45,10 +46,17 @@ export class CodeTableProcessingService {
     // 保存处理选项
     this.processingOptions = { isPrefix, maxLength }
     
-    // 生成两种加选重按键的码表
-    // 无论全码表还是简码表，都使用相同的逻辑：根据是否前缀码决定是否补空格
-    const fullWithSelection = this.generateCodeTableWithSelection(fullResult.codeTable, maxLength, isPrefix)
-    const shortWithSelection = this.generateCodeTableWithSelection(shortResult.codeTable, maxLength, isPrefix)
+    // 并行获取字频字符并集和生成基础码表
+    const [frequencyChars] = await Promise.all([
+      getFrequencyCharsUnion().catch(() => {
+        console.warn('無法獲取字頻字符並集，將使用完整碼表（性能較低）')
+        return null
+      })
+    ])
+    
+    // 生成两种加选重按键的码表（使用字频优化）
+    const fullWithSelection = await this.generateCodeTableWithSelection(fullResult.codeTable, maxLength, isPrefix, frequencyChars)
+    const shortWithSelection = await this.generateCodeTableWithSelection(shortResult.codeTable, maxLength, isPrefix, frequencyChars)
     
     this.processedTables = {
       original: originalCodeTable,
@@ -127,24 +135,42 @@ export class CodeTableProcessingService {
   }
 
   /**
-   * 生成加选重按键的码表
+   * 生成加选重按键的码表（优化版本，支持字频过滤）
    * 对于不到最大码长的编码：
    * - 如果不是前缀码且为首选：补充一个下划线（代表空格）用于选重
    * - 如果是前缀码且为首选：不补充任何东西
    * 对于重码，会添加选择键
+   * 
+   * @param codeTable 原始码表
+   * @param maxLength 最大码长
+   * @param isPrefix 是否为前缀码
+   * @param frequencyChars 字频表字符集合（用于过滤，null则不过滤）
    */
-  private generateCodeTableWithSelection(
+  private async generateCodeTableWithSelection(
     codeTable: CodeTable, 
     maxLength: number, 
-    isPrefix: boolean
-  ): CodeTable {
+    isPrefix: boolean,
+    frequencyChars: Set<string> | null = null
+  ): Promise<CodeTable> {
     const processedTable = new Map<string, string[]>()
+    
+    // 统计信息
+    let totalChars = 0
+    let filteredChars = 0
     
     // 首先收集所有编码的字符，按频率排序以确定候选顺序
     const codeToChars = new Map<string, string[]>()
     
     for (const [char, codes] of codeTable.entries()) {
       if (codes.length === 0) continue
+      
+      totalChars++
+      
+      // 如果提供了字频字符集合，只处理在其中的字符
+      if (frequencyChars && !frequencyChars.has(char)) {
+        filteredChars++
+        continue
+      }
       
       for (const code of codes) {
         if (!codeToChars.has(code)) {
@@ -157,6 +183,11 @@ export class CodeTableProcessingService {
     // 为每个字符处理编码
     for (const [char, codes] of codeTable.entries()) {
       if (codes.length === 0) continue
+      
+      // 字频过滤：只处理在字频表中的字符
+      if (frequencyChars && !frequencyChars.has(char)) {
+        continue
+      }
       
       const processedCodes: string[] = []
       
@@ -188,6 +219,13 @@ export class CodeTableProcessingService {
       }
       
       processedTable.set(char, processedCodes)
+    }
+    
+    // 输出优化统计信息
+    if (frequencyChars) {
+      const remainingChars = totalChars - filteredChars
+      const reductionPercent = ((filteredChars / totalChars) * 100).toFixed(1)
+      console.log(`碼表字頻優化: 原始 ${totalChars} 字符，過濾 ${filteredChars} 字符，保留 ${remainingChars} 字符 (減少 ${reductionPercent}%)`)
     }
     
     return processedTable

@@ -35,6 +35,20 @@
               {{ tab.label }}
             </button>
           </div>
+          
+          <!-- 後台計算進度指示器 -->
+          <div v-if="hasBackgroundTasks" class="background-progress">
+            <div class="progress-info">
+              <span class="progress-text">後台預計算中</span>
+              <span class="progress-percentage">{{ backgroundProgress.percentage }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div 
+                class="progress-fill" 
+                :style="{ width: backgroundProgress.percentage + '%' }"
+              ></div>
+            </div>
+          </div>
         </div>
 
         <!-- 對比表格 -->
@@ -46,6 +60,12 @@
                   <div class="header-content">
                     <span>方案名稱</span>
                     <span class="sort-arrow">{{ getSortArrow('name') }}</span>
+                  </div>
+                </th>
+                <th class="char-count-header sortable" @click="handleSort('charCount')">
+                  <div class="header-content">
+                    <span>收字</span>
+                    <span class="sort-arrow">{{ getSortArrow('charCount') }}</span>
                   </div>
                 </th>
                 
@@ -118,29 +138,11 @@
                       <small>重碼字數</small>
                     </div>
                   </th>
-                  <th class="metric-header sortable" @click="handleSort('cjkToADuplicateChars')">
-                    <div class="metric-header-content">
-                      <div class="header-title">
-                        <span>到CJK-A</span>
-                        <span class="sort-arrow">{{ getSortArrow('cjkToADuplicateChars') }}</span>
-                      </div>
-                      <small>重碼字數</small>
-                    </div>
-                  </th>
                   <th class="metric-header sortable" @click="handleSort('cjkToBDuplicateChars')">
                     <div class="metric-header-content">
                       <div class="header-title">
                         <span>到CJK-B</span>
                         <span class="sort-arrow">{{ getSortArrow('cjkToBDuplicateChars') }}</span>
-                      </div>
-                      <small>重碼字數</small>
-                    </div>
-                  </th>
-                  <th class="metric-header sortable" @click="handleSort('cjkToFDuplicateChars')">
-                    <div class="metric-header-content">
-                      <div class="header-title">
-                        <span>到CJK-F</span>
-                        <span class="sort-arrow">{{ getSortArrow('cjkToFDuplicateChars') }}</span>
                       </div>
                       <small>重碼字數</small>
                     </div>
@@ -185,29 +187,11 @@
                       <small>最大候選數</small>
                     </div>
                   </th>
-                  <th class="metric-header sortable" @click="handleSort('cjkToAMaxCount')">
-                    <div class="metric-header-content">
-                      <div class="header-title">
-                        <span>到CJK-A</span>
-                        <span class="sort-arrow">{{ getSortArrow('cjkToAMaxCount') }}</span>
-                      </div>
-                      <small>最大候選數</small>
-                    </div>
-                  </th>
                   <th class="metric-header sortable" @click="handleSort('cjkToBMaxCount')">
                     <div class="metric-header-content">
                       <div class="header-title">
                         <span>到CJK-B</span>
                         <span class="sort-arrow">{{ getSortArrow('cjkToBMaxCount') }}</span>
-                      </div>
-                      <small>最大候選數</small>
-                    </div>
-                  </th>
-                  <th class="metric-header sortable" @click="handleSort('cjkToFMaxCount')">
-                    <div class="metric-header-content">
-                      <div class="header-title">
-                        <span>到CJK-F</span>
-                        <span class="sort-arrow">{{ getSortArrow('cjkToFMaxCount') }}</span>
                       </div>
                       <small>最大候選數</small>
                     </div>
@@ -271,8 +255,16 @@
                   <div class="scheme-info">
                     <span class="scheme-title">{{ scheme.name }}</span>
                     <span v-if="scheme.isBuiltin" class="scheme-source">內置方案</span>
-                    <span v-else class="scheme-source">上傳方案</span>
+                    <span v-else-if="!scheme.codeTable" class="scheme-source">
+                      數據快照
+                    </span>
+                    <span v-else class="scheme-source">首選方案</span>
                   </div>
+                </td>
+                <td class="char-count">
+                  <span class="metric-value">
+                    {{ formatNumber(scheme.charCount) }}
+                  </span>
                 </td>
                 
                 <!-- 動態選重 Tab 的數據列 -->
@@ -350,25 +342,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.static?.cjkToADuplicateChars) }}
-                    </span>
-                  </td>
-                  <td class="metric-cell">
-                    <div v-if="scheme.isCalculating" class="calculating">
-                      <div class="mini-spinner"></div>
-                      <span>計算中</span>
-                    </div>
-                    <span v-else class="metric-value">
                       {{ formatNumber(scheme.data?.static?.cjkToBDuplicateChars) }}
-                    </span>
-                  </td>
-                  <td class="metric-cell">
-                    <div v-if="scheme.isCalculating" class="calculating">
-                      <div class="mini-spinner"></div>
-                      <span>計算中</span>
-                    </div>
-                    <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.static?.cjkToFDuplicateChars) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -417,25 +391,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.maxCandidates?.cjkToAMaxCount) }}
-                    </span>
-                  </td>
-                  <td class="metric-cell">
-                    <div v-if="scheme.isCalculating" class="calculating">
-                      <div class="mini-spinner"></div>
-                      <span>計算中</span>
-                    </div>
-                    <span v-else class="metric-value">
                       {{ formatNumber(scheme.data?.maxCandidates?.cjkToBMaxCount) }}
-                    </span>
-                  </td>
-                  <td class="metric-cell">
-                    <div v-if="scheme.isCalculating" class="calculating">
-                      <div class="mini-spinner"></div>
-                      <span>計算中</span>
-                    </div>
-                    <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.maxCandidates?.cjkToFMaxCount) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -490,6 +446,23 @@
                 </template>
                 <td class="actions-cell">
                   <button 
+                    v-if="!scheme.isBuiltin && !scheme.codeTable"
+                    @click="reuploadScheme(scheme)" 
+                    class="reupload-btn"
+                    title="重新上傳此方案的碼表文件"
+                  >
+                    📤
+                  </button>
+                  <button 
+                    v-else
+                    @click="recalculateScheme(scheme)" 
+                    class="refresh-btn"
+                    :disabled="scheme.isCalculating"
+                    title="重新計算此方案的數據"
+                  >
+                    🔄
+                  </button>
+                  <button 
                     v-if="canRemoveScheme(scheme)" 
                     @click="removeScheme(scheme)" 
                     class="remove-btn"
@@ -497,7 +470,6 @@
                   >
                     🗑️
                   </button>
-                  <span v-else class="no-remove">-</span>
                 </td>
               </tr>
             </tbody>
@@ -528,17 +500,6 @@
             title="清除所有額外添加的方案"
           >
             🗑️ 清除全部
-          </button>
-          
-          <!-- 重新計算按鈕 -->
-          <button 
-            @click="recalculateCurrentTab"
-            :disabled="isRecalculating"
-            class="recalculate-btn"
-            title="重新計算所有方案的當前Tab數據"
-          >
-            <span v-if="isRecalculating">🔄 計算中...</span>
-            <span v-else>🔄 重新計算</span>
           </button>
         </div>
       </div>
@@ -686,11 +647,17 @@ defineOptions({
   inheritAttrs: false
 })
 
-import { ref, computed, onMounted, watch, nextTick, Teleport } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
 import { getDynamicDupRate } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
+import { 
+  calculateCharCount as calculateCharCountService, 
+  calculateAllMaxCandidates, 
+  calculateStaticDuplicates, 
+  clearCache 
+} from '../services/calculationService'
 import { 
   formatRate, 
   formatNumber, 
@@ -797,6 +764,8 @@ interface Scheme {
   uploadedAt?: Date // 上傳時間
   // 預處理數據（添加方案時計算一次）
   processedData?: ProcessedData
+  // 收字數（碼表中漢字總數）
+  charCount?: number
 }
 
 // 定義內置方案接口
@@ -813,7 +782,6 @@ const showAddForm = ref(false)
 const selectedBuiltinSchemes = ref<string[]>([]) // 多選內置方案
 const selectedBuiltinScheme = ref('') // 保留單選邏輯用於兼容性
 const isAdding = ref(false)
-const isRecalculating = ref(false) // 重新計算狀態
 const uploadProgress = ref({ current: 0, total: 0 }) // 上傳進度
 const availableBuiltinSchemes = ref<BuiltinScheme[]>([])
 const fileInputCharCode = ref<HTMLInputElement>()
@@ -833,11 +801,11 @@ const tabs = [
 type SortDirection = 'desc' | 'asc' | 'none'
 type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateUnified' | 
                       'gb2312DuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
-                      'cjkToADuplicateChars' | 'cjkToBDuplicateChars' | 'cjkToFDuplicateChars' | 'cjkToIDuplicateChars' |
+                      'cjkToBDuplicateChars' | 'cjkToIDuplicateChars' |
                       'gb2312MaxCount' | 'guoziMaxCount' | 'cjkBasicMaxCount' | 
-                      'cjkToAMaxCount' | 'cjkToBMaxCount' | 'cjkToFMaxCount' | 'cjkToIMaxCount' |
+                      'cjkToBMaxCount' | 'cjkToIMaxCount' |
                       'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'unifiedEquiv'
-type SortColumn = 'name' | DataSortColumn
+type SortColumn = 'name' | 'charCount' | DataSortColumn
 
 const sortColumn = ref<SortColumn | null>(null)
 const sortDirection = ref<SortDirection>('none')
@@ -858,9 +826,13 @@ const saveComparisonData = () => {
         isBuiltin: scheme.isBuiltin,
         isPrefix: scheme.isPrefix, // 保存前綴碼設置
         data: scheme.data,
+        charCount: scheme.charCount, // 保存收字數
         codeTableSize: scheme.codeTable?.size || 0,
         // 保存內置方案的 key 用於重新載入
         builtinKey: scheme.isBuiltin ? scheme.id.split('_')[1] : undefined,
+        // 對於非內置方案，我們不保存 codeTable（太大了），
+        // 而是保存一個標記表明這是上傳方案，需要重新上傳
+        isUploadedScheme: !scheme.isBuiltin,
         // 保存新增的元數據
         source: scheme.source,
         uploadedAt: scheme.uploadedAt
@@ -901,8 +873,15 @@ const loadComparisonData = async () => {
               configPrefix: schemeConfig?.prefix,
               finalIsPrefix: correctIsPrefix
             })
+          } else if (savedScheme.isUploadedScheme) {
+            // 上傳方案：codeTable 沒有被保存，需要重新上傳
+            codeTable = undefined
+            console.log(`恢復上傳方案 ${savedScheme.name}: 需要重新上傳碼表文件`, {
+              savedIsPrefix: savedScheme.isPrefix,
+              finalIsPrefix: correctIsPrefix
+            })
           } else {
-            console.log(`恢復上傳方案 ${savedScheme.name}:`, {
+            console.log(`恢復方案 ${savedScheme.name}:`, {
               savedIsPrefix: savedScheme.isPrefix,
               finalIsPrefix: correctIsPrefix
             })
@@ -916,9 +895,25 @@ const loadComparisonData = async () => {
             isCalculating: false,
             isPrefix: correctIsPrefix, // 使用正確的前綴碼設置
             data: savedScheme.data,
+            charCount: savedScheme.charCount, // 恢復收字數
             codeTable,
             source: savedScheme.source,
             uploadedAt: savedScheme.uploadedAt ? new Date(savedScheme.uploadedAt) : undefined
+          }
+          
+          // 如果沒有保存的charCount或codeTable，異步計算
+          if ((!savedScheme.charCount || !codeTable) && savedScheme.isBuiltin && savedScheme.builtinKey) {
+            // 對於內置方案，如果缺少charCount，後續重新計算
+            setTimeout(async () => {
+              if (restoredScheme.codeTable && !restoredScheme.charCount) {
+                try {
+                  restoredScheme.charCount = await calculateCharCount(restoredScheme.codeTable)
+                  saveComparisonData() // 保存更新後的數據
+                } catch (error) {
+                  console.error(`計算方案 ${restoredScheme.name} 收字數失敗:`, error)
+                }
+              }
+            }, 100)
           }
           
           additionalSchemes.value.push(restoredScheme)
@@ -956,6 +951,9 @@ const allSchemes = computed(() => {
     if (sortColumn.value === 'name') {
       aValue = a.name
       bValue = b.name
+    } else if (sortColumn.value === 'charCount') {
+      aValue = a.charCount ?? 0
+      bValue = b.charCount ?? 0
     } else if (sortColumn.value) {
       // TypeScript類型保護：確保sortColumn.value是數據列而不是'name'
       const column = sortColumn.value as DataSortColumn
@@ -964,7 +962,7 @@ const allSchemes = computed(() => {
       if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateUnified'].includes(column)) {
         aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
         bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
-      } else if (['gb2312MaxCount', 'guoziMaxCount', 'cjkBasicMaxCount', 'cjkToAMaxCount', 'cjkToBMaxCount', 'cjkToFMaxCount', 'cjkToIMaxCount'].includes(column)) {
+      } else if (['gb2312MaxCount', 'guoziMaxCount', 'cjkBasicMaxCount', 'cjkToBMaxCount', 'cjkToIMaxCount'].includes(column)) {
         aValue = a.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
         bValue = b.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
       } else if (['zhihuEquiv', 'scEquiv', 'tcEquiv', 'unifiedEquiv'].includes(column)) {
@@ -994,38 +992,213 @@ const allSchemes = computed(() => {
 // 計算屬性 - 是否有任何方案
 const hasAnyScheme = computed(() => allSchemes.value.length > 0)
 
-// 確保當前 Tab 的數據已加載
-const ensureCurrentTabDataLoaded = async () => {
-  const schemes = allSchemes.value
-  const pendingCalculations: Promise<void>[] = []
+// 智能計算隊列管理
+type TabType = 'dynamic' | 'static' | 'maxCandidates' | 'speedEquiv'
+
+interface CalculationTask {
+  id: string
+  schemeId: string
+  tabType: TabType
+  priority: 'high' | 'low'
+  abortController: AbortController
+  promise: Promise<void>
+}
+
+const calculationQueue = ref<CalculationTask[]>([])
+const runningTasks = ref(new Set<string>())
+
+// 計算進度追蹤
+const backgroundProgress = computed(() => {
+  const totalSchemes = allSchemes.value.length
+  if (totalSchemes === 0) return { completed: 0, total: 0, percentage: 100 }
   
-  for (const scheme of schemes) {
-    if (!scheme.codeTable || scheme.isCalculating) continue
-    
-    let needsCalculation = false
-    if (activeTab.value === 'dynamic') {
-      needsCalculation = !scheme.data?.dynamic
-    } else if (activeTab.value === 'static') {
-      needsCalculation = !scheme.data?.static
-    } else if (activeTab.value === 'maxCandidates') {
-      needsCalculation = !scheme.data?.maxCandidates
-    } else if (activeTab.value === 'speedEquiv') {
-      needsCalculation = !scheme.data?.speedEquiv
+  const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+  const totalTasks = totalSchemes * allTabs.length
+  
+  let completed = 0
+  for (const scheme of allSchemes.value) {
+    if (scheme.data?.dynamic) completed++
+    if (scheme.data?.static) completed++
+    if (scheme.data?.maxCandidates) completed++
+    if (scheme.data?.speedEquiv) completed++
+  }
+  
+  return {
+    completed,
+    total: totalTasks,
+    percentage: Math.round((completed / totalTasks) * 100)
+  }
+})
+
+// 是否有後台任務在運行
+const hasBackgroundTasks = computed(() => {
+  return runningTasks.value.size > 0
+})
+
+// 清理已完成或被取消的任務
+const cleanupQueue = () => {
+  calculationQueue.value = calculationQueue.value.filter(task => 
+    runningTasks.value.has(task.id)
+  )
+}
+
+// 取消低優先級任務
+const cancelLowPriorityTasks = () => {
+  for (const task of calculationQueue.value) {
+    if (task.priority === 'low') {
+      task.abortController.abort()
+      runningTasks.value.delete(task.id)
     }
-    
-    if (needsCalculation) {
-      pendingCalculations.push(calculateMissingData(scheme))
+  }
+  cleanupQueue()
+}
+
+// 智能計算調度器
+const scheduleCalculation = async (scheme: Scheme, tabType: TabType, priority: 'high' | 'low' = 'low') => {
+  const taskId = `${scheme.id}-${tabType}`
+  
+  // 檢查是否已經有相同的任務在運行
+  if (runningTasks.value.has(taskId)) {
+    return
+  }
+  
+  // 檢查數據是否已存在
+  const hasData = (
+    (tabType === 'dynamic' && scheme.data?.dynamic) ||
+    (tabType === 'static' && scheme.data?.static) ||
+    (tabType === 'maxCandidates' && scheme.data?.maxCandidates) ||
+    (tabType === 'speedEquiv' && scheme.data?.speedEquiv)
+  )
+  
+  if (hasData) {
+    return
+  }
+  
+  // 如果是高優先級任務，取消所有低優先級任務
+  if (priority === 'high') {
+    cancelLowPriorityTasks()
+  }
+  
+  const abortController = new AbortController()
+  runningTasks.value.add(taskId)
+  
+  const calculateTask = async () => {
+    try {
+      if (!scheme.codeTable) {
+        console.warn(`方案 ${scheme.name} 缺少 codeTable，跳過計算`)
+        return
+      }
+      
+      // 檢查是否被取消
+      if (abortController.signal.aborted) {
+        return
+      }
+      
+      // 設置計算狀態（只有高優先級任務才顯示loading）
+      if (priority === 'high') {
+        scheme.isCalculating = true
+      }
+      
+      console.log(`[智能計算] 開始計算 ${scheme.name} - ${tabType} (${priority} 優先級)`)
+      
+      // 確保有預處理數據
+      if (!scheme.processedData) {
+        scheme.processedData = await preprocessCodeTableData(scheme.codeTable, scheme.isPrefix)
+        if (!scheme.charCount) {
+          scheme.charCount = await calculateCharCount(scheme.codeTable)
+        }
+      }
+      
+      // 確保有數據對象
+      if (!scheme.data) {
+        scheme.data = {}
+      }
+      
+      // 再次檢查是否被取消
+      if (abortController.signal.aborted) {
+        return
+      }
+      
+      // 執行具體計算
+      if (tabType === 'dynamic') {
+        scheme.data.dynamic = await calculateDynamicData(scheme)
+      } else if (tabType === 'static') {
+        scheme.data.static = await calculateStaticData(scheme)
+      } else if (tabType === 'maxCandidates') {
+        scheme.data.maxCandidates = await calculateMaxCandidatesData(scheme)
+      } else if (tabType === 'speedEquiv') {
+        const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
+        if (isMainScheme) {
+          scheme.data.speedEquiv = await calculateMainSchemeSpeedEquivData()
+        } else {
+          scheme.data.speedEquiv = await calculateSpeedEquivData(scheme)
+        }
+      }
+      
+      console.log(`[智能計算] 完成計算 ${scheme.name} - ${tabType}`)
+      
+      // 保存數據
+      saveComparisonData()
+    } catch (error) {
+      if (!abortController.signal.aborted) {
+        console.error(`[智能計算] 計算失敗 ${scheme.name} - ${tabType}:`, error)
+      }
+    } finally {
+      if (priority === 'high') {
+        scheme.isCalculating = false
+      }
+      runningTasks.value.delete(taskId)
     }
   }
   
-  await Promise.all(pendingCalculations)
+  const task: CalculationTask = {
+    id: taskId,
+    schemeId: scheme.id,
+    tabType,
+    priority,
+    abortController,
+    promise: calculateTask()
+  }
+  
+  calculationQueue.value.push(task)
+  return task.promise
+}
+
+// 確保當前 Tab 的數據已加載（高優先級）+ 預計算其他Tab（低優先級）
+const ensureCurrentTabDataLoaded = async () => {
+  const schemes = allSchemes.value.filter(s => s.codeTable && !s.isCalculating)
+  
+  if (schemes.length === 0) return
+  
+  console.log(`[智能計算] 開始智能計算策略 - 當前Tab: ${activeTab.value}`)
+  
+  // 第一階段：立即計算當前Tab的所有數據（高優先級）
+  const currentTabPromises = schemes.map(scheme => 
+    scheduleCalculation(scheme, activeTab.value, 'high')
+  )
+  
+  await Promise.all(currentTabPromises)
+  console.log(`[智能計算] 當前Tab ${activeTab.value} 計算完成`)
+  
+  // 第二階段：後台預計算其他Tab的數據（低優先級）
+  const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+  const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
+  
+  for (const tab of otherTabs) {
+    // 為每個其他Tab安排後台計算任務
+    schemes.forEach(scheme => {
+      scheduleCalculation(scheme, tab, 'low')
+    })
+  }
+  
+  console.log(`[智能計算] 已安排 ${otherTabs.length} 個Tab的後台預計算任務`)
 }
 
 // 為方案計算缺失的數據
 const calculateMissingData = async (scheme: Scheme) => {
-  if (!scheme.codeTable || scheme.isCalculating) return
-  
-  scheme.isCalculating = true
+  if (!scheme.codeTable) {
+    return
+  }
   
   try {
     if (!scheme.data) {
@@ -1035,13 +1208,14 @@ const calculateMissingData = async (scheme: Scheme) => {
     // 如果沒有預處理數據，先進行預處理
     if (!scheme.processedData) {
       scheme.processedData = await preprocessCodeTableData(scheme.codeTable, scheme.isPrefix)
+      scheme.charCount = await calculateCharCount(scheme.codeTable!)
     }
     
     // 檢查是否為主方案（不可刪除的方案）
     const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
     
     if (activeTab.value === 'dynamic' && !scheme.data.dynamic) {
-      scheme.data.dynamic = await calculateDynamicDataOptimized(scheme)
+      scheme.data.dynamic = await calculateDynamicData(scheme)
     } else if (activeTab.value === 'static' && !scheme.data.static) {
       scheme.data.static = await calculateStaticData(scheme)
     } else if (activeTab.value === 'maxCandidates' && !scheme.data.maxCandidates) {
@@ -1052,58 +1226,90 @@ const calculateMissingData = async (scheme: Scheme) => {
         scheme.data.speedEquiv = await calculateMainSchemeSpeedEquivData()
       } else {
         // 新增方案使用優化計算
-        scheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(scheme)
+        scheme.data.speedEquiv = await calculateSpeedEquivData(scheme)
       }
     }
   } catch (error) {
     console.error(`計算方案 ${scheme.name} 的數據失敗:`, error)
-  } finally {
-    scheme.isCalculating = false
   }
 }
 
-// 重新計算當前Tab所有方案的數據
-const recalculateCurrentTab = async () => {
-  isRecalculating.value = true
+// 重新計算單個方案的數據
+const recalculateScheme = async (scheme: Scheme) => {
+  console.log(`[刷新按鈕] 開始重新計算方案: ${scheme.name}`, {
+    hasCodeTable: !!scheme.codeTable,
+    codeTableSize: scheme.codeTable?.size,
+    isCalculating: scheme.isCalculating,
+    isBuiltin: scheme.isBuiltin
+  })
+  
+  if (scheme.isCalculating) {
+    return
+  }
+  
+  if (!scheme.codeTable) {
+    if (!scheme.isBuiltin) {
+      // 對於上傳方案，提示用戶重新上傳
+      alert(`方案 "${scheme.name}" 的碼表數據已丟失（頁面刷新後上傳的文件會丟失）。\n\n請重新上傳該方案的碼表文件，或者移除該方案。`)
+    } else {
+      console.warn(`[刷新按鈕] 內置方案 ${scheme.name} 缺少 codeTable，這不應該發生`)
+    }
+    return
+  }
+  
   try {
-    // 獲取所有有效的方案（有碼表且不在計算中）
-    const validSchemes = allSchemes.value.filter(scheme => 
-      scheme.codeTable && !scheme.isCalculating
-    )
+    // 設置計算狀態
+    scheme.isCalculating = true
     
-    // 清除所有方案當前Tab的數據並重新計算
-    for (const scheme of validSchemes) {
-      if (scheme.data) {
-        if (activeTab.value === 'dynamic') {
-          delete scheme.data.dynamic
-        } else if (activeTab.value === 'static') {
-          delete scheme.data.static
-        } else if (activeTab.value === 'maxCandidates') {
-          delete scheme.data.maxCandidates
-        } else if (activeTab.value === 'speedEquiv') {
-          delete scheme.data.speedEquiv
-        }
+    // 確保方案有預處理數據
+    if (!scheme.processedData) {
+      console.log(`重新生成預處理數據 for ${scheme.name}`)
+      scheme.processedData = await preprocessCodeTableData(scheme.codeTable, scheme.isPrefix)
+      if (!scheme.charCount) {
+        scheme.charCount = await calculateCharCount(scheme.codeTable)
       }
-      console.log(`[調試] 重新計算方案 ${scheme.name}:`, {
-        isPrefix: scheme.isPrefix,
-        isBuiltin: scheme.isBuiltin,
-        source: scheme.source,
-        activeTab: activeTab.value
-      })
-      await calculateMissingData(scheme)
+    }
+    
+    // 確保方案有數據對象
+    if (!scheme.data) {
+      scheme.data = {}
+    }
+    
+    console.log(`重新計算方案 ${scheme.name} (${activeTab.value})`)
+    
+    // 直接重新計算當前Tab的數據，不檢查是否存在
+    if (activeTab.value === 'dynamic') {
+      scheme.data.dynamic = await calculateDynamicData(scheme)
+    } else if (activeTab.value === 'static') {
+      scheme.data.static = await calculateStaticData(scheme)
+    } else if (activeTab.value === 'maxCandidates') {
+      scheme.data.maxCandidates = await calculateMaxCandidatesData(scheme)
+    } else if (activeTab.value === 'speedEquiv') {
+      // 檢查是否為主方案（不可刪除的方案）
+      const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
+      if (isMainScheme) {
+        // 主方案使用全局已處理的碼表
+        scheme.data.speedEquiv = await calculateMainSchemeSpeedEquivData()
+      } else {
+        // 新增方案使用優化計算
+        scheme.data.speedEquiv = await calculateSpeedEquivData(scheme)
+      }
     }
     
     // 保存數據
     saveComparisonData()
   } catch (error) {
-    console.error('重新計算失敗:', error)
+    console.error(`重新計算方案 ${scheme.name} 失敗:`, error)
   } finally {
-    isRecalculating.value = false
+    scheme.isCalculating = false
   }
 }
 
-// 惰性計算：監聽 Tab 切換
+// 智能計算：監聽 Tab 切換
 watch(activeTab, async (newTab) => {
+  console.log(`[智能計算] Tab切換到: ${newTab}`)
+  // 取消所有低優先級任務，重新安排計算
+  cancelLowPriorityTasks()
   await ensureCurrentTabDataLoaded()
 }, { immediate: true })
 
@@ -1140,37 +1346,38 @@ const getSortArrow = (column: SortColumn) => {
 
 // 預處理碼表數據（添加方案時執行一次）
 async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): Promise<ProcessedData> {
-  console.time('碼表預處理')
+  const timerId = Math.random().toString(36).substr(2, 9) // 生成唯一ID
+  console.time(`碼表預處理-${timerId}`)
   
   // 1. 從碼表鍵中提取所有單個字符
-  console.time('提取唯一字符')
+  console.time(`提取唯一字符-${timerId}`)
   const allUniqueChars = new Set<string>()
   for (const key of codeTable.keys()) {
     for (const char of key) {
       allUniqueChars.add(char)
     }
   }
-  console.timeEnd('提取唯一字符')
+  console.timeEnd(`提取唯一字符-${timerId}`)
   
   // 2. 生成全碼表
-  console.time('生成全碼表')
+  console.time(`生成全碼表-${timerId}`)
   const { generateFullCodeTable } = await import('../services/codeTableCleanService')
   const fullResult = generateFullCodeTable(codeTable)
   const fullCodeTable = fullResult.codeTable
-  console.timeEnd('生成全碼表')
+  console.timeEnd(`生成全碼表-${timerId}`)
   
   // 3. 計算最大碼長
-  console.time('計算最大碼長')
+  console.time(`計算最大碼長-${timerId}`)
   let maxLength = 0
   for (const [, codes] of codeTable.entries()) {
     for (const code of codes) {
       maxLength = Math.max(maxLength, code.length)
     }
   }
-  console.timeEnd('計算最大碼長')
+  console.timeEnd(`計算最大碼長-${timerId}`)
   
   // 4. 並行生成所有字符集
-  console.time('生成所有字符集')
+  console.time(`生成所有字符集-${timerId}`)
   const charsetTypes: CharsetType[] = [
     'gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_i'
   ]
@@ -1186,9 +1393,9 @@ async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): 
   charsetResults.forEach(({ type, charset }) => {
     charsetMap.set(type, charset)
   })
-  console.timeEnd('生成所有字符集')
+  console.timeEnd(`生成所有字符集-${timerId}`)
   
-  console.timeEnd('碼表預處理')
+  console.timeEnd(`碼表預處理-${timerId}`)
   
   return {
     fullCodeTable,
@@ -1196,6 +1403,12 @@ async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): 
     charsetMap,
     maxLength
   }
+}
+
+// 計算碼表中的字符總數（與CJK到I區取交集）- 高性能版本
+async function calculateCharCount(codeTable: CodeTable): Promise<number> {
+  // 使用高性能的流式处理，避免创建大Set和重复字符集生成
+  return calculateCharCountService(codeTable)
 }
 
 // 計算字符集的重碼字符數
@@ -1246,6 +1459,18 @@ onMounted(async () => {
   }
 })
 
+// 組件卸載時清理缓存
+onUnmounted(() => {
+  // 取消所有運行中的計算任務
+  for (const task of calculationQueue.value) {
+    task.abortController.abort()
+  }
+  calculationQueue.value = []
+  runningTasks.value.clear()
+  
+  clearCache()
+})
+
 // 監聽當前方案變化
 watch(() => [props.currentCodeTable, props.currentCodeTableName], ([newCodeTable, newCodeTableName]) => {
   if (newCodeTable) {
@@ -1282,44 +1507,28 @@ const loadCurrentUserScheme = async () => {
       isPrefix: globalIsPrefix,  // 使用全局的前綴碼設置
       data: undefined
     }
-    // 異步計算數據
+    
+    // 预处理数据并计算收字数
+    currentUserScheme.value.processedData = await preprocessCodeTableData(props.currentCodeTable, globalIsPrefix)
+    currentUserScheme.value.charCount = await calculateCharCount(props.currentCodeTable)
+    
+    // 异步计算当前Tab的数据
     try {
-      const data = await calculateSchemeData(props.currentCodeTable, globalIsPrefix)
-      currentUserScheme.value.data = data
+      currentUserScheme.value.data = {}
+      if (activeTab.value === 'dynamic') {
+        currentUserScheme.value.data.dynamic = await calculateDynamicData(currentUserScheme.value)
+      } else if (activeTab.value === 'static') {
+        currentUserScheme.value.data.static = await calculateStaticData(currentUserScheme.value)
+      } else if (activeTab.value === 'maxCandidates') {
+        currentUserScheme.value.data.maxCandidates = await calculateMaxCandidatesData(currentUserScheme.value)
+      } else if (activeTab.value === 'speedEquiv') {
+        currentUserScheme.value.data.speedEquiv = await calculateSpeedEquivData(currentUserScheme.value)
+      }
       currentUserScheme.value.isCalculating = false
     } catch (error) {
       console.error('Failed to calculate current scheme data:', error)
       currentUserScheme.value.isCalculating = false
     }
-  }
-}
-
-// 計算方案數據
-async function calculateDynamicData(codeTable: CodeTable, isPrefix = false): Promise<DynamicData> {
-  // 為對比方案獨立處理碼表，不使用單例服務以避免干擾當前方案
-  const { generateFullCodeTable } = await import('../services/codeTableCleanService')
-  const fullResult = generateFullCodeTable(codeTable)
-  const fullCodeTable = fullResult.codeTable
-  
-  // 加載所有字頻數據
-  const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyUnified] = await Promise.all([
-    loadCharFrequency(),
-    loadCharFrequencySC(),
-    loadCharFrequencyTC(),
-    loadCharFrequencyUnified()
-  ])
-  
-  // 計算各種動態選重率（只計算全碼）
-  const dynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency)
-  const dynamicDupRateSC = getDynamicDupRate(fullCodeTable, charFrequencySC)
-  const dynamicDupRateTC = getDynamicDupRate(fullCodeTable, charFrequencyTC)
-  const dynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
-  
-  return {
-    dynamicDupRate,
-    dynamicDupRateSC,
-    dynamicDupRateTC,
-    dynamicDupRateUnified
   }
 }
 
@@ -1333,50 +1542,25 @@ async function calculateStaticData(scheme: Scheme): Promise<StaticData> {
   
   const { fullCodeTable, charsetMap } = scheme.processedData
   
-  // 優化的重碼計算函數
-  const calculateCharsetDuplicatesOptimized = (charset: Set<string>) => {
-    const fullCodeToChars = new Map<string, string[]>()
-    
-    for (const char of charset) {
-      const codes = fullCodeTable.get(char)
-      if (codes && codes.length > 0) {
-        const code = codes[0]
-        if (!fullCodeToChars.has(code)) {
-          fullCodeToChars.set(code, [])
-        }
-        fullCodeToChars.get(code)!.push(char)
-      }
-    }
-    
-    let fullDuplicateChars = 0
-    for (const chars of fullCodeToChars.values()) {
-      if (chars.length > 1) {
-        fullDuplicateChars += chars.length
-      }
-    }
-    
-    return fullDuplicateChars
-  }
-  
-  // 計算各字符集的重碼統計
-  console.time('計算各字符集重碼')
-  const results = {
-    gb2312DuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('gb2312')!),
-    guoziDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('guozi')!),
-    cjkBasicDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('cjk_basic')!),
-    cjkToADuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('cjk_to_a')!),
-    cjkToBDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('cjk_to_b')!),
-    cjkToFDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('cjk_to_f')!),
-    cjkToIDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('cjk_to_i')!)
-  }
-  console.timeEnd('計算各字符集重碼')
+  // 使用高性能的批量重碼計算
+  console.time(`計算各字符集重碼-${scheme.name}`)
+  const results = calculateStaticDuplicates(fullCodeTable, charsetMap)
+  console.timeEnd(`計算各字符集重碼-${scheme.name}`)
   
   console.timeEnd(`靜態重碼計算-${scheme.name}`)
-  return results
+  return {
+    gb2312DuplicateChars: results.gb2312DuplicateChars || 0,
+    guoziDuplicateChars: results.guoziDuplicateChars || 0,
+    cjkBasicDuplicateChars: results.cjk_basicDuplicateChars || 0,
+    cjkToADuplicateChars: results.cjk_to_aDuplicateChars || 0,
+    cjkToBDuplicateChars: results.cjk_to_bDuplicateChars || 0,
+    cjkToFDuplicateChars: results.cjk_to_fDuplicateChars || 0,
+    cjkToIDuplicateChars: results.cjk_to_iDuplicateChars || 0
+  }
 }
 
 // 計算動態重碼數據（使用預處理的數據）- 高性能版本
-async function calculateDynamicDataOptimized(scheme: Scheme): Promise<DynamicData> {
+async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
   console.time(`動態重碼計算-${scheme.name}`)
   
   if (!scheme.processedData) {
@@ -1409,7 +1593,7 @@ async function calculateDynamicDataOptimized(scheme: Scheme): Promise<DynamicDat
 }
 
 // 計算速度當量數據（使用預處理的數據）- 高性能版本  
-async function calculateSpeedEquivDataOptimized(scheme: Scheme): Promise<SpeedEquivData> {
+async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> {
   console.time(`速度當量計算-${scheme.name}`)
   
   if (!scheme.processedData) {
@@ -1419,8 +1603,8 @@ async function calculateSpeedEquivDataOptimized(scheme: Scheme): Promise<SpeedEq
   try {
     const { fullCodeTable, maxLength } = scheme.processedData
     
-    // 生成加選重鍵的碼表
-    const processedCodeTable = generateCodeTableWithSelection(fullCodeTable, maxLength, scheme.isPrefix)
+    // 生成加選重鍵的碼表（支持字频优化）
+    const processedCodeTable = await generateCodeTableWithSelection(fullCodeTable, maxLength, scheme.isPrefix)
     
     // 加載當量表
     const response = await fetch('/data/equivTable.json')
@@ -1475,51 +1659,21 @@ async function calculateMaxCandidatesData(scheme: Scheme): Promise<MaxCandidates
 
     const { fullCodeTable, charsetMap } = scheme.processedData
     
-    // 為每個字符集計算最大候選項（直接使用預處理的數據）
-    console.time('計算各字符集最大候選')
-    const calculateMaxForCharset = async (charset: Set<string>) => {
-      const codeToChars = new Map<string, string[]>()
-      
-      // 只處理當前字符集中的字符
-      for (const char of charset) {
-        const codes = fullCodeTable.get(char)
-        if (codes && codes.length > 0) {
-          const code = codes[0]
-          if (!codeToChars.has(code)) {
-            codeToChars.set(code, [])
-          }
-          codeToChars.get(code)!.push(char)
-        }
-      }
-      
-      // 使用 nextTick 確保 Vue 有機會更新 DOM
-      await nextTick()
-      
-      // 找出最大候選項個數
-      let maxCount = 0
-      for (const chars of codeToChars.values()) {
-        if (chars.length > maxCount) {
-          maxCount = chars.length
-        }
-      }
-      
-      return maxCount
-    }
-
-    // 逐個計算字符集，給UI更新的機會
-    const results = {
-      gb2312MaxCount: await calculateMaxForCharset(charsetMap.get('gb2312')!),
-      guoziMaxCount: await calculateMaxForCharset(charsetMap.get('guozi')!),
-      cjkBasicMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_basic')!),
-      cjkToAMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_a')!),
-      cjkToBMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_b')!),
-      cjkToFMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_f')!),
-      cjkToIMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_i')!)
-    }
-    console.timeEnd('計算各字符集最大候選')
+    // 使用高性能的批量計算，一次性處理所有字符集
+    console.time(`計算各字符集最大候選-${scheme.name}`)
+    const results = calculateAllMaxCandidates(fullCodeTable, charsetMap)
+    console.timeEnd(`計算各字符集最大候選-${scheme.name}`)
     
     console.timeEnd(`最大候選計算-${scheme.name}`)
-    return results
+    return {
+      gb2312MaxCount: results.gb2312MaxCount || 0,
+      guoziMaxCount: results.guoziMaxCount || 0,
+      cjkBasicMaxCount: results.cjk_basicMaxCount || 0,
+      cjkToAMaxCount: results.cjk_to_aMaxCount || 0,
+      cjkToBMaxCount: results.cjk_to_bMaxCount || 0,
+      cjkToFMaxCount: results.cjk_to_fMaxCount || 0,
+      cjkToIMaxCount: results.cjk_to_iMaxCount || 0
+    }
   } catch (error) {
     console.error('計算最大候選項數據失敗:', error)
     return {
@@ -1534,65 +1688,6 @@ async function calculateMaxCandidatesData(scheme: Scheme): Promise<MaxCandidates
   }
 }
 
-// 計算速度當量數據（對比方案用）
-async function calculateSpeedEquivData(codeTable: CodeTable, isPrefix = false): Promise<SpeedEquivData> {
-  try {
-    // 獨立處理碼表，不使用全局單例服務
-    const { generateFullCodeTable } = await import('../services/codeTableCleanService')
-    const fullResult = generateFullCodeTable(codeTable)
-    const fullCodeTable = fullResult.codeTable
-    
-    // 計算最大碼長
-    let maxLength = 0
-    for (const [, codes] of codeTable.entries()) {
-      for (const code of codes) {
-        maxLength = Math.max(maxLength, code.length)
-      }
-    }
-    maxLength = maxLength || 4
-    
-    // 生成加選重鍵的碼表
-    const processedCodeTable = generateCodeTableWithSelection(fullCodeTable, maxLength, isPrefix)
-    
-    // 加載當量表
-    const response = await fetch('/data/equivTable.json')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const equivTableData = await response.json()
-    const equivTable = equivTableData.data || {}
-    
-    // 加載各種字頻表
-    const builtinService = new BuiltinCodeTableService()
-    const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
-      builtinService.loadCharFrequency(),
-      builtinService.loadCharFrequencySC(),
-      builtinService.loadCharFrequencyTC(),
-      builtinService.loadCharFrequencyUnified()
-    ])
-    
-    // 計算各種字頻下的速度當量
-    const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
-    const scEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, scFreq, equivTable)
-    const tcEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tcFreq, equivTable)
-    const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
-    
-    return {
-      zhihuEquiv,
-      scEquiv,
-      tcEquiv,
-      unifiedEquiv
-    }
-  } catch (error) {
-    console.error('速度當量計算失敗:', error)
-    return {
-      zhihuEquiv: 0,
-      scEquiv: 0,
-      tcEquiv: 0,
-      unifiedEquiv: 0
-    }
-  }
-}
 
 // 計算主方案速度當量數據（使用全局已處理的碼表）
 async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
@@ -1645,18 +1740,39 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
   }
 }
 
-// 獨立的碼表選重鍵處理函數（不依賴全局服務）
-function generateCodeTableWithSelection(
+// 獨立的碼表選重鍵處理函數（不依賴全局服務，支持字频优化）
+async function generateCodeTableWithSelection(
   codeTable: CodeTable,
   maxLength: number, 
   isPrefix: boolean
-): CodeTable {
+): Promise<CodeTable> {
   const result = new Map<string, string[]>()
   
-  // 統計每個編碼的候選字符數量
+  // 获取字频字符集合（用于优化）
+  let frequencyChars: Set<string> | null = null
+  try {
+    const { getFrequencyCharsUnion } = await import('../services/dataService')
+    frequencyChars = await getFrequencyCharsUnion()
+  } catch (error) {
+    console.warn('無法獲取字頻字符並集，將使用完整碼表（性能較低）')
+  }
+  
+  // 統計信息
+  let totalChars = 0
+  let filteredChars = 0
+  
+  // 統計每個編碼的候選字符數量（只包含字频表中的字符）
   const codeToChars = new Map<string, string[]>()
   
   for (const [char, codes] of codeTable.entries()) {
+    totalChars++
+    
+    // 字频过滤：只处理在字频表中的字符
+    if (frequencyChars && !frequencyChars.has(char)) {
+      filteredChars++
+      continue
+    }
+    
     for (const code of codes) {
       let processedCode = code
       
@@ -1672,8 +1788,13 @@ function generateCodeTableWithSelection(
     }
   }
   
-  // 為每個字符生成最終編碼（包含選重鍵）
+  // 為每個字符生成最終編碼（包含選重鍵，只处理字频表中的字符）
   for (const [char, codes] of codeTable.entries()) {
+    // 字频过滤：只处理在字频表中的字符
+    if (frequencyChars && !frequencyChars.has(char)) {
+      continue
+    }
+    
     const processedCodes: string[] = []
     
     for (const code of codes) {
@@ -1708,6 +1829,13 @@ function generateCodeTableWithSelection(
     }
   }
   
+  // 输出优化统计信息
+  if (frequencyChars) {
+    const remainingChars = totalChars - filteredChars
+    const reductionPercent = ((filteredChars / totalChars) * 100).toFixed(1)
+    console.log(`輔助碼表字頻優化: 原始 ${totalChars} 字符，過濾 ${filteredChars} 字符，保留 ${remainingChars} 字符 (減少 ${reductionPercent}%)`)
+  }
+  
   return result
 }
 
@@ -1726,9 +1854,10 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
   
   // 進行預處理
   tempScheme.processedData = await preprocessCodeTableData(codeTable, isPrefix)
+  tempScheme.charCount = await calculateCharCount(codeTable)
   
   const [dynamic, static_] = await Promise.all([
-    calculateDynamicDataOptimized(tempScheme),
+    calculateDynamicData(tempScheme),
     calculateStaticData(tempScheme)
   ])
   
@@ -1777,17 +1906,20 @@ async function addBuiltinScheme() {
     
     // 預處理碼表數據（只做一次）
     newScheme.processedData = await preprocessCodeTableData(result.codeTable, newScheme.isPrefix)
+        newScheme.charCount = await calculateCharCount(result.codeTable)
+    newScheme.charCount = await calculateCharCount(result.codeTable)
     
-    // 只計算當前Tab需要的數據
+    // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
     newScheme.data = {}
-    if (activeTab.value === 'dynamic') {
-      newScheme.data.dynamic = await calculateDynamicDataOptimized(newScheme)
-    } else if (activeTab.value === 'static') {
-      newScheme.data.static = await calculateStaticData(newScheme)
-    } else if (activeTab.value === 'maxCandidates') {
-      newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
-    } else if (activeTab.value === 'speedEquiv') {
-      newScheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(newScheme)
+    
+    // 高優先級：立即計算當前Tab數據
+    await scheduleCalculation(newScheme, activeTab.value, 'high')
+    
+    // 低優先級：安排其他Tab的後台計算
+    const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+    const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
+    for (const tab of otherTabs) {
+      scheduleCalculation(newScheme, tab, 'low')
     }
     
     newScheme.isCalculating = false
@@ -1857,17 +1989,18 @@ async function addAllBuiltinSchemes() {
         
         // 預處理碼表數據（只做一次）
         newScheme.processedData = await preprocessCodeTableData(result.codeTable, newScheme.isPrefix)
+        newScheme.charCount = await calculateCharCount(result.codeTable)
         
         // 只計算當前Tab需要的數據
         newScheme.data = {}
         if (activeTab.value === 'dynamic') {
-          newScheme.data.dynamic = await calculateDynamicDataOptimized(newScheme)
+          newScheme.data.dynamic = await calculateDynamicData(newScheme)
         } else if (activeTab.value === 'static') {
           newScheme.data.static = await calculateStaticData(newScheme)
         } else if (activeTab.value === 'maxCandidates') {
           newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
         } else if (activeTab.value === 'speedEquiv') {
-          newScheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(newScheme)
+          newScheme.data.speedEquiv = await calculateSpeedEquivData(newScheme)
         }
         
         newScheme.isCalculating = false
@@ -1952,17 +2085,18 @@ async function addSelectedBuiltinSchemes() {
         
         // 預處理碼表數據（只做一次）
         newScheme.processedData = await preprocessCodeTableData(result.codeTable, newScheme.isPrefix)
+        newScheme.charCount = await calculateCharCount(result.codeTable)
         
         // 只計算當前Tab需要的數據
         newScheme.data = {}
         if (activeTab.value === 'dynamic') {
-          newScheme.data.dynamic = await calculateDynamicDataOptimized(newScheme)
+          newScheme.data.dynamic = await calculateDynamicData(newScheme)
         } else if (activeTab.value === 'static') {
           newScheme.data.static = await calculateStaticData(newScheme)
         } else if (activeTab.value === 'maxCandidates') {
           newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
         } else if (activeTab.value === 'speedEquiv') {
-          newScheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(newScheme)
+          newScheme.data.speedEquiv = await calculateSpeedEquivData(newScheme)
         }
         
         newScheme.isCalculating = false
@@ -2030,17 +2164,18 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     
     // 預處理碼表數據（只做一次）
     newScheme.processedData = await preprocessCodeTableData(codeTable, newScheme.isPrefix)
+        newScheme.charCount = await calculateCharCount(codeTable)
     
     // 只計算當前Tab需要的數據
     newScheme.data = {}
     if (activeTab.value === 'dynamic') {
-      newScheme.data.dynamic = await calculateDynamicDataOptimized(newScheme)
+      newScheme.data.dynamic = await calculateDynamicData(newScheme)
     } else if (activeTab.value === 'static') {
       newScheme.data.static = await calculateStaticData(newScheme)
     } else if (activeTab.value === 'maxCandidates') {
       newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
     } else if (activeTab.value === 'speedEquiv') {
-      newScheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(newScheme)
+      newScheme.data.speedEquiv = await calculateSpeedEquivData(newScheme)
     }
     
     newScheme.isCalculating = false
@@ -2104,17 +2239,19 @@ async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'co
         
         // 預處理碼表數據（只做一次）
         newScheme.processedData = await preprocessCodeTableData(codeTable, newScheme.isPrefix)
+        newScheme.charCount = await calculateCharCount(codeTable)
         
-        // 只計算當前Tab需要的數據
+        // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
         newScheme.data = {}
-        if (activeTab.value === 'dynamic') {
-          newScheme.data.dynamic = await calculateDynamicDataOptimized(newScheme)
-        } else if (activeTab.value === 'static') {
-          newScheme.data.static = await calculateStaticData(newScheme)
-        } else if (activeTab.value === 'maxCandidates') {
-          newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
-        } else if (activeTab.value === 'speedEquiv') {
-          newScheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(newScheme)
+        
+        // 高優先級：立即計算當前Tab數據
+        await scheduleCalculation(newScheme, activeTab.value, 'high')
+        
+        // 低優先級：安排其他Tab的後台計算
+        const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+        const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
+        for (const tab of otherTabs) {
+          scheduleCalculation(newScheme, tab, 'low')
         }
         
         newScheme.isCalculating = false
@@ -2218,6 +2355,58 @@ function cancelAdd() {
   selectedBuiltinSchemes.value = [] // 清空多選
 }
 
+// 重新上傳方案的碼表文件
+function reuploadScheme(scheme: Scheme) {
+  // 創建一個隱藏的文件輸入元素
+  const fileInput = document.createElement('input')
+  fileInput.type = 'file'
+  fileInput.accept = '.txt,.json'
+  fileInput.style.display = 'none'
+  
+  fileInput.onchange = async (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0]
+    if (!file) return
+    
+    try {
+      scheme.isCalculating = true
+      
+      // 解析碼表文件（使用與上傳邏輯相同的處理方式）
+      const text = await file.text()
+      // 默認使用 char_first 格式，與原上傳邏輯保持一致
+      const codeTable = parseCodeTableText(text, 'char_first')
+      
+      // 更新方案的 codeTable
+      scheme.codeTable = codeTable
+      scheme.charCount = await calculateCharCount(codeTable)
+      
+      // 重新預處理數據
+      scheme.processedData = await preprocessCodeTableData(codeTable, scheme.isPrefix)
+      
+      // 清除舊的計算數據，強制重新計算
+      scheme.data = {}
+      
+      // 根據當前Tab計算對應數據
+      await calculateMissingData(scheme)
+      
+      // 保存更新
+      saveComparisonData()
+      
+      console.log(`成功重新上傳方案 ${scheme.name} 的碼表文件`)
+    } catch (error) {
+      console.error(`重新上傳方案 ${scheme.name} 失敗:`, error)
+      alert(`重新上傳失敗: ${error instanceof Error ? error.message : '未知錯誤'}`)
+    } finally {
+      scheme.isCalculating = false
+      // 清理文件輸入元素
+      document.body.removeChild(fileInput)
+    }
+  }
+  
+  // 添加到 DOM 並觸發點擊
+  document.body.appendChild(fileInput)
+  fileInput.click()
+}
+
 // 清除所有額外添加的方案
 function clearAllSchemes() {
   if (additionalSchemes.value.length > 0) {
@@ -2280,29 +2469,45 @@ function clearAllSchemes() {
   margin-bottom: var(--spacing-md);
 }
 
-.recalculate-btn {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 2px solid #bfdbfe;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
+/* 後台計算進度指示器 */
+.background-progress {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.progress-info {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 6px;
+  margin-bottom: 4px;
 }
 
-.recalculate-btn:hover:not(:disabled) {
-  background: #dbeafe;
-  border-color: #93c5fd;
+.progress-text {
+  font-size: 0.75rem;
+  color: #64748b;
 }
 
-.recalculate-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.progress-percentage {
+  font-size: 0.75rem;
+  color: #0f766e;
+  font-weight: 500;
+}
+
+.progress-bar {
+  height: 3px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0f766e, #14b8a6);
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
 
 .tab-button {
@@ -2423,6 +2628,28 @@ function clearAllSchemes() {
   color: #374151;
 }
 
+.char-count-header {
+  background: #f9fafb;
+  width: auto;
+  min-width: 80px;
+  text-align: center !important;
+  font-weight: 600;
+  color: #374151;
+}
+
+.char-count-header small {
+  display: block;
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.char-count {
+  text-align: center;
+  padding: 8px 12px;
+  font-weight: 500;
+}
+
 .metric-header {
   background: #f9fafb;
   width: auto; /* 改为自动宽度 */
@@ -2516,9 +2743,19 @@ function clearAllSchemes() {
   color: #6b7280;
 }
 
+.scheme-source.warning {
+  color: #d97706;
+  font-weight: 500;
+}
+
 .metric-cell {
   font-family: var(--font-numeric);
   font-feature-settings: "tnum" 0; /* 禁用表格數字，使用比例數字 */
+}
+
+.actions-cell {
+  text-align: center;
+  white-space: nowrap;
 }
 
 .calculating {
@@ -2562,13 +2799,44 @@ function clearAllSchemes() {
   background: #fef2f2;
 }
 
-.no-remove {
-  color: #9ca3af;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.refresh-btn {
+  background: none;
+  border: none;
   padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+  font-size: 0.8rem;
+  margin-right: 4px;
+}
+
+.refresh-btn:hover {
+  background: #f0f9ff;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.refresh-btn:disabled:hover {
+  background: none;
+}
+
+.reupload-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+  font-size: 0.8rem;
+  margin-right: 4px;
+  color: #d97706;
+}
+
+.reupload-btn:hover {
+  background: #fef3cd;
 }
 
 /* 添加方案按鈕 */
@@ -2704,26 +2972,26 @@ function clearAllSchemes() {
 }
 
 .form-section {
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
 .form-section h5 {
-  margin: 0 0 8px 0;
-  font-size: 1rem;
+  margin: 0 0 6px 0;
+  font-size: 0.95rem;
   color: #374151;
   font-weight: 600;
 }
 
 .section-desc {
-  margin: 0 0 12px 0;
-  font-size: 0.875rem;
+  margin: 0 0 8px 0;
+  font-size: 0.82rem;
   color: #6b7280;
 }
 
 .builtin-options {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -2735,26 +3003,26 @@ function clearAllSchemes() {
 .multi-select-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .select-all-controls {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
-  padding: 8px;
+  padding: 6px 8px;
   background: #f8fafc;
-  border-radius: 6px;
+  border-radius: 4px;
   border: 1px solid #e5e7eb;
 }
 
 .select-all-btn,
 .clear-selection-btn {
-  padding: 4px 8px;
+  padding: 3px 6px;
   border: 1px solid #d1d5db;
   background: white;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -2780,11 +3048,11 @@ function clearAllSchemes() {
 
 .scheme-checkboxes {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 4px;
   max-height: 200px;
   overflow-y: auto;
-  padding: 8px;
+  padding: 6px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   background: white;
@@ -2793,12 +3061,13 @@ function clearAllSchemes() {
 .scheme-checkbox {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 4px;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 3px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.2;
 }
 
 .scheme-checkbox:hover {
@@ -2806,9 +3075,9 @@ function clearAllSchemes() {
 }
 
 .checkbox-input {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
   border: 2px solid #d1d5db;
   background: white;
   cursor: pointer;
@@ -2823,6 +3092,8 @@ function clearAllSchemes() {
 .checkbox-label {
   flex: 1;
   color: #374151;
+  font-size: 0.85rem;
+  line-height: 1.2;
 }
 
 .batch-add-controls {
