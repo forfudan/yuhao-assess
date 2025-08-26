@@ -208,23 +208,31 @@ export function calculateStaticDuplicates(
 }
 
 /**
- * 内存优化的字符计数
- * 使用流式处理避免大量内存占用
+ * 修正的字符计数函数
+ * 计算码表中在CJK-I范围内的唯一字符数量
  */
 export function calculateCharCount(codeTable: CodeTable): number {
-  let intersectionCount = 0
+  const uniqueChars = new Set<string>()
   
-  // 流式处理，避免创建大Set
+  // 收集所有唯一字符
   for (const char of codeTable.keys()) {
-    for (const c of char) {
-      const codePoint = c.codePointAt(0)
-      if (codePoint && isInCJKToI(codePoint)) {
-        intersectionCount++
-      }
+    // 正确处理Unicode字符，使用Array.from来处理可能的代理对
+    const chars = Array.from(char)
+    for (const c of chars) {
+      uniqueChars.add(c)
     }
   }
   
-  return intersectionCount
+  // 计算在CJK-I范围内的字符数量
+  let cjkCount = 0
+  for (const char of uniqueChars) {
+    const codePoint = char.codePointAt(0)
+    if (codePoint && isInCJKToI(codePoint)) {
+      cjkCount++
+    }
+  }
+  
+  return cjkCount
 }
 
 /**
