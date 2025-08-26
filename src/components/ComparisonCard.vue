@@ -1419,8 +1419,8 @@ async function calculateSpeedEquivDataOptimized(scheme: Scheme): Promise<SpeedEq
   try {
     const { fullCodeTable, maxLength } = scheme.processedData
     
-    // 生成加選重鍵的碼表
-    const processedCodeTable = generateCodeTableWithSelection(fullCodeTable, maxLength, scheme.isPrefix)
+    // 生成加選重鍵的碼表（支持字频优化）
+    const processedCodeTable = await generateCodeTableWithSelection(fullCodeTable, maxLength, scheme.isPrefix)
     
     // 加載當量表
     const response = await fetch('/data/equivTable.json')
@@ -1551,8 +1551,8 @@ async function calculateSpeedEquivData(codeTable: CodeTable, isPrefix = false): 
     }
     maxLength = maxLength || 4
     
-    // 生成加選重鍵的碼表
-    const processedCodeTable = generateCodeTableWithSelection(fullCodeTable, maxLength, isPrefix)
+    // 生成加選重鍵的碼表（支持字频优化）
+    const processedCodeTable = await generateCodeTableWithSelection(fullCodeTable, maxLength, isPrefix)
     
     // 加載當量表
     const response = await fetch('/data/equivTable.json')
@@ -1645,18 +1645,39 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
   }
 }
 
-// 獨立的碼表選重鍵處理函數（不依賴全局服務）
-function generateCodeTableWithSelection(
+// 獨立的碼表選重鍵處理函數（不依賴全局服務，支持字频优化）
+async function generateCodeTableWithSelection(
   codeTable: CodeTable,
   maxLength: number, 
   isPrefix: boolean
-): CodeTable {
+): Promise<CodeTable> {
   const result = new Map<string, string[]>()
   
-  // 統計每個編碼的候選字符數量
+  // 获取字频字符集合（用于优化）
+  let frequencyChars: Set<string> | null = null
+  try {
+    const { getFrequencyCharsUnion } = await import('../services/dataService')
+    frequencyChars = await getFrequencyCharsUnion()
+  } catch (error) {
+    console.warn('無法獲取字頻字符並集，將使用完整碼表（性能較低）')
+  }
+  
+  // 統計信息
+  let totalChars = 0
+  let filteredChars = 0
+  
+  // 統計每個編碼的候選字符數量（只包含字频表中的字符）
   const codeToChars = new Map<string, string[]>()
   
   for (const [char, codes] of codeTable.entries()) {
+    totalChars++
+    
+    // 字频过滤：只处理在字频表中的字符
+    if (frequencyChars && !frequencyChars.has(char)) {
+      filteredChars++
+      continue
+    }
+    
     for (const code of codes) {
       let processedCode = code
       
@@ -1672,8 +1693,13 @@ function generateCodeTableWithSelection(
     }
   }
   
-  // 為每個字符生成最終編碼（包含選重鍵）
+  // 為每個字符生成最終編碼（包含選重鍵，只处理字频表中的字符）
   for (const [char, codes] of codeTable.entries()) {
+    // 字频过滤：只处理在字频表中的字符
+    if (frequencyChars && !frequencyChars.has(char)) {
+      continue
+    }
+    
     const processedCodes: string[] = []
     
     for (const code of codes) {
@@ -1706,6 +1732,13 @@ function generateCodeTableWithSelection(
     if (processedCodes.length > 0) {
       result.set(char, processedCodes)
     }
+  }
+  
+  // 输出优化统计信息
+  if (frequencyChars) {
+    const remainingChars = totalChars - filteredChars
+    const reductionPercent = ((filteredChars / totalChars) * 100).toFixed(1)
+    console.log(`輔助碼表字頻優化: 原始 ${totalChars} 字符，過濾 ${filteredChars} 字符，保留 ${remainingChars} 字符 (減少 ${reductionPercent}%)`)
   }
   
   return result

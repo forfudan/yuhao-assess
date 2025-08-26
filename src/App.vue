@@ -304,14 +304,14 @@ const toggleAllCards = () => {
 const isDarkMode = ref(false)
 
 // 初始化主題和數據恢復
-onMounted(() => {
+onMounted(async () => {
   // 初始化主題，默認淺色模式
   const savedTheme = localStorage.getItem('theme')
   isDarkMode.value = savedTheme === 'dark'
   updateTheme()
   
   // 恢復碼表數據
-  restoreCodeTableData()
+  await restoreCodeTableData()
 })
 
 // 切換主題
@@ -342,7 +342,7 @@ const saveCodeTableData = () => {
 }
 
 // 恢復碼表數據
-const restoreCodeTableData = () => {
+const restoreCodeTableData = async () => {
   try {
     const saved = localStorage.getItem('savedCodeTable')
     if (saved) {
@@ -362,8 +362,8 @@ const restoreCodeTableData = () => {
       uploadPrefixFlag.value = data.uploadPrefixFlag || false
       globalMaxLength.value = data.globalMaxLength || 4
       
-      // 重新处理码表以确保processing service有正确的数据
-      codeTableProcessingService.processCodeTable(codeTable.value, {
+      // 重新处理码表以确保processing service有正确的数据（包含字频优化）
+      await codeTableProcessingService.processCodeTable(codeTable.value, {
         isPrefix: uploadPrefixFlag.value,
         maxLength: globalMaxLength.value
       })
@@ -468,7 +468,7 @@ function calculateMaxCodeLength(codeTable: CodeTable): number {
 }
 
 // 處理碼表上傳成功
-const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean }) => {
+const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean }) => {
   codeTable.value = data.codeTable
   // 如果是内置方案，从fileName中提取名称（格式：内置方案：方案名）
   if (data.tableKey && data.fileName.startsWith('內置方案：')) {
@@ -481,8 +481,8 @@ const handleCodeTableUpload = (data: { codeTable: CodeTable; fileName: string; f
   // 计算最大码长（全局变量，计算一次后不再改变）
   globalMaxLength.value = calculateMaxCodeLength(data.codeTable)
   
-  // 立即处理码表，生成所有派生版本
-  codeTableProcessingService.processCodeTable(data.codeTable, {
+  // 立即处理码表，生成所有派生版本（包含字频优化）
+  await codeTableProcessingService.processCodeTable(data.codeTable, {
     isPrefix: data.isPrefix || false,
     maxLength: globalMaxLength.value
   })
