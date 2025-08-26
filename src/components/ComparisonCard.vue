@@ -2972,26 +2972,26 @@ function clearAllSchemes() {
 }
 
 .form-section {
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
 .form-section h5 {
-  margin: 0 0 8px 0;
-  font-size: 1rem;
+  margin: 0 0 6px 0;
+  font-size: 0.95rem;
   color: #374151;
   font-weight: 600;
 }
 
 .section-desc {
-  margin: 0 0 12px 0;
-  font-size: 0.875rem;
+  margin: 0 0 8px 0;
+  font-size: 0.82rem;
   color: #6b7280;
 }
 
 .builtin-options {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -3003,26 +3003,26 @@ function clearAllSchemes() {
 .multi-select-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .select-all-controls {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
-  padding: 8px;
+  padding: 6px 8px;
   background: #f8fafc;
-  border-radius: 6px;
+  border-radius: 4px;
   border: 1px solid #e5e7eb;
 }
 
 .select-all-btn,
 .clear-selection-btn {
-  padding: 4px 8px;
+  padding: 3px 6px;
   border: 1px solid #d1d5db;
   background: white;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -3048,11 +3048,11 @@ function clearAllSchemes() {
 
 .scheme-checkboxes {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 4px;
   max-height: 200px;
   overflow-y: auto;
-  padding: 8px;
+  padding: 6px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   background: white;
@@ -3061,12 +3061,13 @@ function clearAllSchemes() {
 .scheme-checkbox {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 4px;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 3px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.2;
 }
 
 .scheme-checkbox:hover {
@@ -3074,9 +3075,9 @@ function clearAllSchemes() {
 }
 
 .checkbox-input {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
   border: 2px solid #d1d5db;
   background: white;
   cursor: pointer;
@@ -3091,6 +3092,8 @@ function clearAllSchemes() {
 .checkbox-label {
   flex: 1;
   color: #374151;
+  font-size: 0.85rem;
+  line-height: 1.2;
 }
 
 .batch-add-controls {
