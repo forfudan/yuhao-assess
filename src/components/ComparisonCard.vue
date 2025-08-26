@@ -475,17 +475,6 @@
           >
             🗑️ 清除全部
           </button>
-          
-          <!-- 重新計算按鈕 -->
-          <button 
-            @click="recalculateCurrentTab"
-            :disabled="isRecalculating"
-            class="recalculate-btn"
-            title="重新計算所有方案的當前Tab數據"
-          >
-            <span v-if="isRecalculating">🔄 計算中...</span>
-            <span v-else>🔄 重新計算</span>
-          </button>
         </div>
       </div>
     </div>
@@ -761,7 +750,6 @@ const showAddForm = ref(false)
 const selectedBuiltinSchemes = ref<string[]>([]) // 多選內置方案
 const selectedBuiltinScheme = ref('') // 保留單選邏輯用於兼容性
 const isAdding = ref(false)
-const isRecalculating = ref(false) // 重新計算狀態
 const uploadProgress = ref({ current: 0, total: 0 }) // 上傳進度
 const availableBuiltinSchemes = ref<BuiltinScheme[]>([])
 const fileInputCharCode = ref<HTMLInputElement>()
@@ -1029,46 +1017,6 @@ const calculateMissingData = async (scheme: Scheme) => {
   }
 }
 
-// 重新計算當前Tab所有方案的數據
-const recalculateCurrentTab = async () => {
-  isRecalculating.value = true
-  try {
-    // 獲取所有有效的方案（有碼表且不在計算中）
-    const validSchemes = allSchemes.value.filter(scheme => 
-      scheme.codeTable && !scheme.isCalculating
-    )
-    
-    // 清除所有方案當前Tab的數據並重新計算
-    for (const scheme of validSchemes) {
-      if (scheme.data) {
-        if (activeTab.value === 'dynamic') {
-          delete scheme.data.dynamic
-        } else if (activeTab.value === 'static') {
-          delete scheme.data.static
-        } else if (activeTab.value === 'maxCandidates') {
-          delete scheme.data.maxCandidates
-        } else if (activeTab.value === 'speedEquiv') {
-          delete scheme.data.speedEquiv
-        }
-      }
-      console.log(`[調試] 重新計算方案 ${scheme.name}:`, {
-        isPrefix: scheme.isPrefix,
-        isBuiltin: scheme.isBuiltin,
-        source: scheme.source,
-        activeTab: activeTab.value
-      })
-      await calculateMissingData(scheme)
-    }
-    
-    // 保存數據
-    saveComparisonData()
-  } catch (error) {
-    console.error('重新計算失敗:', error)
-  } finally {
-    isRecalculating.value = false
-  }
-}
-
 // 重新計算單個方案的數據
 const recalculateScheme = async (scheme: Scheme) => {
   if (!scheme.codeTable || scheme.isCalculating) {
@@ -1078,6 +1026,15 @@ const recalculateScheme = async (scheme: Scheme) => {
   try {
     // 設置計算狀態
     scheme.isCalculating = true
+    
+    // 確保方案有預處理數據
+    if (!scheme.processedData) {
+      console.log(`重新生成預處理數據 for ${scheme.name}`)
+      scheme.processedData = await preprocessCodeTableData(scheme.codeTable, scheme.isPrefix)
+      if (!scheme.charCount) {
+        scheme.charCount = await calculateCharCount(scheme.codeTable)
+      }
+    }
     
     // 確保方案有數據對象
     if (!scheme.data) {
@@ -2367,31 +2324,6 @@ function clearAllSchemes() {
   display: flex;
   border-bottom: 2px solid #e5e7eb;
   margin-bottom: var(--spacing-md);
-}
-
-.recalculate-btn {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 2px solid #bfdbfe;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.recalculate-btn:hover:not(:disabled) {
-  background: #dbeafe;
-  border-color: #93c5fd;
-}
-
-.recalculate-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .tab-button {
