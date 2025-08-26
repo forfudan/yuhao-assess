@@ -156,6 +156,73 @@
                   </th>
                 </template>
                 
+                <!-- 最大候選 Tab 的列 -->
+                <template v-else-if="activeTab === 'maxCandidates'">
+                  <th class="metric-header sortable" @click="handleSort('gb2312MaxCount')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>GB2312</span>
+                        <span class="sort-arrow">{{ getSortArrow('gb2312MaxCount') }}</span>
+                      </div>
+                      <small>最大候選數</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('guoziMaxCount')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>國字常用</span>
+                        <span class="sort-arrow">{{ getSortArrow('guoziMaxCount') }}</span>
+                      </div>
+                      <small>最大候選數</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkBasicMaxCount')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>CJK基本</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkBasicMaxCount') }}</span>
+                      </div>
+                      <small>最大候選數</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkToAMaxCount')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>到CJK-A</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToAMaxCount') }}</span>
+                      </div>
+                      <small>最大候選數</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkToBMaxCount')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>到CJK-B</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToBMaxCount') }}</span>
+                      </div>
+                      <small>最大候選數</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkToFMaxCount')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>到CJK-F</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToFMaxCount') }}</span>
+                      </div>
+                      <small>最大候選數</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('cjkToIMaxCount')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>到CJK-I</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToIMaxCount') }}</span>
+                      </div>
+                      <small>最大候選數</small>
+                    </div>
+                  </th>
+                </template>
+                
                 <!-- 速度當量 Tab 的列 -->
                 <template v-else-if="activeTab === 'speedEquiv'">
                   <th class="metric-header sortable" @click="handleSort('zhihuEquiv')">
@@ -311,6 +378,73 @@
                     </div>
                     <span v-else class="metric-value">
                       {{ formatNumber(scheme.data?.static?.cjkToIDuplicateChars) }}
+                    </span>
+                  </td>
+                </template>
+                
+                <!-- 最大候選 Tab 的數據列 -->
+                <template v-else-if="activeTab === 'maxCandidates'">
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.maxCandidates?.gb2312MaxCount) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.maxCandidates?.guoziMaxCount) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.maxCandidates?.cjkBasicMaxCount) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.maxCandidates?.cjkToAMaxCount) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.maxCandidates?.cjkToBMaxCount) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.maxCandidates?.cjkToFMaxCount) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.maxCandidates?.cjkToIMaxCount) }}
                     </span>
                   </td>
                 </template>
@@ -516,6 +650,10 @@ import {
   calculateSpeedEquivFromCodeTable,
   calculateCodePairFrequencies
 } from '../services/speedAnalysisService'
+import {
+  getAllMaximumCandidates,
+  type MaximumCandidatesResult
+} from '../services/maximumCandidatesService'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, CharFrequency } from '../types'
 
@@ -563,9 +701,20 @@ interface SpeedEquivData {
   unifiedEquiv: number
 }
 
+interface MaxCandidatesData {
+  gb2312MaxCount: number
+  guoziMaxCount: number
+  cjkBasicMaxCount: number
+  cjkToAMaxCount: number
+  cjkToBMaxCount: number
+  cjkToFMaxCount: number
+  cjkToIMaxCount: number
+}
+
 interface SchemeData {
   dynamic?: DynamicData
   static?: StaticData
+  maxCandidates?: MaxCandidatesData
   speedEquiv?: SpeedEquivData
 }
 
@@ -599,10 +748,11 @@ const fileInputCodeChar = ref<HTMLInputElement>()
 const uploadPrefixFlag = ref(false) // 用户上传文件时的前缀码标志
 
 // Tab 相關狀態
-const activeTab = ref<'dynamic' | 'static' | 'speedEquiv'>('dynamic')
+const activeTab = ref<'dynamic' | 'static' | 'maxCandidates' | 'speedEquiv'>('dynamic')
 const tabs = [
   { key: 'dynamic', label: '動態選重' },
   { key: 'static', label: '靜態重碼' },
+  { key: 'maxCandidates', label: '最大候選' },
   { key: 'speedEquiv', label: '速度當量' }
 ] as const
 
@@ -611,6 +761,8 @@ type SortDirection = 'desc' | 'asc' | 'none'
 type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateUnified' | 
                       'gb2312DuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
                       'cjkToADuplicateChars' | 'cjkToBDuplicateChars' | 'cjkToFDuplicateChars' | 'cjkToIDuplicateChars' |
+                      'gb2312MaxCount' | 'guoziMaxCount' | 'cjkBasicMaxCount' | 
+                      'cjkToAMaxCount' | 'cjkToBMaxCount' | 'cjkToFMaxCount' | 'cjkToIMaxCount' |
                       'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'unifiedEquiv'
 type SortColumn = 'name' | DataSortColumn
 
@@ -716,6 +868,9 @@ const allSchemes = computed(() => {
       if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateUnified'].includes(column)) {
         aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
         bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
+      } else if (['gb2312MaxCount', 'guoziMaxCount', 'cjkBasicMaxCount', 'cjkToAMaxCount', 'cjkToBMaxCount', 'cjkToFMaxCount', 'cjkToIMaxCount'].includes(column)) {
+        aValue = a.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
+        bValue = b.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
       } else if (['zhihuEquiv', 'scEquiv', 'tcEquiv', 'unifiedEquiv'].includes(column)) {
         aValue = a.data?.speedEquiv?.[column as keyof SpeedEquivData] ?? 0
         bValue = b.data?.speedEquiv?.[column as keyof SpeedEquivData] ?? 0
@@ -756,6 +911,8 @@ const ensureCurrentTabDataLoaded = async () => {
       needsCalculation = !scheme.data?.dynamic
     } else if (activeTab.value === 'static') {
       needsCalculation = !scheme.data?.static
+    } else if (activeTab.value === 'maxCandidates') {
+      needsCalculation = !scheme.data?.maxCandidates
     } else if (activeTab.value === 'speedEquiv') {
       needsCalculation = !scheme.data?.speedEquiv
     }
@@ -786,6 +943,8 @@ const calculateMissingData = async (scheme: Scheme) => {
       scheme.data.dynamic = await calculateDynamicData(scheme.codeTable, scheme.isPrefix)
     } else if (activeTab.value === 'static' && !scheme.data.static) {
       scheme.data.static = await calculateStaticData(scheme.codeTable, scheme.isPrefix)
+    } else if (activeTab.value === 'maxCandidates' && !scheme.data.maxCandidates) {
+      scheme.data.maxCandidates = await calculateMaxCandidatesData(scheme.codeTable, scheme.isPrefix)
     } else if (activeTab.value === 'speedEquiv' && !scheme.data.speedEquiv) {
       if (isMainScheme) {
         // 主方案使用全局已處理的碼表
@@ -994,6 +1153,35 @@ async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Prom
     cjkToBDuplicateChars,
     cjkToFDuplicateChars,
     cjkToIDuplicateChars
+  }
+}
+
+// 計算最大候選項數據（對比方案用）
+async function calculateMaxCandidatesData(codeTable: CodeTable, isPrefix = false): Promise<MaxCandidatesData> {
+  try {
+    // 計算所有字符集的最大候選項個數
+    const allResults = await getAllMaximumCandidates(codeTable)
+    
+    return {
+      gb2312MaxCount: allResults.gb2312?.maxCount || 0,
+      guoziMaxCount: allResults.guozi?.maxCount || 0,
+      cjkBasicMaxCount: allResults.cjk_basic?.maxCount || 0,
+      cjkToAMaxCount: allResults.cjk_to_a?.maxCount || 0,
+      cjkToBMaxCount: allResults.cjk_to_b?.maxCount || 0,
+      cjkToFMaxCount: allResults.cjk_to_f?.maxCount || 0,
+      cjkToIMaxCount: allResults.cjk_to_i?.maxCount || 0
+    }
+  } catch (error) {
+    console.error('計算最大候選項數據失敗:', error)
+    return {
+      gb2312MaxCount: 0,
+      guoziMaxCount: 0,
+      cjkBasicMaxCount: 0,
+      cjkToAMaxCount: 0,
+      cjkToBMaxCount: 0,
+      cjkToFMaxCount: 0,
+      cjkToIMaxCount: 0
+    }
   }
 }
 
@@ -1228,6 +1416,8 @@ async function addBuiltinScheme() {
       newScheme.data.dynamic = await calculateDynamicData(result.codeTable, newScheme.isPrefix)
     } else if (activeTab.value === 'static') {
       newScheme.data.static = await calculateStaticData(result.codeTable, newScheme.isPrefix)
+    } else if (activeTab.value === 'maxCandidates') {
+      newScheme.data.maxCandidates = await calculateMaxCandidatesData(result.codeTable, newScheme.isPrefix)
     } else if (activeTab.value === 'speedEquiv') {
       newScheme.data.speedEquiv = await calculateSpeedEquivData(result.codeTable, newScheme.isPrefix)
     }
@@ -1301,6 +1491,8 @@ async function addAllBuiltinSchemes() {
           newScheme.data.dynamic = await calculateDynamicData(result.codeTable, newScheme.isPrefix)
         } else if (activeTab.value === 'static') {
           newScheme.data.static = await calculateStaticData(result.codeTable, newScheme.isPrefix)
+        } else if (activeTab.value === 'maxCandidates') {
+          newScheme.data.maxCandidates = await calculateMaxCandidatesData(result.codeTable, newScheme.isPrefix)
         } else if (activeTab.value === 'speedEquiv') {
           newScheme.data.speedEquiv = await calculateSpeedEquivData(result.codeTable, newScheme.isPrefix)
         }
@@ -1371,6 +1563,8 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
       newScheme.data.dynamic = await calculateDynamicData(codeTable, uploadPrefixFlag.value)
     } else if (activeTab.value === 'static') {
       newScheme.data.static = await calculateStaticData(codeTable, uploadPrefixFlag.value)
+    } else if (activeTab.value === 'maxCandidates') {
+      newScheme.data.maxCandidates = await calculateMaxCandidatesData(codeTable, uploadPrefixFlag.value)
     } else if (activeTab.value === 'speedEquiv') {
       newScheme.data.speedEquiv = await calculateSpeedEquivData(codeTable, uploadPrefixFlag.value)
     }
@@ -1737,7 +1931,8 @@ function clearAllSchemes() {
 }
 
 .metric-cell {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: var(--font-numeric);
+  font-feature-settings: "tnum" 0; /* 禁用表格數字，使用比例數字 */
 }
 
 .calculating {

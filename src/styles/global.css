@@ -76,6 +76,7 @@
   /* 字體 */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   --font-mono: 'SF Mono', Monaco, 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+  --font-numeric: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   
   /* 過渡動畫 */
   --transition-fast: 0.15s ease;
@@ -304,6 +305,13 @@ input:focus, select:focus, textarea:focus {
   .md\\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* 萬分號樣式增強 - 讓萬分號在非等寬字體下更加明顯 */
+.metric-value,
+.metric-cell {
+  /* 使用特殊的字體特性來增強符號的可讀性 */
+  font-variant-numeric: proportional-nums;
 }
 
 /* 響應式設計 */
