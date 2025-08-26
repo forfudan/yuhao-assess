@@ -241,6 +241,9 @@
                   <div class="scheme-info">
                     <span class="scheme-title">{{ scheme.name }}</span>
                     <span v-if="scheme.isBuiltin" class="scheme-source">內置方案</span>
+                    <span v-else-if="!scheme.codeTable" class="scheme-source warning">
+                      緩存數據
+                    </span>
                     <span v-else class="scheme-source">上傳方案</span>
                   </div>
                 </td>
@@ -429,6 +432,15 @@
                 </template>
                 <td class="actions-cell">
                   <button 
+                    v-if="!scheme.isBuiltin && !scheme.codeTable"
+                    @click="reuploadScheme(scheme)" 
+                    class="reupload-btn"
+                    title="重新上傳此方案的碼表文件"
+                  >
+                    📤
+                  </button>
+                  <button 
+                    v-else
                     @click="recalculateScheme(scheme)" 
                     class="refresh-btn"
                     :disabled="scheme.isCalculating"
@@ -804,6 +816,9 @@ const saveComparisonData = () => {
         codeTableSize: scheme.codeTable?.size || 0,
         // 保存內置方案的 key 用於重新載入
         builtinKey: scheme.isBuiltin ? scheme.id.split('_')[1] : undefined,
+        // 對於非內置方案，我們不保存 codeTable（太大了），
+        // 而是保存一個標記表明這是上傳方案，需要重新上傳
+        isUploadedScheme: !scheme.isBuiltin,
         // 保存新增的元數據
         source: scheme.source,
         uploadedAt: scheme.uploadedAt
@@ -844,8 +859,15 @@ const loadComparisonData = async () => {
               configPrefix: schemeConfig?.prefix,
               finalIsPrefix: correctIsPrefix
             })
+          } else if (savedScheme.isUploadedScheme) {
+            // 上傳方案：codeTable 沒有被保存，需要重新上傳
+            codeTable = undefined
+            console.log(`恢復上傳方案 ${savedScheme.name}: 需要重新上傳碼表文件`, {
+              savedIsPrefix: savedScheme.isPrefix,
+              finalIsPrefix: correctIsPrefix
+            })
           } else {
-            console.log(`恢復上傳方案 ${savedScheme.name}:`, {
+            console.log(`恢復方案 ${savedScheme.name}:`, {
               savedIsPrefix: savedScheme.isPrefix,
               finalIsPrefix: correctIsPrefix
             })
@@ -1039,7 +1061,24 @@ const calculateMissingData = async (scheme: Scheme) => {
 
 // 重新計算單個方案的數據
 const recalculateScheme = async (scheme: Scheme) => {
-  if (!scheme.codeTable || scheme.isCalculating) {
+  console.log(`[刷新按鈕] 開始重新計算方案: ${scheme.name}`, {
+    hasCodeTable: !!scheme.codeTable,
+    codeTableSize: scheme.codeTable?.size,
+    isCalculating: scheme.isCalculating,
+    isBuiltin: scheme.isBuiltin
+  })
+  
+  if (scheme.isCalculating) {
+    return
+  }
+  
+  if (!scheme.codeTable) {
+    if (!scheme.isBuiltin) {
+      // 對於上傳方案，提示用戶重新上傳
+      alert(`方案 "${scheme.name}" 的碼表數據已丟失（頁面刷新後上傳的文件會丟失）。\n\n請重新上傳該方案的碼表文件，或者移除該方案。`)
+    } else {
+      console.warn(`[刷新按鈕] 內置方案 ${scheme.name} 缺少 codeTable，這不應該發生`)
+    }
     return
   }
   
@@ -2129,6 +2168,58 @@ function cancelAdd() {
   selectedBuiltinSchemes.value = [] // 清空多選
 }
 
+// 重新上傳方案的碼表文件
+function reuploadScheme(scheme: Scheme) {
+  // 創建一個隱藏的文件輸入元素
+  const fileInput = document.createElement('input')
+  fileInput.type = 'file'
+  fileInput.accept = '.txt,.json'
+  fileInput.style.display = 'none'
+  
+  fileInput.onchange = async (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0]
+    if (!file) return
+    
+    try {
+      scheme.isCalculating = true
+      
+      // 解析碼表文件（使用與上傳邏輯相同的處理方式）
+      const text = await file.text()
+      // 默認使用 char_first 格式，與原上傳邏輯保持一致
+      const codeTable = parseCodeTableText(text, 'char_first')
+      
+      // 更新方案的 codeTable
+      scheme.codeTable = codeTable
+      scheme.charCount = await calculateCharCount(codeTable)
+      
+      // 重新預處理數據
+      scheme.processedData = await preprocessCodeTableData(codeTable, scheme.isPrefix)
+      
+      // 清除舊的計算數據，強制重新計算
+      scheme.data = {}
+      
+      // 根據當前Tab計算對應數據
+      await calculateMissingData(scheme)
+      
+      // 保存更新
+      saveComparisonData()
+      
+      console.log(`成功重新上傳方案 ${scheme.name} 的碼表文件`)
+    } catch (error) {
+      console.error(`重新上傳方案 ${scheme.name} 失敗:`, error)
+      alert(`重新上傳失敗: ${error instanceof Error ? error.message : '未知錯誤'}`)
+    } finally {
+      scheme.isCalculating = false
+      // 清理文件輸入元素
+      document.body.removeChild(fileInput)
+    }
+  }
+  
+  // 添加到 DOM 並觸發點擊
+  document.body.appendChild(fileInput)
+  fileInput.click()
+}
+
 // 清除所有額外添加的方案
 function clearAllSchemes() {
   if (additionalSchemes.value.length > 0) {
@@ -2424,6 +2515,11 @@ function clearAllSchemes() {
   color: #6b7280;
 }
 
+.scheme-source.warning {
+  color: #d97706;
+  font-weight: 500;
+}
+
 .metric-cell {
   font-family: var(--font-numeric);
   font-feature-settings: "tnum" 0; /* 禁用表格數字，使用比例數字 */
@@ -2497,6 +2593,22 @@ function clearAllSchemes() {
 
 .refresh-btn:disabled:hover {
   background: none;
+}
+
+.reupload-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+  font-size: 0.8rem;
+  margin-right: 4px;
+  color: #d97706;
+}
+
+.reupload-btn:hover {
+  background: #fef3cd;
 }
 
 /* 添加方案按鈕 */
