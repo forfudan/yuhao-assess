@@ -652,6 +652,7 @@ import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '..
 import { getDynamicDupRate } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
+import { generateFullCodeTable } from '../services/codeTableCleanService'
 import { 
   calculateCharCount as calculateCharCountService, 
   calculateAllMaxCandidates, 
@@ -668,7 +669,8 @@ import {
   loadCharFrequencySC,
   loadCharFrequencyTC,
   loadCharFrequencyUnified,
-  loadAllCharFrequencies
+  loadAllCharFrequencies,
+  getFrequencyCharsUnion
 } from '../services/dataService'
 import {
   calculateSpeedEquivFromCodeTable,
@@ -1361,7 +1363,6 @@ async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): 
   
   // 2. 生成全碼表
   console.time(`生成全碼表-${timerId}`)
-  const { generateFullCodeTable } = await import('../services/codeTableCleanService')
   const fullResult = generateFullCodeTable(codeTable)
   const fullCodeTable = fullResult.codeTable
   console.timeEnd(`生成全碼表-${timerId}`)
@@ -1751,7 +1752,6 @@ async function generateCodeTableWithSelection(
   // 获取字频字符集合（用于优化）
   let frequencyChars: Set<string> | null = null
   try {
-    const { getFrequencyCharsUnion } = await import('../services/dataService')
     frequencyChars = await getFrequencyCharsUnion()
   } catch (error) {
     console.warn('無法獲取字頻字符並集，將使用完整碼表（性能較低）')

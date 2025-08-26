@@ -324,3 +324,36 @@ input:focus, select:focus, textarea:focus {
     padding: var(--spacing-lg);
   }
 }
+
+/* 強制顏色模式支持 (新標準，替代 -ms-high-contrast) */
+@media (forced-colors: active) {
+  * {
+    forced-color-adjust: auto;
+  }
+  
+  /* 確保按鈕和交互元素在強制顏色模式下保持可見性 */
+  .primary-btn,
+  .secondary-btn,
+  .tab-button,
+  button {
+    forced-color-adjust: none;
+    border: 2px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+  
+  .primary-btn:hover,
+  .secondary-btn:hover,
+  .tab-button:hover,
+  button:hover {
+    background: Highlight;
+    color: HighlightText;
+  }
+  
+  /* 確保卡片和邊框在強制顏色模式下可見 */
+  .card,
+  .comparison-table,
+  .scheme-item {
+    border: 1px solid CanvasText;
+  }
+}
