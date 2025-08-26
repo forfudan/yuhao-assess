@@ -1,8 +1,8 @@
 /**
- * 服务模块统一导出
+ * 服務模塊統一導出
  */
 
-// 重码分析服务
+// 重碼分析服務
 export {
   getStaticDupRate,
   getDynamicDupRate,
@@ -10,14 +10,14 @@ export {
   type DuplicateStats
 } from './duplicateAnalysisService'
 
-// 速度分析服务
+// 速度分析服務
 export {
   calculateCodePairFrequencies,
   calculateSpeedEquiv,
   calculateSpeedEquivFromCodeTable
 } from './speedAnalysisService'
 
-// 导出码表处理服务
+// 導出碼表處理服務
 export {
   cleanCodeTable,
   generateFullCodeTable,
@@ -27,7 +27,7 @@ export {
   getCodeTableStats
 } from './codeTableCleanService'
 
-// 导出数据服务
+// 導出數據服務
 export {
   loadCharFrequency,
   loadCharFrequencySC,
@@ -37,7 +37,7 @@ export {
   loadEquivTable
 } from './dataService'
 
-// 导出UI服务
+// 導出UI服務
 export {
   formatRate,
   formatNumber,
@@ -46,7 +46,7 @@ export {
   getCharacterTooltip
 } from './uiService'
 
-// 导出字符集服务
+// 導出字符集服務
 export {
   isInGB2312,
   isInGuozi,
@@ -67,23 +67,23 @@ export {
   generateCharset
 } from './charsetService'
 
-// 导出最大候选数服务
+// 導出最大候選數服務
 export {
   getMaximumCandidates,
   getAllMaximumCandidates,
   type MaximumCandidatesResult
 } from './maximumCandidatesService'
 
-// 导出内置码表服务
+// 導出內置碼表服務
 export {
   BuiltinCodeTableService,
   builtinCodeTableService
 } from './builtinCodeTableService'
 
-// 导出码表处理服务
+// 導出碼表處理服務
 export { codeTableProcessingService } from './codeTableProcessingService'
 
-// 导出类型
+// 導出類型
 export type {
   AnalysisParams,
   CodeTableMetrics,

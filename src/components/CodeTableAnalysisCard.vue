@@ -71,10 +71,10 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// 折叠功能
+// 摺疊功能
 const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
 
-// 暴露折叠方法给父组件
+// 暴露摺疊方法給父組件
 defineExpose({
   collapse,
   expand,
@@ -96,7 +96,7 @@ defineExpose({
   flex: 1;
 }
 
-/* 折叠按钮样式 */
+/* 摺疊按鈕樣式 */
 .collapse-button {
   background: rgba(255, 255, 255, 0.2);
   border: none;

@@ -525,7 +525,7 @@ const props = defineProps<Props>()
 // 折叠功能
 const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
 
-// 暴露折叠方法给父组件
+// 暴露摺疊方法給父組件
 defineExpose({
   collapse,
   expand,
@@ -601,11 +601,6 @@ const tabs = [
   { key: 'speedEquiv', label: '速度當量' }
 ] as const
 
-// 惰性計算：監聽 Tab 切換
-watch(activeTab, async (newTab) => {
-  await ensureCurrentTabDataLoaded()
-}, { immediate: true })
-
 // 確保當前 Tab 的數據已加載
 const ensureCurrentTabDataLoaded = async () => {
   const schemes = allSchemes.value
@@ -664,6 +659,11 @@ const calculateMissingData = async (scheme: Scheme) => {
     scheme.isCalculating = false
   }
 }
+
+// 惰性計算：監聽 Tab 切換
+watch(activeTab, async (newTab) => {
+  await ensureCurrentTabDataLoaded()
+}, { immediate: true })
 
 // 排序相關狀態
 type SortDirection = 'desc' | 'asc' | 'none'
@@ -768,10 +768,10 @@ const allSchemes = computed(() => {
       aValue = a.name
       bValue = b.name
     } else if (sortColumn.value) {
-      // TypeScript类型保护：确保sortColumn.value是数据列而不是'name'
+      // TypeScript類型保護：確保sortColumn.value是數據列而不是'name'
       const column = sortColumn.value as DataSortColumn
       
-      // 根据列名判断是动态还是静态数据
+      // 根據列名判斷是動態還是靜態數據
       if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateUnified'].includes(column)) {
         aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
         bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
@@ -833,7 +833,7 @@ const getSortArrow = (column: SortColumn) => {
   return sortDirection.value === 'desc' ? '↓' : '↑'
 }
 
-// 计算字符集的重码字符数
+// 計算字符集的重碼字符數
 async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Set<string>, fullCodeTable: CodeTable) {
   const actualCharset = await generateCharset(charsetType, allChars)
   
@@ -931,8 +931,8 @@ const loadCurrentUserScheme = async () => {
 
 // 計算方案數據
 async function calculateDynamicData(codeTable: CodeTable, isPrefix = false): Promise<DynamicData> {
-  // 为对比方案独立处理码表，不使用单例服务以避免干扰当前方案
-  const { generateFullCodeTable } = await import('../services/index')
+  // 為對比方案獨立處理碼表，不使用單例服務以避免干擾當前方案
+  const { generateFullCodeTable } = await import('../services/codeTableCleanService')
   const fullResult = generateFullCodeTable(codeTable)
   const fullCodeTable = fullResult.codeTable
   
@@ -967,8 +967,8 @@ async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Prom
     }
   }
   
-  // 为对比方案独立处理码表，不使用单例服务以避免干扰当前方案
-  const { generateFullCodeTable } = await import('../services/index')
+  // 為對比方案獨立處理碼表，不使用單例服務以避免干擾當前方案
+  const { generateFullCodeTable } = await import('../services/codeTableCleanService')
   const fullResult = generateFullCodeTable(codeTable)
   const fullCodeTable = fullResult.codeTable
   
@@ -996,7 +996,7 @@ async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Prom
 async function calculateSpeedEquivData(codeTable: CodeTable, isPrefix = false): Promise<SpeedEquivData> {
   try {
     // 獨立處理碼表，不使用全局單例服務
-    const { generateFullCodeTable } = await import('../services/index')
+    const { generateFullCodeTable } = await import('../services/codeTableCleanService')
     const fullResult = generateFullCodeTable(codeTable)
     const fullCodeTable = fullResult.codeTable
     
@@ -1843,9 +1843,9 @@ function clearAllSchemes() {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999999; /* 极高的z-index值确保在最上层 */
+  z-index: 999999; /* 極高的z-index值確保在最上層 */
   backdrop-filter: blur(4px); /* 背景模糊效果 */
-  animation: fadeIn 0.2s ease-out; /* 淡入动画 */
+  animation: fadeIn 0.2s ease-out; /* 淡入動畫 */
 }
 
 @keyframes fadeIn {

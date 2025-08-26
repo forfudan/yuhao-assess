@@ -233,7 +233,7 @@ const props = withDefaults(defineProps<Props>(), {
 // 折叠功能
 const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
 
-// 暴露折叠方法给父组件
+// 暴露摺疊方法給父組件
 defineExpose({
   collapse,
   expand,
@@ -241,13 +241,13 @@ defineExpose({
   getCollapsedState
 })
 
-// 双值数据结构
+// 雙值數據結構
 interface DualValue {
   full: number
   short: number
 }
 
-// 分析结果数据结构
+// 分析結果數據結構
 interface AnalysisResults {
   dynamicDupRate: DualValue
   dynamicDupRateSC: DualValue
@@ -297,7 +297,7 @@ interface AnalysisResults {
   }
 }
 
-// 响应式数据
+// 響應式數據
 const isCalculating = ref(false)
 const analysisResults = ref<AnalysisResults | null>(null)
 const builtinService = new BuiltinCodeTableService()
@@ -305,22 +305,22 @@ const builtinService = new BuiltinCodeTableService()
 // 工具提示管理器
 const { tooltipVisible, tooltipText, tooltipStyle, showTooltip, hideTooltip } = createTooltipManager()
 
-// 计算字符集的重码字符数和重码组数（支持双码表）
+// 計算字符集的重碼字符數和重碼組數（支持雙碼表）
 async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Set<string>, fullCodeTable: CodeTable, shortCodeTable: CodeTable) {
-  // 生成实际有编码的字符集（基于码表中的字符）
+  // 生成實際有編碼的字符集（基於碼表中的字符）
   const actualCharset = await generateCharset(charsetType, allChars)
   
-  // 获取理论字符集大小
+  // 獲取理論字符集大小
   let theoreticalSize = 0
   if (charsetType === 'gb2312' || charsetType === 'guozi') {
-    // 对于GB2312和国字，从JSON文件获取理论大小
+    // 對於GB2312和國字，從JSON文件獲取理論大小
     theoreticalSize = await getTheoreticalCharsetSize(charsetType)
   } else {
-    // 对于CJK区域，生成完整的理论字符集
+    // 對於CJK區域，生成完整的理論字符集
     theoreticalSize = await getTheoreticalCharsetSize(charsetType)
   }
   
-  // 计算全码表的重码统计
+  // 計算全碼表的重碼統計
   const fullCodeToChars = new Map<string, string[]>()
   let fullCodeTableMatches = 0
   
@@ -345,7 +345,7 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
     }
   }
   
-  // 计算简码表的重码统计
+  // 計算簡碼表的重碼統計
   const shortCodeToChars = new Map<string, string[]>()
   let shortCodeTableMatches = 0
   
@@ -430,10 +430,10 @@ async function generateCJKCharsetCache(allChars: Set<string>) {
 
 // 計算字符集的重碼統計（直接使用字符集）
 async function calculateDirectCharsetDuplicates(actualCharset: Set<string>, theoreticalSizeType: CharsetType, fullCodeTable: CodeTable, shortCodeTable: CodeTable) {
-  // 获取理论字符集大小
+  // 獲取理論字符集大小
   const theoreticalSize = await getTheoreticalCharsetSize(theoreticalSizeType)
   
-  // 计算全码表的重码统计
+  // 計算全碼表的重碼統計
   const fullCodeToChars = new Map<string, string[]>()
   let fullCodeTableMatches = 0
   
@@ -458,7 +458,7 @@ async function calculateDirectCharsetDuplicates(actualCharset: Set<string>, theo
     }
   }
   
-  // 计算简码表的重码统计
+  // 計算簡碼表的重碼統計
   const shortCodeToChars = new Map<string, string[]>()
   let shortCodeTableMatches = 0
   
@@ -491,10 +491,10 @@ async function calculateDirectCharsetDuplicates(actualCharset: Set<string>, theo
   }
 }
 
-// 计算所有指标
+// 計算所有指標
 async function calculateAllMetrics() {
   if (!props.codeTable || props.codeTable.size === 0) {
-    console.warn('没有可用的码表数据')
+    console.warn('沒有可用的碼表數據')
     return
   }
   
@@ -523,7 +523,7 @@ async function calculateAllMetrics() {
     const fullCodeTable = processedTables.full
     const shortCodeTable = processedTables.short
     
-    // 加载所有字频数据
+    // 加載所有字頻數據
     const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyUnified] = await Promise.all([
       loadCharFrequency(),
       loadCharFrequencySC(),
@@ -531,7 +531,7 @@ async function calculateAllMetrics() {
       loadCharFrequencyUnified()
     ])
     
-    // 计算各种动态选重率
+    // 計算各種動態選重率
     const fullDynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency)
     const shortDynamicDupRate = getDynamicDupRate(shortCodeTable, charFrequency)
     
@@ -544,7 +544,7 @@ async function calculateAllMetrics() {
     const fullDynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
     const shortDynamicDupRateUnified = getDynamicDupRate(shortCodeTable, charFrequencyUnified)
     
-    // 计算各字符集的重码统计
+    // 計算各字符集的重碼統計
     const gb2312Stats = await calculateCharsetDuplicates('gb2312', allChars, fullCodeTable, shortCodeTable)
     const guoziStats = await calculateCharsetDuplicates('guozi', allChars, fullCodeTable, shortCodeTable)
     const cjkBasicStats = await calculateCharsetDuplicates('cjk_basic', allChars, fullCodeTable, shortCodeTable)
@@ -615,7 +615,7 @@ async function calculateAllMetrics() {
     }
     
   } catch (error) {
-    console.error('计算重码时出错:', error)
+    console.error('計算重碼時出錯:', error)
   } finally {
     isCalculating.value = false
   }
@@ -628,7 +628,7 @@ watch(() => props.codeTable, (newCodeTable) => {
   }
 }, { immediate: true })
 
-// 组件挂载时自动计算一次
+// 組件掛載時自動計算一次
 onMounted(() => {
   if (props.codeTable && props.codeTable.size > 0) {
     calculateAllMetrics()

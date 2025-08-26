@@ -1,15 +1,15 @@
 /**
- * 速度當量分析服务
- * 处理打字速度相关的计算和分析
+ * 速度當量分析服務
+ * 處理打字速度相關的計算和分析
  */
 
 import type { CodeTable, CharFrequency } from '../types'
 
 /**
- * 计算码对频率
- * @param codeTable 码表
- * @param charFrequency 字频数据
- * @returns 码对频率数据
+ * 計算碼對頻率
+ * @param codeTable 碼表
+ * @param charFrequency 字頻數據
+ * @returns 碼對頻率數據
  */
 export function calculateCodePairFrequencies(
   codeTable: CodeTable,
@@ -34,10 +34,10 @@ export function calculateCodePairFrequencies(
 }
 
 /**
- * 计算速度當量（基础版本）
- * @param pairFrequencies 码对频率数据
+ * 計算速度當量值（基礎版本）
+ * @param pairFrequencies 碼對頻率數據
  * @param equivTable 當量表
- * @returns 计算出的速度當量
+ * @returns 計算出的速度當量值
  */
 export function calculateSpeedEquiv(
   pairFrequencies: Record<string, number>,
@@ -58,11 +58,11 @@ export function calculateSpeedEquiv(
 }
 
 /**
- * 计算速度當量（完整版本，包含码表和字频处理）
- * @param codeTable 码表
- * @param charFrequency 字频数据
+ * 計算速度當量值（完整版本，包含碼表和字頻處理）
+ * @param codeTable 碼表
+ * @param charFrequency 字頻數據
  * @param equivTable 當量表
- * @returns 计算出的速度當量
+ * @returns 計算出的速度當量值
  */
 export function calculateSpeedEquivFromCodeTable(
   codeTable: CodeTable,

@@ -1,28 +1,28 @@
 /**
- * UI 服务
+ * UI 服務
  * 
- * 负责UI相关的功能，包括格式化、工具提示等
+ * 負責UI相關的功能，包括格式化、工具提示等
  */
 
 import { ref } from 'vue'
 
 // =============================================================================
-// 格式化工具函数
+// 格式化工具函數
 // =============================================================================
 
 /**
- * 格式化比率为万分比
+ * 格式化比率為萬分比
  * @param rate 比率值 (0-1)
- * @returns 格式化的万分比字符串
+ * @returns 格式化的萬分比字符串
  */
 export const formatRate = (rate?: number): string => {
   return rate ? (rate * 10000).toFixed(2) + '‱' : '-'
 }
 
 /**
- * 格式化数字，千位分隔符
- * @param num 数字
- * @returns 格式化的数字字符串
+ * 格式化數字，千位分隔符
+ * @param num 數字
+ * @returns 格式化的數字字符串
  */
 export const formatNumber = (num?: number): string => {
   return num ? num.toLocaleString() : '-'
@@ -104,12 +104,12 @@ export function createTooltipManager() {
 }
 
 // =============================================================================
-// 数组操作工具函数
+// 陣列操作工具函數
 // =============================================================================
 
 /**
- * 获取字符数组的工具提示文本
- * @param chars 字符数组
+ * 獲取字符陣列的工具提示文本
+ * @param chars 字符陣列
  * @returns 格式化的工具提示文本
  */
 export const getCharacterTooltip = (chars: string[]): string => {

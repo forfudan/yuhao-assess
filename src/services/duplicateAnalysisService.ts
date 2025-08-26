@@ -1,6 +1,6 @@
 /**
- * 重码分析服务
- * 处理重码率计算、重码统计和重码报告生成
+ * 重碼分析服務
+ * 處理重碼率計算、重碼統計和重碼報告生成
  */
 
 import { generateCharset, type CharsetType, charsetInfo } from './charsetService'
