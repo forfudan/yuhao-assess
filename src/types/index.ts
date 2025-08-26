@@ -18,7 +18,7 @@ export interface ParseResult {
   format: CodeTableFormat
 }
 
-// 內置碼表配置
+// 預設碼表配置
 export interface BuiltinCodeTable {
   key: string
   name: string

@@ -3,8 +3,8 @@
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
-          <h3 class="card-title">全碼速度當量分析</h3>
-          <p class="card-description">分析輸入法的人體工學表現，計算基於字頻加權的按鍵組合速度當量。閱讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
+          <h3 class="card-title">速度當量分析</h3>
+          <p class="card-description">分析輸入法的速度當量，計算基於字頻加權的全碼按鍵組合。閱讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
           <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">

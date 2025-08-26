@@ -76,7 +76,7 @@ export {
   type MaximumCandidatesResult
 } from './maximumCandidatesService'
 
-// 導出內置碼表服務
+// 導出預設碼表服務
 export {
   BuiltinCodeTableService,
   builtinCodeTableService

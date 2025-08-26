@@ -4,7 +4,7 @@
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">最大候選項個數</h3>
-          <p class="card-description">分析不同字符集下每個編碼的最大候選項個數。</p>
+          <p class="card-description">分析不同字符集下方案的最大候選項個數，借以反映方案的檢字效率。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
           <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -76,9 +76,9 @@
         <!-- 數據說明 -->
         <div class="info-section">
           <h4>指標說明</h4>
-          <p>最大候選項個數評估輸入法的選字體驗，數值越小表示翻頁次數越少，輸入效率越高。計算考慮了：</p>
+          <p>最大候選項個數評估輸入法的選字體驗，數值越小表示翻頁次數越少，檢字效率越高。計算考慮了：</p>
           <ul>
-            <li>使用全碼表和指定字符集，統計每個編碼對應的漢字數量</li>
+            <li>單字全碼和指定字符集，統計每個編碼對應的漢字數量</li>
             <li>取所有編碼中候選項個數的最大值</li>
             <li>顏色標示：<span style="color: #059669; font-weight: 600;">≤2</span>、<span style="color: #d97706; font-weight: 600;">3-5</span>、<span style="color: #dc2626; font-weight: 600;">>5</span></li>
             <li>鼠標懸停在編碼上可查看該編碼對應的所有漢字</li>

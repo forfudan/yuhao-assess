@@ -1,6 +1,6 @@
 {
   "version": "0.0.1",
-  "description": "內置碼表配置文件",
+  "description": "預設碼表配置文件",
   "defaultScheme": "yuhao-ming",
   "builtinCodeTables": [
     {

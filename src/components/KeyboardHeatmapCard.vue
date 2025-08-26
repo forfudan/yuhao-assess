@@ -4,7 +4,7 @@
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">鍵位熱力圖</h3>
-          <p class="card-description">基於全碼加選重按鍵表分析鍵位分布和使用頻率，可視化展示鍵位負擔。</p>
+          <p class="card-description">基於單字全碼以及可能的選重鍵，分析各個按鍵的使用頻率，可視化展示手指負擔。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
           <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">

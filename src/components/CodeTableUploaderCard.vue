@@ -4,7 +4,7 @@
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">碼表上傳</h3>
-          <p class="card-description">上傳您的輸入法碼表文件進行性能分析。支持"字符-編碼"和"編碼-字符"兩種格式。</p>
+          <p class="card-description">選擇預設方案或上傳您的輸入法碼表文件進行性能分析。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
           <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -15,9 +15,9 @@
     </div>
     
     <div v-show="!isCollapsed" class="card-content">
-    <!-- 內置碼表選擇 -->
+    <!-- 預設碼表選擇 -->
     <div class="builtin-selector">
-      <label class="builtin-label">內置碼表方案：</label>
+      <label class="builtin-label">預設方案：</label>
       <div class="builtin-content">
         <select 
           v-model="selectedBuiltinTable" 
@@ -25,7 +25,7 @@
           @change="handleBuiltinTableChange"
           :disabled="isUploading"
         >
-          <option value="">選擇內置方案...</option>
+          <option value="">選擇預設方案...</option>
           <option 
             v-for="table in builtinTables" 
             :key="table.key" 
@@ -75,7 +75,7 @@
             title="切換前綴碼模式"
             type="button"
           >
-            {{ isPrefixCode ? '✓ 本方案為前綴碼' : '本方案為前綴碼' }}
+            {{ isPrefixCode ? '✓ 我是前綴碼方案' : '我是前綴碼方案' }}
           </button>
         </div>
       </div>
@@ -214,7 +214,7 @@ const emit = defineEmits<{
   uploadError: [error: string]
 }>()
 
-// 內置碼表相關
+// 預設碼表相關
 const builtinService = new BuiltinCodeTableService()
 const selectedBuiltinTable = ref('')
 const builtinTables = ref<Array<{key: string, name: string, description: string}>>([])
@@ -291,7 +291,7 @@ const handleFileSelection = (file: File) => {
     return
   }
 
-  // 清除內置碼表選擇
+  // 清除預設碼表選擇
   selectedBuiltinTable.value = ''
   
   selectedFile.value = file
@@ -426,29 +426,29 @@ const processFile = async () => {
   }
 }
 
-// 載入內置碼表配置
+// 載入預設碼表配置
 async function loadBuiltinConfig() {
   try {
     await builtinService.loadConfig()
     builtinTables.value = builtinService.getAvailableTables()
   } catch (error) {
-    console.error('載入內置碼表配置失敗:', error)
+    console.error('載入預設碼表配置失敗:', error)
   }
 }
 
-// 處理內置碼表選擇變化
+// 處理預設碼表選擇變化
 async function handleBuiltinTableChange() {
-  // 當選擇內置碼表時，清除檔案選擇
+  // 當選擇預設碼表時，清除檔案選擇
   if (selectedBuiltinTable.value) {
     selectedFile.value = null
     previewData.value = []
     
-    // 自動載入內置碼表
+    // 自動載入預設碼表
     await loadBuiltinTable()
   }
 }
 
-// 載入內置碼表
+// 載入預設碼表
 async function loadBuiltinTable() {
   if (!selectedBuiltinTable.value) return
   
@@ -466,13 +466,13 @@ async function loadBuiltinTable() {
     
     emit('uploadSuccess', {
       codeTable: result.codeTable,
-      fileName: `內置方案：${builtinTables.value.find(t => t.key === selectedBuiltinTable.value)?.name || selectedBuiltinTable.value}`,
+      fileName: `預設方案：${builtinTables.value.find(t => t.key === selectedBuiltinTable.value)?.name || selectedBuiltinTable.value}`,
       format: result.format,
       tableKey: selectedBuiltinTable.value,  // 添加tableKey用于前缀码检测
       isPrefix: isBuiltinPrefix  // 使用配置中的前缀码属性
     })
   } catch (error) {
-    emit('uploadError', `載入內置碼表失敗: ${error instanceof Error ? error.message : String(error)}`)
+    emit('uploadError', `載入預設碼表失敗: ${error instanceof Error ? error.message : String(error)}`)
   } finally {
     isUploading.value = false
   }
@@ -531,7 +531,7 @@ loadBuiltinConfig()
   gap: var(--spacing-sm); /* 从 var(--spacing-md) 减少到 var(--spacing-sm) */
 }
 
-/* 內置碼表選擇器樣式 */
+/* 預設碼表選擇器樣式 */
 .builtin-selector {
   border: 2px solid var(--color-border);
   border-radius: var(--radius-lg);

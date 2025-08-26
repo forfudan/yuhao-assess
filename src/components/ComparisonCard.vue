@@ -4,7 +4,7 @@
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">方案對比</h3>
-          <p class="card-description">對比不同輸入法方案的各項數據，支持內置方案和文件上傳。</p>
+          <p class="card-description">對比不同輸入法方案的各項數據，支持預設方案和文件上傳。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
           <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -254,11 +254,11 @@
                 <td class="scheme-name">
                   <div class="scheme-info">
                     <span class="scheme-title">{{ scheme.name }}</span>
-                    <span v-if="scheme.isBuiltin" class="scheme-source">內置方案</span>
+                    <span v-if="scheme.isBuiltin" class="scheme-source">預設方案</span>
                     <span v-else-if="!scheme.codeTable" class="scheme-source">
                       數據快照
                     </span>
-                    <span v-else class="scheme-source">首選方案</span>
+                    <span v-else class="scheme-source">上傳方案</span>
                   </div>
                 </td>
                 <td class="char-count">
@@ -516,9 +516,9 @@
         </div>
         
         <div class="form-content">
-          <!-- 內置方案選項 -->
+          <!-- 預設方案選項 -->
           <div class="form-section">
-            <h5>內置方案</h5>
+            <h5>預設方案</h5>
             <p class="section-desc">選擇預設的輸入法方案（支持多選）</p>
             <div class="builtin-options">
               <!-- 多選方案列表 -->
@@ -588,8 +588,8 @@
                   v-model="uploadPrefixFlag"
                   class="prefix-checkbox"
                 >
-                <span class="prefix-label">前綴碼方案</span>
-                <span class="prefix-desc">（勾選表示這些都是前綴碼方案，影響空格鍵頻率計算）</span>
+                <span class="prefix-label">我是前綴碼方案</span>
+                <span class="prefix-desc">（勾選即表示上傳的是前綴碼的碼表，影響空格鍵頻率計算）</span>
               </label>
             </div>
             
@@ -762,7 +762,7 @@ interface Scheme {
   isPrefix: boolean
   data?: SchemeData
   // 元數據字段
-  source?: string // 來源（文件名或內置方案ID）
+  source?: string // 來源（文件名或預設方案ID）
   uploadedAt?: Date // 上傳時間
   // 預處理數據（添加方案時計算一次）
   processedData?: ProcessedData
@@ -770,7 +770,7 @@ interface Scheme {
   charCount?: number
 }
 
-// 定義內置方案接口
+// 定義預設方案接口
 interface BuiltinScheme {
   id: string
   name: string
@@ -781,7 +781,7 @@ const yuhaoDefaultScheme = ref<Scheme | null>(null) // 宇浩日月方案
 const currentUserScheme = ref<Scheme | null>(null) // 當前用戶方案
 const additionalSchemes = ref<Scheme[]>([]) // 額外添加的方案
 const showAddForm = ref(false)
-const selectedBuiltinSchemes = ref<string[]>([]) // 多選內置方案
+const selectedBuiltinSchemes = ref<string[]>([]) // 多選預設方案
 const selectedBuiltinScheme = ref('') // 保留單選邏輯用於兼容性
 const isAdding = ref(false)
 const uploadProgress = ref({ current: 0, total: 0 }) // 上傳進度
@@ -830,9 +830,9 @@ const saveComparisonData = () => {
         data: scheme.data,
         charCount: scheme.charCount, // 保存收字數
         codeTableSize: scheme.codeTable?.size || 0,
-        // 保存內置方案的 key 用於重新載入
+        // 保存預設方案的 key 用於重新載入
         builtinKey: scheme.isBuiltin ? scheme.id.split('_')[1] : undefined,
-        // 對於非內置方案，我們不保存 codeTable（太大了），
+        // 對於非預設方案，我們不保存 codeTable（太大了），
         // 而是保存一個標記表明這是上傳方案，需要重新上傳
         isUploadedScheme: !scheme.isBuiltin,
         // 保存新增的元數據
@@ -862,14 +862,14 @@ const loadComparisonData = async () => {
           let correctIsPrefix = savedScheme.isPrefix || false // 默認從保存的數據中獲取
           
           if (savedScheme.isBuiltin && savedScheme.builtinKey) {
-            // 重新載入內置方案
+            // 重新載入預設方案
             const result = await builtinService.downloadCodeTable(savedScheme.builtinKey)
             codeTable = result.codeTable
             
-            // 重新獲取內置方案的正確前綴碼設置
+            // 重新獲取預設方案的正確前綴碼設置
             const schemeConfig = await builtinService.getBuiltinCodeTable(savedScheme.builtinKey)
             correctIsPrefix = schemeConfig?.prefix || false
-            console.log(`[調試] 恢復內置方案 ${savedScheme.name}:`, {
+            console.log(`[調試] 恢復預設方案 ${savedScheme.name}:`, {
               builtinKey: savedScheme.builtinKey,
               savedIsPrefix: savedScheme.isPrefix,
               configPrefix: schemeConfig?.prefix,
@@ -905,7 +905,7 @@ const loadComparisonData = async () => {
           
           // 如果沒有保存的charCount或codeTable，異步計算
           if ((!savedScheme.charCount || !codeTable) && savedScheme.isBuiltin && savedScheme.builtinKey) {
-            // 對於內置方案，如果缺少charCount，後續重新計算
+            // 對於預設方案，如果缺少charCount，後續重新計算
             setTimeout(async () => {
               if (restoredScheme.codeTable && !restoredScheme.charCount) {
                 try {
@@ -1254,7 +1254,7 @@ const recalculateScheme = async (scheme: Scheme) => {
       // 對於上傳方案，提示用戶重新上傳
       alert(`方案 "${scheme.name}" 的碼表數據已丟失（頁面刷新後上傳的文件會丟失）。\n\n請重新上傳該方案的碼表文件，或者移除該方案。`)
     } else {
-      console.warn(`[刷新按鈕] 內置方案 ${scheme.name} 缺少 codeTable，這不應該發生`)
+      console.warn(`[刷新按鈕] 預設方案 ${scheme.name} 缺少 codeTable，這不應該發生`)
     }
     return
   }
@@ -1439,7 +1439,7 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
   return fullDuplicateChars
 }
 
-// 初始化內置方案列表
+// 初始化預設方案列表
 onMounted(async () => {
   try {
     const config = await builtinService.loadConfig()
@@ -1456,7 +1456,7 @@ onMounted(async () => {
       loadCurrentUserScheme()
     }
   } catch (error) {
-    console.error('載入內置方案列表失敗:', error)
+    console.error('載入預設方案列表失敗:', error)
   }
 })
 
@@ -1878,7 +1878,7 @@ async function onBuiltinSchemeSelect() {
   }
 }
 
-// 添加內置方案
+// 添加預設方案
 async function addBuiltinScheme() {
   if (!selectedBuiltinScheme.value || isAdding.value) return
   
@@ -1897,7 +1897,7 @@ async function addBuiltinScheme() {
       isBuiltin: true,
       isCalculating: true,
       isPrefix: schemeConfig?.prefix || false,  // 從配置中獲取前綴碼屬性
-      source: selectedBuiltinScheme.value, // 記錄內置方案ID
+      source: selectedBuiltinScheme.value, // 記錄預設方案ID
       uploadedAt: new Date() // 添加時間
     }
     
@@ -1934,7 +1934,7 @@ async function addBuiltinScheme() {
     saveComparisonData()
     
   } catch (error) {
-    console.error('添加內置方案失敗:', error)
+    console.error('添加預設方案失敗:', error)
     // 移除失敗的方案
     const index = additionalSchemes.value.findIndex(s => s.name === builtinScheme.name && s.isCalculating)
     if (index !== -1) {
@@ -1945,14 +1945,14 @@ async function addBuiltinScheme() {
   }
 }
 
-// 添加所有內置方案
+// 添加所有預設方案
 async function addAllBuiltinSchemes() {
   if (isAdding.value || availableBuiltinSchemes.value.length === 0) return
   
   isAdding.value = true
   
   try {
-    // 獲取已添加的內置方案ID，避免重複添加
+    // 獲取已添加的預設方案ID，避免重複添加
     const existingBuiltinIds = new Set(
       additionalSchemes.value
         .filter(scheme => scheme.isBuiltin)
@@ -1965,7 +1965,7 @@ async function addAllBuiltinSchemes() {
     )
     
     if (schemesToAdd.length === 0) {
-      console.log('所有內置方案都已添加')
+      console.log('所有預設方案都已添加')
       return
     }
     
@@ -1981,7 +1981,7 @@ async function addAllBuiltinSchemes() {
           isBuiltin: true,
           isCalculating: true,
           isPrefix: schemeConfig?.prefix || false,  // 從配置中獲取前綴碼屬性
-          source: builtinScheme.id, // 記錄內置方案ID
+          source: builtinScheme.id, // 記錄預設方案ID
           uploadedAt: new Date() // 添加時間
         }
         
@@ -2026,7 +2026,7 @@ async function addAllBuiltinSchemes() {
     saveComparisonData()
     
   } catch (error) {
-    console.error('批量添加內置方案失敗:', error)
+    console.error('批量添加預設方案失敗:', error)
   } finally {
     isAdding.value = false
   }
@@ -2041,14 +2041,14 @@ function clearSelectedBuiltinSchemes() {
   selectedBuiltinSchemes.value = []
 }
 
-// 添加選中的內置方案
+// 添加選中的預設方案
 async function addSelectedBuiltinSchemes() {
   if (isAdding.value || selectedBuiltinSchemes.value.length === 0) return
   
   isAdding.value = true
   
   try {
-    // 獲取已添加的內置方案ID，避免重複添加
+    // 獲取已添加的預設方案ID，避免重複添加
     const existingBuiltinIds = new Set(
       additionalSchemes.value
         .filter(scheme => scheme.isBuiltin)
@@ -2077,7 +2077,7 @@ async function addSelectedBuiltinSchemes() {
           isBuiltin: true,
           isCalculating: true,
           isPrefix: schemeConfig?.prefix || false,  // 從配置中獲取前綴碼屬性
-          source: builtinScheme.id, // 記錄內置方案ID
+          source: builtinScheme.id, // 記錄預設方案ID
           uploadedAt: new Date() // 添加時間
         }
         

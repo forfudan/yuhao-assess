@@ -69,7 +69,7 @@
             </a>
             <a v-if="analysisReady" @click="scrollToCard('speed')" class="nav-item">
               <span class="nav-icon">⚡</span>
-              <span class="nav-title">全碼速度當量分析</span>
+              <span class="nav-title">速度當量分析</span>
             </a>
             <a v-if="analysisReady" @click="scrollToCard('comparison')" class="nav-item">
               <span class="nav-icon">🆚</span>
@@ -491,9 +491,9 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
   globalMaxLength.value = maxLength
   uploadPrefixFlag.value = data.isPrefix || false
   
-  // 如果是内置方案，从fileName中提取名称（格式：内置方案：方案名）
-  if (data.tableKey && data.fileName.startsWith('內置方案：')) {
-    codeTableName.value = data.fileName.replace('內置方案：', '')
+  // 如果是預設方案，从fileName中提取名称（格式：預設方案：方案名）
+  if (data.tableKey && data.fileName.startsWith('預設方案：')) {
+    codeTableName.value = data.fileName.replace('預設方案：', '')
   } else {
     codeTableName.value = data.fileName.replace(/\.(txt|csv)$/, '')
   }

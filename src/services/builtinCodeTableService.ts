@@ -5,7 +5,7 @@ export class BuiltinCodeTableService {
   private charFrequency: CharFrequency | null = null
   private equivTable: EquivTable | null = null
 
-  // 加載內置碼表配置
+  // 加載預設碼表配置
   async loadConfig(): Promise<CodeTableConfig> {
     if (this.config) {
       return this.config
@@ -121,13 +121,13 @@ export class BuiltinCodeTableService {
     }
   }
 
-  // 獲取所有內置碼表
+  // 獲取所有預設碼表
   async getBuiltinCodeTables(): Promise<BuiltinCodeTable[]> {
     const config = await this.loadConfig()
     return config.builtinCodeTables.filter(table => table.enabled)
   }
 
-  // 獲取可用的內置碼表列表
+  // 獲取可用的預設碼表列表
   getAvailableTables(): Array<{key: string, name: string, description: string}> {
     if (!this.config) {
       return []
@@ -139,7 +139,7 @@ export class BuiltinCodeTableService {
     }))
   }
 
-  // 根據key獲取內置碼表配置
+  // 根據key獲取預設碼表配置
   getTableConfig(key: string): BuiltinCodeTable | null {
     if (!this.config) {
       return null
@@ -147,13 +147,13 @@ export class BuiltinCodeTableService {
     return this.config.builtinCodeTables.find(table => table.key === key) || null
   }
 
-  // 根據key獲取內置碼表
+  // 根據key獲取預設碼表
   async getBuiltinCodeTable(key: string): Promise<BuiltinCodeTable | null> {
     const tables = await this.getBuiltinCodeTables()
     return tables.find(table => table.key === key) || null
   }
 
-  // 下載並解析內置碼表
+  // 下載並解析預設碼表
   async downloadCodeTable(key: string): Promise<{ codeTable: CodeTable; fileName: string; format: CodeTableFormat }> {
     const table = await this.getBuiltinCodeTable(key)
     if (!table) {
