@@ -970,7 +970,21 @@ const ensureCurrentTabDataLoaded = async () => {
     }
     
     if (needsCalculation) {
-      pendingCalculations.push(calculateMissingData(scheme))
+      // 設置計算狀態
+      scheme.isCalculating = true
+      
+      // 創建計算Promise，包含狀態管理
+      const calculation = async () => {
+        try {
+          await calculateMissingData(scheme)
+        } catch (error) {
+          console.error(`計算方案 ${scheme.name} 失敗:`, error)
+        } finally {
+          scheme.isCalculating = false
+        }
+      }
+      
+      pendingCalculations.push(calculation())
     }
   }
   
@@ -1109,37 +1123,38 @@ const getSortArrow = (column: SortColumn) => {
 
 // 預處理碼表數據（添加方案時執行一次）
 async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): Promise<ProcessedData> {
-  console.time('碼表預處理')
+  const timerId = Math.random().toString(36).substr(2, 9) // 生成唯一ID
+  console.time(`碼表預處理-${timerId}`)
   
   // 1. 從碼表鍵中提取所有單個字符
-  console.time('提取唯一字符')
+  console.time(`提取唯一字符-${timerId}`)
   const allUniqueChars = new Set<string>()
   for (const key of codeTable.keys()) {
     for (const char of key) {
       allUniqueChars.add(char)
     }
   }
-  console.timeEnd('提取唯一字符')
+  console.timeEnd(`提取唯一字符-${timerId}`)
   
   // 2. 生成全碼表
-  console.time('生成全碼表')
+  console.time(`生成全碼表-${timerId}`)
   const { generateFullCodeTable } = await import('../services/codeTableCleanService')
   const fullResult = generateFullCodeTable(codeTable)
   const fullCodeTable = fullResult.codeTable
-  console.timeEnd('生成全碼表')
+  console.timeEnd(`生成全碼表-${timerId}`)
   
   // 3. 計算最大碼長
-  console.time('計算最大碼長')
+  console.time(`計算最大碼長-${timerId}`)
   let maxLength = 0
   for (const [, codes] of codeTable.entries()) {
     for (const code of codes) {
       maxLength = Math.max(maxLength, code.length)
     }
   }
-  console.timeEnd('計算最大碼長')
+  console.timeEnd(`計算最大碼長-${timerId}`)
   
   // 4. 並行生成所有字符集
-  console.time('生成所有字符集')
+  console.time(`生成所有字符集-${timerId}`)
   const charsetTypes: CharsetType[] = [
     'gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_i'
   ]
@@ -1155,9 +1170,9 @@ async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): 
   charsetResults.forEach(({ type, charset }) => {
     charsetMap.set(type, charset)
   })
-  console.timeEnd('生成所有字符集')
+  console.timeEnd(`生成所有字符集-${timerId}`)
   
-  console.timeEnd('碼表預處理')
+  console.timeEnd(`碼表預處理-${timerId}`)
   
   return {
     fullCodeTable,
@@ -1365,7 +1380,7 @@ async function calculateStaticData(scheme: Scheme): Promise<StaticData> {
   }
   
   // 計算各字符集的重碼統計
-  console.time('計算各字符集重碼')
+  console.time(`計算各字符集重碼-${scheme.name}`)
   const results = {
     gb2312DuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('gb2312')!),
     guoziDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('guozi')!),
@@ -1375,7 +1390,7 @@ async function calculateStaticData(scheme: Scheme): Promise<StaticData> {
     cjkToFDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('cjk_to_f')!),
     cjkToIDuplicateChars: calculateCharsetDuplicatesOptimized(charsetMap.get('cjk_to_i')!)
   }
-  console.timeEnd('計算各字符集重碼')
+  console.timeEnd(`計算各字符集重碼-${scheme.name}`)
   
   console.timeEnd(`靜態重碼計算-${scheme.name}`)
   return results
@@ -1482,7 +1497,7 @@ async function calculateMaxCandidatesData(scheme: Scheme): Promise<MaxCandidates
     const { fullCodeTable, charsetMap } = scheme.processedData
     
     // 為每個字符集計算最大候選項（直接使用預處理的數據）
-    console.time('計算各字符集最大候選')
+    console.time(`計算各字符集最大候選-${scheme.name}`)
     const calculateMaxForCharset = async (charset: Set<string>) => {
       const codeToChars = new Map<string, string[]>()
       
@@ -1522,7 +1537,7 @@ async function calculateMaxCandidatesData(scheme: Scheme): Promise<MaxCandidates
       cjkToFMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_f')!),
       cjkToIMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_i')!)
     }
-    console.timeEnd('計算各字符集最大候選')
+    console.timeEnd(`計算各字符集最大候選-${scheme.name}`)
     
     console.timeEnd(`最大候選計算-${scheme.name}`)
     return results
