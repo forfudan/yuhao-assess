@@ -26,6 +26,11 @@
             </a>
           </div>
           <div class="header-actions">
+            <button @click="clearAllCache" class="action-button" title="清理所有本地緩存數據">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
+              </svg>
+            </button>
             <button @click="toggleAllCards" class="action-button" :title="allCardsCollapsed ? '展開所有卡片' : '摺疊所有卡片'">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                 <path v-if="allCardsCollapsed" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
@@ -525,6 +530,64 @@ const handleUploadError = (error: string) => {
   }, 5000)
 
   console.error('碼表上傳失敗:', error)
+}
+
+// 清理所有本地緩存數據
+const clearAllCache = () => {
+  try {
+    // 確認用戶是否真的要清理所有數據
+    if (!confirm('確定要清理所有本地緩存數據嗎？這將包括：\n\n• 已上傳的碼表數據\n• 所有方案對比數據\n• 分析結果\n• 用戶設定\n\n清理後頁面將重新載入。')) {
+      return
+    }
+    
+    // 獲取所有localStorage鍵值
+    const allKeys = Object.keys(localStorage)
+    
+    // 清除所有相關的鍵值
+    const keysToRemove = [
+      'savedCodeTable',              // 主碼表數據
+      'yuhao-comparison-schemes',    // 方案對比數據
+      'comparisonSchemes',           // 舊版本方案對比數據
+      'uploadedCodeTable',
+      'codeTableName',
+      'analysisData',
+      'userSettings',
+      'cacheTimestamp',
+      'theme'                        // 主題設定
+    ]
+    
+    // 直接清除已知鍵值
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key)
+    })
+    
+    // 清除所有以特定前綴開頭或包含特定關鍵字的keys
+    allKeys.forEach(key => {
+      if (
+        key.startsWith('yuhao') ||
+        key.startsWith('codeTable') ||
+        key.startsWith('analysis') ||
+        key.includes('comparison') ||
+        key.includes('scheme') ||
+        key.includes('codetable') ||
+        key.includes('cache')
+      ) {
+        localStorage.removeItem(key)
+      }
+    })
+    
+    // 清理所有sessionStorage（如果有的話）
+    sessionStorage.clear()
+    
+    // 提示用戶並重新載入頁面
+    alert('所有本地緩存數據已清除，頁面將重新載入')
+    
+    // 重新載入頁面
+    window.location.reload()
+  } catch (error) {
+    console.error('清除緩存時發生錯誤:', error)
+    alert('清除緩存失敗，請手動重新整理頁面')
+  }
 }
 </script>
 
