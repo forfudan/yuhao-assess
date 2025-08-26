@@ -35,6 +35,20 @@
               {{ tab.label }}
             </button>
           </div>
+          
+          <!-- 後台計算進度指示器 -->
+          <div v-if="hasBackgroundTasks" class="background-progress">
+            <div class="progress-info">
+              <span class="progress-text">後台預計算中</span>
+              <span class="progress-percentage">{{ backgroundProgress.percentage }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div 
+                class="progress-fill" 
+                :style="{ width: backgroundProgress.percentage + '%' }"
+              ></div>
+            </div>
+          </div>
         </div>
 
         <!-- 對比表格 -->
@@ -978,45 +992,206 @@ const allSchemes = computed(() => {
 // 計算屬性 - 是否有任何方案
 const hasAnyScheme = computed(() => allSchemes.value.length > 0)
 
-// 確保當前 Tab 的數據已加載
-const ensureCurrentTabDataLoaded = async () => {
-  const schemes = allSchemes.value
-  const pendingCalculations: Promise<void>[] = []
+// 智能計算隊列管理
+type TabType = 'dynamic' | 'static' | 'maxCandidates' | 'speedEquiv'
+
+interface CalculationTask {
+  id: string
+  schemeId: string
+  tabType: TabType
+  priority: 'high' | 'low'
+  abortController: AbortController
+  promise: Promise<void>
+}
+
+const calculationQueue = ref<CalculationTask[]>([])
+const runningTasks = ref(new Set<string>())
+
+// 計算進度追蹤
+const backgroundProgress = computed(() => {
+  const totalSchemes = allSchemes.value.length
+  if (totalSchemes === 0) return { completed: 0, total: 0, percentage: 100 }
   
-  for (const scheme of schemes) {
-    if (!scheme.codeTable || scheme.isCalculating) continue
-    
-    let needsCalculation = false
-    if (activeTab.value === 'dynamic') {
-      needsCalculation = !scheme.data?.dynamic
-    } else if (activeTab.value === 'static') {
-      needsCalculation = !scheme.data?.static
-    } else if (activeTab.value === 'maxCandidates') {
-      needsCalculation = !scheme.data?.maxCandidates
-    } else if (activeTab.value === 'speedEquiv') {
-      needsCalculation = !scheme.data?.speedEquiv
+  const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+  const totalTasks = totalSchemes * allTabs.length
+  
+  let completed = 0
+  for (const scheme of allSchemes.value) {
+    if (scheme.data?.dynamic) completed++
+    if (scheme.data?.static) completed++
+    if (scheme.data?.maxCandidates) completed++
+    if (scheme.data?.speedEquiv) completed++
+  }
+  
+  return {
+    completed,
+    total: totalTasks,
+    percentage: Math.round((completed / totalTasks) * 100)
+  }
+})
+
+// 是否有後台任務在運行
+const hasBackgroundTasks = computed(() => {
+  return runningTasks.value.size > 0
+})
+
+// 清理已完成或被取消的任務
+const cleanupQueue = () => {
+  calculationQueue.value = calculationQueue.value.filter(task => 
+    runningTasks.value.has(task.id)
+  )
+}
+
+// 取消低優先級任務
+const cancelLowPriorityTasks = () => {
+  for (const task of calculationQueue.value) {
+    if (task.priority === 'low') {
+      task.abortController.abort()
+      runningTasks.value.delete(task.id)
     }
-    
-    if (needsCalculation) {
-      // 設置計算狀態
-      scheme.isCalculating = true
+  }
+  cleanupQueue()
+}
+
+// 智能計算調度器
+const scheduleCalculation = async (scheme: Scheme, tabType: TabType, priority: 'high' | 'low' = 'low') => {
+  const taskId = `${scheme.id}-${tabType}`
+  
+  // 檢查是否已經有相同的任務在運行
+  if (runningTasks.value.has(taskId)) {
+    return
+  }
+  
+  // 檢查數據是否已存在
+  const hasData = (
+    (tabType === 'dynamic' && scheme.data?.dynamic) ||
+    (tabType === 'static' && scheme.data?.static) ||
+    (tabType === 'maxCandidates' && scheme.data?.maxCandidates) ||
+    (tabType === 'speedEquiv' && scheme.data?.speedEquiv)
+  )
+  
+  if (hasData) {
+    return
+  }
+  
+  // 如果是高優先級任務，取消所有低優先級任務
+  if (priority === 'high') {
+    cancelLowPriorityTasks()
+  }
+  
+  const abortController = new AbortController()
+  runningTasks.value.add(taskId)
+  
+  const calculateTask = async () => {
+    try {
+      if (!scheme.codeTable) {
+        console.warn(`方案 ${scheme.name} 缺少 codeTable，跳過計算`)
+        return
+      }
       
-      // 創建計算Promise，包含狀態管理
-      const calculation = async () => {
-        try {
-          await calculateMissingData(scheme)
-        } catch (error) {
-          console.error(`計算方案 ${scheme.name} 失敗:`, error)
-        } finally {
-          scheme.isCalculating = false
+      // 檢查是否被取消
+      if (abortController.signal.aborted) {
+        return
+      }
+      
+      // 設置計算狀態（只有高優先級任務才顯示loading）
+      if (priority === 'high') {
+        scheme.isCalculating = true
+      }
+      
+      console.log(`[智能計算] 開始計算 ${scheme.name} - ${tabType} (${priority} 優先級)`)
+      
+      // 確保有預處理數據
+      if (!scheme.processedData) {
+        scheme.processedData = await preprocessCodeTableData(scheme.codeTable, scheme.isPrefix)
+        if (!scheme.charCount) {
+          scheme.charCount = await calculateCharCount(scheme.codeTable)
         }
       }
       
-      pendingCalculations.push(calculation())
+      // 確保有數據對象
+      if (!scheme.data) {
+        scheme.data = {}
+      }
+      
+      // 再次檢查是否被取消
+      if (abortController.signal.aborted) {
+        return
+      }
+      
+      // 執行具體計算
+      if (tabType === 'dynamic') {
+        scheme.data.dynamic = await calculateDynamicData(scheme)
+      } else if (tabType === 'static') {
+        scheme.data.static = await calculateStaticData(scheme)
+      } else if (tabType === 'maxCandidates') {
+        scheme.data.maxCandidates = await calculateMaxCandidatesData(scheme)
+      } else if (tabType === 'speedEquiv') {
+        const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
+        if (isMainScheme) {
+          scheme.data.speedEquiv = await calculateMainSchemeSpeedEquivData()
+        } else {
+          scheme.data.speedEquiv = await calculateSpeedEquivData(scheme)
+        }
+      }
+      
+      console.log(`[智能計算] 完成計算 ${scheme.name} - ${tabType}`)
+      
+      // 保存數據
+      saveComparisonData()
+    } catch (error) {
+      if (!abortController.signal.aborted) {
+        console.error(`[智能計算] 計算失敗 ${scheme.name} - ${tabType}:`, error)
+      }
+    } finally {
+      if (priority === 'high') {
+        scheme.isCalculating = false
+      }
+      runningTasks.value.delete(taskId)
     }
   }
   
-  await Promise.all(pendingCalculations)
+  const task: CalculationTask = {
+    id: taskId,
+    schemeId: scheme.id,
+    tabType,
+    priority,
+    abortController,
+    promise: calculateTask()
+  }
+  
+  calculationQueue.value.push(task)
+  return task.promise
+}
+
+// 確保當前 Tab 的數據已加載（高優先級）+ 預計算其他Tab（低優先級）
+const ensureCurrentTabDataLoaded = async () => {
+  const schemes = allSchemes.value.filter(s => s.codeTable && !s.isCalculating)
+  
+  if (schemes.length === 0) return
+  
+  console.log(`[智能計算] 開始智能計算策略 - 當前Tab: ${activeTab.value}`)
+  
+  // 第一階段：立即計算當前Tab的所有數據（高優先級）
+  const currentTabPromises = schemes.map(scheme => 
+    scheduleCalculation(scheme, activeTab.value, 'high')
+  )
+  
+  await Promise.all(currentTabPromises)
+  console.log(`[智能計算] 當前Tab ${activeTab.value} 計算完成`)
+  
+  // 第二階段：後台預計算其他Tab的數據（低優先級）
+  const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+  const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
+  
+  for (const tab of otherTabs) {
+    // 為每個其他Tab安排後台計算任務
+    schemes.forEach(scheme => {
+      scheduleCalculation(scheme, tab, 'low')
+    })
+  }
+  
+  console.log(`[智能計算] 已安排 ${otherTabs.length} 個Tab的後台預計算任務`)
 }
 
 // 為方案計算缺失的數據
@@ -1130,8 +1305,11 @@ const recalculateScheme = async (scheme: Scheme) => {
   }
 }
 
-// 惰性計算：監聽 Tab 切換
+// 智能計算：監聽 Tab 切換
 watch(activeTab, async (newTab) => {
+  console.log(`[智能計算] Tab切換到: ${newTab}`)
+  // 取消所有低優先級任務，重新安排計算
+  cancelLowPriorityTasks()
   await ensureCurrentTabDataLoaded()
 }, { immediate: true })
 
@@ -1283,6 +1461,13 @@ onMounted(async () => {
 
 // 組件卸載時清理缓存
 onUnmounted(() => {
+  // 取消所有運行中的計算任務
+  for (const task of calculationQueue.value) {
+    task.abortController.abort()
+  }
+  calculationQueue.value = []
+  runningTasks.value.clear()
+  
   clearCache()
 })
 
@@ -1724,16 +1909,17 @@ async function addBuiltinScheme() {
         newScheme.charCount = await calculateCharCount(result.codeTable)
     newScheme.charCount = await calculateCharCount(result.codeTable)
     
-    // 只計算當前Tab需要的數據
+    // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
     newScheme.data = {}
-    if (activeTab.value === 'dynamic') {
-      newScheme.data.dynamic = await calculateDynamicData(newScheme)
-    } else if (activeTab.value === 'static') {
-      newScheme.data.static = await calculateStaticData(newScheme)
-    } else if (activeTab.value === 'maxCandidates') {
-      newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
-    } else if (activeTab.value === 'speedEquiv') {
-      newScheme.data.speedEquiv = await calculateSpeedEquivData(newScheme)
+    
+    // 高優先級：立即計算當前Tab數據
+    await scheduleCalculation(newScheme, activeTab.value, 'high')
+    
+    // 低優先級：安排其他Tab的後台計算
+    const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+    const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
+    for (const tab of otherTabs) {
+      scheduleCalculation(newScheme, tab, 'low')
     }
     
     newScheme.isCalculating = false
@@ -2055,16 +2241,17 @@ async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'co
         newScheme.processedData = await preprocessCodeTableData(codeTable, newScheme.isPrefix)
         newScheme.charCount = await calculateCharCount(codeTable)
         
-        // 只計算當前Tab需要的數據
+        // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
         newScheme.data = {}
-        if (activeTab.value === 'dynamic') {
-          newScheme.data.dynamic = await calculateDynamicData(newScheme)
-        } else if (activeTab.value === 'static') {
-          newScheme.data.static = await calculateStaticData(newScheme)
-        } else if (activeTab.value === 'maxCandidates') {
-          newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
-        } else if (activeTab.value === 'speedEquiv') {
-          newScheme.data.speedEquiv = await calculateSpeedEquivData(newScheme)
+        
+        // 高優先級：立即計算當前Tab數據
+        await scheduleCalculation(newScheme, activeTab.value, 'high')
+        
+        // 低優先級：安排其他Tab的後台計算
+        const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+        const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
+        for (const tab of otherTabs) {
+          scheduleCalculation(newScheme, tab, 'low')
         }
         
         newScheme.isCalculating = false
@@ -2280,6 +2467,47 @@ function clearAllSchemes() {
   display: flex;
   border-bottom: 2px solid #e5e7eb;
   margin-bottom: var(--spacing-md);
+}
+
+/* 後台計算進度指示器 */
+.background-progress {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.progress-text {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.progress-percentage {
+  font-size: 0.75rem;
+  color: #0f766e;
+  font-weight: 500;
+}
+
+.progress-bar {
+  height: 3px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0f766e, #14b8a6);
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
 
 .tab-button {
