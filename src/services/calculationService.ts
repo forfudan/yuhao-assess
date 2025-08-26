@@ -1,21 +1,20 @@
 /**
- * 优化的计算服务
- * 针对ComparisonCard中的性能瓶颈进行优化
+ * 高性能计算服务
+ * 提供码表分析的核心计算功能
  */
 
 import type { CodeTable, CharFrequency } from '../types/index'
 import type { CharsetType } from './charsetService'
-import { getDynamicDupRate } from './duplicateAnalysisService'
 
 // 缓存结果避免重复计算
 const charsetCache = new Map<string, Set<string>>()
 const codeTableCache = new Map<string, any>()
 
 /**
- * 优化的字符集生成函数
+ * 字符集生成函数
  * 使用位运算和缓存来提高性能
  */
-export function generateCharsetOptimized(charsetType: CharsetType, allChars: Set<string>): Set<string> {
+export function generateCharset(charsetType: CharsetType, allChars: Set<string>): Set<string> {
   const cacheKey = `${charsetType}-${allChars.size}`
   if (charsetCache.has(cacheKey)) {
     return charsetCache.get(cacheKey)!
@@ -105,7 +104,7 @@ export function generateCharsetOptimized(charsetType: CharsetType, allChars: Set
  * 批量计算最大候选数
  * 一次性处理所有字符集，避免重复遍历
  */
-export function calculateAllMaxCandidatesOptimized(
+export function calculateAllMaxCandidates(
   fullCodeTable: CodeTable,
   charsetMap: Map<CharsetType, Set<string>>
 ): Record<string, number> {
@@ -155,10 +154,10 @@ export function calculateAllMaxCandidatesOptimized(
 }
 
 /**
- * 优化的静态重码计算
+ * 静态重码计算
  * 使用更高效的数据结构和算法
  */
-export function calculateStaticDuplicatesOptimized(
+export function calculateStaticDuplicates(
   fullCodeTable: CodeTable,
   charsetMap: Map<CharsetType, Set<string>>
 ): Record<string, number> {
@@ -212,14 +211,14 @@ export function calculateStaticDuplicatesOptimized(
  * 内存优化的字符计数
  * 使用流式处理避免大量内存占用
  */
-export function calculateCharCountOptimized(codeTable: CodeTable): number {
+export function calculateCharCount(codeTable: CodeTable): number {
   let intersectionCount = 0
   
   // 流式处理，避免创建大Set
   for (const char of codeTable.keys()) {
     for (const c of char) {
       const codePoint = c.codePointAt(0)
-      if (codePoint && isInCJKToIOptimized(codePoint)) {
+      if (codePoint && isInCJKToI(codePoint)) {
         intersectionCount++
       }
     }
@@ -232,7 +231,7 @@ export function calculateCharCountOptimized(codeTable: CodeTable): number {
  * 优化的CJK到I区检查
  * 使用位运算提高性能
  */
-function isInCJKToIOptimized(codePoint: number): boolean {
+function isInCJKToI(codePoint: number): boolean {
   return (
     (codePoint >= 0x4E00 && codePoint <= 0x9FFF) ||
     (codePoint >= 0x3400 && codePoint <= 0x4DBF) ||
@@ -248,10 +247,10 @@ function isInCJKToIOptimized(codePoint: number): boolean {
 }
 
 /**
- * 批量优化的预处理函数
+ * 批量预处理函数
  * 一次性完成所有字符集生成和映射构建
  */
-export function preprocessCodeTableOptimized(
+export function preprocessCodeTable(
   codeTable: CodeTable
 ): {
   allUniqueChars: Set<string>
@@ -275,7 +274,7 @@ export function preprocessCodeTableOptimized(
   const charsetTypes: CharsetType[] = ['gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_i']
   
   for (const charsetType of charsetTypes) {
-    charsetMap.set(charsetType, generateCharsetOptimized(charsetType, allUniqueChars))
+    charsetMap.set(charsetType, generateCharset(charsetType, allUniqueChars))
   }
   
   // 4. 预构建编码到字符的映射
@@ -302,7 +301,7 @@ export function preprocessCodeTableOptimized(
  * 一次性计算所有指标
  * 避免重复遍历和计算
  */
-export function calculateAllMetricsOptimized(preprocessedData: {
+export function calculateAllMetrics(preprocessedData: {
   allUniqueChars: Set<string>
   charsetMap: Map<CharsetType, Set<string>>
   fullCodeTable: CodeTable
@@ -315,9 +314,9 @@ export function calculateAllMetricsOptimized(preprocessedData: {
   const { charsetMap, fullCodeTable } = preprocessedData
   
   // 一次性计算所有指标
-  const staticDuplicates = calculateStaticDuplicatesOptimized(fullCodeTable, charsetMap)
-  const maxCandidates = calculateAllMaxCandidatesOptimized(fullCodeTable, charsetMap)
-  const charCount = calculateCharCountOptimized(fullCodeTable)
+  const staticDuplicates = calculateStaticDuplicates(fullCodeTable, charsetMap)
+  const maxCandidates = calculateAllMaxCandidates(fullCodeTable, charsetMap)
+  const charCount = calculateCharCount(fullCodeTable)
   
   return {
     staticDuplicates,
