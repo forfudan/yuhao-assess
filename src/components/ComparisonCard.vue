@@ -511,7 +511,12 @@
             class="add-scheme-btn"
             :disabled="isAdding"
           >
-            <span v-if="isAdding">添加中...</span>
+            <span v-if="isAdding">
+              <span v-if="uploadProgress.total > 0">
+                上傳中 {{ uploadProgress.current }}/{{ uploadProgress.total }}...
+              </span>
+              <span v-else>添加中...</span>
+            </span>
             <span v-else>➕ 添加新方案</span>
           </button>
           
@@ -553,21 +558,55 @@
           <!-- 內置方案選項 -->
           <div class="form-section">
             <h5>內置方案</h5>
-            <p class="section-desc">選擇預設的輸入法方案</p>
+            <p class="section-desc">選擇預設的輸入法方案（支持多選）</p>
             <div class="builtin-options">
-              <select v-model="selectedBuiltinScheme" @change="onBuiltinSchemeSelect" class="scheme-select">
-                <option value="">請選擇內置方案</option>
-                <option v-for="scheme in availableBuiltinSchemes" :key="scheme.id" :value="scheme.id">
-                  {{ scheme.name }}
-                </option>
-              </select>
-              <button 
-                @click="addAllBuiltinSchemes" 
-                :disabled="isAdding || availableBuiltinSchemes.length === 0"
-                class="add-all-btn"
-              >
-                選擇所有
-              </button>
+              <!-- 多選方案列表 -->
+              <div class="multi-select-container">
+                <div class="select-all-controls">
+                  <button 
+                    @click="selectAllBuiltinSchemes" 
+                    :disabled="isAdding || availableBuiltinSchemes.length === 0"
+                    class="select-all-btn"
+                  >
+                    全選
+                  </button>
+                  <button 
+                    @click="clearSelectedBuiltinSchemes" 
+                    :disabled="isAdding || selectedBuiltinSchemes.length === 0"
+                    class="clear-selection-btn"
+                  >
+                    清空選擇
+                  </button>
+                  <span class="selection-count">已選: {{ selectedBuiltinSchemes.length }}</span>
+                </div>
+                
+                <div class="scheme-checkboxes">
+                  <label 
+                    v-for="scheme in availableBuiltinSchemes" 
+                    :key="scheme.id" 
+                    class="scheme-checkbox"
+                  >
+                    <input 
+                      type="checkbox" 
+                      :value="scheme.id"
+                      v-model="selectedBuiltinSchemes"
+                      :disabled="isAdding"
+                      class="checkbox-input"
+                    >
+                    <span class="checkbox-label">{{ scheme.name }}</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div class="batch-add-controls">
+                <button 
+                  @click="addSelectedBuiltinSchemes" 
+                  :disabled="isAdding || selectedBuiltinSchemes.length === 0"
+                  class="add-selected-btn"
+                >
+                  添加選中方案 ({{ selectedBuiltinSchemes.length }})
+                </button>
+              </div>
             </div>
           </div>
 
@@ -578,7 +617,7 @@
           <!-- 文件上傳選項 -->
           <div class="form-section">
             <h5>上傳碼表文件</h5>
-            <p class="section-desc">選擇碼表格式並上傳 .txt 或 .csv 文件</p>
+            <p class="section-desc">選擇碼表格式並上傳 .txt 或 .csv 文件（支持多文件選擇）</p>
             
             <!-- 前綴碼選項 -->
             <div class="prefix-toggle-section">
@@ -589,7 +628,7 @@
                   class="prefix-checkbox"
                 >
                 <span class="prefix-label">前綴碼方案</span>
-                <span class="prefix-desc">（勾選表示這是前綴碼方案，影響空格鍵頻率計算）</span>
+                <span class="prefix-desc">（勾選表示這些都是前綴碼方案，影響空格鍵頻率計算）</span>
               </label>
             </div>
             
@@ -597,35 +636,42 @@
               <input 
                 ref="fileInputCharCode"
                 type="file" 
-                @change="(e) => handleFileUpload(e, 'char_first')" 
+                @change="(e) => handleMultipleFileUpload(e, 'char_first')" 
                 accept=".txt,.csv"
                 class="file-input"
                 :disabled="isAdding"
+                multiple
                 style="display: none;"
               >
               <input 
                 ref="fileInputCodeChar"
                 type="file" 
-                @change="(e) => handleFileUpload(e, 'code_first')" 
+                @change="(e) => handleMultipleFileUpload(e, 'code_first')" 
                 accept=".txt,.csv"
                 class="file-input"
                 :disabled="isAdding"
+                multiple
                 style="display: none;"
               >
-              <button 
-                @click="triggerFileUpload('char_first')" 
-                class="upload-btn"
-                :disabled="isAdding"
-              >
-                漢字-編碼格式
-              </button>
-              <button 
-                @click="triggerFileUpload('code_first')" 
-                class="upload-btn"
-                :disabled="isAdding"
-              >
-                編碼-漢字格式
-              </button>
+              <div class="upload-buttons">
+                <button 
+                  @click="triggerFileUpload('char_first')" 
+                  class="upload-btn"
+                  :disabled="isAdding"
+                >
+                  📁 漢字-編碼格式 (多選)
+                </button>
+                <button 
+                  @click="triggerFileUpload('code_first')" 
+                  class="upload-btn"
+                  :disabled="isAdding"
+                >
+                  📁 編碼-漢字格式 (多選)
+                </button>
+              </div>
+              <div class="upload-tips">
+                <small>💡 提示：可以按住 Ctrl/Cmd 鍵選擇多個文件，或按住 Shift 鍵選擇連續的文件</small>
+              </div>
             </div>
           </div>
         </div>
@@ -764,9 +810,11 @@ const yuhaoDefaultScheme = ref<Scheme | null>(null) // 宇浩日月方案
 const currentUserScheme = ref<Scheme | null>(null) // 當前用戶方案
 const additionalSchemes = ref<Scheme[]>([]) // 額外添加的方案
 const showAddForm = ref(false)
+const selectedBuiltinSchemes = ref<string[]>([]) // 多選內置方案
+const selectedBuiltinScheme = ref('') // 保留單選邏輯用於兼容性
 const isAdding = ref(false)
 const isRecalculating = ref(false) // 重新計算狀態
-const selectedBuiltinScheme = ref('')
+const uploadProgress = ref({ current: 0, total: 0 }) // 上傳進度
 const availableBuiltinSchemes = ref<BuiltinScheme[]>([])
 const fileInputCharCode = ref<HTMLInputElement>()
 const fileInputCodeChar = ref<HTMLInputElement>()
@@ -1847,6 +1895,102 @@ async function addAllBuiltinSchemes() {
   }
 }
 
+// 多選相關函數
+function selectAllBuiltinSchemes() {
+  selectedBuiltinSchemes.value = availableBuiltinSchemes.value.map(scheme => scheme.id)
+}
+
+function clearSelectedBuiltinSchemes() {
+  selectedBuiltinSchemes.value = []
+}
+
+// 添加選中的內置方案
+async function addSelectedBuiltinSchemes() {
+  if (isAdding.value || selectedBuiltinSchemes.value.length === 0) return
+  
+  isAdding.value = true
+  
+  try {
+    // 獲取已添加的內置方案ID，避免重複添加
+    const existingBuiltinIds = new Set(
+      additionalSchemes.value
+        .filter(scheme => scheme.isBuiltin)
+        .map(scheme => scheme.id.split('_')[1])
+    )
+    
+    // 過濾出尚未添加的方案
+    const schemesToAdd = availableBuiltinSchemes.value.filter(
+      scheme => selectedBuiltinSchemes.value.includes(scheme.id) && !existingBuiltinIds.has(scheme.id)
+    )
+    
+    if (schemesToAdd.length === 0) {
+      console.log('選中的方案都已添加或無有效選擇')
+      return
+    }
+    
+    // 逐個添加方案
+    for (const builtinScheme of schemesToAdd) {
+      try {
+        // 獲取方案配置信息
+        const schemeConfig = await builtinService.getBuiltinCodeTable(builtinScheme.id)
+        
+        const newScheme: Scheme = {
+          id: `builtin_${builtinScheme.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name: builtinScheme.name,
+          isBuiltin: true,
+          isCalculating: true,
+          isPrefix: schemeConfig?.prefix || false,  // 從配置中獲取前綴碼屬性
+          source: builtinScheme.id, // 記錄內置方案ID
+          uploadedAt: new Date() // 添加時間
+        }
+        
+        additionalSchemes.value.push(newScheme)
+        
+        // 載入碼表並預處理數據
+        const result = await builtinService.downloadCodeTable(builtinScheme.id)
+        newScheme.codeTable = result.codeTable
+        
+        // 預處理碼表數據（只做一次）
+        newScheme.processedData = await preprocessCodeTableData(result.codeTable, newScheme.isPrefix)
+        
+        // 只計算當前Tab需要的數據
+        newScheme.data = {}
+        if (activeTab.value === 'dynamic') {
+          newScheme.data.dynamic = await calculateDynamicDataOptimized(newScheme)
+        } else if (activeTab.value === 'static') {
+          newScheme.data.static = await calculateStaticData(newScheme)
+        } else if (activeTab.value === 'maxCandidates') {
+          newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
+        } else if (activeTab.value === 'speedEquiv') {
+          newScheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(newScheme)
+        }
+        
+        newScheme.isCalculating = false
+        
+      } catch (error) {
+        console.error(`添加方案 ${builtinScheme.name} 失敗:`, error)
+        // 移除失敗的方案
+        const index = additionalSchemes.value.findIndex(s => s.name === builtinScheme.name && s.isCalculating)
+        if (index !== -1) {
+          additionalSchemes.value.splice(index, 1)
+        }
+      }
+    }
+    
+    showAddForm.value = false
+    selectedBuiltinSchemes.value = [] // 清空選擇
+    selectedBuiltinScheme.value = ''
+    
+    // 立即保存數據
+    saveComparisonData()
+    
+  } catch (error) {
+    console.error('批量添加選中方案失敗:', error)
+  } finally {
+    isAdding.value = false
+  }
+}
+
 // 觸發文件上傳
 function triggerFileUpload(format: 'char_first' | 'code_first') {
   if (format === 'char_first') {
@@ -1919,6 +2063,92 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
   target.value = ''
 }
 
+// 處理多文件上傳
+async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'code_first') {
+  const target = event.target as HTMLInputElement
+  const files = target.files
+  if (!files || files.length === 0 || isAdding.value) return
+  
+  isAdding.value = true
+  uploadProgress.value = { current: 0, total: files.length }
+  
+  try {
+    const fileList = Array.from(files)
+    console.log(`準備上傳 ${fileList.length} 個文件`)
+    
+    // 逐個處理文件
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i]
+      uploadProgress.value.current = i + 1
+      
+      try {
+        console.log(`正在處理文件 ${i + 1}/${fileList.length}: ${file.name}`)
+        
+        const newScheme: Scheme = {
+          id: `upload_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`,
+          name: file.name.replace(/\.(txt|csv)$/, ''),
+          isBuiltin: false,
+          isCalculating: true,
+          isPrefix: uploadPrefixFlag.value,  // 使用上傳時的前綴碼設置
+          source: file.name, // 記錄文件名
+          uploadedAt: new Date() // 記錄上傳時間
+        }
+        
+        additionalSchemes.value.push(newScheme)
+        
+        // 解析碼表文件
+        const text = await file.text()
+        const codeTable = parseCodeTableText(text, format)
+        
+        newScheme.codeTable = codeTable
+        
+        // 預處理碼表數據（只做一次）
+        newScheme.processedData = await preprocessCodeTableData(codeTable, newScheme.isPrefix)
+        
+        // 只計算當前Tab需要的數據
+        newScheme.data = {}
+        if (activeTab.value === 'dynamic') {
+          newScheme.data.dynamic = await calculateDynamicDataOptimized(newScheme)
+        } else if (activeTab.value === 'static') {
+          newScheme.data.static = await calculateStaticData(newScheme)
+        } else if (activeTab.value === 'maxCandidates') {
+          newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
+        } else if (activeTab.value === 'speedEquiv') {
+          newScheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(newScheme)
+        }
+        
+        newScheme.isCalculating = false
+        
+      } catch (error) {
+        console.error(`處理文件 ${file.name} 失敗:`, error)
+        // 移除失敗的方案
+        const index = additionalSchemes.value.findIndex(s => s.name === file.name.replace(/\.(txt|csv)$/, '') && s.isCalculating)
+        if (index !== -1) {
+          additionalSchemes.value.splice(index, 1)
+        }
+      }
+    }
+    
+    showAddForm.value = false
+    selectedBuiltinSchemes.value = [] // 清空選擇
+    selectedBuiltinScheme.value = ''
+    
+    // 立即保存數據
+    saveComparisonData()
+    
+    console.log(`成功處理 ${fileList.length} 個文件`)
+    
+  } catch (error) {
+    console.error('批量上傳碼表失敗:', error)
+  } finally {
+    isAdding.value = false
+    uploadProgress.value = { current: 0, total: 0 }
+  }
+  
+  // 清空文件輸入
+  target.value = ''
+}
+
 // 解析碼表文本
 function parseCodeTableText(text: string, format: 'char_first' | 'code_first'): CodeTable {
   const codeTable = new Map<string, string[]>()
@@ -1985,6 +2215,7 @@ function removeScheme(scheme: Scheme) {
 function cancelAdd() {
   showAddForm.value = false
   selectedBuiltinScheme.value = ''
+  selectedBuiltinSchemes.value = [] // 清空多選
 }
 
 // 清除所有額外添加的方案
@@ -2491,8 +2722,8 @@ function clearAllSchemes() {
 
 .builtin-options {
   display: flex;
+  flex-direction: column;
   gap: 12px;
-  align-items: flex-end;
   width: 100%;
 }
 
@@ -2500,11 +2731,154 @@ function clearAllSchemes() {
   flex: 1;
 }
 
+/* 多選容器樣式 */
+.multi-select-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.select-all-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.select-all-btn,
+.clear-selection-btn {
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.select-all-btn:hover,
+.clear-selection-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.select-all-btn:disabled,
+.clear-selection-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.selection-count {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.scheme-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: white;
+}
+
+.scheme-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.scheme-checkbox:hover {
+  background: #f3f4f6;
+}
+
+.checkbox-input {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 2px solid #d1d5db;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkbox-input:checked {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.checkbox-label {
+  flex: 1;
+  color: #374151;
+}
+
+.batch-add-controls {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+}
+
+.add-selected-btn {
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.add-selected-btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.add-selected-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
 .upload-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.upload-buttons {
   display: flex;
   gap: 12px;
   align-items: flex-end;
   flex-wrap: wrap;
+}
+
+.upload-tips {
+  padding: 8px 12px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  color: #0369a1;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.upload-tips small {
+  display: block;
+  font-size: inherit;
 }
 
 .prefix-toggle-section {
