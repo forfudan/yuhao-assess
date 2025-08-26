@@ -386,7 +386,8 @@ onMounted(() => {
   padding: 4px 12px;
   border-radius: 20px;
   font-weight: 600;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: var(--font-numeric);
+  font-feature-settings: "tnum" 0; /* 禁用表格數字，使用比例數字 */
   background: #dcfce7;
   color: #166534;
 }

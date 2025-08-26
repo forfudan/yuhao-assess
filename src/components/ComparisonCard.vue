@@ -1737,7 +1737,8 @@ function clearAllSchemes() {
 }
 
 .metric-cell {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: var(--font-numeric);
+  font-feature-settings: "tnum" 0; /* 禁用表格數字，使用比例數字 */
 }
 
 .calculating {
