@@ -118,29 +118,11 @@
                       <small>重碼字數</small>
                     </div>
                   </th>
-                  <th class="metric-header sortable" @click="handleSort('cjkToADuplicateChars')">
-                    <div class="metric-header-content">
-                      <div class="header-title">
-                        <span>到CJK-A</span>
-                        <span class="sort-arrow">{{ getSortArrow('cjkToADuplicateChars') }}</span>
-                      </div>
-                      <small>重碼字數</small>
-                    </div>
-                  </th>
                   <th class="metric-header sortable" @click="handleSort('cjkToBDuplicateChars')">
                     <div class="metric-header-content">
                       <div class="header-title">
                         <span>到CJK-B</span>
                         <span class="sort-arrow">{{ getSortArrow('cjkToBDuplicateChars') }}</span>
-                      </div>
-                      <small>重碼字數</small>
-                    </div>
-                  </th>
-                  <th class="metric-header sortable" @click="handleSort('cjkToFDuplicateChars')">
-                    <div class="metric-header-content">
-                      <div class="header-title">
-                        <span>到CJK-F</span>
-                        <span class="sort-arrow">{{ getSortArrow('cjkToFDuplicateChars') }}</span>
                       </div>
                       <small>重碼字數</small>
                     </div>
@@ -185,29 +167,11 @@
                       <small>最大候選數</small>
                     </div>
                   </th>
-                  <th class="metric-header sortable" @click="handleSort('cjkToAMaxCount')">
-                    <div class="metric-header-content">
-                      <div class="header-title">
-                        <span>到CJK-A</span>
-                        <span class="sort-arrow">{{ getSortArrow('cjkToAMaxCount') }}</span>
-                      </div>
-                      <small>最大候選數</small>
-                    </div>
-                  </th>
                   <th class="metric-header sortable" @click="handleSort('cjkToBMaxCount')">
                     <div class="metric-header-content">
                       <div class="header-title">
                         <span>到CJK-B</span>
                         <span class="sort-arrow">{{ getSortArrow('cjkToBMaxCount') }}</span>
-                      </div>
-                      <small>最大候選數</small>
-                    </div>
-                  </th>
-                  <th class="metric-header sortable" @click="handleSort('cjkToFMaxCount')">
-                    <div class="metric-header-content">
-                      <div class="header-title">
-                        <span>到CJK-F</span>
-                        <span class="sort-arrow">{{ getSortArrow('cjkToFMaxCount') }}</span>
                       </div>
                       <small>最大候選數</small>
                     </div>
@@ -350,25 +314,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.static?.cjkToADuplicateChars) }}
-                    </span>
-                  </td>
-                  <td class="metric-cell">
-                    <div v-if="scheme.isCalculating" class="calculating">
-                      <div class="mini-spinner"></div>
-                      <span>計算中</span>
-                    </div>
-                    <span v-else class="metric-value">
                       {{ formatNumber(scheme.data?.static?.cjkToBDuplicateChars) }}
-                    </span>
-                  </td>
-                  <td class="metric-cell">
-                    <div v-if="scheme.isCalculating" class="calculating">
-                      <div class="mini-spinner"></div>
-                      <span>計算中</span>
-                    </div>
-                    <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.static?.cjkToFDuplicateChars) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -417,25 +363,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.maxCandidates?.cjkToAMaxCount) }}
-                    </span>
-                  </td>
-                  <td class="metric-cell">
-                    <div v-if="scheme.isCalculating" class="calculating">
-                      <div class="mini-spinner"></div>
-                      <span>計算中</span>
-                    </div>
-                    <span v-else class="metric-value">
                       {{ formatNumber(scheme.data?.maxCandidates?.cjkToBMaxCount) }}
-                    </span>
-                  </td>
-                  <td class="metric-cell">
-                    <div v-if="scheme.isCalculating" class="calculating">
-                      <div class="mini-spinner"></div>
-                      <span>計算中</span>
-                    </div>
-                    <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.maxCandidates?.cjkToFMaxCount) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -833,9 +761,9 @@ const tabs = [
 type SortDirection = 'desc' | 'asc' | 'none'
 type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateUnified' | 
                       'gb2312DuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
-                      'cjkToADuplicateChars' | 'cjkToBDuplicateChars' | 'cjkToFDuplicateChars' | 'cjkToIDuplicateChars' |
+                      'cjkToBDuplicateChars' | 'cjkToIDuplicateChars' |
                       'gb2312MaxCount' | 'guoziMaxCount' | 'cjkBasicMaxCount' | 
-                      'cjkToAMaxCount' | 'cjkToBMaxCount' | 'cjkToFMaxCount' | 'cjkToIMaxCount' |
+                      'cjkToBMaxCount' | 'cjkToIMaxCount' |
                       'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'unifiedEquiv'
 type SortColumn = 'name' | DataSortColumn
 
@@ -964,7 +892,7 @@ const allSchemes = computed(() => {
       if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateUnified'].includes(column)) {
         aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
         bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
-      } else if (['gb2312MaxCount', 'guoziMaxCount', 'cjkBasicMaxCount', 'cjkToAMaxCount', 'cjkToBMaxCount', 'cjkToFMaxCount', 'cjkToIMaxCount'].includes(column)) {
+      } else if (['gb2312MaxCount', 'guoziMaxCount', 'cjkBasicMaxCount', 'cjkToBMaxCount', 'cjkToIMaxCount'].includes(column)) {
         aValue = a.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
         bValue = b.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
       } else if (['zhihuEquiv', 'scEquiv', 'tcEquiv', 'unifiedEquiv'].includes(column)) {
