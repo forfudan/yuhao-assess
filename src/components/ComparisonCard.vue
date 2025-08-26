@@ -524,6 +524,17 @@
           >
             🗑️ 清除全部
           </button>
+          
+          <!-- 重新計算按鈕 -->
+          <button 
+            @click="recalculateCurrentTab"
+            :disabled="isRecalculating"
+            class="recalculate-btn"
+            title="重新計算所有方案的當前Tab數據"
+          >
+            <span v-if="isRecalculating">🔄 計算中...</span>
+            <span v-else>🔄 重新計算</span>
+          </button>
         </div>
       </div>
     </div>
@@ -725,8 +736,11 @@ interface Scheme {
   codeTable?: CodeTable
   isBuiltin: boolean
   isCalculating: boolean
-  isPrefix?: boolean
+  isPrefix: boolean
   data?: SchemeData
+  // 元數據字段
+  source?: string // 來源（文件名或內置方案ID）
+  uploadedAt?: Date // 上傳時間
 }
 
 // 定義內置方案接口
@@ -741,6 +755,7 @@ const currentUserScheme = ref<Scheme | null>(null) // 當前用戶方案
 const additionalSchemes = ref<Scheme[]>([]) // 額外添加的方案
 const showAddForm = ref(false)
 const isAdding = ref(false)
+const isRecalculating = ref(false) // 重新計算狀態
 const selectedBuiltinScheme = ref('')
 const availableBuiltinSchemes = ref<BuiltinScheme[]>([])
 const fileInputCharCode = ref<HTMLInputElement>()
@@ -783,10 +798,14 @@ const saveComparisonData = () => {
         id: scheme.id,
         name: scheme.name,
         isBuiltin: scheme.isBuiltin,
+        isPrefix: scheme.isPrefix, // 保存前綴碼設置
         data: scheme.data,
         codeTableSize: scheme.codeTable?.size || 0,
         // 保存內置方案的 key 用於重新載入
-        builtinKey: scheme.isBuiltin ? scheme.id.split('_')[1] : undefined
+        builtinKey: scheme.isBuiltin ? scheme.id.split('_')[1] : undefined,
+        // 保存新增的元數據
+        source: scheme.source,
+        uploadedAt: scheme.uploadedAt
       }))
     }
     localStorage.setItem(COMPARISON_STORAGE_KEY, JSON.stringify(dataToSave))
@@ -808,11 +827,27 @@ const loadComparisonData = async () => {
       for (const savedScheme of data.additionalSchemes) {
         try {
           let codeTable: CodeTable | undefined
+          let correctIsPrefix = savedScheme.isPrefix || false // 默認從保存的數據中獲取
           
           if (savedScheme.isBuiltin && savedScheme.builtinKey) {
             // 重新載入內置方案
             const result = await builtinService.downloadCodeTable(savedScheme.builtinKey)
             codeTable = result.codeTable
+            
+            // 重新獲取內置方案的正確前綴碼設置
+            const schemeConfig = await builtinService.getBuiltinCodeTable(savedScheme.builtinKey)
+            correctIsPrefix = schemeConfig?.prefix || false
+            console.log(`[調試] 恢復內置方案 ${savedScheme.name}:`, {
+              builtinKey: savedScheme.builtinKey,
+              savedIsPrefix: savedScheme.isPrefix,
+              configPrefix: schemeConfig?.prefix,
+              finalIsPrefix: correctIsPrefix
+            })
+          } else {
+            console.log(`恢復上傳方案 ${savedScheme.name}:`, {
+              savedIsPrefix: savedScheme.isPrefix,
+              finalIsPrefix: correctIsPrefix
+            })
           }
           
           // 創建恢復的方案對象
@@ -821,8 +856,11 @@ const loadComparisonData = async () => {
             name: savedScheme.name,
             isBuiltin: savedScheme.isBuiltin,
             isCalculating: false,
+            isPrefix: correctIsPrefix, // 使用正確的前綴碼設置
             data: savedScheme.data,
-            codeTable
+            codeTable,
+            source: savedScheme.source,
+            uploadedAt: savedScheme.uploadedAt ? new Date(savedScheme.uploadedAt) : undefined
           }
           
           additionalSchemes.value.push(restoredScheme)
@@ -958,6 +996,46 @@ const calculateMissingData = async (scheme: Scheme) => {
     console.error(`計算方案 ${scheme.name} 的數據失敗:`, error)
   } finally {
     scheme.isCalculating = false
+  }
+}
+
+// 重新計算當前Tab所有方案的數據
+const recalculateCurrentTab = async () => {
+  isRecalculating.value = true
+  try {
+    // 獲取所有有效的方案（有碼表且不在計算中）
+    const validSchemes = allSchemes.value.filter(scheme => 
+      scheme.codeTable && !scheme.isCalculating
+    )
+    
+    // 清除所有方案當前Tab的數據並重新計算
+    for (const scheme of validSchemes) {
+      if (scheme.data) {
+        if (activeTab.value === 'dynamic') {
+          delete scheme.data.dynamic
+        } else if (activeTab.value === 'static') {
+          delete scheme.data.static
+        } else if (activeTab.value === 'maxCandidates') {
+          delete scheme.data.maxCandidates
+        } else if (activeTab.value === 'speedEquiv') {
+          delete scheme.data.speedEquiv
+        }
+      }
+      console.log(`[調試] 重新計算方案 ${scheme.name}:`, {
+        isPrefix: scheme.isPrefix,
+        isBuiltin: scheme.isBuiltin,
+        source: scheme.source,
+        activeTab: activeTab.value
+      })
+      await calculateMissingData(scheme)
+    }
+    
+    // 保存數據
+    saveComparisonData()
+  } catch (error) {
+    console.error('重新計算失敗:', error)
+  } finally {
+    isRecalculating.value = false
   }
 }
 
@@ -1400,7 +1478,9 @@ async function addBuiltinScheme() {
       name: builtinScheme.name,
       isBuiltin: true,
       isCalculating: true,
-      isPrefix: schemeConfig?.prefix || false  // 從配置中獲取前綴碼屬性
+      isPrefix: schemeConfig?.prefix || false,  // 從配置中獲取前綴碼屬性
+      source: selectedBuiltinScheme.value, // 記錄內置方案ID
+      uploadedAt: new Date() // 添加時間
     }
     
     additionalSchemes.value.push(newScheme)
@@ -1476,7 +1556,9 @@ async function addAllBuiltinSchemes() {
           name: builtinScheme.name,
           isBuiltin: true,
           isCalculating: true,
-          isPrefix: schemeConfig?.prefix || false  // 從配置中獲取前綴碼屬性
+          isPrefix: schemeConfig?.prefix || false,  // 從配置中獲取前綴碼屬性
+          source: builtinScheme.id, // 記錄內置方案ID
+          uploadedAt: new Date() // 添加時間
         }
         
         additionalSchemes.value.push(newScheme)
@@ -1545,7 +1627,9 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
       name: file.name.replace(/\.(txt|csv)$/, ''),
       isBuiltin: false,
       isCalculating: true,
-      isPrefix: uploadPrefixFlag.value  // 使用上傳時的前綴碼設置
+      isPrefix: uploadPrefixFlag.value,  // 使用上傳時的前綴碼設置
+      source: file.name, // 記錄文件名
+      uploadedAt: new Date() // 記錄上傳時間
     }
     
     additionalSchemes.value.push(newScheme)
@@ -1560,13 +1644,13 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     // 只計算當前Tab需要的數據
     newScheme.data = {}
     if (activeTab.value === 'dynamic') {
-      newScheme.data.dynamic = await calculateDynamicData(codeTable, uploadPrefixFlag.value)
+      newScheme.data.dynamic = await calculateDynamicData(codeTable, newScheme.isPrefix)
     } else if (activeTab.value === 'static') {
-      newScheme.data.static = await calculateStaticData(codeTable, uploadPrefixFlag.value)
+      newScheme.data.static = await calculateStaticData(codeTable, newScheme.isPrefix)
     } else if (activeTab.value === 'maxCandidates') {
-      newScheme.data.maxCandidates = await calculateMaxCandidatesData(codeTable, uploadPrefixFlag.value)
+      newScheme.data.maxCandidates = await calculateMaxCandidatesData(codeTable, newScheme.isPrefix)
     } else if (activeTab.value === 'speedEquiv') {
-      newScheme.data.speedEquiv = await calculateSpeedEquivData(codeTable, uploadPrefixFlag.value)
+      newScheme.data.speedEquiv = await calculateSpeedEquivData(codeTable, newScheme.isPrefix)
     }
     
     newScheme.isCalculating = false
@@ -1717,6 +1801,31 @@ function clearAllSchemes() {
   display: flex;
   border-bottom: 2px solid #e5e7eb;
   margin-bottom: var(--spacing-md);
+}
+
+.recalculate-btn {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 2px solid #bfdbfe;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.recalculate-btn:hover:not(:disabled) {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.recalculate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .tab-button {
