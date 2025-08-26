@@ -241,10 +241,10 @@
                   <div class="scheme-info">
                     <span class="scheme-title">{{ scheme.name }}</span>
                     <span v-if="scheme.isBuiltin" class="scheme-source">內置方案</span>
-                    <span v-else-if="!scheme.codeTable" class="scheme-source warning">
-                      緩存數據
+                    <span v-else-if="!scheme.codeTable" class="scheme-source">
+                      數據快照
                     </span>
-                    <span v-else class="scheme-source">上傳方案</span>
+                    <span v-else class="scheme-source">首選方案</span>
                   </div>
                 </td>
                 <td class="char-count">
