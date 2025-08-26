@@ -1200,7 +1200,7 @@ async function calculateDynamicData(codeTable: CodeTable, isPrefix = false): Pro
   }
 }
 
-// 計算靜態重碼數據（對比方案用）- 優化版本
+// 計算靜態重碼數據（對比方案用）
 async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Promise<StaticData> {
   console.time('靜態重碼計算')
   
