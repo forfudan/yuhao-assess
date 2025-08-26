@@ -418,6 +418,14 @@
                 </template>
                 <td class="actions-cell">
                   <button 
+                    @click="recalculateScheme(scheme)" 
+                    class="refresh-btn"
+                    :disabled="scheme.isCalculating"
+                    title="重新計算此方案的數據"
+                  >
+                    🔄
+                  </button>
+                  <button 
                     v-if="canRemoveScheme(scheme)" 
                     @click="removeScheme(scheme)" 
                     class="remove-btn"
@@ -425,7 +433,6 @@
                   >
                     🗑️
                   </button>
-                  <span v-else class="no-remove">-</span>
                 </td>
               </tr>
             </tbody>
@@ -951,9 +958,9 @@ const ensureCurrentTabDataLoaded = async () => {
 
 // 為方案計算缺失的數據
 const calculateMissingData = async (scheme: Scheme) => {
-  if (!scheme.codeTable || scheme.isCalculating) return
-  
-  scheme.isCalculating = true
+  if (!scheme.codeTable) {
+    return
+  }
   
   try {
     if (!scheme.data) {
@@ -985,8 +992,6 @@ const calculateMissingData = async (scheme: Scheme) => {
     }
   } catch (error) {
     console.error(`計算方案 ${scheme.name} 的數據失敗:`, error)
-  } finally {
-    scheme.isCalculating = false
   }
 }
 
@@ -1027,6 +1032,45 @@ const recalculateCurrentTab = async () => {
     console.error('重新計算失敗:', error)
   } finally {
     isRecalculating.value = false
+  }
+}
+
+// 重新計算單個方案的數據
+const recalculateScheme = async (scheme: Scheme) => {
+  if (!scheme.codeTable || scheme.isCalculating) {
+    return
+  }
+  
+  try {
+    // 設置計算狀態
+    scheme.isCalculating = true
+    
+    // 清除該方案當前Tab的數據
+    if (scheme.data) {
+      if (activeTab.value === 'dynamic') {
+        delete scheme.data.dynamic
+      } else if (activeTab.value === 'static') {
+        delete scheme.data.static
+      } else if (activeTab.value === 'maxCandidates') {
+        delete scheme.data.maxCandidates
+      } else if (activeTab.value === 'speedEquiv') {
+        delete scheme.data.speedEquiv
+      }
+    } else {
+      scheme.data = {}
+    }
+    
+    console.log(`重新計算方案 ${scheme.name} (${activeTab.value})`)
+    
+    // 重新計算數據
+    await calculateMissingData(scheme)
+    
+    // 保存數據
+    saveComparisonData()
+  } catch (error) {
+    console.error(`重新計算方案 ${scheme.name} 失敗:`, error)
+  } finally {
+    scheme.isCalculating = false
   }
 }
 
@@ -2482,6 +2526,11 @@ function clearAllSchemes() {
   font-feature-settings: "tnum" 0; /* 禁用表格數字，使用比例數字 */
 }
 
+.actions-cell {
+  text-align: center;
+  white-space: nowrap;
+}
+
 .calculating {
   display: flex;
   align-items: center;
@@ -2523,13 +2572,28 @@ function clearAllSchemes() {
   background: #fef2f2;
 }
 
-.no-remove {
-  color: #9ca3af;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.refresh-btn {
+  background: none;
+  border: none;
   padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+  font-size: 0.8rem;
+  margin-right: 4px;
+}
+
+.refresh-btn:hover {
+  background: #f0f9ff;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.refresh-btn:disabled:hover {
+  background: none;
 }
 
 /* 添加方案按鈕 */
