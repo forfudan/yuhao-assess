@@ -1062,25 +1062,31 @@ const recalculateScheme = async (scheme: Scheme) => {
     // 設置計算狀態
     scheme.isCalculating = true
     
-    // 清除該方案當前Tab的數據
-    if (scheme.data) {
-      if (activeTab.value === 'dynamic') {
-        delete scheme.data.dynamic
-      } else if (activeTab.value === 'static') {
-        delete scheme.data.static
-      } else if (activeTab.value === 'maxCandidates') {
-        delete scheme.data.maxCandidates
-      } else if (activeTab.value === 'speedEquiv') {
-        delete scheme.data.speedEquiv
-      }
-    } else {
+    // 確保方案有數據對象
+    if (!scheme.data) {
       scheme.data = {}
     }
     
     console.log(`重新計算方案 ${scheme.name} (${activeTab.value})`)
     
-    // 重新計算數據
-    await calculateMissingData(scheme)
+    // 直接重新計算當前Tab的數據，不檢查是否存在
+    if (activeTab.value === 'dynamic') {
+      scheme.data.dynamic = await calculateDynamicDataOptimized(scheme)
+    } else if (activeTab.value === 'static') {
+      scheme.data.static = await calculateStaticData(scheme)
+    } else if (activeTab.value === 'maxCandidates') {
+      scheme.data.maxCandidates = await calculateMaxCandidatesData(scheme)
+    } else if (activeTab.value === 'speedEquiv') {
+      // 檢查是否為主方案（不可刪除的方案）
+      const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
+      if (isMainScheme) {
+        // 主方案使用全局已處理的碼表
+        scheme.data.speedEquiv = await calculateMainSchemeSpeedEquivData()
+      } else {
+        // 新增方案使用優化計算
+        scheme.data.speedEquiv = await calculateSpeedEquivDataOptimized(scheme)
+      }
+    }
     
     // 保存數據
     saveComparisonData()
