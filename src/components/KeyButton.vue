@@ -37,12 +37,12 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{}>()
 
-// 显示的值
+// 顯示的值
 const displayValue = computed(() => {
   return props.keyData.count > 0 ? `${(props.keyData.frequency * 100).toFixed(1)}%` : ''
 })
 
-// 是否显示数值
+// 是否顯示數值
 const showValue = computed(() => {
   return props.keyData.count > 0 && props.displayMode !== 'finger'
 })
@@ -197,12 +197,12 @@ const getFingerColor = (key: string, intensity: number): string => {
   background-color: rgba(0, 188, 212, calc(var(--intensity, 0) * 0.8 + 0.1));
 }
 
-/* 負擔模式（蓝色 - 与频率模式相同） */
+/* 負擔模式（藍色 - 與頻率模式相同） */
 .key-button.mode-load .key-heatmap-overlay {
   background-color: rgba(59, 130, 246, calc(var(--intensity, 0) * 0.8 + 0.1));
 }
 
-/* 负担模式 - 深色主题（青色 - 与频率模式相同） */
+/* 負擔模式 - 深色主題（青色 - 與頻率模式相同） */
 [data-theme="dark"] .key-button.mode-load .key-heatmap-overlay {
   background-color: rgba(0, 188, 212, calc(var(--intensity, 0) * 0.8 + 0.1));
 }

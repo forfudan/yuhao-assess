@@ -82,6 +82,11 @@ import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
+import { loadAllCharFrequencies } from '../services/dataService'
+import {
+  calculateSpeedEquiv,
+  calculateCodePairFrequencies 
+} from '../services/speedAnalysisService'
 
 // Props
 interface Props {
@@ -96,10 +101,10 @@ const props = withDefaults(defineProps<Props>(), {
   initialPrefix: false
 })
 
-// 折叠功能
+// 摺疊功能
 const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
 
-// 暴露折叠方法给父组件
+// 暴露摺疊方法給父組件
 defineExpose({
   collapse,
   expand,
@@ -107,7 +112,7 @@ defineExpose({
   getCollapsedState
 })
 
-// 分析结果数据结构
+// 分析結果數據結構
 interface SpeedEquivResults {
   zhihuEquiv: number
   scEquiv: number
@@ -115,7 +120,7 @@ interface SpeedEquivResults {
   unifiedEquiv: number
 }
 
-// 响应式数据
+// 響應式數據
 const isCalculating = ref(false)
 const error = ref<string | null>(null)
 const analysisResults = ref<SpeedEquivResults | null>(null)
@@ -123,7 +128,7 @@ const maxCodeLength = ref<number>(0)
 const detectedIsPrefix = ref(false)
 const builtinService = new BuiltinCodeTableService()
 
-// 加载当量表
+// 加載當量表
 async function loadEquivTable(): Promise<Record<string, number>> {
   try {
     const response = await fetch('/data/equivTable.json')
@@ -133,54 +138,12 @@ async function loadEquivTable(): Promise<Record<string, number>> {
     const data = await response.json()
     return data.data || {}
   } catch (error) {
-    console.error('加载当量表失败:', error)
-    throw new Error('加载当量表失败')
+    console.error('加載當量表失敗:', error)
+    throw new Error('加載當量表失敗')
   }
 }
 
-// 计算编码对的频率分布
-function calculateCodePairFrequencies(
-  codeTable: CodeTable, 
-  charFrequency: Record<string, number>
-): Record<string, number> {
-  const pairFrequencies: Record<string, number> = {}
-  
-  for (const [char, codes] of codeTable.entries()) {
-    const frequency = charFrequency[char] || 0
-    if (frequency === 0 || codes.length === 0) continue
-    
-    const code = codes[0] // 使用第一个编码
-    
-    // 生成所有相邻的编码对
-    for (let i = 0; i < code.length - 1; i++) {
-      const pair = code.substring(i, i + 2)
-      pairFrequencies[pair] = (pairFrequencies[pair] || 0) + frequency
-    }
-  }
-  
-  return pairFrequencies
-}
-
-// 计算速度当量
-function calculateSpeedEquiv(
-  pairFrequencies: Record<string, number>,
-  equivTable: Record<string, number>
-): number {
-  let totalWeightedEquiv = 0
-  let totalFrequency = 0
-  
-  for (const [pair, frequency] of Object.entries(pairFrequencies)) {
-    const equiv = equivTable[pair]
-    if (equiv !== undefined) {
-      totalWeightedEquiv += equiv * frequency
-      totalFrequency += frequency
-    }
-  }
-  
-  return totalFrequency > 0 ? totalWeightedEquiv / totalFrequency : 0
-}
-
-// 主计算函数
+// 主計算函數
 async function calculateSpeedEquivAnalysis() {
   if (!props.codeTable || props.codeTable.size === 0) {
     return
@@ -190,16 +153,16 @@ async function calculateSpeedEquivAnalysis() {
   error.value = null
 
   try {
-    // 1. 直接获取已处理的码表（由App.vue统一处理）
+    // 1. 直接獲取已處理的碼表（由App.vue統一處理）
     const processedTables = codeTableProcessingService.getProcessedTables()
     if (!processedTables) {
-      throw new Error('无法获取处理后的码表')
+      throw new Error('無法獲取處理後的碼表')
     }
     
     const fullCodeTable = processedTables.full
     const processedCodeTable = processedTables.fullWithSelection
     
-    // 2. 从处理服务获取最大码长和前缀码检测结果
+    // 2. 從處理服務獲取最大碼長和前綴碼檢測結果
     const processingOptions = codeTableProcessingService.getProcessingOptions()
     maxCodeLength.value = processingOptions?.maxLength || 4
     detectedIsPrefix.value = processingOptions?.isPrefix || false
@@ -208,12 +171,7 @@ async function calculateSpeedEquivAnalysis() {
     const equivTable = await loadEquivTable()
     
     // 5. 加载各种字频表
-    const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
-      builtinService.loadCharFrequency(),
-      builtinService.loadCharFrequencySC(),
-      builtinService.loadCharFrequencyTC(),
-      builtinService.loadCharFrequencyUnified()
-    ])
+    const { zhihuFreq, scFreq, tcFreq, unifiedFreq } = await loadAllCharFrequencies()
     
     // 6. 计算各种字频下的速度当量
     const zhihuPairFreq = calculateCodePairFrequencies(processedCodeTable, zhihuFreq)

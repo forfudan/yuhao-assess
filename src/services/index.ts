@@ -1,19 +1,23 @@
 /**
- * 分析服務模塊導出
- * 
- * 統一導出所有分析相關的函數和類型
+ * 服務模塊統一導出
  */
 
-// 導出主要分析函數
+// 重碼分析服務
 export {
   getStaticDupRate,
   getDynamicDupRate,
-  calculateCodeTableMetrics,
-  codeTableToEntries,
-  filterCharFrequency
-} from './analysisService'
+  calculateCharsetDuplicates,
+  type DuplicateStats
+} from './duplicateAnalysisService'
 
-// 導出碼表清理函數
+// 速度分析服務
+export {
+  calculateCodePairFrequencies,
+  calculateSpeedEquiv,
+  calculateSpeedEquivFromCodeTable
+} from './speedAnalysisService'
+
+// 導出碼表處理服務
 export {
   cleanCodeTable,
   generateFullCodeTable,
@@ -22,6 +26,25 @@ export {
   validateCodeTable,
   getCodeTableStats
 } from './codeTableCleanService'
+
+// 導出數據服務
+export {
+  loadCharFrequency,
+  loadCharFrequencySC,
+  loadCharFrequencyTC,
+  loadCharFrequencyUnified,
+  loadAllCharFrequencies,
+  loadEquivTable
+} from './dataService'
+
+// 導出UI服務
+export {
+  formatRate,
+  formatNumber,
+  formatEquiv,
+  createTooltipManager,
+  getCharacterTooltip
+} from './uiService'
 
 // 導出字符集服務
 export {
@@ -38,39 +61,33 @@ export {
   isInCJKToH,
   isInCJKToI,
   charsetCheckers,
-  charsetInfo
+  charsetInfo,
+  getCharsetSize,
+  getTheoreticalCharsetSize,
+  generateCharset
 } from './charsetService'
 
-// 導出重碼分析函數
-export {
-  calculateCharsetDuplicates,
-  generateDuplicateReport,
-  formatDuplicateReport,
-  exportDuplicateReportJSON,
-  exportDuplicateReportCSV
-} from './duplicateAnalysisService'
-
-// 導出最大候選項分析函數
+// 導出最大候選數服務
 export {
   getMaximumCandidates,
-  getAllMaximumCandidates
+  getAllMaximumCandidates,
+  type MaximumCandidatesResult
 } from './maximumCandidatesService'
 
-// 導出碼表處理服務
+// 導出內置碼表服務
 export {
-  CodeTableProcessingService,
-  codeTableProcessingService
-} from './codeTableProcessingService'
+  BuiltinCodeTableService,
+  builtinCodeTableService
+} from './builtinCodeTableService'
 
-// 重新導出相關類型
+// 導出碼表處理服務
+export { codeTableProcessingService } from './codeTableProcessingService'
+
+// 導出類型
 export type {
-  CodeTable,
-  CharFrequency,
-  CodeTableEntry,
   AnalysisParams,
   CodeTableMetrics,
   CharsetType,
-  DuplicateStats,
   CodeTableCleanOptions,
   CleanResult
 } from '../types/index'

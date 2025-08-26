@@ -1,10 +1,10 @@
 <template>
-  <div class="comparison-card">
+  <div class="comparison-card" v-bind="$attrs">
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">方案對比</h3>
-          <p class="card-description">對比不同輸入法方案的重碼數據，支持內置方案和文件上傳。</p>
+          <p class="card-description">對比不同輸入法方案的各項數據，支持內置方案和文件上傳。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
           <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -490,11 +490,32 @@
 </template>
 
 <script setup lang="ts">
+// 禁用自動屬性繼承，因為我們有多個根節點（包括 Teleport）
+defineOptions({
+  inheritAttrs: false
+})
+
 import { ref, computed, onMounted, watch, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
-import { getDynamicDupRate } from '../services/analysisService'
+import { getDynamicDupRate } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
+import { 
+  formatRate, 
+  formatNumber, 
+  formatEquiv
+} from '../services/uiService'
+import { 
+  loadCharFrequency,
+  loadCharFrequencySC,
+  loadCharFrequencyTC,
+  loadCharFrequencyUnified,
+  loadAllCharFrequencies
+} from '../services/dataService'
+import {
+  calculateSpeedEquivFromCodeTable,
+  calculateCodePairFrequencies
+} from '../services/speedAnalysisService'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, CharFrequency } from '../types'
 
@@ -509,7 +530,7 @@ const props = defineProps<Props>()
 // 折叠功能
 const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
 
-// 暴露折叠方法给父组件
+// 暴露摺疊方法給父組件
 defineExpose({
   collapse,
   expand,
@@ -584,70 +605,6 @@ const tabs = [
   { key: 'static', label: '靜態重碼' },
   { key: 'speedEquiv', label: '速度當量' }
 ] as const
-
-// 惰性計算：監聽 Tab 切換
-watch(activeTab, async (newTab) => {
-  await ensureCurrentTabDataLoaded()
-}, { immediate: true })
-
-// 確保當前 Tab 的數據已加載
-const ensureCurrentTabDataLoaded = async () => {
-  const schemes = allSchemes.value
-  const pendingCalculations: Promise<void>[] = []
-  
-  for (const scheme of schemes) {
-    if (!scheme.codeTable || scheme.isCalculating) continue
-    
-    let needsCalculation = false
-    if (activeTab.value === 'dynamic') {
-      needsCalculation = !scheme.data?.dynamic
-    } else if (activeTab.value === 'static') {
-      needsCalculation = !scheme.data?.static
-    } else if (activeTab.value === 'speedEquiv') {
-      needsCalculation = !scheme.data?.speedEquiv
-    }
-    
-    if (needsCalculation) {
-      pendingCalculations.push(calculateMissingData(scheme))
-    }
-  }
-  
-  await Promise.all(pendingCalculations)
-}
-
-// 為方案計算缺失的數據
-const calculateMissingData = async (scheme: Scheme) => {
-  if (!scheme.codeTable || scheme.isCalculating) return
-  
-  scheme.isCalculating = true
-  
-  try {
-    if (!scheme.data) {
-      scheme.data = {}
-    }
-    
-    // 檢查是否為主方案（不可刪除的方案）
-    const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
-    
-    if (activeTab.value === 'dynamic' && !scheme.data.dynamic) {
-      scheme.data.dynamic = await calculateDynamicData(scheme.codeTable, scheme.isPrefix)
-    } else if (activeTab.value === 'static' && !scheme.data.static) {
-      scheme.data.static = await calculateStaticData(scheme.codeTable, scheme.isPrefix)
-    } else if (activeTab.value === 'speedEquiv' && !scheme.data.speedEquiv) {
-      if (isMainScheme) {
-        // 主方案使用全局已處理的碼表
-        scheme.data.speedEquiv = await calculateMainSchemeSpeedEquivData()
-      } else {
-        // 新增方案使用獨立計算
-        scheme.data.speedEquiv = await calculateSpeedEquivData(scheme.codeTable, scheme.isPrefix)
-      }
-    }
-  } catch (error) {
-    console.error(`計算方案 ${scheme.name} 的數據失敗:`, error)
-  } finally {
-    scheme.isCalculating = false
-  }
-}
 
 // 排序相關狀態
 type SortDirection = 'desc' | 'asc' | 'none'
@@ -752,10 +709,10 @@ const allSchemes = computed(() => {
       aValue = a.name
       bValue = b.name
     } else if (sortColumn.value) {
-      // TypeScript类型保护：确保sortColumn.value是数据列而不是'name'
+      // TypeScript類型保護：確保sortColumn.value是數據列而不是'name'
       const column = sortColumn.value as DataSortColumn
       
-      // 根据列名判断是动态还是静态数据
+      // 根據列名判斷是動態還是靜態數據
       if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateUnified'].includes(column)) {
         aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
         bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
@@ -786,18 +743,69 @@ const allSchemes = computed(() => {
 // 計算屬性 - 是否有任何方案
 const hasAnyScheme = computed(() => allSchemes.value.length > 0)
 
-// 格式化函數
-const formatRate = (rate?: number) => {
-  return rate ? (rate * 10000).toFixed(2) + '‱' : '-'
+// 確保當前 Tab 的數據已加載
+const ensureCurrentTabDataLoaded = async () => {
+  const schemes = allSchemes.value
+  const pendingCalculations: Promise<void>[] = []
+  
+  for (const scheme of schemes) {
+    if (!scheme.codeTable || scheme.isCalculating) continue
+    
+    let needsCalculation = false
+    if (activeTab.value === 'dynamic') {
+      needsCalculation = !scheme.data?.dynamic
+    } else if (activeTab.value === 'static') {
+      needsCalculation = !scheme.data?.static
+    } else if (activeTab.value === 'speedEquiv') {
+      needsCalculation = !scheme.data?.speedEquiv
+    }
+    
+    if (needsCalculation) {
+      pendingCalculations.push(calculateMissingData(scheme))
+    }
+  }
+  
+  await Promise.all(pendingCalculations)
 }
 
-const formatNumber = (num?: number) => {
-  return num ? num.toLocaleString() : '-'
+// 為方案計算缺失的數據
+const calculateMissingData = async (scheme: Scheme) => {
+  if (!scheme.codeTable || scheme.isCalculating) return
+  
+  scheme.isCalculating = true
+  
+  try {
+    if (!scheme.data) {
+      scheme.data = {}
+    }
+    
+    // 檢查是否為主方案（不可刪除的方案）
+    const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
+    
+    if (activeTab.value === 'dynamic' && !scheme.data.dynamic) {
+      scheme.data.dynamic = await calculateDynamicData(scheme.codeTable, scheme.isPrefix)
+    } else if (activeTab.value === 'static' && !scheme.data.static) {
+      scheme.data.static = await calculateStaticData(scheme.codeTable, scheme.isPrefix)
+    } else if (activeTab.value === 'speedEquiv' && !scheme.data.speedEquiv) {
+      if (isMainScheme) {
+        // 主方案使用全局已處理的碼表
+        scheme.data.speedEquiv = await calculateMainSchemeSpeedEquivData()
+      } else {
+        // 新增方案使用獨立計算
+        scheme.data.speedEquiv = await calculateSpeedEquivData(scheme.codeTable, scheme.isPrefix)
+      }
+    }
+  } catch (error) {
+    console.error(`計算方案 ${scheme.name} 的數據失敗:`, error)
+  } finally {
+    scheme.isCalculating = false
+  }
 }
 
-const formatEquiv = (equiv?: number) => {
-  return equiv ? equiv.toFixed(4) : '-'
-}
+// 惰性計算：監聽 Tab 切換
+watch(activeTab, async (newTab) => {
+  await ensureCurrentTabDataLoaded()
+}, { immediate: true })
 
 // 排序函數
 const handleSort = (column: SortColumn) => {
@@ -830,44 +838,7 @@ const getSortArrow = (column: SortColumn) => {
   return sortDirection.value === 'desc' ? '↓' : '↑'
 }
 
-// 加载字频数据
-async function loadCharFrequency(): Promise<CharFrequency> {
-  try {
-    return await builtinService.loadCharFrequency()
-  } catch (error) {
-    console.error('加载知乎字频数据失败:', error)
-    return {}
-  }
-}
-
-async function loadCharFrequencySC(): Promise<CharFrequency> {
-  try {
-    return await builtinService.loadCharFrequencySC()
-  } catch (error) {
-    console.error('加载简体字频数据失败:', error)
-    return {}
-  }
-}
-
-async function loadCharFrequencyTC(): Promise<CharFrequency> {
-  try {
-    return await builtinService.loadCharFrequencyTC()
-  } catch (error) {
-    console.error('加载繁体字频数据失败:', error)
-    return {}
-  }
-}
-
-async function loadCharFrequencyUnified(): Promise<CharFrequency> {
-  try {
-    return await builtinService.loadCharFrequencyUnified()
-  } catch (error) {
-    console.error('加载繁简联合字频数据失败:', error)
-    return {}
-  }
-}
-
-// 计算字符集的重码字符数
+// 計算字符集的重碼字符數
 async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Set<string>, fullCodeTable: CodeTable) {
   const actualCharset = await generateCharset(charsetType, allChars)
   
@@ -965,8 +936,8 @@ const loadCurrentUserScheme = async () => {
 
 // 計算方案數據
 async function calculateDynamicData(codeTable: CodeTable, isPrefix = false): Promise<DynamicData> {
-  // 为对比方案独立处理码表，不使用单例服务以避免干扰当前方案
-  const { generateFullCodeTable } = await import('../services/index')
+  // 為對比方案獨立處理碼表，不使用單例服務以避免干擾當前方案
+  const { generateFullCodeTable } = await import('../services/codeTableCleanService')
   const fullResult = generateFullCodeTable(codeTable)
   const fullCodeTable = fullResult.codeTable
   
@@ -1001,8 +972,8 @@ async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Prom
     }
   }
   
-  // 为对比方案独立处理码表，不使用单例服务以避免干扰当前方案
-  const { generateFullCodeTable } = await import('../services/index')
+  // 為對比方案獨立處理碼表，不使用單例服務以避免干擾當前方案
+  const { generateFullCodeTable } = await import('../services/codeTableCleanService')
   const fullResult = generateFullCodeTable(codeTable)
   const fullCodeTable = fullResult.codeTable
   
@@ -1030,7 +1001,7 @@ async function calculateStaticData(codeTable: CodeTable, isPrefix = false): Prom
 async function calculateSpeedEquivData(codeTable: CodeTable, isPrefix = false): Promise<SpeedEquivData> {
   try {
     // 獨立處理碼表，不使用全局單例服務
-    const { generateFullCodeTable } = await import('../services/index')
+    const { generateFullCodeTable } = await import('../services/codeTableCleanService')
     const fullResult = generateFullCodeTable(codeTable)
     const fullCodeTable = fullResult.codeTable
     
@@ -1064,10 +1035,10 @@ async function calculateSpeedEquivData(codeTable: CodeTable, isPrefix = false): 
     ])
     
     // 計算各種字頻下的速度當量
-    const zhihuEquiv = calculateSpeedEquiv(processedCodeTable, zhihuFreq, equivTable)
-    const scEquiv = calculateSpeedEquiv(processedCodeTable, scFreq, equivTable)
-    const tcEquiv = calculateSpeedEquiv(processedCodeTable, tcFreq, equivTable)
-    const unifiedEquiv = calculateSpeedEquiv(processedCodeTable, unifiedFreq, equivTable)
+    const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
+    const scEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, scFreq, equivTable)
+    const tcEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tcFreq, equivTable)
+    const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
     
     return {
       zhihuEquiv,
@@ -1115,10 +1086,10 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
     ])
     
     // 計算各種字頻下的速度當量
-    const zhihuEquiv = calculateSpeedEquiv(processedCodeTable, zhihuFreq, equivTable)
-    const scEquiv = calculateSpeedEquiv(processedCodeTable, scFreq, equivTable)
-    const tcEquiv = calculateSpeedEquiv(processedCodeTable, tcFreq, equivTable)
-    const unifiedEquiv = calculateSpeedEquiv(processedCodeTable, unifiedFreq, equivTable)
+    const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
+    const scEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, scFreq, equivTable)
+    const tcEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tcFreq, equivTable)
+    const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
     
     return {
       zhihuEquiv,
@@ -1201,51 +1172,6 @@ function generateCodeTableWithSelection(
   }
   
   return result
-}
-
-// 計算編碼對的頻率分佈
-function calculateCodePairFrequencies(
-  codeTable: CodeTable, 
-  charFrequency: Record<string, number>
-): Record<string, number> {
-  const pairFrequencies: Record<string, number> = {}
-  
-  for (const [char, codes] of codeTable.entries()) {
-    const frequency = charFrequency[char] || 0
-    if (frequency === 0 || codes.length === 0) continue
-    
-    const code = codes[0] // 使用第一個編碼
-    
-    // 生成所有相鄰的編碼對
-    for (let i = 0; i < code.length - 1; i++) {
-      const pair = code.substring(i, i + 2)
-      pairFrequencies[pair] = (pairFrequencies[pair] || 0) + frequency
-    }
-  }
-  
-  return pairFrequencies
-}
-
-// 計算速度當量
-function calculateSpeedEquiv(
-  codeTable: CodeTable,
-  charFrequency: Record<string, number>,
-  equivTable: Record<string, number>
-): number {
-  const pairFrequencies = calculateCodePairFrequencies(codeTable, charFrequency)
-  
-  let totalWeightedEquiv = 0
-  let totalFrequency = 0
-  
-  for (const [pair, frequency] of Object.entries(pairFrequencies)) {
-    const equiv = equivTable[pair]
-    if (equiv !== undefined) {
-      totalWeightedEquiv += equiv * frequency
-      totalFrequency += frequency
-    }
-  }
-  
-  return totalFrequency > 0 ? totalWeightedEquiv / totalFrequency : 0
 }
 
 // 已废弃：保留兼容性，但推荐使用分离的函数
@@ -1922,9 +1848,9 @@ function clearAllSchemes() {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999999; /* 极高的z-index值确保在最上层 */
+  z-index: 999999; /* 極高的z-index值確保在最上層 */
   backdrop-filter: blur(4px); /* 背景模糊效果 */
-  animation: fadeIn 0.2s ease-out; /* 淡入动画 */
+  animation: fadeIn 0.2s ease-out; /* 淡入動畫 */
 }
 
 @keyframes fadeIn {
