@@ -640,7 +640,7 @@ defineOptions({
   inheritAttrs: false
 })
 
-import { ref, computed, onMounted, watch, Teleport } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
 import { getDynamicDupRate } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
@@ -1424,12 +1424,12 @@ async function calculateMaxCandidatesData(scheme: Scheme): Promise<MaxCandidates
     if (!scheme.processedData) {
       throw new Error('方案缺少預處理數據')
     }
-    
+
     const { fullCodeTable, charsetMap } = scheme.processedData
     
     // 為每個字符集計算最大候選項（直接使用預處理的數據）
     console.time('計算各字符集最大候選')
-    const calculateMaxForCharset = (charset: Set<string>) => {
+    const calculateMaxForCharset = async (charset: Set<string>) => {
       const codeToChars = new Map<string, string[]>()
       
       // 只處理當前字符集中的字符
@@ -1444,6 +1444,9 @@ async function calculateMaxCandidatesData(scheme: Scheme): Promise<MaxCandidates
         }
       }
       
+      // 使用 nextTick 確保 Vue 有機會更新 DOM
+      await nextTick()
+      
       // 找出最大候選項個數
       let maxCount = 0
       for (const chars of codeToChars.values()) {
@@ -1454,15 +1457,16 @@ async function calculateMaxCandidatesData(scheme: Scheme): Promise<MaxCandidates
       
       return maxCount
     }
-    
+
+    // 逐個計算字符集，給UI更新的機會
     const results = {
-      gb2312MaxCount: calculateMaxForCharset(charsetMap.get('gb2312')!),
-      guoziMaxCount: calculateMaxForCharset(charsetMap.get('guozi')!),
-      cjkBasicMaxCount: calculateMaxForCharset(charsetMap.get('cjk_basic')!),
-      cjkToAMaxCount: calculateMaxForCharset(charsetMap.get('cjk_to_a')!),
-      cjkToBMaxCount: calculateMaxForCharset(charsetMap.get('cjk_to_b')!),
-      cjkToFMaxCount: calculateMaxForCharset(charsetMap.get('cjk_to_f')!),
-      cjkToIMaxCount: calculateMaxForCharset(charsetMap.get('cjk_to_i')!)
+      gb2312MaxCount: await calculateMaxForCharset(charsetMap.get('gb2312')!),
+      guoziMaxCount: await calculateMaxForCharset(charsetMap.get('guozi')!),
+      cjkBasicMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_basic')!),
+      cjkToAMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_a')!),
+      cjkToBMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_b')!),
+      cjkToFMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_f')!),
+      cjkToIMaxCount: await calculateMaxForCharset(charsetMap.get('cjk_to_i')!)
     }
     console.timeEnd('計算各字符集最大候選')
     
