@@ -35,19 +35,6 @@
               {{ tab.label }}
             </button>
           </div>
-          
-          <!-- 重新計算按鈕 -->
-          <div class="tab-actions" v-if="hasFailedSchemes">
-            <button 
-              @click="recalculateFailedSchemes"
-              :disabled="isRecalculating"
-              class="recalculate-btn"
-              title="重新計算顯示為 '-' 的方案數據"
-            >
-              <span v-if="isRecalculating">🔄 計算中...</span>
-              <span v-else>🔄 重新計算</span>
-            </button>
-          </div>
         </div>
 
         <!-- 對比表格 -->
@@ -537,6 +524,17 @@
           >
             🗑️ 清除全部
           </button>
+          
+          <!-- 重新計算按鈕 -->
+          <button 
+            @click="recalculateCurrentTab"
+            :disabled="isRecalculating"
+            class="recalculate-btn"
+            title="重新計算所有方案的當前Tab數據"
+          >
+            <span v-if="isRecalculating">🔄 計算中...</span>
+            <span v-else>🔄 重新計算</span>
+          </button>
         </div>
       </div>
     </div>
@@ -975,45 +973,17 @@ const calculateMissingData = async (scheme: Scheme) => {
   }
 }
 
-// 檢查當前Tab是否有計算失敗的方案
-const hasFailedSchemes = computed(() => {
-  return allSchemes.value.some(scheme => {
-    if (!scheme.codeTable || scheme.isCalculating) return false
-    
-    if (activeTab.value === 'dynamic') {
-      return !scheme.data?.dynamic
-    } else if (activeTab.value === 'static') {
-      return !scheme.data?.static
-    } else if (activeTab.value === 'maxCandidates') {
-      return !scheme.data?.maxCandidates
-    } else if (activeTab.value === 'speedEquiv') {
-      return !scheme.data?.speedEquiv
-    }
-    return false
-  })
-})
-
-// 重新計算失敗的方案
-const recalculateFailedSchemes = async () => {
+// 重新計算當前Tab所有方案的數據
+const recalculateCurrentTab = async () => {
   isRecalculating.value = true
   try {
-    const failedSchemes = allSchemes.value.filter(scheme => {
-      if (!scheme.codeTable || scheme.isCalculating) return false
-      
-      if (activeTab.value === 'dynamic') {
-        return !scheme.data?.dynamic
-      } else if (activeTab.value === 'static') {
-        return !scheme.data?.static
-      } else if (activeTab.value === 'maxCandidates') {
-        return !scheme.data?.maxCandidates
-      } else if (activeTab.value === 'speedEquiv') {
-        return !scheme.data?.speedEquiv
-      }
-      return false
-    })
+    // 獲取所有有效的方案（有碼表且不在計算中）
+    const validSchemes = allSchemes.value.filter(scheme => 
+      scheme.codeTable && !scheme.isCalculating
+    )
     
-    // 清除失敗方案的相關數據並重新計算
-    for (const scheme of failedSchemes) {
+    // 清除所有方案當前Tab的數據並重新計算
+    for (const scheme of validSchemes) {
       if (scheme.data) {
         if (activeTab.value === 'dynamic') {
           delete scheme.data.dynamic
@@ -1787,22 +1757,11 @@ function clearAllSchemes() {
 /* Tab 样式 */
 .tabs-container {
   margin-bottom: var(--spacing-lg);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
 }
 
 .tab-list {
   display: flex;
   border-bottom: 2px solid #e5e7eb;
-  margin-bottom: var(--spacing-md);
-  flex: 1;
-}
-
-.tab-actions {
-  display: flex;
-  align-items: center;
-  margin-left: var(--spacing-lg);
   margin-bottom: var(--spacing-md);
 }
 
@@ -1810,15 +1769,15 @@ function clearAllSchemes() {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .recalculate-btn:hover:not(:disabled) {
