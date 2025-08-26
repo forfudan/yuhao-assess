@@ -35,6 +35,19 @@
               {{ tab.label }}
             </button>
           </div>
+          
+          <!-- 重新計算按鈕 -->
+          <div class="tab-actions" v-if="hasFailedSchemes">
+            <button 
+              @click="recalculateFailedSchemes"
+              :disabled="isRecalculating"
+              class="recalculate-btn"
+              title="重新計算顯示為 '-' 的方案數據"
+            >
+              <span v-if="isRecalculating">🔄 計算中...</span>
+              <span v-else>🔄 重新計算</span>
+            </button>
+          </div>
         </div>
 
         <!-- 對比表格 -->
@@ -741,6 +754,7 @@ const currentUserScheme = ref<Scheme | null>(null) // 當前用戶方案
 const additionalSchemes = ref<Scheme[]>([]) // 額外添加的方案
 const showAddForm = ref(false)
 const isAdding = ref(false)
+const isRecalculating = ref(false) // 重新計算狀態
 const selectedBuiltinScheme = ref('')
 const availableBuiltinSchemes = ref<BuiltinScheme[]>([])
 const fileInputCharCode = ref<HTMLInputElement>()
@@ -958,6 +972,68 @@ const calculateMissingData = async (scheme: Scheme) => {
     console.error(`計算方案 ${scheme.name} 的數據失敗:`, error)
   } finally {
     scheme.isCalculating = false
+  }
+}
+
+// 檢查當前Tab是否有計算失敗的方案
+const hasFailedSchemes = computed(() => {
+  return allSchemes.value.some(scheme => {
+    if (!scheme.codeTable || scheme.isCalculating) return false
+    
+    if (activeTab.value === 'dynamic') {
+      return !scheme.data?.dynamic
+    } else if (activeTab.value === 'static') {
+      return !scheme.data?.static
+    } else if (activeTab.value === 'maxCandidates') {
+      return !scheme.data?.maxCandidates
+    } else if (activeTab.value === 'speedEquiv') {
+      return !scheme.data?.speedEquiv
+    }
+    return false
+  })
+})
+
+// 重新計算失敗的方案
+const recalculateFailedSchemes = async () => {
+  isRecalculating.value = true
+  try {
+    const failedSchemes = allSchemes.value.filter(scheme => {
+      if (!scheme.codeTable || scheme.isCalculating) return false
+      
+      if (activeTab.value === 'dynamic') {
+        return !scheme.data?.dynamic
+      } else if (activeTab.value === 'static') {
+        return !scheme.data?.static
+      } else if (activeTab.value === 'maxCandidates') {
+        return !scheme.data?.maxCandidates
+      } else if (activeTab.value === 'speedEquiv') {
+        return !scheme.data?.speedEquiv
+      }
+      return false
+    })
+    
+    // 清除失敗方案的相關數據並重新計算
+    for (const scheme of failedSchemes) {
+      if (scheme.data) {
+        if (activeTab.value === 'dynamic') {
+          delete scheme.data.dynamic
+        } else if (activeTab.value === 'static') {
+          delete scheme.data.static
+        } else if (activeTab.value === 'maxCandidates') {
+          delete scheme.data.maxCandidates
+        } else if (activeTab.value === 'speedEquiv') {
+          delete scheme.data.speedEquiv
+        }
+      }
+      await calculateMissingData(scheme)
+    }
+    
+    // 保存數據
+    saveComparisonData()
+  } catch (error) {
+    console.error('重新計算失敗:', error)
+  } finally {
+    isRecalculating.value = false
   }
 }
 
@@ -1711,12 +1787,49 @@ function clearAllSchemes() {
 /* Tab 样式 */
 .tabs-container {
   margin-bottom: var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
 }
 
 .tab-list {
   display: flex;
   border-bottom: 2px solid #e5e7eb;
   margin-bottom: var(--spacing-md);
+  flex: 1;
+}
+
+.tab-actions {
+  display: flex;
+  align-items: center;
+  margin-left: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.recalculate-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.recalculate-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.recalculate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .tab-button {
