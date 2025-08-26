@@ -48,6 +48,12 @@
                     <span class="sort-arrow">{{ getSortArrow('name') }}</span>
                   </div>
                 </th>
+                <th class="char-count-header sortable" @click="handleSort('charCount')">
+                  <div class="header-content">
+                    <span>收字</span>
+                    <span class="sort-arrow">{{ getSortArrow('charCount') }}</span>
+                  </div>
+                </th>
                 
                 <!-- 動態選重 Tab 的列 -->
                 <template v-if="activeTab === 'dynamic'">
@@ -237,6 +243,11 @@
                     <span v-if="scheme.isBuiltin" class="scheme-source">內置方案</span>
                     <span v-else class="scheme-source">上傳方案</span>
                   </div>
+                </td>
+                <td class="char-count">
+                  <span class="metric-value">
+                    {{ formatNumber(scheme.charCount) }}
+                  </span>
                 </td>
                 
                 <!-- 動態選重 Tab 的數據列 -->
@@ -732,6 +743,8 @@ interface Scheme {
   uploadedAt?: Date // 上傳時間
   // 預處理數據（添加方案時計算一次）
   processedData?: ProcessedData
+  // 收字數（碼表中漢字總數）
+  charCount?: number
 }
 
 // 定義內置方案接口
@@ -772,7 +785,7 @@ type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC'
                       'gb2312MaxCount' | 'guoziMaxCount' | 'cjkBasicMaxCount' | 
                       'cjkToBMaxCount' | 'cjkToIMaxCount' |
                       'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'unifiedEquiv'
-type SortColumn = 'name' | DataSortColumn
+type SortColumn = 'name' | 'charCount' | DataSortColumn
 
 const sortColumn = ref<SortColumn | null>(null)
 const sortDirection = ref<SortDirection>('none')
@@ -891,6 +904,9 @@ const allSchemes = computed(() => {
     if (sortColumn.value === 'name') {
       aValue = a.name
       bValue = b.name
+    } else if (sortColumn.value === 'charCount') {
+      aValue = a.charCount ?? 0
+      bValue = b.charCount ?? 0
     } else if (sortColumn.value) {
       // TypeScript類型保護：確保sortColumn.value是數據列而不是'name'
       const column = sortColumn.value as DataSortColumn
@@ -970,6 +986,7 @@ const calculateMissingData = async (scheme: Scheme) => {
     // 如果沒有預處理數據，先進行預處理
     if (!scheme.processedData) {
       scheme.processedData = await preprocessCodeTableData(scheme.codeTable, scheme.isPrefix)
+      scheme.charCount = await calculateCharCount(scheme.codeTable!)
     }
     
     // 檢查是否為主方案（不可刪除的方案）
@@ -1170,6 +1187,30 @@ async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): 
   }
 }
 
+// 計算碼表中的字符總數（與CJK到I區取交集）
+async function calculateCharCount(codeTable: CodeTable): Promise<number> {
+  // 提取码表中的所有字符
+  const codeTableChars = new Set<string>()
+  for (const key of codeTable.keys()) {
+    for (const char of key) {
+      codeTableChars.add(char)
+    }
+  }
+  
+  // 生成CJK到I区的标准字符集
+  const cjkToICharset = await generateCharset('cjk_to_i', codeTableChars)
+  
+  // 计算交集
+  let intersectionCount = 0
+  for (const char of codeTableChars) {
+    if (cjkToICharset.has(char)) {
+      intersectionCount++
+    }
+  }
+  
+  return intersectionCount
+}
+
 // 計算字符集的重碼字符數
 async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Set<string>, fullCodeTable: CodeTable) {
   const actualCharset = await generateCharset(charsetType, allChars)
@@ -1254,10 +1295,23 @@ const loadCurrentUserScheme = async () => {
       isPrefix: globalIsPrefix,  // 使用全局的前綴碼設置
       data: undefined
     }
-    // 異步計算數據
+    
+    // 预处理数据并计算收字数
+    currentUserScheme.value.processedData = await preprocessCodeTableData(props.currentCodeTable, globalIsPrefix)
+    currentUserScheme.value.charCount = await calculateCharCount(props.currentCodeTable)
+    
+    // 异步计算当前Tab的数据
     try {
-      const data = await calculateSchemeData(props.currentCodeTable, globalIsPrefix)
-      currentUserScheme.value.data = data
+      currentUserScheme.value.data = {}
+      if (activeTab.value === 'dynamic') {
+        currentUserScheme.value.data.dynamic = await calculateDynamicDataOptimized(currentUserScheme.value)
+      } else if (activeTab.value === 'static') {
+        currentUserScheme.value.data.static = await calculateStaticData(currentUserScheme.value)
+      } else if (activeTab.value === 'maxCandidates') {
+        currentUserScheme.value.data.maxCandidates = await calculateMaxCandidatesData(currentUserScheme.value)
+      } else if (activeTab.value === 'speedEquiv') {
+        currentUserScheme.value.data.speedEquiv = await calculateSpeedEquivDataOptimized(currentUserScheme.value)
+      }
       currentUserScheme.value.isCalculating = false
     } catch (error) {
       console.error('Failed to calculate current scheme data:', error)
@@ -1731,6 +1785,7 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
   
   // 進行預處理
   tempScheme.processedData = await preprocessCodeTableData(codeTable, isPrefix)
+  tempScheme.charCount = await calculateCharCount(codeTable)
   
   const [dynamic, static_] = await Promise.all([
     calculateDynamicDataOptimized(tempScheme),
@@ -1782,6 +1837,8 @@ async function addBuiltinScheme() {
     
     // 預處理碼表數據（只做一次）
     newScheme.processedData = await preprocessCodeTableData(result.codeTable, newScheme.isPrefix)
+        newScheme.charCount = await calculateCharCount(result.codeTable)
+    newScheme.charCount = await calculateCharCount(result.codeTable)
     
     // 只計算當前Tab需要的數據
     newScheme.data = {}
@@ -1862,6 +1919,7 @@ async function addAllBuiltinSchemes() {
         
         // 預處理碼表數據（只做一次）
         newScheme.processedData = await preprocessCodeTableData(result.codeTable, newScheme.isPrefix)
+        newScheme.charCount = await calculateCharCount(result.codeTable)
         
         // 只計算當前Tab需要的數據
         newScheme.data = {}
@@ -1957,6 +2015,7 @@ async function addSelectedBuiltinSchemes() {
         
         // 預處理碼表數據（只做一次）
         newScheme.processedData = await preprocessCodeTableData(result.codeTable, newScheme.isPrefix)
+        newScheme.charCount = await calculateCharCount(result.codeTable)
         
         // 只計算當前Tab需要的數據
         newScheme.data = {}
@@ -2035,6 +2094,7 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     
     // 預處理碼表數據（只做一次）
     newScheme.processedData = await preprocessCodeTableData(codeTable, newScheme.isPrefix)
+        newScheme.charCount = await calculateCharCount(codeTable)
     
     // 只計算當前Tab需要的數據
     newScheme.data = {}
@@ -2109,6 +2169,7 @@ async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'co
         
         // 預處理碼表數據（只做一次）
         newScheme.processedData = await preprocessCodeTableData(codeTable, newScheme.isPrefix)
+        newScheme.charCount = await calculateCharCount(codeTable)
         
         // 只計算當前Tab需要的數據
         newScheme.data = {}
@@ -2426,6 +2487,28 @@ function clearAllSchemes() {
   text-align: left !important;
   font-weight: 600;
   color: #374151;
+}
+
+.char-count-header {
+  background: #f9fafb;
+  width: auto;
+  min-width: 80px;
+  text-align: center !important;
+  font-weight: 600;
+  color: #374151;
+}
+
+.char-count-header small {
+  display: block;
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.char-count {
+  text-align: center;
+  padding: 8px 12px;
+  font-weight: 500;
 }
 
 .metric-header {
