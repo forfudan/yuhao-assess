@@ -1064,25 +1064,25 @@ const backgroundProgress = computed(() => {
   // 1. 当前表格中的方案数量（包括已完成和正在计算的）
   const currentSchemes = allSchemes.value.length
   
-  // 2. 如果正在上传文件，使用上传进度来计算待处理的方案数
+  // 2. 如果正在上傳文件，使用上傳進度來計算待處理的方案數
   let pendingUploadCount = 0
   if (isAdding.value && uploadProgress.value.total > 0) {
-    // 剩余待上传的文件数 = 总文件数 - 已处理文件数
+    // 剩餘待上傳的文件數 = 總文件數 - 已處理文件數
     pendingUploadCount = uploadProgress.value.total - uploadProgress.value.current
   } else if (isAdding.value) {
-    // 如果是添加预设方案，使用 selectedBuiltinSchemes
+    // 如果是添加預設方案，使用 selectedBuiltinSchemes
     pendingUploadCount = selectedBuiltinSchemes.value.length
   }
   
-  // 3. 目标总方案数 = 当前方案数 + 待上传方案数
+  // 3. 目標總方案數 = 當前方案數 + 待上傳方案數
   const targetTotalSchemes = currentSchemes + pendingUploadCount
   
   if (targetTotalSchemes === 0) return { completed: 0, total: 0, percentage: 100 }
   
-  // 4. 目标总任务数 = 目标总方案数 × 4个标签页
+  // 4. 目標總任務數 = 目標總方案數 × 4個標籤頁
   const targetTotalTasks = targetTotalSchemes * allTabs.length
   
-  // 5. 统计已完成的任务数（只计算已完成且不在计算中的）
+  // 5. 統計已完成的任務數（只計算已完成且不在計算中的）
   let completedTasks = 0
   for (const scheme of allSchemes.value) {
     if (!scheme.isCalculating) {
@@ -1093,14 +1093,14 @@ const backgroundProgress = computed(() => {
     }
   }
   
-  // 6. 判断是否有正在进行的任务
+  // 6. 判斷是否有正在進行的任務
   const hasRunning = runningTasks.value.size > 0 || 
                     allSchemes.value.some(s => s.isCalculating) || 
                     isAdding.value
   
   const percentage = hasRunning ? Math.round((completedTasks / targetTotalTasks) * 100) : 100
   
-  // 控制台输出调试信息
+  // 控制台輸出調試信息
   console.log('[進度條調試]', {
     pendingUploadCount,
     currentSchemes,
@@ -1122,9 +1122,9 @@ const backgroundProgress = computed(() => {
   return {
     completed: completedTasks,
     total: targetTotalTasks,
-    percentage: Math.max(0, Math.min(100, percentage)), // 确保在0-100范围内
+    percentage: Math.max(0, Math.min(100, percentage)), // 確保在0-100範圍內
     hasRunning,
-    // 调试信息
+    // 調試信息
     debug: {
       currentSchemes,
       pendingUploadCount,
