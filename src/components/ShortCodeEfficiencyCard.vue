@@ -84,7 +84,7 @@
         </div>
         <!-- 省略行提示 -->
         <div v-if="hasOmittedRows" class="omitted-notice">
-          <p><strong>注意：</strong>繼續出簡不再降低碼長，或已達到 1000 字上限。</p>
+          <p><strong>注意：</strong>繼續出簡不再降低碼長</p>
         </div>
         <!-- 說明文字 -->
         <div class="explanation">
