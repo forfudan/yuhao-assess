@@ -141,7 +141,6 @@
 
           <!-- 方案對比卡片 -->
           <ComparisonCard 
-            v-if="analysisReady" 
             id="card-comparison"
             ref="comparisonCardRef"
             :currentCodeTable="codeTable" 

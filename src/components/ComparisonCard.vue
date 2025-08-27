@@ -39,7 +39,7 @@
           <!-- 後台計算進度指示器 -->
           <div v-if="hasBackgroundTasks" class="background-progress">
             <div class="progress-info">
-              <span class="progress-text">後台預計算中</span>
+              <span class="progress-text">{{ progressText }}</span>
               <span class="progress-percentage">{{ backgroundProgress.percentage }}%</span>
             </div>
             <div class="progress-bar">
@@ -250,7 +250,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(scheme, index) in allSchemes" :key="scheme.id" class="scheme-row">
+              <tr v-for="(scheme, index) in visibleSchemes" :key="scheme.id" class="scheme-row">
                 <td class="scheme-name">
                   <div class="scheme-info">
                     <span class="scheme-title">{{ scheme.name }}</span>
@@ -474,6 +474,12 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- 隱藏方案提示 -->
+        <div v-if="hiddenSchemesCount > 0" class="hidden-schemes-notice">
+          <div class="notice-icon">ℹ️</div>
+          <span class="notice-text">已隱藏 {{ hiddenSchemesCount }} 個無效方案 (或未選擇主方案)</span>
         </div>
 
         <!-- 添加方案按鈕 -->
@@ -926,6 +932,18 @@ const loadComparisonData = async () => {
           console.error(`恢復方案 ${savedScheme.name} 失敗:`, error)
         }
       }
+      
+      // 数据加载完成后，为缺少数据的方案启动智能计算
+      nextTick(() => {
+        const schemesNeedingCalculation = additionalSchemes.value.filter(scheme => 
+          scheme.codeTable && !scheme.isCalculating && (!scheme.data || Object.keys(scheme.data).length < 4)
+        )
+        
+        if (schemesNeedingCalculation.length > 0) {
+          console.log(`[智能計算] 載入後發現 ${schemesNeedingCalculation.length} 個方案需要補充計算`)
+          ensureCurrentTabDataLoaded()
+        }
+      })
     }
   } catch (error) {
     console.error('載入對比數據失敗:', error)
@@ -994,6 +1012,33 @@ const allSchemes = computed(() => {
   })
 })
 
+// 計算屬性 - 過濾掉收字為0的方案用於表格顯示
+const visibleSchemes = computed(() => {
+  return allSchemes.value.filter(scheme => {
+    // 正在計算中的方案始終顯示
+    if (scheme.isCalculating) return true
+    
+    // 收字數量存在且大於0的方案顯示
+    if (scheme.charCount && scheme.charCount > 0) return true
+    
+    // 收字數量為undefined或null的方案也顯示（可能還未計算完成）
+    if (scheme.charCount === undefined || scheme.charCount === null) return true
+    
+    // 只隱藏確實收字為0的方案
+    return false
+  })
+})
+
+// 計算屬性 - 被隱藏的方案數量
+const hiddenSchemesCount = computed(() => {
+  return allSchemes.value.filter(scheme => 
+    !scheme.isCalculating && 
+    scheme.charCount !== undefined && 
+    scheme.charCount !== null && 
+    scheme.charCount === 0
+  ).length
+})
+
 // 計算屬性 - 是否有任何方案
 const hasAnyScheme = computed(() => allSchemes.value.length > 0)
 
@@ -1014,30 +1059,137 @@ const runningTasks = ref(new Set<string>())
 
 // 計算進度追蹤
 const backgroundProgress = computed(() => {
-  const totalSchemes = allSchemes.value.length
-  if (totalSchemes === 0) return { completed: 0, total: 0, percentage: 100 }
-  
   const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
-  const totalTasks = totalSchemes * allTabs.length
   
-  let completed = 0
-  for (const scheme of allSchemes.value) {
-    if (scheme.data?.dynamic) completed++
-    if (scheme.data?.static) completed++
-    if (scheme.data?.maxCandidates) completed++
-    if (scheme.data?.speedEquiv) completed++
+  // 1. 当前表格中的方案数量（包括已完成和正在计算的）
+  const currentSchemes = allSchemes.value.length
+  
+  // 2. 如果正在上傳文件，使用上傳進度來計算待處理的方案數
+  let pendingUploadCount = 0
+  if (isAdding.value && uploadProgress.value.total > 0) {
+    // 剩餘待上傳的文件數 = 總文件數 - 已處理文件數
+    pendingUploadCount = uploadProgress.value.total - uploadProgress.value.current
+  } else if (isAdding.value) {
+    // 如果是添加預設方案，使用 selectedBuiltinSchemes
+    pendingUploadCount = selectedBuiltinSchemes.value.length
   }
   
+  // 3. 目標總方案數 = 當前方案數 + 待上傳方案數
+  const targetTotalSchemes = currentSchemes + pendingUploadCount
+  
+  if (targetTotalSchemes === 0) return { completed: 0, total: 0, percentage: 100 }
+  
+  // 4. 目標總任務數 = 目標總方案數 × 4個標籤頁
+  const targetTotalTasks = targetTotalSchemes * allTabs.length
+  
+  // 5. 統計已完成的任務數（只計算已完成且不在計算中的）
+  let completedTasks = 0
+  for (const scheme of allSchemes.value) {
+    if (!scheme.isCalculating) {
+      if (scheme.data?.dynamic) completedTasks++
+      if (scheme.data?.static) completedTasks++
+      if (scheme.data?.maxCandidates) completedTasks++
+      if (scheme.data?.speedEquiv) completedTasks++
+    }
+  }
+  
+  // 6. 判斷是否有正在進行的任務或還有未完成的任務
+  const hasRunning = runningTasks.value.size > 0 || 
+                    allSchemes.value.some(s => s.isCalculating) || 
+                    isAdding.value
+  
+  // 7. 檢查每個方案是否所有4個tab都已完成
+  let allSchemesCompleted = true
+  for (const scheme of allSchemes.value) {
+    if (!scheme.data?.dynamic || !scheme.data?.static || 
+        !scheme.data?.maxCandidates || !scheme.data?.speedEquiv) {
+      allSchemesCompleted = false
+      break
+    }
+  }
+  
+  // 8. 如果還有方案未上傳或有方案的tab未完成，就應該顯示進度
+  const shouldShowProgress = hasRunning || !allSchemesCompleted || pendingUploadCount > 0
+  
+  const percentage = shouldShowProgress ? Math.round((completedTasks / targetTotalTasks) * 100) : 100
+  
+  // 控制台輸出調試信息
+  console.log('[進度條調試]', {
+    pendingUploadCount,
+    currentSchemes,
+    targetTotalSchemes,
+    targetTotalTasks,
+    completedTasks,
+    percentage,
+    hasRunning,
+    shouldShowProgress,
+    allSchemesCompleted,
+    isAdding: isAdding.value,
+    runningTasksSize: runningTasks.value.size,
+    calculatingSchemes: allSchemes.value.filter(s => s.isCalculating).length,
+    // 额外调试信息
+    selectedBuiltinSchemesLength: selectedBuiltinSchemes.value.length,
+    selectedBuiltinSchemes: selectedBuiltinSchemes.value,
+    uploadProgress: uploadProgress.value,
+    allSchemesNames: allSchemes.value.map(s => s.name),
+    schemesCompletion: allSchemes.value.map(s => ({
+      name: s.name,
+      dynamic: !!s.data?.dynamic,
+      static: !!s.data?.static,
+      maxCandidates: !!s.data?.maxCandidates,
+      speedEquiv: !!s.data?.speedEquiv
+    }))
+  })
+  
   return {
-    completed,
-    total: totalTasks,
-    percentage: Math.round((completed / totalTasks) * 100)
+    completed: completedTasks,
+    total: targetTotalTasks,
+    percentage: Math.max(0, Math.min(100, percentage)), // 確保在0-100範圍內
+    hasRunning: shouldShowProgress,
+    // 調試信息
+    debug: {
+      currentSchemes,
+      pendingUploadCount,
+      targetTotalSchemes,
+      completedTasks,
+      targetTotalTasks,
+      hasRunning
+    }
   }
 })
 
 // 是否有後台任務在運行
 const hasBackgroundTasks = computed(() => {
-  return runningTasks.value.size > 0
+  const hasCalculationTasks = runningTasks.value.size > 0
+  const hasUploadTasks = isAdding.value
+  const hasCalculatingSchemes = allSchemes.value.some(s => s.isCalculating)
+  
+  return hasCalculationTasks || hasUploadTasks || hasCalculatingSchemes
+})
+
+// 進度文本
+const progressText = computed(() => {
+  const pendingUploadCount = isAdding.value ? selectedBuiltinSchemes.value.length : 0
+  const calculatingCount = allSchemes.value.filter(s => s.isCalculating).length
+  const backgroundTaskCount = runningTasks.value.size
+  
+  if (pendingUploadCount > 0) {
+    return pendingUploadCount > 1 ? 
+      `添加方案中 (待處理${pendingUploadCount}個)` : 
+      '添加方案中'
+  }
+  
+  if (calculatingCount > 0) {
+    return calculatingCount > 1 ?
+      `處理方案中 (${calculatingCount}個加載中)` :
+      '處理方案中'
+  }
+  
+  if (backgroundTaskCount > 0) {
+    return '後台預計算中'
+  }
+  
+  return '處理中'
 })
 
 // 清理已完成或被取消的任務
@@ -1977,16 +2129,17 @@ async function addAllBuiltinSchemes() {
         newScheme.processedData = await preprocessCodeTableDataComplete(result.codeTable, newScheme.isPrefix)
         newScheme.charCount = await calculateCharCount(result.codeTable)
         
-        // 只計算當前Tab需要的數據
+        // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
         newScheme.data = {}
-        if (activeTab.value === 'dynamic') {
-          newScheme.data.dynamic = await calculateDynamicData(newScheme)
-        } else if (activeTab.value === 'static') {
-          newScheme.data.static = await calculateStaticData(newScheme)
-        } else if (activeTab.value === 'maxCandidates') {
-          newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
-        } else if (activeTab.value === 'speedEquiv') {
-          newScheme.data.speedEquiv = await calculateSpeedEquivData(newScheme)
+        
+        // 高優先級：立即計算當前Tab數據
+        await scheduleCalculation(newScheme, activeTab.value, 'high')
+        
+        // 低優先級：安排其他Tab的後台計算
+        const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+        const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
+        for (const tab of otherTabs) {
+          scheduleCalculation(newScheme, tab, 'low')
         }
         
         newScheme.isCalculating = false
@@ -2073,16 +2226,17 @@ async function addSelectedBuiltinSchemes() {
         newScheme.processedData = await preprocessCodeTableDataComplete(result.codeTable, newScheme.isPrefix)
         newScheme.charCount = await calculateCharCount(result.codeTable)
         
-        // 只計算當前Tab需要的數據
+        // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
         newScheme.data = {}
-        if (activeTab.value === 'dynamic') {
-          newScheme.data.dynamic = await calculateDynamicData(newScheme)
-        } else if (activeTab.value === 'static') {
-          newScheme.data.static = await calculateStaticData(newScheme)
-        } else if (activeTab.value === 'maxCandidates') {
-          newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
-        } else if (activeTab.value === 'speedEquiv') {
-          newScheme.data.speedEquiv = await calculateSpeedEquivData(newScheme)
+        
+        // 高優先級：立即計算當前Tab數據
+        await scheduleCalculation(newScheme, activeTab.value, 'high')
+        
+        // 低優先級：安排其他Tab的後台計算
+        const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+        const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
+        for (const tab of otherTabs) {
+          scheduleCalculation(newScheme, tab, 'low')
         }
         
         newScheme.isCalculating = false
@@ -2152,16 +2306,17 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     newScheme.processedData = await preprocessCodeTableDataComplete(codeTable, newScheme.isPrefix)
         newScheme.charCount = await calculateCharCount(codeTable)
     
-    // 只計算當前Tab需要的數據
+    // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
     newScheme.data = {}
-    if (activeTab.value === 'dynamic') {
-      newScheme.data.dynamic = await calculateDynamicData(newScheme)
-    } else if (activeTab.value === 'static') {
-      newScheme.data.static = await calculateStaticData(newScheme)
-    } else if (activeTab.value === 'maxCandidates') {
-      newScheme.data.maxCandidates = await calculateMaxCandidatesData(newScheme)
-    } else if (activeTab.value === 'speedEquiv') {
-      newScheme.data.speedEquiv = await calculateSpeedEquivData(newScheme)
+    
+    // 高優先級：立即計算當前Tab數據
+    await scheduleCalculation(newScheme, activeTab.value, 'high')
+    
+    // 低優先級：安排其他Tab的後台計算
+    const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+    const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
+    for (const tab of otherTabs) {
+      scheduleCalculation(newScheme, tab, 'low')
     }
     
     newScheme.isCalculating = false
@@ -2546,6 +2701,29 @@ function clearAllSchemes() {
 .empty-state p {
   margin: 0 0 24px 0;
   font-size: 0.875rem;
+}
+
+/* 隱藏方案提示樣式 */
+.hidden-schemes-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  margin: 16px 0;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 8px;
+  border: 1px solid #f59e0b;
+  gap: 8px;
+}
+
+.notice-icon {
+  font-size: 1.2rem;
+}
+
+.notice-text {
+  font-size: 0.875rem;
+  color: #92400e;
+  font-weight: 500;
 }
 
 .primary-btn {
