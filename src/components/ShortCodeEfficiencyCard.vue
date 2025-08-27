@@ -90,7 +90,7 @@
             <li>簡碼數量為 0：全碼平均碼長（基準）</li>
             <li>簡碼數量為大於 0：使用前N個最有效率的簡碼時的平均碼長</li>
             <li>簡碼字的選取基於漢字字頻 × 節約碼長，並考慮空格鍵</li>
-            <li>僅考慮簡碼長度小於全碼長度的字符，實際簡碼數量可能小於N</li>
+            <li>僅考慮簡碼長度小於全碼長度的漢字，實際簡碼數量可能小於N</li>
             <li>鼠標懸停在數字上可查看當前區間對應的高效簡碼字</li>
             <li>點擊數字可將當前區間的高效簡碼字復制到剪貼板</li>
           </ul>
@@ -317,7 +317,7 @@ const showTooltip = (event: MouseEvent, chars: string[], currentN: number, freqT
       tooltipChars.value = displayChars.join('')
       
       if (displayChars.length === 0) {
-        tooltipChars.value = '無新增字符'
+        tooltipChars.value = '無新增漢字'
       }
     } else {
       // 第一行顯示所有字符
@@ -328,7 +328,7 @@ const showTooltip = (event: MouseEvent, chars: string[], currentN: number, freqT
   
   const actualCount = displayChars.length
   const tooltipText = prevN > 0 
-    ? `N=${currentN}新增的${actualCount}個簡碼字符：${tooltipChars.value}`
+    ? `N=${currentN}新增的${actualCount}個簡碼字：${tooltipChars.value}`
     : `N=${currentN}的${actualCount}個效率最高的簡碼字符：${tooltipChars.value}`
   showTooltipBase(event, tooltipText)
 }
@@ -402,8 +402,8 @@ const copyToClipboard = async (chars: string[], currentN: number, freqType: stri
     
     const count = displayChars.length
     const successMessage = prevN > 0 
-      ? `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}新增的${count}個字符到剪貼板`
-      : `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}的${count}個字符到剪貼板`
+      ? `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}新增的${count}個簡碼字到剪貼板`
+      : `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}的${count}個簡碼字到剪貼板`
     
     console.log(successMessage, textToCopy)
     // 可以在這裡添加 toast 提示
