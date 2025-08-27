@@ -82,7 +82,10 @@
             </tbody>
           </table>
         </div>
-
+        <!-- 省略行提示 -->
+        <div v-if="hasOmittedRows" class="omitted-notice">
+          <p><strong>注意：</strong>繼續出簡不再降低碼長。</p>
+        </div>
         <!-- 說明文字 -->
         <div class="explanation">
           <p><strong>說明：</strong></p>
@@ -185,7 +188,7 @@ const tableData = computed<TableRow[]>(() => {
   // 獲取所有N值
   const nValues = efficiencyData.value['charFrequencyZhihu']?.map((r: any) => r.N) || []
   
-  return nValues.map((N: number) => {
+  const allRows = nValues.map((N: number) => {
     const zhihuResult = efficiencyData.value['charFrequencyZhihu']?.find((r: any) => r.N === N)
     const SCResult = efficiencyData.value['charFrequencySC']?.find((r: any) => r.N === N)
     const TCResult = efficiencyData.value['charFrequencyTC']?.find((r: any) => r.N === N)
@@ -203,6 +206,47 @@ const tableData = computed<TableRow[]>(() => {
       combinedChars: combinedResult?.selectedChars || []
     }
   })
+
+  // 過濾掉四列都沒有新增簡碼字的行
+  const filteredRows: TableRow[] = []
+  let prevZhihuCount = 0
+  let prevSCCount = 0
+  let prevTCCount = 0
+  let prevCombinedCount = 0
+
+  for (const row of allRows) {
+    const currentZhihuCount = row.zhihuChars.length
+    const currentSCCount = row.SCChars.length
+    const currentTCCount = row.TCChars.length
+    const currentCombinedCount = row.combinedChars.length
+
+    // 檢查是否有任何一列有新增簡碼字
+    const hasNewZhihu = currentZhihuCount > prevZhihuCount
+    const hasNewSC = currentSCCount > prevSCCount
+    const hasNewTC = currentTCCount > prevTCCount
+    const hasNewCombined = currentCombinedCount > prevCombinedCount
+
+    if (hasNewZhihu || hasNewSC || hasNewTC || hasNewCombined) {
+      filteredRows.push(row)
+    }
+
+    // 更新前一行的計數
+    prevZhihuCount = currentZhihuCount
+    prevSCCount = currentSCCount
+    prevTCCount = currentTCCount
+    prevCombinedCount = currentCombinedCount
+  }
+
+  return filteredRows
+})
+
+// 檢查是否有被省略的行
+const hasOmittedRows = computed(() => {
+  const frequencies = ['charFrequencyZhihu', 'charFrequencySC', 'charFrequencyTC', 'combined'] as const
+  if (!frequencies.every(freq => efficiencyData.value[freq as string]?.length > 0)) return false
+  
+  const nValues = efficiencyData.value['charFrequencyZhihu']?.map((r: any) => r.N) || []
+  return nValues.length > tableData.value.length
 })
 
 // 載入字頻數據
@@ -699,6 +743,20 @@ onMounted(async () => {
 .explanation li {
   margin-bottom: 4px;
   line-height: 1.4;
+}
+
+.omitted-notice {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  color: #856404;
+}
+
+.omitted-notice p {
+  margin: 0;
+  font-size: 0.85rem;
 }
 
 .no-data {
