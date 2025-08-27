@@ -227,6 +227,7 @@ const uploaderCardRef = ref()
 const duplicateAnalysisCardRef = ref()
 const maximumCandidatesCardRef = ref()
 const speedEquivCardRef = ref()
+const shortCodeEfficiencyCardRef = ref()
 const comparisonCardRef = ref()
 const keyboardHeatmapCardRef = ref()
 const codeTableAnalysisCardRef = ref()
@@ -295,6 +296,7 @@ const toggleAllCards = () => {
     duplicateAnalysisCardRef.value,
     maximumCandidatesCardRef.value,
     speedEquivCardRef.value,
+    shortCodeEfficiencyCardRef.value,
     comparisonCardRef.value,
     keyboardHeatmapCardRef.value,
     codeTableAnalysisCardRef.value
