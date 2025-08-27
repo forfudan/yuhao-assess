@@ -651,7 +651,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick, Teleport } from
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
 import { getDynamicDupRate } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
-import { codeTableProcessingService } from '../services/codeTableProcessingService'
+import { codeTableProcessingService, CodeTableProcessingService } from '../services/codeTableProcessingService'
 import { generateFullCodeTable } from '../services/codeTableCleanService'
 import { 
   calculateCharCount as calculateCharCountService, 
@@ -1688,7 +1688,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     } else {
       // 回退到動態生成（為了向後兼容）
       console.log(`預處理表為空，動態生成加選重鍵表`)
-      processedCodeTable = await generateCodeTableWithSelection(fullCodeTable, maxLength, scheme.isPrefix)
+      processedCodeTable = await CodeTableProcessingService.generateCodeTableWithSelection(fullCodeTable, maxLength, scheme.isPrefix)
     }
     
     // 加載當量表
@@ -1823,104 +1823,6 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
       unifiedEquiv: 0
     }
   }
-}
-
-// 獨立的碼表選重鍵處理函數（不依賴全局服務，支持字频优化）
-async function generateCodeTableWithSelection(
-  codeTable: CodeTable,
-  maxLength: number, 
-  isPrefix: boolean
-): Promise<CodeTable> {
-  const result = new Map<string, string[]>()
-  
-  // 获取字频字符集合（用于优化）
-  let frequencyChars: Set<string> | null = null
-  try {
-    frequencyChars = await getFrequencyCharsUnion()
-  } catch (error) {
-    console.warn('無法獲取字頻字符並集，將使用完整碼表（性能較低）')
-  }
-  
-  // 統計信息
-  let totalChars = 0
-  let filteredChars = 0
-  
-  // 統計每個編碼的候選字符數量（只包含字频表中的字符）
-  const codeToChars = new Map<string, string[]>()
-  
-  for (const [char, codes] of codeTable.entries()) {
-    totalChars++
-    
-    // 字频过滤：只处理在字频表中的字符
-    if (frequencyChars && !frequencyChars.has(char)) {
-      filteredChars++
-      continue
-    }
-    
-    for (const code of codes) {
-      let processedCode = code
-      
-      // 如果不是前綴碼且編碼長度小於最大長度，補充下劃線
-      if (!isPrefix && code.length < maxLength) {
-        processedCode = code + '_'.repeat(maxLength - code.length)
-      }
-      
-      if (!codeToChars.has(processedCode)) {
-        codeToChars.set(processedCode, [])
-      }
-      codeToChars.get(processedCode)!.push(char)
-    }
-  }
-  
-  // 為每個字符生成最終編碼（包含選重鍵，只处理字频表中的字符）
-  for (const [char, codes] of codeTable.entries()) {
-    // 字频过滤：只处理在字频表中的字符
-    if (frequencyChars && !frequencyChars.has(char)) {
-      continue
-    }
-    
-    const processedCodes: string[] = []
-    
-    for (const code of codes) {
-      let processedCode = code
-      
-      // 如果不是前綴碼且編碼長度小於最大長度，補充下劃線
-      if (!isPrefix && code.length < maxLength) {
-        processedCode = code + '_'.repeat(maxLength - code.length)
-      }
-      
-      const candidates = codeToChars.get(processedCode) || []
-      const charIndex = candidates.indexOf(char)
-      
-      // 添加選重鍵
-      if (charIndex === 0) {
-        // 第一候選，不加選重鍵
-        processedCodes.push(processedCode)
-      } else if (charIndex === 1) {
-        // 第二候選，加分號
-        processedCodes.push(processedCode + ';')
-      } else if (charIndex === 2) {
-        // 第三候選，加單引號
-        processedCodes.push(processedCode + "'")
-      } else {
-        // 更多候選，使用數字鍵（簡化處理）
-        processedCodes.push(processedCode + (charIndex + 1).toString())
-      }
-    }
-    
-    if (processedCodes.length > 0) {
-      result.set(char, processedCodes)
-    }
-  }
-  
-  // 输出优化统计信息
-  if (frequencyChars) {
-    const remainingChars = totalChars - filteredChars
-    const reductionPercent = ((filteredChars / totalChars) * 100).toFixed(1)
-    console.log(`輔助碼表字頻優化: 原始 ${totalChars} 字符，過濾 ${filteredChars} 字符，保留 ${remainingChars} 字符 (減少 ${reductionPercent}%)`)
-  }
-  
-  return result
 }
 
 // 已废弃：保留兼容性，但推荐使用分离的函数
