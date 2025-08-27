@@ -651,7 +651,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick, Teleport } from
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
 import { getDynamicDupRate } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
-import { codeTableProcessingService } from '../services/codeTableProcessingService'
+import { codeTableProcessingService, CodeTableProcessingService } from '../services/codeTableProcessingService'
 import { generateFullCodeTable } from '../services/codeTableCleanService'
 import { 
   calculateCharCount as calculateCharCountService, 
@@ -746,10 +746,13 @@ interface SchemeData {
 
 // 預處理的數據結構
 interface ProcessedData {
-  fullCodeTable: CodeTable          // 全碼表
-  allUniqueChars: Set<string>       // 所有唯一字符
-  charsetMap: Map<CharsetType, Set<string>>  // 字符集映射
-  maxLength: number                 // 最大碼長
+  fullCodeTable: CodeTable                    // 全碼表
+  shortCodeTable: CodeTable                   // 簡碼表
+  fullWithSelectionTable: CodeTable           // 全碼加選重表（用於速度當量計算）
+  shortWithSelectionTable: CodeTable          // 簡碼加選重表（為未來擴展保留）
+  allUniqueChars: Set<string>                 // 所有唯一字符
+  charsetMap: Map<CharsetType, Set<string>>   // 字符集映射
+  maxLength: number                           // 最大碼長
 }
 
 // 定義方案接口
@@ -1103,9 +1106,9 @@ const scheduleCalculation = async (scheme: Scheme, tabType: TabType, priority: '
       
       console.log(`[智能計算] 開始計算 ${scheme.name} - ${tabType} (${priority} 優先級)`)
       
-      // 確保有預處理數據
+      // 確保有預處理數據（使用完整預處理以支持速度當量計算）
       if (!scheme.processedData) {
-        scheme.processedData = await preprocessCodeTableData(scheme.codeTable, scheme.isPrefix)
+        scheme.processedData = await preprocessCodeTableDataComplete(scheme.codeTable, scheme.isPrefix)
         if (!scheme.charCount) {
           scheme.charCount = await calculateCharCount(scheme.codeTable)
         }
@@ -1207,9 +1210,9 @@ const calculateMissingData = async (scheme: Scheme) => {
       scheme.data = {}
     }
     
-    // 如果沒有預處理數據，先進行預處理
+    // 如果沒有預處理數據，先進行預處理（使用完整預處理以支持速度當量計算）
     if (!scheme.processedData) {
-      scheme.processedData = await preprocessCodeTableData(scheme.codeTable, scheme.isPrefix)
+      scheme.processedData = await preprocessCodeTableDataComplete(scheme.codeTable, scheme.isPrefix)
       scheme.charCount = await calculateCharCount(scheme.codeTable!)
     }
     
@@ -1263,10 +1266,10 @@ const recalculateScheme = async (scheme: Scheme) => {
     // 設置計算狀態
     scheme.isCalculating = true
     
-    // 確保方案有預處理數據
+    // 確保方案有預處理數據（使用完整預處理以支持速度當量計算）
     if (!scheme.processedData) {
-      console.log(`重新生成預處理數據 for ${scheme.name}`)
-      scheme.processedData = await preprocessCodeTableData(scheme.codeTable, scheme.isPrefix)
+      console.log(`重新生成完整預處理數據 for ${scheme.name}`)
+      scheme.processedData = await preprocessCodeTableDataComplete(scheme.codeTable, scheme.isPrefix)
       if (!scheme.charCount) {
         scheme.charCount = await calculateCharCount(scheme.codeTable)
       }
@@ -1346,7 +1349,69 @@ const getSortArrow = (column: SortColumn) => {
   return sortDirection.value === 'desc' ? '↓' : '↑'
 }
 
-// 預處理碼表數據（添加方案時執行一次）
+// 使用 CodeTableProcessingService 進行完整的預處理（生成所有必要的輔助表）
+async function preprocessCodeTableDataComplete(codeTable: CodeTable, isPrefix = false): Promise<ProcessedData> {
+  const timerId = Math.random().toString(36).substr(2, 9)
+  console.time(`完整碼表預處理-${timerId}`)
+  
+  // 計算最大碼長
+  let maxLength = 0
+  for (const [, codes] of codeTable.entries()) {
+    for (const code of codes) {
+      maxLength = Math.max(maxLength, code.length)
+    }
+  }
+  
+  // 使用 CodeTableProcessingService 生成所有輔助表
+  console.time(`生成所有輔助表-${timerId}`)
+  const processedTables = await codeTableProcessingService.processCodeTable(codeTable, { 
+    isPrefix, 
+    maxLength 
+  })
+  console.timeEnd(`生成所有輔助表-${timerId}`)
+  
+  // 從碼表鍵中提取所有單個字符
+  console.time(`提取唯一字符-${timerId}`)
+  const allUniqueChars = new Set<string>()
+  for (const key of codeTable.keys()) {
+    for (const char of key) {
+      allUniqueChars.add(char)
+    }
+  }
+  console.timeEnd(`提取唯一字符-${timerId}`)
+  
+  // 並行生成字符集
+  console.time(`生成字符集-${timerId}`)
+  const charsetTypes: CharsetType[] = [
+    'gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_i'
+  ]
+  
+  const charsetPromises = charsetTypes.map(async (type) => {
+    const charset = await generateCharset(type, allUniqueChars)
+    return { type, charset }
+  })
+  const charsetResults = await Promise.all(charsetPromises)
+  
+  const charsetMap = new Map<CharsetType, Set<string>>()
+  charsetResults.forEach(({ type, charset }) => {
+    charsetMap.set(type, charset)
+  })
+  console.timeEnd(`生成字符集-${timerId}`)
+  
+  console.timeEnd(`完整碼表預處理-${timerId}`)
+  
+  return {
+    fullCodeTable: processedTables.full,
+    shortCodeTable: processedTables.short,
+    fullWithSelectionTable: processedTables.fullWithSelection,
+    shortWithSelectionTable: processedTables.shortWithSelection,
+    allUniqueChars,
+    charsetMap,
+    maxLength
+  }
+}
+
+// 預處理碼表數據（添加方案時執行一次）- 保持兼容性
 async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): Promise<ProcessedData> {
   const timerId = Math.random().toString(36).substr(2, 9) // 生成唯一ID
   console.time(`碼表預處理-${timerId}`)
@@ -1398,8 +1463,14 @@ async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): 
   
   console.timeEnd(`碼表預處理-${timerId}`)
   
+  // 對於向後兼容，創建空的輔助表
+  const emptyTable = new Map<string, string[]>()
+  
   return {
     fullCodeTable,
+    shortCodeTable: emptyTable,            // 兼容性：暫不生成
+    fullWithSelectionTable: emptyTable,     // 兼容性：暫不生成  
+    shortWithSelectionTable: emptyTable,    // 兼容性：暫不生成
     allUniqueChars,
     charsetMap,
     maxLength
@@ -1516,8 +1587,8 @@ const loadCurrentUserScheme = async () => {
       data: undefined
     }
     
-    // 预处理数据并计算收字数（這會復用 codeTableProcessingService 的緩存）
-    currentUserScheme.value.processedData = await preprocessCodeTableData(props.currentCodeTable, globalIsPrefix)
+    // 预处理数据并计算收字数（使用完整預處理以支持所有計算包括速度當量）
+    currentUserScheme.value.processedData = await preprocessCodeTableDataComplete(props.currentCodeTable, globalIsPrefix)
     currentUserScheme.value.charCount = await calculateCharCount(props.currentCodeTable)
     
     // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
@@ -1606,10 +1677,19 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
   }
   
   try {
-    const { fullCodeTable, maxLength } = scheme.processedData
+    const { fullCodeTable, fullWithSelectionTable, maxLength } = scheme.processedData
     
-    // 生成加選重鍵的碼表（支持字频优化）
-    const processedCodeTable = await generateCodeTableWithSelection(fullCodeTable, maxLength, scheme.isPrefix)
+    // 檢查是否有預處理的選重表
+    let processedCodeTable: CodeTable
+    if (fullWithSelectionTable && fullWithSelectionTable.size > 0) {
+      // 使用預處理好的全碼加選重表
+      console.log(`使用預處理的全碼加選重表 (${fullWithSelectionTable.size} 字符)`)
+      processedCodeTable = fullWithSelectionTable
+    } else {
+      // 回退到動態生成（為了向後兼容）
+      console.log(`預處理表為空，動態生成加選重鍵表`)
+      processedCodeTable = await CodeTableProcessingService.generateCodeTableWithSelection(fullCodeTable, maxLength, scheme.isPrefix)
+    }
     
     // 加載當量表
     const response = await fetch('/data/equivTable.json')
@@ -1745,104 +1825,6 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
   }
 }
 
-// 獨立的碼表選重鍵處理函數（不依賴全局服務，支持字频优化）
-async function generateCodeTableWithSelection(
-  codeTable: CodeTable,
-  maxLength: number, 
-  isPrefix: boolean
-): Promise<CodeTable> {
-  const result = new Map<string, string[]>()
-  
-  // 获取字频字符集合（用于优化）
-  let frequencyChars: Set<string> | null = null
-  try {
-    frequencyChars = await getFrequencyCharsUnion()
-  } catch (error) {
-    console.warn('無法獲取字頻字符並集，將使用完整碼表（性能較低）')
-  }
-  
-  // 統計信息
-  let totalChars = 0
-  let filteredChars = 0
-  
-  // 統計每個編碼的候選字符數量（只包含字频表中的字符）
-  const codeToChars = new Map<string, string[]>()
-  
-  for (const [char, codes] of codeTable.entries()) {
-    totalChars++
-    
-    // 字频过滤：只处理在字频表中的字符
-    if (frequencyChars && !frequencyChars.has(char)) {
-      filteredChars++
-      continue
-    }
-    
-    for (const code of codes) {
-      let processedCode = code
-      
-      // 如果不是前綴碼且編碼長度小於最大長度，補充下劃線
-      if (!isPrefix && code.length < maxLength) {
-        processedCode = code + '_'.repeat(maxLength - code.length)
-      }
-      
-      if (!codeToChars.has(processedCode)) {
-        codeToChars.set(processedCode, [])
-      }
-      codeToChars.get(processedCode)!.push(char)
-    }
-  }
-  
-  // 為每個字符生成最終編碼（包含選重鍵，只处理字频表中的字符）
-  for (const [char, codes] of codeTable.entries()) {
-    // 字频过滤：只处理在字频表中的字符
-    if (frequencyChars && !frequencyChars.has(char)) {
-      continue
-    }
-    
-    const processedCodes: string[] = []
-    
-    for (const code of codes) {
-      let processedCode = code
-      
-      // 如果不是前綴碼且編碼長度小於最大長度，補充下劃線
-      if (!isPrefix && code.length < maxLength) {
-        processedCode = code + '_'.repeat(maxLength - code.length)
-      }
-      
-      const candidates = codeToChars.get(processedCode) || []
-      const charIndex = candidates.indexOf(char)
-      
-      // 添加選重鍵
-      if (charIndex === 0) {
-        // 第一候選，不加選重鍵
-        processedCodes.push(processedCode)
-      } else if (charIndex === 1) {
-        // 第二候選，加分號
-        processedCodes.push(processedCode + ';')
-      } else if (charIndex === 2) {
-        // 第三候選，加單引號
-        processedCodes.push(processedCode + "'")
-      } else {
-        // 更多候選，使用數字鍵（簡化處理）
-        processedCodes.push(processedCode + (charIndex + 1).toString())
-      }
-    }
-    
-    if (processedCodes.length > 0) {
-      result.set(char, processedCodes)
-    }
-  }
-  
-  // 输出优化统计信息
-  if (frequencyChars) {
-    const remainingChars = totalChars - filteredChars
-    const reductionPercent = ((filteredChars / totalChars) * 100).toFixed(1)
-    console.log(`輔助碼表字頻優化: 原始 ${totalChars} 字符，過濾 ${filteredChars} 字符，保留 ${remainingChars} 字符 (減少 ${reductionPercent}%)`)
-  }
-  
-  return result
-}
-
 // 已废弃：保留兼容性，但推荐使用分离的函数
 // 這個函數將被移除，因為現在使用預處理的架構
 async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Promise<SchemeData> {
@@ -1856,8 +1838,8 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
     isPrefix
   }
   
-  // 進行預處理
-  tempScheme.processedData = await preprocessCodeTableData(codeTable, isPrefix)
+  // 進行預處理（使用完整預處理以保持一致性）
+  tempScheme.processedData = await preprocessCodeTableDataComplete(codeTable, isPrefix)
   tempScheme.charCount = await calculateCharCount(codeTable)
   
   const [dynamic, static_] = await Promise.all([
@@ -1908,8 +1890,8 @@ async function addBuiltinScheme() {
     const result = await builtinService.downloadCodeTable(selectedBuiltinScheme.value)
     newScheme.codeTable = result.codeTable
     
-    // 預處理碼表數據（只做一次）
-    newScheme.processedData = await preprocessCodeTableData(result.codeTable, newScheme.isPrefix)
+    // 預處理碼表數據（內置方案使用完整預處理以支持所有計算）
+    newScheme.processedData = await preprocessCodeTableDataComplete(result.codeTable, newScheme.isPrefix)
         newScheme.charCount = await calculateCharCount(result.codeTable)
     newScheme.charCount = await calculateCharCount(result.codeTable)
     
@@ -1992,7 +1974,7 @@ async function addAllBuiltinSchemes() {
         newScheme.codeTable = result.codeTable
         
         // 預處理碼表數據（只做一次）
-        newScheme.processedData = await preprocessCodeTableData(result.codeTable, newScheme.isPrefix)
+        newScheme.processedData = await preprocessCodeTableDataComplete(result.codeTable, newScheme.isPrefix)
         newScheme.charCount = await calculateCharCount(result.codeTable)
         
         // 只計算當前Tab需要的數據
@@ -2088,7 +2070,7 @@ async function addSelectedBuiltinSchemes() {
         newScheme.codeTable = result.codeTable
         
         // 預處理碼表數據（只做一次）
-        newScheme.processedData = await preprocessCodeTableData(result.codeTable, newScheme.isPrefix)
+        newScheme.processedData = await preprocessCodeTableDataComplete(result.codeTable, newScheme.isPrefix)
         newScheme.charCount = await calculateCharCount(result.codeTable)
         
         // 只計算當前Tab需要的數據
@@ -2167,7 +2149,7 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     newScheme.codeTable = codeTable
     
     // 預處理碼表數據（只做一次）
-    newScheme.processedData = await preprocessCodeTableData(codeTable, newScheme.isPrefix)
+    newScheme.processedData = await preprocessCodeTableDataComplete(codeTable, newScheme.isPrefix)
         newScheme.charCount = await calculateCharCount(codeTable)
     
     // 只計算當前Tab需要的數據
@@ -2242,7 +2224,7 @@ async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'co
         newScheme.codeTable = codeTable
         
         // 預處理碼表數據（只做一次）
-        newScheme.processedData = await preprocessCodeTableData(codeTable, newScheme.isPrefix)
+        newScheme.processedData = await preprocessCodeTableDataComplete(codeTable, newScheme.isPrefix)
         newScheme.charCount = await calculateCharCount(codeTable)
         
         // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
@@ -2384,7 +2366,7 @@ function reuploadScheme(scheme: Scheme) {
       scheme.charCount = await calculateCharCount(codeTable)
       
       // 重新預處理數據
-      scheme.processedData = await preprocessCodeTableData(codeTable, scheme.isPrefix)
+      scheme.processedData = await preprocessCodeTableDataComplete(codeTable, scheme.isPrefix)
       
       // 清除舊的計算數據，強制重新計算
       scheme.data = {}

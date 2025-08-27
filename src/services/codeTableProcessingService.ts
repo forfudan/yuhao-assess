@@ -146,7 +146,7 @@ export class CodeTableProcessingService {
    * @param isPrefix 是否为前缀码
    * @param frequencyChars 字频表字符集合（用于过滤，null则不过滤）
    */
-  private async generateCodeTableWithSelection(
+  async generateCodeTableWithSelection(
     codeTable: CodeTable, 
     maxLength: number, 
     isPrefix: boolean,
@@ -236,6 +236,30 @@ export class CodeTableProcessingService {
    */
   hasProcessedTables(): boolean {
     return this.processedTables !== null
+  }
+
+  /**
+   * 静态方法：生成加选重按键的码表（供外部直接调用）
+   * @param codeTable 原始码表
+   * @param maxLength 最大码长
+   * @param isPrefix 是否为前缀码
+   */
+  static async generateCodeTableWithSelection(
+    codeTable: CodeTable, 
+    maxLength: number, 
+    isPrefix: boolean
+  ): Promise<CodeTable> {
+    const instance = CodeTableProcessingService.getInstance()
+    
+    // 获取字频字符集合（用于优化）
+    let frequencyChars: Set<string> | null = null
+    try {
+      frequencyChars = await getFrequencyCharsUnion()
+    } catch (error) {
+      console.warn('無法獲取字頻字符並集，將使用完整碼表（性能較低）')
+    }
+    
+    return instance.generateCodeTableWithSelection(codeTable, maxLength, isPrefix, frequencyChars)
   }
 
   /**
