@@ -84,16 +84,15 @@
         </div>
         <!-- 省略行提示 -->
         <div v-if="hasOmittedRows" class="omitted-notice">
-          <p><strong>注意：</strong>繼續出簡不再降低碼長。</p>
+          <p><strong>注意：</strong>繼續出簡不再降低碼長，或已達到 1000 字上限。</p>
         </div>
         <!-- 說明文字 -->
         <div class="explanation">
           <p><strong>說明：</strong></p>
           <ul>
-            <li>簡碼數量為 0：全碼平均碼長（基準）</li>
-            <li>簡碼數量為大於 0：使用前N個最有效率的簡碼時的平均碼長</li>
-            <li>簡碼字的選取基於漢字字頻 × 節約碼長，並考慮空格鍵</li>
-            <li>僅考慮簡碼長度小於全碼長度的漢字，實際簡碼數量可能小於N</li>
+            <li>本模塊使用前 N 個（最大為 1000 個）最有效率的簡碼時的平均碼長</li>
+            <li>簡碼字的效率取決於於漢字字頻 × 節約碼長</li>
+            <li>僅考慮簡碼長度小於全碼長度的漢字，實際簡碼數量可能小於 N</li>
             <li>鼠標懸停在數字上可查看當前區間對應的高效簡碼字</li>
             <li>點擊數字可將當前區間的高效簡碼字復制到剪貼板</li>
           </ul>
@@ -226,7 +225,8 @@ const tableData = computed<TableRow[]>(() => {
     const hasNewTC = currentTCCount > prevTCCount
     const hasNewCombined = currentCombinedCount > prevCombinedCount
 
-    if (hasNewZhihu || hasNewSC || hasNewTC || hasNewCombined) {
+    // N=0是基準行，永遠顯示；其他行只有在有新增簡碼字時才顯示
+    if (row.N === 0 || hasNewZhihu || hasNewSC || hasNewTC || hasNewCombined) {
       filteredRows.push(row)
     }
 
