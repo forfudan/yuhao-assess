@@ -108,7 +108,7 @@
   <Teleport to="body">
     <div v-if="tooltipVisible" class="custom-tooltip" :style="tooltipStyle">
       <div class="tooltip-content">
-        <div class="tooltip-header">本區間效率最高簡碼字：</div>
+        <div class="tooltip-header">本區間效率最高簡碼字（點擊數字複製漢字）：</div>
         <div class="tooltip-chars">{{ tooltipChars }}</div>
       </div>
     </div>

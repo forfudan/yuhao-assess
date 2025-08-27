@@ -60,7 +60,7 @@
         </table>
 
         <div class="info-section">
-          <h4>指標說明</h4>
+          <p><strong>說明：</strong></p>
           <p>速度當量基於實驗統計結果，評估輸入法按鍵對的手感表現。數值越小表示輸入越流暢。計算考慮了：</p>
           <ul>
             <li>使用全碼碼表（每個單字的最長編碼）進行分析</li>
@@ -362,33 +362,30 @@ onMounted(async () => {
 .info-section {
   background: #f8fafc;
   border-radius: 8px;
-  padding: 20px;
-  border-left: 4px solid #f59e0b;
+  padding: 16px;
+  font-size: 0.9rem;
 }
 
-.info-section h4 {
-  margin: 0 0 12px 0;
-  color: #374151;
-  font-size: 1rem;
-  font-weight: 600;
+.info-section strong {
+  color: #495057;
 }
 
 .info-section p {
   margin: 0 0 12px 0;
-  color: #6b7280;
+  color: #6c757d;
   font-size: 0.875rem;
   line-height: 1.6;
 }
 
 .info-section ul {
-  margin: 0 0 12px 0;
-  padding-left: 20px;
-  color: #6b7280;
+  margin: 8px 0 0 20px;
+  color: #6c757d;
   font-size: 0.875rem;
 }
 
 .info-section li {
   margin-bottom: 4px;
+  line-height: 1.4;
 }
 
 /* 响应式设计 */
