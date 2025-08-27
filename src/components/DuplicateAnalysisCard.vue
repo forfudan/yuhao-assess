@@ -3,7 +3,7 @@
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
-          <h3 class="card-title">重碼數據分析</h3>
+          <h3 class="card-title">重碼數據</h3>
           <p class="card-description">分析不同字符集下的重碼情況，計算靜態重碼率和動態選重率。閱讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">

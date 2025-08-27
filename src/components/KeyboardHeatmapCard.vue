@@ -3,7 +3,7 @@
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
-          <h3 class="card-title">鍵位熱力圖</h3>
+          <h3 class="card-title">鍵位熱力</h3>
           <p class="card-description">基於單字全碼以及可能的選重鍵，分析各個按鍵的使用頻率，可視化展示手指負擔。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">

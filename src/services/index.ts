@@ -85,6 +85,13 @@ export {
 // 導出碼表處理服務
 export { codeTableProcessingService } from './codeTableProcessingService'
 
+// 導出簡碼效率服務
+export {
+  calculateShortCodeEfficiency,
+  calculateFullCodeAverageLength,
+  calculateShortCodeAverageLength
+} from './shortCodeEfficiencyService'
+
 // 導出類型
 export type {
   AnalysisParams,

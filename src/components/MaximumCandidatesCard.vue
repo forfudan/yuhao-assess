@@ -3,7 +3,7 @@
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
-          <h3 class="card-title">最大候選項個數</h3>
+          <h3 class="card-title">候選個數</h3>
           <p class="card-description">分析不同字符集下方案的最大候選項個數，借以反映方案的檢字效率。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
@@ -34,7 +34,7 @@
             <thead>
               <tr>
                 <th class="charset-header">字符集</th>
-                <th class="count-header">最大候選項個數</th>
+                <th class="count-header">候選個數</th>
                 <th class="codes-header">對應編碼</th>
               </tr>
             </thead>
@@ -75,7 +75,7 @@
 
         <!-- 數據說明 -->
         <div class="info-section">
-          <h4>指標說明</h4>
+          <p><strong>說明：</strong></p>
           <p>最大候選項個數評估輸入法的選字體驗，數值越小表示翻頁次數越少，檢字效率越高。計算考慮了：</p>
           <ul>
             <li>單字全碼和指定字符集，統計每個編碼對應的漢字數量</li>
@@ -486,33 +486,30 @@ onMounted(() => {
 .info-section {
   background: #f8fafc;
   border-radius: 8px;
-  padding: 20px;
-  border-left: 4px solid #f59e0b;
+  padding: 16px;
+  font-size: 0.9rem;
 }
 
-.info-section h4 {
-  margin: 0 0 12px 0;
-  color: #374151;
-  font-size: 1rem;
-  font-weight: 600;
+.info-section strong {
+  color: #495057;
 }
 
 .info-section p {
   margin: 0 0 12px 0;
-  color: #6b7280;
+  color: #6c757d;
   font-size: 0.875rem;
   line-height: 1.6;
 }
 
 .info-section ul {
-  margin: 0 0 12px 0;
-  padding-left: 20px;
-  color: #6b7280;
+  margin: 8px 0 0 20px;
+  color: #6c757d;
   font-size: 0.875rem;
 }
 
 .info-section li {
   margin-bottom: 4px;
+  line-height: 1.4;
 }
 
 /* 響應式設計 */

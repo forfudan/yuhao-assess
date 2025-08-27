@@ -61,15 +61,19 @@
             </a>
             <a v-if="analysisReady" @click="scrollToCard('duplicate')" class="nav-item">
               <span class="nav-icon">🔢</span>
-              <span class="nav-title">重碼數據分析</span>
+              <span class="nav-title">重碼數據</span>
             </a>
             <a v-if="analysisReady" @click="scrollToCard('maximum')" class="nav-item">
               <span class="nav-icon">📊</span>
-              <span class="nav-title">最大候選項個數</span>
+              <span class="nav-title">候選個數</span>
             </a>
             <a v-if="analysisReady" @click="scrollToCard('speed')" class="nav-item">
               <span class="nav-icon">⚡</span>
-              <span class="nav-title">速度當量分析</span>
+              <span class="nav-title">速度當量</span>
+            </a>
+            <a v-if="analysisReady" @click="scrollToCard('efficiency')" class="nav-item">
+              <span class="nav-icon">📈</span>
+              <span class="nav-title">簡碼效率</span>
             </a>
             <a v-if="analysisReady" @click="scrollToCard('comparison')" class="nav-item">
               <span class="nav-icon">🆚</span>
@@ -77,7 +81,7 @@
             </a>
             <a v-if="analysisReady" @click="scrollToCard('heatmap')" class="nav-item">
               <span class="nav-icon">⌨️</span>
-              <span class="nav-title">鍵位熱力圖</span>
+              <span class="nav-title">鍵位熱力</span>
             </a>
             <a v-if="analysisReady" @click="scrollToCard('analysis')" class="nav-item">
               <span class="nav-icon">📋</span>
@@ -113,7 +117,7 @@
             :upload-status="uploadStatus"
           />
 
-          <!-- 重碼數據分析卡片 -->
+          <!-- 重碼數據卡片 -->
           <DuplicateAnalysisCard 
             v-if="analysisReady" 
             id="card-duplicate"
@@ -137,6 +141,16 @@
             :code-table="codeTable" 
             :code-table-name="codeTableName" 
             :initial-prefix="uploadPrefixFlag" 
+          />
+
+          <!-- 簡碼效率卡片 -->
+          <ShortCodeEfficiencyCard 
+            v-if="analysisReady" 
+            id="card-efficiency"
+            ref="shortCodeEfficiencyCardRef"
+            :code-table="codeTable" 
+            :analysis-ready="analysisReady"
+            :global-prefix-keys="uploadPrefixKeys"
           />
 
           <!-- 方案對比卡片 -->
@@ -193,6 +207,7 @@ import DuplicateAnalysisCard from './components/DuplicateAnalysisCard.vue'
 import MaximumCandidatesCard from './components/MaximumCandidatesCard.vue'
 import ComparisonCard from './components/ComparisonCard.vue'
 import SpeedEquivCard from './components/SpeedEquivCard.vue'
+import ShortCodeEfficiencyCard from './components/ShortCodeEfficiencyCard.vue'
 import { codeTableProcessingService } from './services/codeTableProcessingService'
 import type { CodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
 
@@ -335,6 +350,7 @@ const saveCodeTableData = () => {
       analysisData: analysisData.value,
       codeTableName: codeTableName.value,
       uploadPrefixFlag: uploadPrefixFlag.value,
+      uploadPrefixKeys: uploadPrefixKeys.value,
       globalMaxLength: globalMaxLength.value,
       timestamp: Date.now()
     }
@@ -361,6 +377,7 @@ const restoreCodeTableData = async () => {
       analysisData.value = data.analysisData
       codeTableName.value = data.codeTableName || ''
       uploadPrefixFlag.value = data.uploadPrefixFlag || false
+      uploadPrefixKeys.value = data.uploadPrefixKeys || []
       globalMaxLength.value = data.globalMaxLength || 4
       
       // 重新处理码表以确保processing service有正确的数据（包含字频优化）
