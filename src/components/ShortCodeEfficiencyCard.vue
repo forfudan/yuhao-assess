@@ -82,14 +82,17 @@
             </tbody>
           </table>
         </div>
-
+        <!-- 省略行提示 -->
+        <div v-if="hasOmittedRows" class="omitted-notice">
+          <p><strong>注意：</strong>繼續出簡不再降低碼長</p>
+        </div>
         <!-- 說明文字 -->
         <div class="explanation">
           <p><strong>說明：</strong></p>
           <ul>
-            <li>簡碼數量為 0：全碼平均碼長（基準）</li>
-            <li>簡碼數量為大於 0：使用N個最有效率的簡碼時的平均碼長</li>
-            <li>簡碼字的選取基於漢字字頻 × 節約碼長，並考慮空格鍵</li>
+            <li>本模塊使用前 N 個（最大為 1000 個）最有效率的簡碼時的平均碼長</li>
+            <li>簡碼字的效率取決於於漢字字頻 × 節約碼長</li>
+            <li>僅考慮簡碼長度小於全碼長度的漢字，實際簡碼數量可能小於 N</li>
             <li>鼠標懸停在數字上可查看當前區間對應的高效簡碼字</li>
             <li>點擊數字可將當前區間的高效簡碼字復制到剪貼板</li>
           </ul>
@@ -184,7 +187,7 @@ const tableData = computed<TableRow[]>(() => {
   // 獲取所有N值
   const nValues = efficiencyData.value['charFrequencyZhihu']?.map((r: any) => r.N) || []
   
-  return nValues.map((N: number) => {
+  const allRows = nValues.map((N: number) => {
     const zhihuResult = efficiencyData.value['charFrequencyZhihu']?.find((r: any) => r.N === N)
     const SCResult = efficiencyData.value['charFrequencySC']?.find((r: any) => r.N === N)
     const TCResult = efficiencyData.value['charFrequencyTC']?.find((r: any) => r.N === N)
@@ -202,6 +205,48 @@ const tableData = computed<TableRow[]>(() => {
       combinedChars: combinedResult?.selectedChars || []
     }
   })
+
+  // 過濾掉四列都沒有新增簡碼字的行
+  const filteredRows: TableRow[] = []
+  let prevZhihuCount = 0
+  let prevSCCount = 0
+  let prevTCCount = 0
+  let prevCombinedCount = 0
+
+  for (const row of allRows) {
+    const currentZhihuCount = row.zhihuChars.length
+    const currentSCCount = row.SCChars.length
+    const currentTCCount = row.TCChars.length
+    const currentCombinedCount = row.combinedChars.length
+
+    // 檢查是否有任何一列有新增簡碼字
+    const hasNewZhihu = currentZhihuCount > prevZhihuCount
+    const hasNewSC = currentSCCount > prevSCCount
+    const hasNewTC = currentTCCount > prevTCCount
+    const hasNewCombined = currentCombinedCount > prevCombinedCount
+
+    // N=0是基準行，永遠顯示；其他行只有在有新增簡碼字時才顯示
+    if (row.N === 0 || hasNewZhihu || hasNewSC || hasNewTC || hasNewCombined) {
+      filteredRows.push(row)
+    }
+
+    // 更新前一行的計數
+    prevZhihuCount = currentZhihuCount
+    prevSCCount = currentSCCount
+    prevTCCount = currentTCCount
+    prevCombinedCount = currentCombinedCount
+  }
+
+  return filteredRows
+})
+
+// 檢查是否有被省略的行
+const hasOmittedRows = computed(() => {
+  const frequencies = ['charFrequencyZhihu', 'charFrequencySC', 'charFrequencyTC', 'combined'] as const
+  if (!frequencies.every(freq => efficiencyData.value[freq as string]?.length > 0)) return false
+  
+  const nValues = efficiencyData.value['charFrequencyZhihu']?.map((r: any) => r.N) || []
+  return nValues.length > tableData.value.length
 })
 
 // 載入字頻數據
@@ -305,7 +350,7 @@ const showTooltip = (event: MouseEvent, chars: string[], currentN: number, freqT
   const prevN = getPreviousN(currentN)
   
   if (chars.length === 0) {
-    tooltipChars.value = '無簡碼字符'
+    tooltipChars.value = '無簡碼字'
   } else {
     // 根據不同的N值顯示差值字符
     if (prevN > 0) {
@@ -316,7 +361,7 @@ const showTooltip = (event: MouseEvent, chars: string[], currentN: number, freqT
       tooltipChars.value = displayChars.join('')
       
       if (displayChars.length === 0) {
-        tooltipChars.value = '無新增字符'
+        tooltipChars.value = '無新增漢字'
       }
     } else {
       // 第一行顯示所有字符
@@ -327,7 +372,7 @@ const showTooltip = (event: MouseEvent, chars: string[], currentN: number, freqT
   
   const actualCount = displayChars.length
   const tooltipText = prevN > 0 
-    ? `N=${currentN}新增的${actualCount}個簡碼字符：${tooltipChars.value}`
+    ? `N=${currentN}新增的${actualCount}個簡碼字：${tooltipChars.value}`
     : `N=${currentN}的${actualCount}個效率最高的簡碼字符：${tooltipChars.value}`
   showTooltipBase(event, tooltipText)
 }
@@ -354,15 +399,19 @@ const getPreviousChars = (prevN: number, freqType: string): string[] => {
 }
 
 const getCellClass = (value: number, rowValues: number[]): string => {
-  // 基於絕對值的分級，馬長高顯示綠色，碼長低顯示紅色
+  // 基於絕對值的五檔分級
   if (value <= 0) return ''
   
-  if (value > 3.6) {
-    return 'high-value'       // 碼長 3.6 以上 - 紅色
-  } else if (value >= 3.0) {
-    return 'medium-value'     // 碼長 3.0-3.6 - 黃色
+  if (value >= 3.7) {
+    return 'very-high-value'   // >= 3.7 - 略低於四碼定長全碼長度
+  } else if (value >= 3.3) {
+    return 'high-value'        // >= 3.3 - 略低於出了一簡之後的碼長
+  } else if (value >= 2.9) {
+    return 'medium-value'      // >= 2.9 - 略低於出了二簡之後的碼長
+  } else if (value >= 2.5) {
+    return 'low-value'         // >= 2.5 - 略低於前綴碼的簡碼碼長
   } else {
-    return 'low-value'        // 碼長 3.0 以下 - 綠色
+    return 'very-low-value'    // < 2.5 - 頂功碼長
   }
 }
 
@@ -397,8 +446,8 @@ const copyToClipboard = async (chars: string[], currentN: number, freqType: stri
     
     const count = displayChars.length
     const successMessage = prevN > 0 
-      ? `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}新增的${count}個字符到剪貼板`
-      : `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}的${count}個字符到剪貼板`
+      ? `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}新增的${count}個簡碼字到剪貼板`
+      : `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}的${count}個簡碼字到剪貼板`
     
     console.log(successMessage, textToCopy)
     // 可以在這裡添加 toast 提示
@@ -571,11 +620,12 @@ onMounted(async () => {
   font-family: var(--font-numeric);
   font-feature-settings: "tnum" 0; /* 禁用表格數字，使用比例數字 */
   text-align: center;
+  transition: background-color 0.2s ease;
 }
 
 .hoverable {
   cursor: help;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .clickable {
@@ -587,20 +637,56 @@ onMounted(async () => {
   color: #1f2937;
 }
 
-/* 效率值的三檔顏色分級 - 反轉邏輯 */
+/* 效率值的五檔簡約顏色分級 */
+.very-high-value {
+  background: #fee2e2 !important;  /* 淺紅色背景 - >= 3.7 */
+  color: #991b1b;                   /* 深紅色文字 */
+  font-weight: 700;
+}
+
 .high-value {
-  background: #fee2e2 !important;  /* 淺紅色 - 3.6以上（需要優化） */
-  color: #991b1b;
+  background: #fef3c7 !important;  /* 淺黃色背景 - >= 3.3 */
+  color: #92400e;                   /* 深黃色文字 */
+  font-weight: 700;
 }
 
 .medium-value {
-  background: #fef3c7 !important;  /* 淺黃色 - 3.0-3.6（中等） */
-  color: #92400e;
+  background: #dcfce7 !important;  /* 淺綠色背景 - >= 2.9 */
+  color: #166534;                   /* 深綠色文字 */
+  font-weight: 700;
 }
 
 .low-value {
-  background: #dcfce7 !important;  /* 淺綠色 - 3.0以下（效率好） */
-  color: #166534;
+  background: #dbeafe !important;  /* 淺藍色背景 - >= 2.5 */
+  color: #1e40af;                   /* 深藍色文字 */
+  font-weight: 700;
+}
+
+.very-low-value {
+  background: #f3e8ff !important;  /* 淺紫色背景 - < 2.5 */
+  color: #7c3aed;                   /* 深紫色文字 */
+  font-weight: 700;
+}
+
+/* 簡化的懸停效果 */
+.very-high-value:hover {
+  background: #fecaca !important;
+}
+
+.high-value:hover {
+  background: #fde68a !important;
+}
+
+.medium-value:hover {
+  background: #bbf7d0 !important;
+}
+
+.low-value:hover {
+  background: #bfdbfe !important;
+}
+
+.very-low-value:hover {
+  background: #e9d5ff !important;
 }
 
 /* 自定義工具提示 */
@@ -657,6 +743,20 @@ onMounted(async () => {
 .explanation li {
   margin-bottom: 4px;
   line-height: 1.4;
+}
+
+.omitted-notice {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  color: #856404;
+}
+
+.omitted-notice p {
+  margin: 0;
+  font-size: 0.85rem;
 }
 
 .no-data {

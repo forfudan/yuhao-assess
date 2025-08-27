@@ -8,15 +8,15 @@ interface CodeTableRow {
 interface EfficiencyResult {
   N: number
   efficiency: number
-  selectedChars: string[]  // 新增：被選中使用簡碼的字符
+  selectedChars: string[]  // 新增：被選中使用簡碼的字
 }
 
 /**
  * 計算簡碼效率
  * 
  * 算法說明：
- * 1. 對於每個簡碼數量N，選擇頻率加權碼長差值最大的前N個字符使用簡碼
- * 2. 頻率差值 = 字符頻率 * (全碼長度 - 簡碼長度)
+ * 1. 對於每個簡碼數量N，選擇頻率加權碼長差值最大的前N個漢字使用簡碼
+ * 2. 頻率差值 = 漢字頻率 * (全碼長度 - 簡碼長度)
  * 3. 計算使用N個簡碼後的平均碼長
  */
 export function calculateShortCodeEfficiency(
@@ -57,7 +57,7 @@ function preprocessCodeTable(
   maxLen: number,
   isPrefix: boolean
 ): ProcessedChar[] {
-  // 按字符分組，處理簡碼和全碼
+  // 按漢字分組，處理簡碼和全碼
   const charMap = new Map<string, CodeTableRow[]>()
   
   for (const row of codeTable) {
@@ -145,9 +145,13 @@ function calculateActualLength(code: string, maxLen: number, isPrefix: boolean):
 }
 
 function calculateEfficiencyForN(processedChars: ProcessedChar[], N: number): { efficiency: number; selectedChars: string[] } {
-  // 按頻率差值排序，選擇前N個字符使用簡碼
-  const sortedByFreqDiff = [...processedChars].sort((a, b) => b.freqLenDiff - a.freqLenDiff)
-  const selectedCharsList = sortedByFreqDiff.slice(0, N).map(c => c.char)
+  // 只考慮簡碼長度小於全碼長度的漢字
+  const validShortCodeChars = processedChars.filter(char => char.lenShort < char.lenFull)
+  
+  // 按頻率差值排序，選擇前N個字符使用簡碼（但實際數量可能小於N）
+  const sortedByFreqDiff = [...validShortCodeChars].sort((a, b) => b.freqLenDiff - a.freqLenDiff)
+  const actualSelectedCount = Math.min(N, sortedByFreqDiff.length)
+  const selectedCharsList = sortedByFreqDiff.slice(0, actualSelectedCount).map(c => c.char)
   const selectedChars = new Set(selectedCharsList)
   
   // 計算加權平均碼長
