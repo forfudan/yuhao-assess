@@ -34,7 +34,7 @@ export class CodeTableProcessingService {
   /**
    * 处理原始码表，生成所有需要的派生码表
    */
-  async processCodeTable(originalCodeTable: CodeTable, options?: { isPrefix?: boolean, maxLength?: number }): Promise<ProcessedCodeTables> {
+  async processCodeTable(originalCodeTable: CodeTable, options?: { isPrefix?: boolean, maxLength?: number, prefixKeys?: string[] }): Promise<ProcessedCodeTables> {
     // 生成全码表和简码表
     const fullResult = generateFullCodeTable(originalCodeTable)
     const shortResult = generateShortCodeTable(originalCodeTable)
@@ -42,6 +42,7 @@ export class CodeTableProcessingService {
     // 计算最大码长
     const maxLength = options?.maxLength || this.calculateMaxCodeLength(originalCodeTable)  // 使用原始码表计算
     const isPrefix = options?.isPrefix || false
+    const prefixKeys = options?.prefixKeys
     
     // 保存处理选项
     this.processingOptions = { isPrefix, maxLength }
@@ -55,8 +56,8 @@ export class CodeTableProcessingService {
     ])
     
     // 生成两种加选重按键的码表（使用字频优化）
-    const fullWithSelection = await this.generateCodeTableWithSelection(fullResult.codeTable, maxLength, isPrefix, frequencyChars)
-    const shortWithSelection = await this.generateCodeTableWithSelection(shortResult.codeTable, maxLength, isPrefix, frequencyChars)
+    const fullWithSelection = await this.generateCodeTableWithSelection(fullResult.codeTable, maxLength, isPrefix, frequencyChars, prefixKeys)
+    const shortWithSelection = await this.generateCodeTableWithSelection(shortResult.codeTable, maxLength, isPrefix, frequencyChars, prefixKeys)
     
     this.processedTables = {
       original: originalCodeTable,
@@ -145,12 +146,14 @@ export class CodeTableProcessingService {
    * @param maxLength 最大码长
    * @param isPrefix 是否为前缀码
    * @param frequencyChars 字频表字符集合（用于过滤，null则不过滤）
+   * @param prefixKeys 前缀码上屏键列表（可选）
    */
   async generateCodeTableWithSelection(
     codeTable: CodeTable, 
     maxLength: number, 
     isPrefix: boolean,
-    frequencyChars: Set<string> | null = null
+    frequencyChars: Set<string> | null = null,
+    prefixKeys?: string[]
   ): Promise<CodeTable> {
     const processedTable = new Map<string, string[]>()
     
@@ -198,9 +201,18 @@ export class CodeTableProcessingService {
         
         let processedCode = code
         
-        // 如果不是前缀码，且码长不到最大码长，且为首选时，补充一个下划线（代表空格）用于选重
-        // 如果是前缀码，则不补充下划线
-        if (!isPrefix && code.length < maxLength && isFirstCandidate) {
+        // 前缀码的特殊处理逻辑：
+        // 当(1)编码没有达到最大码长时，且(2)编码的最后一个字符不是 prefixKeys 中的字符或下划线(表示空格)，
+        // 则在编码末尾增加一个下划线（表示空格）。这是因为如果不到最大码长，且不是以prefixKeys或下划线结尾，
+        // 则意味着无法形成唯一分割，需要加一个下划线来让编码上屏。
+        if (isPrefix && prefixKeys && code.length < maxLength) {
+          const lastChar = code.slice(-1)
+          const needsUnderscore = !prefixKeys.includes(lastChar) && lastChar !== '_'
+          if (needsUnderscore) {
+            processedCode = code + '_'
+          }
+        } else if (!isPrefix && code.length < maxLength && isFirstCandidate) {
+          // 非前缀码的原有逻辑：首选且未达到最大码长时补充下划线
           processedCode = code + '_'
         }
         
@@ -243,11 +255,13 @@ export class CodeTableProcessingService {
    * @param codeTable 原始码表
    * @param maxLength 最大码长
    * @param isPrefix 是否为前缀码
+   * @param prefixKeys 前缀码上屏键列表（可选）
    */
   static async generateCodeTableWithSelection(
     codeTable: CodeTable, 
     maxLength: number, 
-    isPrefix: boolean
+    isPrefix: boolean,
+    prefixKeys?: string[]
   ): Promise<CodeTable> {
     const instance = CodeTableProcessingService.getInstance()
     
@@ -259,7 +273,7 @@ export class CodeTableProcessingService {
       console.warn('無法獲取字頻字符並集，將使用完整碼表（性能較低）')
     }
     
-    return instance.generateCodeTableWithSelection(codeTable, maxLength, isPrefix, frequencyChars)
+    return instance.generateCodeTableWithSelection(codeTable, maxLength, isPrefix, frequencyChars, prefixKeys)
   }
 
   /**

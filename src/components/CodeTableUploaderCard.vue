@@ -69,6 +69,15 @@
           </label>
         </div>
         <div class="prefix-control">
+          <div class="prefix-keys-input" v-if="isPrefixCode">
+            <input 
+              v-model="prefixKeysInput"
+              placeholder="輸入上屏碼"
+              title="輸入前綴碼方案的上屏鍵，如: aoeiu"
+              class="prefix-keys-field"
+              type="text"
+            />
+          </div>
           <button 
             @click="togglePrefixMode" 
             :class="['prefix-button', { 'active': isPrefixCode }]"
@@ -210,7 +219,7 @@ defineExpose({
 
 // 定义 emits
 const emit = defineEmits<{
-  uploadSuccess: [data: { codeTable: CodeTable; fileName: string; format: CodeTableFormat; tableKey?: string; isPrefix?: boolean }]
+  uploadSuccess: [data: { codeTable: CodeTable; fileName: string; format: CodeTableFormat; tableKey?: string; isPrefix?: boolean; prefixKeys?: string[] }]
   uploadError: [error: string]
 }>()
 
@@ -225,6 +234,7 @@ const selectedFile = ref<File | null>(null)
 const isDragOver = ref(false)
 const isUploading = ref(false)
 const isPrefixCode = ref(false)
+const prefixKeysInput = ref('')
 const fileInput = ref<HTMLInputElement>()
 const previewData = ref<Array<{
   raw: string
@@ -412,11 +422,17 @@ const processFile = async () => {
       return
     }
 
+    // 将 prefixKeysInput 转换为数组
+    const prefixKeys = isPrefixCode.value && prefixKeysInput.value ? 
+      Array.from(prefixKeysInput.value.trim()).filter(char => char !== ' ') : 
+      undefined
+
     emit('uploadSuccess', {
       codeTable: result.codeTable,
       fileName: selectedFile.value.name,
       format: result.format,
-      isPrefix: isPrefixCode.value
+      isPrefix: isPrefixCode.value,
+      prefixKeys: prefixKeys
     })
 
   } catch (error) {
@@ -459,17 +475,25 @@ async function loadBuiltinTable() {
     
     // 获取内置方案的前缀码配置
     const tableConfig = builtinService.getTableConfig(selectedBuiltinTable.value)
-    const isBuiltinPrefix = tableConfig?.prefix || false
+    const isBuiltinPrefix = tableConfig?.isPrefix || false
+    const builtinPrefixKeys = tableConfig?.prefixKeys
     
     // 更新前缀码按钮状态以反映配置
     isPrefixCode.value = isBuiltinPrefix
+    // 更新前缀码输入框以反映配置
+    if (builtinPrefixKeys && builtinPrefixKeys.length > 0) {
+      prefixKeysInput.value = builtinPrefixKeys.join('')
+    } else {
+      prefixKeysInput.value = ''
+    }
     
     emit('uploadSuccess', {
       codeTable: result.codeTable,
       fileName: `預設方案：${builtinTables.value.find(t => t.key === selectedBuiltinTable.value)?.name || selectedBuiltinTable.value}`,
       format: result.format,
       tableKey: selectedBuiltinTable.value,  // 添加tableKey用于前缀码检测
-      isPrefix: isBuiltinPrefix  // 使用配置中的前缀码属性
+      isPrefix: isBuiltinPrefix,  // 使用配置中的前缀码属性
+      prefixKeys: builtinPrefixKeys
     })
   } catch (error) {
     emit('uploadError', `載入預設碼表失敗: ${error instanceof Error ? error.message : String(error)}`)
@@ -661,36 +685,49 @@ loadBuiltinConfig()
 
 .prefix-control {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
   align-items: flex-start;
 }
 
-.prefix-button {
-  background: #f3f4f6;
-  border: 2px solid #d1d5db;
-  border-radius: 6px;
+.prefix-keys-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prefix-keys-field {
   padding: 6px 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.prefix-keys-field:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.prefix-keys-field::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.prefix-button {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
   color: #374151;
   cursor: pointer;
+  font-size: 14px;
   transition: all 0.2s ease;
   white-space: nowrap;
-}
-
-.prefix-button:hover {
-  background: #e5e7eb;
-  border-color: #9ca3af;
-}
-
-.prefix-button.active {
-  background: #dcfce7;
-  border-color: #16a34a;
-  color: #15803d;
-}
-
-.prefix-button.active:hover {
-  background: #bbf7d0;
-  border-color: #15803d;
 }
 
 /* 上传区域 */

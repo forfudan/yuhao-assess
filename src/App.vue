@@ -145,6 +145,7 @@
             ref="comparisonCardRef"
             :currentCodeTable="codeTable" 
             :currentCodeTableName="codeTableName" 
+            :globalPrefixKeys="uploadPrefixKeys"
           />
 
           <!-- 鍵位熱力圖卡片 -->
@@ -203,6 +204,7 @@ const uploadStatus = ref<UploadStatus | null>(null)
 const analysisData = ref<CodeTableAnalysis | null>(null)
 const analysisResults = ref(null)
 const uploadPrefixFlag = ref<boolean>(false)
+const uploadPrefixKeys = ref<string[]>([])
 const globalMaxLength = ref<number>(4) // 全局最大码长，计算一次后不再改变
 
 // 上传卡片引用
@@ -467,7 +469,7 @@ function calculateMaxCodeLength(codeTable: CodeTable): number {
 }
 
 // 處理碼表上傳成功
-const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean }) => {
+const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean; prefixKeys?: string[] }) => {
   console.log('[App] 開始處理碼表上傳:', data.fileName, data.codeTable.size)
   
   // 先計算最大碼長
@@ -477,7 +479,8 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
   console.log('[App] 開始處理碼表...')
   await codeTableProcessingService.processCodeTable(data.codeTable, {
     isPrefix: data.isPrefix || false,
-    maxLength: maxLength
+    maxLength: maxLength,
+    prefixKeys: data.prefixKeys
   })
   console.log('[App] 碼表處理完成')
   
@@ -489,6 +492,7 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
   codeTable.value = data.codeTable
   globalMaxLength.value = maxLength
   uploadPrefixFlag.value = data.isPrefix || false
+  uploadPrefixKeys.value = data.prefixKeys || []
   
   // 如果是預設方案，从fileName中提取名称（格式：預設方案：方案名）
   if (data.tableKey && data.fileName.startsWith('預設方案：')) {
