@@ -410,6 +410,7 @@ const copyToClipboard = async (chars: string[], currentN: number, freqType: stri
 
 // 監聽 props 變化
 watch(() => props.codeTable, updateEfficiency, { deep: true })
+watch(() => props.globalPrefixKeys, updateEfficiency, { deep: true })
 
 onMounted(async () => {
   await loadCharFrequencyData()

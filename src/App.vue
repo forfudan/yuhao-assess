@@ -81,7 +81,7 @@
             </a>
             <a v-if="analysisReady" @click="scrollToCard('heatmap')" class="nav-item">
               <span class="nav-icon">⌨️</span>
-              <span class="nav-title">鍵位熱力圖</span>
+              <span class="nav-title">鍵位熱力</span>
             </a>
             <a v-if="analysisReady" @click="scrollToCard('analysis')" class="nav-item">
               <span class="nav-icon">📋</span>
@@ -350,6 +350,7 @@ const saveCodeTableData = () => {
       analysisData: analysisData.value,
       codeTableName: codeTableName.value,
       uploadPrefixFlag: uploadPrefixFlag.value,
+      uploadPrefixKeys: uploadPrefixKeys.value,
       globalMaxLength: globalMaxLength.value,
       timestamp: Date.now()
     }
@@ -376,6 +377,7 @@ const restoreCodeTableData = async () => {
       analysisData.value = data.analysisData
       codeTableName.value = data.codeTableName || ''
       uploadPrefixFlag.value = data.uploadPrefixFlag || false
+      uploadPrefixKeys.value = data.uploadPrefixKeys || []
       globalMaxLength.value = data.globalMaxLength || 4
       
       // 重新处理码表以确保processing service有正确的数据（包含字频优化）
