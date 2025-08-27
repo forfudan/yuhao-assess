@@ -507,7 +507,7 @@ loadBuiltinConfig()
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: var(--spacing-lg);
+  margin-left: var(--spacing-md); /* 保持原有间距，因为这个是必要的分离 */
   backdrop-filter: blur(10px);
 }
 
@@ -528,14 +528,14 @@ loadBuiltinConfig()
 .code-table-uploader {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm); /* 从 var(--spacing-md) 减少到 var(--spacing-sm) */
+  gap: var(--spacing-xs); /* 从 var(--spacing-sm) 进一步减少到 var(--spacing-xs) */
 }
 
 /* 預設碼表選擇器樣式 */
 .builtin-selector {
   border: 2px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-sm); /* 从 var(--spacing-md) 减少到 var(--spacing-sm) */
+  padding: var(--spacing-xs); /* 从 var(--spacing-sm) 进一步减少到 var(--spacing-xs) */
   background: var(--color-bg-secondary);
 }
 
@@ -543,23 +543,23 @@ loadBuiltinConfig()
   display: block;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-xs); /* 从 var(--spacing-sm) 减少到 var(--spacing-xs) */
+  margin-bottom: 4px; /* 从 var(--spacing-xs) 进一步减少到固定4px */
 }
 
 .builtin-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs); /* 从 var(--spacing-sm) 减少到 var(--spacing-xs) */
+  gap: 4px; /* 从 var(--spacing-xs) 进一步减少到固定4px */
 }
 
 .builtin-select {
-  padding: var(--spacing-sm); /* 从 var(--spacing-md) 减少到 var(--spacing-sm) */
+  padding: 8px; /* 从 var(--spacing-sm) 进一步减少到固定8px */
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
-  min-height: 40px; /* 从 44px 减少到 40px */
+  min-height: 36px; /* 从 40px 进一步减少到 36px */
   font-family: inherit;
 }
 
@@ -582,7 +582,7 @@ loadBuiltinConfig()
 .divider {
   position: relative;
   text-align: center;
-  margin: var(--spacing-xs) 0; /* 从 var(--spacing-sm) 减少到 var(--spacing-xs) */
+  margin: 8px 0; /* 从 var(--spacing-xs) 进一步减少到固定8px */
 }
 
 .divider::before {
@@ -608,7 +608,7 @@ loadBuiltinConfig()
 .format-selector {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs); /* 从 var(--spacing-sm) 减少到 var(--spacing-xs) */
+  gap: 6px; /* 从 var(--spacing-xs) 进一步减少到固定6px */
 }
 
 .format-label {
@@ -635,7 +635,7 @@ loadBuiltinConfig()
   align-items: center;
   gap: var(--spacing-sm);
   cursor: pointer;
-  padding: var(--spacing-sm);
+  padding: 6px 8px; /* 从 var(--spacing-sm) 减少到固定6px 8px */
   border-radius: var(--radius-md);
   transition: background-color 0.2s ease-in-out;
 }
@@ -697,7 +697,7 @@ loadBuiltinConfig()
 .upload-area {
   border: 2px dashed var(--color-border-primary);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md); /* 从 var(--spacing-lg) 减少到 var(--spacing-md) */
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
@@ -729,13 +729,13 @@ loadBuiltinConfig()
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm); /* 从 var(--spacing-md) 减少到 var(--spacing-sm) */
 }
 
 /* 上传提示 */
 .upload-icon {
-  font-size: 3rem;
-  margin-bottom: var(--spacing-md);
+  font-size: 2.5rem; /* 从 3rem 减少到 2.5rem */
+  margin-bottom: var(--spacing-sm); /* 从 var(--spacing-md) 减少到 var(--spacing-sm) */
 }
 
 .upload-title {
@@ -760,7 +760,7 @@ loadBuiltinConfig()
   align-items: center;
   gap: var(--spacing-md);
   background-color: var(--color-bg-tertiary);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md); /* 从 var(--spacing-lg) 减少到 var(--spacing-md) */
   border-radius: var(--radius-md);
   width: 100%;
   max-width: 400px;
@@ -778,7 +778,7 @@ loadBuiltinConfig()
 .file-name {
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: 4px; /* 从 var(--spacing-xs) 减少到固定4px */
 }
 
 .file-size {
@@ -835,7 +835,7 @@ loadBuiltinConfig()
 .preview-section {
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-md);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md); /* 从 var(--spacing-lg) 减少到 var(--spacing-md) */
 }
 
 .preview-title {
