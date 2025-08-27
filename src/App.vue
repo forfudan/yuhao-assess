@@ -71,6 +71,10 @@
               <span class="nav-icon">⚡</span>
               <span class="nav-title">速度當量分析</span>
             </a>
+            <a v-if="analysisReady" @click="scrollToCard('efficiency')" class="nav-item">
+              <span class="nav-icon">📈</span>
+              <span class="nav-title">簡碼效率</span>
+            </a>
             <a v-if="analysisReady" @click="scrollToCard('comparison')" class="nav-item">
               <span class="nav-icon">🆚</span>
               <span class="nav-title">方案對比</span>
@@ -139,6 +143,16 @@
             :initial-prefix="uploadPrefixFlag" 
           />
 
+          <!-- 簡碼效率卡片 -->
+          <ShortCodeEfficiencyCard 
+            v-if="analysisReady" 
+            id="card-efficiency"
+            ref="shortCodeEfficiencyCardRef"
+            :code-table="codeTable" 
+            :analysis-ready="analysisReady"
+            :global-prefix-keys="uploadPrefixKeys"
+          />
+
           <!-- 方案對比卡片 -->
           <ComparisonCard 
             id="card-comparison"
@@ -193,6 +207,7 @@ import DuplicateAnalysisCard from './components/DuplicateAnalysisCard.vue'
 import MaximumCandidatesCard from './components/MaximumCandidatesCard.vue'
 import ComparisonCard from './components/ComparisonCard.vue'
 import SpeedEquivCard from './components/SpeedEquivCard.vue'
+import ShortCodeEfficiencyCard from './components/ShortCodeEfficiencyCard.vue'
 import { codeTableProcessingService } from './services/codeTableProcessingService'
 import type { CodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
 
