@@ -1059,39 +1059,80 @@ const runningTasks = ref(new Set<string>())
 
 // 計算進度追蹤
 const backgroundProgress = computed(() => {
-  const totalSchemes = allSchemes.value.length
-  
-  // 考虑上传队列中的方案数量
-  const uploading = allSchemes.value.filter(s => s.isCalculating || isAdding.value).length
-  const addingCount = isAdding.value ? selectedBuiltinSchemes.value.length : 0
-  
-  // 总任务数：包括现有方案和正在添加的方案
-  const totalSchemesIncludingAdding = totalSchemes + addingCount
-  
-  if (totalSchemesIncludingAdding === 0) return { completed: 0, total: 0, percentage: 100 }
-  
   const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
-  const totalTasks = totalSchemesIncludingAdding * allTabs.length
   
-  let completed = 0
+  // 1. 当前表格中的方案数量（包括已完成和正在计算的）
+  const currentSchemes = allSchemes.value.length
+  
+  // 2. 如果正在上传文件，使用上传进度来计算待处理的方案数
+  let pendingUploadCount = 0
+  if (isAdding.value && uploadProgress.value.total > 0) {
+    // 剩余待上传的文件数 = 总文件数 - 已处理文件数
+    pendingUploadCount = uploadProgress.value.total - uploadProgress.value.current
+  } else if (isAdding.value) {
+    // 如果是添加预设方案，使用 selectedBuiltinSchemes
+    pendingUploadCount = selectedBuiltinSchemes.value.length
+  }
+  
+  // 3. 目标总方案数 = 当前方案数 + 待上传方案数
+  const targetTotalSchemes = currentSchemes + pendingUploadCount
+  
+  if (targetTotalSchemes === 0) return { completed: 0, total: 0, percentage: 100 }
+  
+  // 4. 目标总任务数 = 目标总方案数 × 4个标签页
+  const targetTotalTasks = targetTotalSchemes * allTabs.length
+  
+  // 5. 统计已完成的任务数（只计算已完成且不在计算中的）
+  let completedTasks = 0
   for (const scheme of allSchemes.value) {
-    // 只计算非计算中状态的完成数据
     if (!scheme.isCalculating) {
-      if (scheme.data?.dynamic) completed++
-      if (scheme.data?.static) completed++
-      if (scheme.data?.maxCandidates) completed++
-      if (scheme.data?.speedEquiv) completed++
+      if (scheme.data?.dynamic) completedTasks++
+      if (scheme.data?.static) completedTasks++
+      if (scheme.data?.maxCandidates) completedTasks++
+      if (scheme.data?.speedEquiv) completedTasks++
     }
   }
   
-  // 如果有正在运行的任务，显示进度
-  const hasRunning = runningTasks.value.size > 0 || uploading > 0 || isAdding.value
+  // 6. 判断是否有正在进行的任务
+  const hasRunning = runningTasks.value.size > 0 || 
+                    allSchemes.value.some(s => s.isCalculating) || 
+                    isAdding.value
+  
+  const percentage = hasRunning ? Math.round((completedTasks / targetTotalTasks) * 100) : 100
+  
+  // 控制台输出调试信息
+  console.log('[進度條調試]', {
+    pendingUploadCount,
+    currentSchemes,
+    targetTotalSchemes,
+    targetTotalTasks,
+    completedTasks,
+    percentage,
+    hasRunning,
+    isAdding: isAdding.value,
+    runningTasksSize: runningTasks.value.size,
+    calculatingSchemes: allSchemes.value.filter(s => s.isCalculating).length,
+    // 额外调试信息
+    selectedBuiltinSchemesLength: selectedBuiltinSchemes.value.length,
+    selectedBuiltinSchemes: selectedBuiltinSchemes.value,
+    uploadProgress: uploadProgress.value,
+    allSchemesNames: allSchemes.value.map(s => s.name)
+  })
   
   return {
-    completed,
-    total: totalTasks,
-    percentage: hasRunning ? Math.round((completed / totalTasks) * 100) : 100,
-    hasRunning
+    completed: completedTasks,
+    total: targetTotalTasks,
+    percentage: Math.max(0, Math.min(100, percentage)), // 确保在0-100范围内
+    hasRunning,
+    // 调试信息
+    debug: {
+      currentSchemes,
+      pendingUploadCount,
+      targetTotalSchemes,
+      completedTasks,
+      targetTotalTasks,
+      hasRunning
+    }
   }
 })
 
@@ -1106,18 +1147,23 @@ const hasBackgroundTasks = computed(() => {
 
 // 進度文本
 const progressText = computed(() => {
-  if (isAdding.value) {
-    return selectedBuiltinSchemes.value.length > 1 ? 
-      `添加方案中 (${selectedBuiltinSchemes.value.length}個)` : 
+  const pendingUploadCount = isAdding.value ? selectedBuiltinSchemes.value.length : 0
+  const calculatingCount = allSchemes.value.filter(s => s.isCalculating).length
+  const backgroundTaskCount = runningTasks.value.size
+  
+  if (pendingUploadCount > 0) {
+    return pendingUploadCount > 1 ? 
+      `添加方案中 (待處理${pendingUploadCount}個)` : 
       '添加方案中'
   }
   
-  const calculatingCount = allSchemes.value.filter(s => s.isCalculating).length
   if (calculatingCount > 0) {
-    return `加載方案中 (${calculatingCount}個)`
+    return calculatingCount > 1 ?
+      `處理方案中 (${calculatingCount}個加載中)` :
+      '處理方案中'
   }
   
-  if (runningTasks.value.size > 0) {
+  if (backgroundTaskCount > 0) {
     return '後台預計算中'
   }
   
