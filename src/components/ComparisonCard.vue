@@ -477,9 +477,9 @@
         </div>
 
         <!-- 隱藏方案提示 -->
-        <div v-if="allSchemes.length > 0 && visibleSchemes.length === 0" class="hidden-schemes-notice">
+        <div v-if="hiddenSchemesCount > 0" class="hidden-schemes-notice">
           <div class="notice-icon">ℹ️</div>
-          <span class="notice-text">已隱藏 {{ allSchemes.length }} 個收字為 0 (或尚未選擇主方案)</span>
+          <span class="notice-text">已隱藏 {{ hiddenSchemesCount }} 個無效方案 (或未選擇主方案)</span>
         </div>
 
         <!-- 添加方案按鈕 -->
@@ -1002,7 +1002,29 @@ const allSchemes = computed(() => {
 
 // 計算屬性 - 過濾掉收字為0的方案用於表格顯示
 const visibleSchemes = computed(() => {
-  return allSchemes.value.filter(scheme => scheme.charCount && scheme.charCount > 0)
+  return allSchemes.value.filter(scheme => {
+    // 正在計算中的方案始終顯示
+    if (scheme.isCalculating) return true
+    
+    // 收字數量存在且大於0的方案顯示
+    if (scheme.charCount && scheme.charCount > 0) return true
+    
+    // 收字數量為undefined或null的方案也顯示（可能還未計算完成）
+    if (scheme.charCount === undefined || scheme.charCount === null) return true
+    
+    // 只隱藏確實收字為0的方案
+    return false
+  })
+})
+
+// 計算屬性 - 被隱藏的方案數量
+const hiddenSchemesCount = computed(() => {
+  return allSchemes.value.filter(scheme => 
+    !scheme.isCalculating && 
+    scheme.charCount !== undefined && 
+    scheme.charCount !== null && 
+    scheme.charCount === 0
+  ).length
 })
 
 // 計算屬性 - 是否有任何方案
