@@ -61,15 +61,15 @@
             </a>
             <a v-if="analysisReady" @click="scrollToCard('duplicate')" class="nav-item">
               <span class="nav-icon">🔢</span>
-              <span class="nav-title">重碼數據分析</span>
+              <span class="nav-title">重碼數據</span>
             </a>
             <a v-if="analysisReady" @click="scrollToCard('maximum')" class="nav-item">
               <span class="nav-icon">📊</span>
-              <span class="nav-title">最大候選項個數</span>
+              <span class="nav-title">候選個數</span>
             </a>
             <a v-if="analysisReady" @click="scrollToCard('speed')" class="nav-item">
               <span class="nav-icon">⚡</span>
-              <span class="nav-title">速度當量分析</span>
+              <span class="nav-title">速度當量</span>
             </a>
             <a v-if="analysisReady" @click="scrollToCard('efficiency')" class="nav-item">
               <span class="nav-icon">📈</span>
@@ -117,7 +117,7 @@
             :upload-status="uploadStatus"
           />
 
-          <!-- 重碼數據分析卡片 -->
+          <!-- 重碼數據卡片 -->
           <DuplicateAnalysisCard 
             v-if="analysisReady" 
             id="card-duplicate"

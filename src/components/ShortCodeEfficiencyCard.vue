@@ -43,33 +43,37 @@
               <tr v-for="(row, index) in tableData" :key="row.N">
                 <td class="n-value">{{ row.N }}</td>
                 <td 
-                  class="metric-value hoverable"
+                  class="metric-value hoverable clickable"
                   @mouseenter="showTooltip($event, row.zhihuChars, row.N, 'zhihu')"
                   @mouseleave="hideTooltip()"
+                  @click="copyToClipboard(row.zhihuChars, row.N, 'zhihu')"
                   :class="getCellClass(row.zhihu, [row.zhihu, row.SC, row.TC, row.combined])"
                 >
                   {{ formatValue(row.zhihu) }}
                 </td>
                 <td 
-                  class="metric-value hoverable"
+                  class="metric-value hoverable clickable"
                   @mouseenter="showTooltip($event, row.SCChars, row.N, 'SC')"
                   @mouseleave="hideTooltip()"
+                  @click="copyToClipboard(row.SCChars, row.N, 'SC')"
                   :class="getCellClass(row.SC, [row.zhihu, row.SC, row.TC, row.combined])"
                 >
                   {{ formatValue(row.SC) }}
                 </td>
                 <td 
-                  class="metric-value hoverable"
+                  class="metric-value hoverable clickable"
                   @mouseenter="showTooltip($event, row.TCChars, row.N, 'TC')"
                   @mouseleave="hideTooltip()"
+                  @click="copyToClipboard(row.TCChars, row.N, 'TC')"
                   :class="getCellClass(row.TC, [row.zhihu, row.SC, row.TC, row.combined])"
                 >
                   {{ formatValue(row.TC) }}
                 </td>
                 <td 
-                  class="metric-value hoverable"
+                  class="metric-value hoverable clickable"
                   @mouseenter="showTooltip($event, row.combinedChars, row.N, 'combined')"
                   @mouseleave="hideTooltip()"
+                  @click="copyToClipboard(row.combinedChars, row.N, 'combined')"
                   :class="getCellClass(row.combined, [row.zhihu, row.SC, row.TC, row.combined])"
                 >
                   {{ formatValue(row.combined) }}
@@ -85,8 +89,9 @@
           <ul>
             <li>簡碼數量為 0：全碼平均碼長（基準）</li>
             <li>簡碼數量為大於 0：使用N個最有效率的簡碼時的平均碼長</li>
-            <li>簡碼字的選取基於漢字字頻 × 節約碼長</li>
+            <li>簡碼字的選取基於漢字字頻 × 節約碼長，並考慮空格鍵</li>
             <li>鼠標懸停在數字上可查看當前區間對應的高效簡碼字</li>
+            <li>點擊數字可將當前區間的高效簡碼字復制到剪貼板</li>
           </ul>
         </div>
       </div>
@@ -361,6 +366,48 @@ const getCellClass = (value: number, rowValues: number[]): string => {
   }
 }
 
+// 復制字符到剪貼板
+const copyToClipboard = async (chars: string[], currentN: number, freqType: string) => {
+  try {
+    // 獲取要復制的字符（與懸停顯示邏輯一致）
+    let displayChars: string[] = []
+    const prevN = getPreviousN(currentN)
+    
+    if (chars.length === 0) {
+      displayChars = []
+    } else if (prevN > 0) {
+      // 獲取差值字符
+      const prevChars = getPreviousChars(prevN, freqType)
+      displayChars = chars.filter(char => !prevChars.includes(char))
+    } else {
+      // 第一行顯示所有字符
+      displayChars = chars
+    }
+    
+    const textToCopy = displayChars.join('')
+    await navigator.clipboard.writeText(textToCopy)
+    
+    // 顯示復制成功提示
+    const freqNames = {
+      'zhihu': '知乎字頻',
+      'SC': '簡體字頻', 
+      'TC': '繁體字頻',
+      'combined': '聯合字頻'
+    }
+    
+    const count = displayChars.length
+    const successMessage = prevN > 0 
+      ? `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}新增的${count}個字符到剪貼板`
+      : `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}的${count}個字符到剪貼板`
+    
+    console.log(successMessage, textToCopy)
+    // 可以在這裡添加 toast 提示
+  } catch (err) {
+    console.error('復制到剪貼板失敗:', err)
+    // 可以在這裡添加錯誤提示
+  }
+}
+
 // 監聽 props 變化
 watch(() => props.codeTable, updateEfficiency, { deep: true })
 
@@ -530,6 +577,10 @@ onMounted(async () => {
   transition: all 0.2s ease;
 }
 
+.clickable {
+  cursor: pointer;
+}
+
 .hoverable:hover {
   background: #e5e7eb;
   color: #1f2937;
@@ -588,9 +639,8 @@ onMounted(async () => {
 
 .explanation {
   padding: 16px;
-  background: #f8f9fa;
+  background: #f8fafc;
   border-radius: 8px;
-  border-left: 4px solid #667eea;
   font-size: 0.9rem;
 }
 

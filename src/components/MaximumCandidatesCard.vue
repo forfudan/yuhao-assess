@@ -3,7 +3,7 @@
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
-          <h3 class="card-title">最大候選項個數</h3>
+          <h3 class="card-title">候選個數</h3>
           <p class="card-description">分析不同字符集下方案的最大候選項個數，借以反映方案的檢字效率。</p>
         </div>
         <button @click="toggleCollapsed" class="collapse-button">
@@ -34,7 +34,7 @@
             <thead>
               <tr>
                 <th class="charset-header">字符集</th>
-                <th class="count-header">最大候選項個數</th>
+                <th class="count-header">候選個數</th>
                 <th class="codes-header">對應編碼</th>
               </tr>
             </thead>
@@ -487,7 +487,6 @@ onMounted(() => {
   background: #f8fafc;
   border-radius: 8px;
   padding: 20px;
-  border-left: 4px solid #f59e0b;
 }
 
 .info-section h4 {
