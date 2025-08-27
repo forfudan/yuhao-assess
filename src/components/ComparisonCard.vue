@@ -250,7 +250,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(scheme, index) in allSchemes" :key="scheme.id" class="scheme-row">
+              <tr v-for="(scheme, index) in visibleSchemes" :key="scheme.id" class="scheme-row">
                 <td class="scheme-name">
                   <div class="scheme-info">
                     <span class="scheme-title">{{ scheme.name }}</span>
@@ -474,6 +474,12 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- 隱藏方案提示 -->
+        <div v-if="allSchemes.length > 0 && visibleSchemes.length === 0" class="hidden-schemes-notice">
+          <div class="notice-icon">ℹ️</div>
+          <span class="notice-text">已隱藏 {{ allSchemes.length }} 個收字為 0 (或尚未選擇主方案)</span>
         </div>
 
         <!-- 添加方案按鈕 -->
@@ -992,6 +998,11 @@ const allSchemes = computed(() => {
     const comparison = aValue - bValue
     return sortDirection.value === 'asc' ? comparison : -comparison
   })
+})
+
+// 計算屬性 - 過濾掉收字為0的方案用於表格顯示
+const visibleSchemes = computed(() => {
+  return allSchemes.value.filter(scheme => scheme.charCount && scheme.charCount > 0)
 })
 
 // 計算屬性 - 是否有任何方案
@@ -2546,6 +2557,29 @@ function clearAllSchemes() {
 .empty-state p {
   margin: 0 0 24px 0;
   font-size: 0.875rem;
+}
+
+/* 隱藏方案提示樣式 */
+.hidden-schemes-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  margin: 16px 0;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 8px;
+  border: 1px solid #f59e0b;
+  gap: 8px;
+}
+
+.notice-icon {
+  font-size: 1.2rem;
+}
+
+.notice-text {
+  font-size: 0.875rem;
+  color: #92400e;
+  font-weight: 500;
 }
 
 .primary-btn {
