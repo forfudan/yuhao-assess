@@ -36,15 +36,15 @@
                 <th>知乎字頻</th>
                 <th>簡體字頻</th>
                 <th>繁體字頻</th>
-                <th>聯合字頻</th>
+                <th>繁簡聯合字頻</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in tableData" :key="row.N">
+              <tr v-for="(row, index) in tableData" :key="row.N">
                 <td class="n-value">{{ row.N }}</td>
                 <td 
                   class="metric-value hoverable"
-                  @mouseenter="showTooltip($event, row.zhihuChars)"
+                  @mouseenter="showTooltip($event, row.zhihuChars, row.N, 'zhihu')"
                   @mouseleave="hideTooltip()"
                   :class="getCellClass(row.zhihu, [row.zhihu, row.SC, row.TC, row.combined])"
                 >
@@ -52,7 +52,7 @@
                 </td>
                 <td 
                   class="metric-value hoverable"
-                  @mouseenter="showTooltip($event, row.SCChars)"
+                  @mouseenter="showTooltip($event, row.SCChars, row.N, 'SC')"
                   @mouseleave="hideTooltip()"
                   :class="getCellClass(row.SC, [row.zhihu, row.SC, row.TC, row.combined])"
                 >
@@ -60,7 +60,7 @@
                 </td>
                 <td 
                   class="metric-value hoverable"
-                  @mouseenter="showTooltip($event, row.TCChars)"
+                  @mouseenter="showTooltip($event, row.TCChars, row.N, 'TC')"
                   @mouseleave="hideTooltip()"
                   :class="getCellClass(row.TC, [row.zhihu, row.SC, row.TC, row.combined])"
                 >
@@ -68,7 +68,7 @@
                 </td>
                 <td 
                   class="metric-value hoverable"
-                  @mouseenter="showTooltip($event, row.combinedChars)"
+                  @mouseenter="showTooltip($event, row.combinedChars, row.N, 'combined')"
                   @mouseleave="hideTooltip()"
                   :class="getCellClass(row.combined, [row.zhihu, row.SC, row.TC, row.combined])"
                 >
@@ -83,11 +83,10 @@
         <div class="explanation">
           <p><strong>說明：</strong></p>
           <ul>
-            <li>N=0：全碼平均長度（基準）</li>
-            <li>N>0：使用N個簡碼時的平均碼長</li>
-            <li>數值越小表示效率越高</li>
-            <li>簡碼選擇基於字符頻率×碼長差值</li>
-            <li>鼠標懸停在數字上可查看對應的簡碼字符</li>
+            <li>簡碼數量為 0：全碼平均碼長（基準）</li>
+            <li>簡碼數量為大於 0：使用N個最有效率的簡碼時的平均碼長</li>
+            <li>簡碼字的選取基於漢字字頻 × 節約碼長</li>
+            <li>鼠標懸停在數字上可查看當前區間對應的高效簡碼字</li>
           </ul>
         </div>
       </div>
@@ -104,7 +103,7 @@
   <Teleport to="body">
     <div v-if="tooltipVisible" class="custom-tooltip" :style="tooltipStyle">
       <div class="tooltip-content">
-        <div class="tooltip-header">效率最高的簡碼字符：</div>
+        <div class="tooltip-header">本區間效率最高簡碼字：</div>
         <div class="tooltip-chars">{{ tooltipChars }}</div>
       </div>
     </div>
@@ -295,27 +294,70 @@ const formatValue = (value: number): string => {
   return value.toFixed(3)
 }
 
-// 生成字符工具提示文本
-const showTooltip = (event: MouseEvent, chars: string[]) => {
+// 生成字符工具提示文本 - 顯示差值字符
+const showTooltip = (event: MouseEvent, chars: string[], currentN: number, freqType: string) => {
+  let displayChars: string[] = []
+  const prevN = getPreviousN(currentN)
+  
   if (chars.length === 0) {
     tooltipChars.value = '無簡碼字符'
   } else {
-    tooltipChars.value = chars.join('')
+    // 根據不同的N值顯示差值字符
+    if (prevN > 0) {
+      // 獲取前一個N值的字符
+      const prevChars = getPreviousChars(prevN, freqType)
+      // 計算差值：當前N的字符減去前一個N的字符
+      displayChars = chars.filter(char => !prevChars.includes(char))
+      tooltipChars.value = displayChars.join('')
+      
+      if (displayChars.length === 0) {
+        tooltipChars.value = '無新增字符'
+      }
+    } else {
+      // 第一行顯示所有字符
+      displayChars = chars
+      tooltipChars.value = chars.join('')
+    }
   }
-  const tooltipText = `N=${chars.length}個效率最高的簡碼字符：${tooltipChars.value}`
+  
+  const actualCount = displayChars.length
+  const tooltipText = prevN > 0 
+    ? `N=${currentN}新增的${actualCount}個簡碼字符：${tooltipChars.value}`
+    : `N=${currentN}的${actualCount}個效率最高的簡碼字符：${tooltipChars.value}`
   showTooltipBase(event, tooltipText)
 }
 
+// 獲取前一個N值
+const getPreviousN = (currentN: number): number => {
+  const nValues = tableData.value.map(row => row.N).sort((a, b) => a - b)
+  const currentIndex = nValues.indexOf(currentN)
+  return currentIndex > 0 ? nValues[currentIndex - 1] : 0
+}
+
+// 獲取前一個N值對應的字符
+const getPreviousChars = (prevN: number, freqType: string): string[] => {
+  const prevRow = tableData.value.find(row => row.N === prevN)
+  if (!prevRow) return []
+  
+  switch (freqType) {
+    case 'zhihu': return prevRow.zhihuChars
+    case 'SC': return prevRow.SCChars
+    case 'TC': return prevRow.TCChars
+    case 'combined': return prevRow.combinedChars
+    default: return []
+  }
+}
+
 const getCellClass = (value: number, rowValues: number[]): string => {
-  // 基於絕對值的分級，而不是相對比較
+  // 基於絕對值的分級，馬長高顯示綠色，碼長低顯示紅色
   if (value <= 0) return ''
   
-  if (value >= 4.0) {
-    return 'excellent-value'  // 4.0 以上
+  if (value > 3.6) {
+    return 'high-value'       // 碼長 3.6 以上 - 紅色
   } else if (value >= 3.0) {
-    return 'good-value'       // 3.0-4.0
+    return 'medium-value'     // 碼長 3.0-3.6 - 黃色
   } else {
-    return 'poor-value'       // 3.0 以下
+    return 'low-value'        // 碼長 3.0 以下 - 綠色
   }
 }
 
@@ -493,20 +535,20 @@ onMounted(async () => {
   color: #1f2937;
 }
 
-/* 效率值的三檔顏色分級 */
-.excellent-value {
-  background: #dcfce7 !important;  /* 淺綠色 - 4.0以上 */
-  color: #166534;
+/* 效率值的三檔顏色分級 - 反轉邏輯 */
+.high-value {
+  background: #fee2e2 !important;  /* 淺紅色 - 3.6以上（需要優化） */
+  color: #991b1b;
 }
 
-.good-value {
-  background: #fef3c7 !important;  /* 淺黃色 - 3.0-4.0 */
+.medium-value {
+  background: #fef3c7 !important;  /* 淺黃色 - 3.0-3.6（中等） */
   color: #92400e;
 }
 
-.poor-value {
-  background: #fee2e2 !important;  /* 淺紅色 - 3.0以下 */
-  color: #991b1b;
+.low-value {
+  background: #dcfce7 !important;  /* 淺綠色 - 3.0以下（效率好） */
+  color: #166534;
 }
 
 /* 自定義工具提示 */
