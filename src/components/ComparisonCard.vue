@@ -693,6 +693,7 @@ import type { CodeTable, CharFrequency } from '../types'
 interface Props {
   currentCodeTable?: CodeTable | null
   currentCodeTableName?: string
+  globalPrefixKeys?: string[]
 }
 
 const props = defineProps<Props>()
@@ -769,6 +770,7 @@ interface Scheme {
   isBuiltin: boolean
   isCalculating: boolean
   isPrefix: boolean
+  prefixKeys?: string[]  // 前缀码上屏键
   data?: SchemeData
   // 元數據字段
   source?: string // 來源（文件名或預設方案ID）
@@ -836,6 +838,7 @@ const saveComparisonData = () => {
         name: scheme.name,
         isBuiltin: scheme.isBuiltin,
         isPrefix: scheme.isPrefix, // 保存前綴碼設置
+        prefixKeys: scheme.prefixKeys, // 保存前綴碼上屏键
         data: scheme.data,
         charCount: scheme.charCount, // 保存收字數
         codeTableSize: scheme.codeTable?.size || 0,
@@ -877,11 +880,11 @@ const loadComparisonData = async () => {
             
             // 重新獲取預設方案的正確前綴碼設置
             const schemeConfig = await builtinService.getBuiltinCodeTable(savedScheme.builtinKey)
-            correctIsPrefix = schemeConfig?.prefix || false
+            correctIsPrefix = schemeConfig?.isPrefix || false
             console.log(`[調試] 恢復預設方案 ${savedScheme.name}:`, {
               builtinKey: savedScheme.builtinKey,
               savedIsPrefix: savedScheme.isPrefix,
-              configPrefix: schemeConfig?.prefix,
+              configPrefix: schemeConfig?.isPrefix,
               finalIsPrefix: correctIsPrefix
             })
           } else if (savedScheme.isUploadedScheme) {
@@ -905,6 +908,7 @@ const loadComparisonData = async () => {
             isBuiltin: savedScheme.isBuiltin,
             isCalculating: false,
             isPrefix: correctIsPrefix, // 使用正確的前綴碼設置
+            prefixKeys: savedScheme.prefixKeys, // 恢復前綴碼上屏键
             data: savedScheme.data,
             charCount: savedScheme.charCount, // 恢復收字數
             codeTable,
@@ -1260,7 +1264,7 @@ const scheduleCalculation = async (scheme: Scheme, tabType: TabType, priority: '
       
       // 確保有預處理數據（使用完整預處理以支持速度當量計算）
       if (!scheme.processedData) {
-        scheme.processedData = await preprocessCodeTableDataComplete(scheme.codeTable, scheme.isPrefix)
+        scheme.processedData = await preprocessCodeTableDataComplete(scheme.codeTable, scheme.isPrefix, scheme.prefixKeys)
         if (!scheme.charCount) {
           scheme.charCount = await calculateCharCount(scheme.codeTable)
         }
@@ -1364,7 +1368,7 @@ const calculateMissingData = async (scheme: Scheme) => {
     
     // 如果沒有預處理數據，先進行預處理（使用完整預處理以支持速度當量計算）
     if (!scheme.processedData) {
-      scheme.processedData = await preprocessCodeTableDataComplete(scheme.codeTable, scheme.isPrefix)
+      scheme.processedData = await preprocessCodeTableDataComplete(scheme.codeTable, scheme.isPrefix, scheme.prefixKeys)
       scheme.charCount = await calculateCharCount(scheme.codeTable!)
     }
     
@@ -1421,7 +1425,7 @@ const recalculateScheme = async (scheme: Scheme) => {
     // 確保方案有預處理數據（使用完整預處理以支持速度當量計算）
     if (!scheme.processedData) {
       console.log(`重新生成完整預處理數據 for ${scheme.name}`)
-      scheme.processedData = await preprocessCodeTableDataComplete(scheme.codeTable, scheme.isPrefix)
+      scheme.processedData = await preprocessCodeTableDataComplete(scheme.codeTable, scheme.isPrefix, scheme.prefixKeys)
       if (!scheme.charCount) {
         scheme.charCount = await calculateCharCount(scheme.codeTable)
       }
@@ -1502,7 +1506,7 @@ const getSortArrow = (column: SortColumn) => {
 }
 
 // 使用 CodeTableProcessingService 進行完整的預處理（生成所有必要的輔助表）
-async function preprocessCodeTableDataComplete(codeTable: CodeTable, isPrefix = false): Promise<ProcessedData> {
+async function preprocessCodeTableDataComplete(codeTable: CodeTable, isPrefix = false, prefixKeys?: string[]): Promise<ProcessedData> {
   const timerId = Math.random().toString(36).substr(2, 9)
   console.time(`完整碼表預處理-${timerId}`)
   
@@ -1518,7 +1522,8 @@ async function preprocessCodeTableDataComplete(codeTable: CodeTable, isPrefix = 
   console.time(`生成所有輔助表-${timerId}`)
   const processedTables = await codeTableProcessingService.processCodeTable(codeTable, { 
     isPrefix, 
-    maxLength 
+    maxLength,
+    prefixKeys
   })
   console.timeEnd(`生成所有輔助表-${timerId}`)
   
@@ -1740,7 +1745,7 @@ const loadCurrentUserScheme = async () => {
     }
     
     // 预处理数据并计算收字数（使用完整預處理以支持所有計算包括速度當量）
-    currentUserScheme.value.processedData = await preprocessCodeTableDataComplete(props.currentCodeTable, globalIsPrefix)
+    currentUserScheme.value.processedData = await preprocessCodeTableDataComplete(props.currentCodeTable, globalIsPrefix, props.globalPrefixKeys)
     currentUserScheme.value.charCount = await calculateCharCount(props.currentCodeTable)
     
     // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
@@ -1991,7 +1996,7 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
   }
   
   // 進行預處理（使用完整預處理以保持一致性）
-  tempScheme.processedData = await preprocessCodeTableDataComplete(codeTable, isPrefix)
+  tempScheme.processedData = await preprocessCodeTableDataComplete(codeTable, isPrefix, props.globalPrefixKeys)
   tempScheme.charCount = await calculateCharCount(codeTable)
   
   const [dynamic, static_] = await Promise.all([
@@ -2030,7 +2035,8 @@ async function addBuiltinScheme() {
       name: builtinScheme.name,
       isBuiltin: true,
       isCalculating: true,
-      isPrefix: schemeConfig?.prefix || false,  // 從配置中獲取前綴碼屬性
+      isPrefix: schemeConfig?.isPrefix || false,  // 從配置中獲取前綴碼屬性
+      prefixKeys: schemeConfig?.prefixKeys, // 從配置中獲取前綴碼上屏键
       source: selectedBuiltinScheme.value, // 記錄預設方案ID
       uploadedAt: new Date() // 添加時間
     }
@@ -2043,8 +2049,7 @@ async function addBuiltinScheme() {
     newScheme.codeTable = result.codeTable
     
     // 預處理碼表數據（內置方案使用完整預處理以支持所有計算）
-    newScheme.processedData = await preprocessCodeTableDataComplete(result.codeTable, newScheme.isPrefix)
-        newScheme.charCount = await calculateCharCount(result.codeTable)
+    newScheme.processedData = await preprocessCodeTableDataComplete(result.codeTable, newScheme.isPrefix, newScheme.prefixKeys)
     newScheme.charCount = await calculateCharCount(result.codeTable)
     
     // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
@@ -2114,7 +2119,8 @@ async function addAllBuiltinSchemes() {
           name: builtinScheme.name,
           isBuiltin: true,
           isCalculating: true,
-          isPrefix: schemeConfig?.prefix || false,  // 從配置中獲取前綴碼屬性
+          isPrefix: schemeConfig?.isPrefix || false,  // 從配置中獲取前綴碼屬性
+          prefixKeys: schemeConfig?.prefixKeys, // 從配置中獲取前綴碼上屏键
           source: builtinScheme.id, // 記錄預設方案ID
           uploadedAt: new Date() // 添加時間
         }
@@ -2126,7 +2132,7 @@ async function addAllBuiltinSchemes() {
         newScheme.codeTable = result.codeTable
         
         // 預處理碼表數據（只做一次）
-        newScheme.processedData = await preprocessCodeTableDataComplete(result.codeTable, newScheme.isPrefix)
+        newScheme.processedData = await preprocessCodeTableDataComplete(result.codeTable, newScheme.isPrefix, newScheme.prefixKeys)
         newScheme.charCount = await calculateCharCount(result.codeTable)
         
         // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
@@ -2211,7 +2217,8 @@ async function addSelectedBuiltinSchemes() {
           name: builtinScheme.name,
           isBuiltin: true,
           isCalculating: true,
-          isPrefix: schemeConfig?.prefix || false,  // 從配置中獲取前綴碼屬性
+          isPrefix: schemeConfig?.isPrefix || false,  // 從配置中獲取前綴碼屬性
+          prefixKeys: schemeConfig?.prefixKeys, // 從配置中獲取前綴碼上屏键
           source: builtinScheme.id, // 記錄預設方案ID
           uploadedAt: new Date() // 添加時間
         }
@@ -2223,7 +2230,7 @@ async function addSelectedBuiltinSchemes() {
         newScheme.codeTable = result.codeTable
         
         // 預處理碼表數據（只做一次）
-        newScheme.processedData = await preprocessCodeTableDataComplete(result.codeTable, newScheme.isPrefix)
+        newScheme.processedData = await preprocessCodeTableDataComplete(result.codeTable, newScheme.isPrefix, newScheme.prefixKeys)
         newScheme.charCount = await calculateCharCount(result.codeTable)
         
         // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
@@ -2289,6 +2296,7 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
       isBuiltin: false,
       isCalculating: true,
       isPrefix: uploadPrefixFlag.value,  // 使用上傳時的前綴碼設置
+      prefixKeys: props.globalPrefixKeys, // 使用上傳時的前綴碼上屏键
       source: file.name, // 記錄文件名
       uploadedAt: new Date() // 記錄上傳時間
     }
@@ -2303,8 +2311,8 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     newScheme.codeTable = codeTable
     
     // 預處理碼表數據（只做一次）
-    newScheme.processedData = await preprocessCodeTableDataComplete(codeTable, newScheme.isPrefix)
-        newScheme.charCount = await calculateCharCount(codeTable)
+    newScheme.processedData = await preprocessCodeTableDataComplete(codeTable, newScheme.isPrefix, props.globalPrefixKeys)
+    newScheme.charCount = await calculateCharCount(codeTable)
     
     // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
     newScheme.data = {}
@@ -2366,6 +2374,7 @@ async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'co
           isBuiltin: false,
           isCalculating: true,
           isPrefix: uploadPrefixFlag.value,  // 使用上傳時的前綴碼設置
+          prefixKeys: props.globalPrefixKeys, // 使用上傳時的前綴碼上屏键
           source: file.name, // 記錄文件名
           uploadedAt: new Date() // 記錄上傳時間
         }
@@ -2379,7 +2388,7 @@ async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'co
         newScheme.codeTable = codeTable
         
         // 預處理碼表數據（只做一次）
-        newScheme.processedData = await preprocessCodeTableDataComplete(codeTable, newScheme.isPrefix)
+        newScheme.processedData = await preprocessCodeTableDataComplete(codeTable, newScheme.isPrefix, props.globalPrefixKeys)
         newScheme.charCount = await calculateCharCount(codeTable)
         
         // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
@@ -2521,7 +2530,7 @@ function reuploadScheme(scheme: Scheme) {
       scheme.charCount = await calculateCharCount(codeTable)
       
       // 重新預處理數據
-      scheme.processedData = await preprocessCodeTableDataComplete(codeTable, scheme.isPrefix)
+      scheme.processedData = await preprocessCodeTableDataComplete(codeTable, scheme.isPrefix, scheme.prefixKeys)
       
       // 清除舊的計算數據，強制重新計算
       scheme.data = {}
