@@ -305,7 +305,7 @@ const showTooltip = (event: MouseEvent, chars: string[], currentN: number, freqT
   const prevN = getPreviousN(currentN)
   
   if (chars.length === 0) {
-    tooltipChars.value = '無簡碼字符'
+    tooltipChars.value = '無簡碼字'
   } else {
     // 根據不同的N值顯示差值字符
     if (prevN > 0) {
@@ -354,15 +354,19 @@ const getPreviousChars = (prevN: number, freqType: string): string[] => {
 }
 
 const getCellClass = (value: number, rowValues: number[]): string => {
-  // 基於絕對值的分級，馬長高顯示綠色，碼長低顯示紅色
+  // 基於絕對值的五檔分級
   if (value <= 0) return ''
   
-  if (value > 3.6) {
-    return 'high-value'       // 碼長 3.6 以上 - 紅色
-  } else if (value >= 3.0) {
-    return 'medium-value'     // 碼長 3.0-3.6 - 黃色
+  if (value >= 3.7) {
+    return 'very-high-value'   // >= 3.7 - 略低於四碼定長全碼長度
+  } else if (value >= 3.3) {
+    return 'high-value'        // >= 3.3 - 略低於出了一簡之後的碼長
+  } else if (value >= 2.9) {
+    return 'medium-value'      // >= 2.9 - 略低於出了二簡之後的碼長
+  } else if (value >= 2.5) {
+    return 'low-value'         // >= 2.5 - 略低於前綴碼的簡碼碼長
   } else {
-    return 'low-value'        // 碼長 3.0 以下 - 綠色
+    return 'very-low-value'    // < 2.5 - 頂功碼長
   }
 }
 
@@ -571,11 +575,12 @@ onMounted(async () => {
   font-family: var(--font-numeric);
   font-feature-settings: "tnum" 0; /* 禁用表格數字，使用比例數字 */
   text-align: center;
+  transition: background-color 0.2s ease;
 }
 
 .hoverable {
   cursor: help;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .clickable {
@@ -587,20 +592,56 @@ onMounted(async () => {
   color: #1f2937;
 }
 
-/* 效率值的三檔顏色分級 - 反轉邏輯 */
+/* 效率值的五檔簡約顏色分級 */
+.very-high-value {
+  background: #fee2e2 !important;  /* 淺紅色背景 - >= 3.7 */
+  color: #991b1b;                   /* 深紅色文字 */
+  font-weight: 700;
+}
+
 .high-value {
-  background: #fee2e2 !important;  /* 淺紅色 - 3.6以上（需要優化） */
-  color: #991b1b;
+  background: #fef3c7 !important;  /* 淺黃色背景 - >= 3.3 */
+  color: #92400e;                   /* 深黃色文字 */
+  font-weight: 700;
 }
 
 .medium-value {
-  background: #fef3c7 !important;  /* 淺黃色 - 3.0-3.6（中等） */
-  color: #92400e;
+  background: #dcfce7 !important;  /* 淺綠色背景 - >= 2.9 */
+  color: #166534;                   /* 深綠色文字 */
+  font-weight: 700;
 }
 
 .low-value {
-  background: #dcfce7 !important;  /* 淺綠色 - 3.0以下（效率好） */
-  color: #166534;
+  background: #dbeafe !important;  /* 淺藍色背景 - >= 2.5 */
+  color: #1e40af;                   /* 深藍色文字 */
+  font-weight: 700;
+}
+
+.very-low-value {
+  background: #f3e8ff !important;  /* 淺紫色背景 - < 2.5 */
+  color: #7c3aed;                   /* 深紫色文字 */
+  font-weight: 700;
+}
+
+/* 簡化的懸停效果 */
+.very-high-value:hover {
+  background: #fecaca !important;
+}
+
+.high-value:hover {
+  background: #fde68a !important;
+}
+
+.medium-value:hover {
+  background: #bbf7d0 !important;
+}
+
+.low-value:hover {
+  background: #bfdbfe !important;
+}
+
+.very-low-value:hover {
+  background: #e9d5ff !important;
 }
 
 /* 自定義工具提示 */
