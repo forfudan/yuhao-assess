@@ -39,7 +39,7 @@
           <!-- 後台計算進度指示器 -->
           <div v-if="hasBackgroundTasks" class="background-progress">
             <div class="progress-info">
-              <span class="progress-text">後台預計算中</span>
+              <span class="progress-text">{{ progressText }}</span>
               <span class="progress-percentage">{{ backgroundProgress.percentage }}%</span>
             </div>
             <div class="progress-bar">
@@ -932,6 +932,18 @@ const loadComparisonData = async () => {
           console.error(`恢復方案 ${savedScheme.name} 失敗:`, error)
         }
       }
+      
+      // 数据加载完成后，为缺少数据的方案启动智能计算
+      nextTick(() => {
+        const schemesNeedingCalculation = additionalSchemes.value.filter(scheme => 
+          scheme.codeTable && !scheme.isCalculating && (!scheme.data || Object.keys(scheme.data).length < 4)
+        )
+        
+        if (schemesNeedingCalculation.length > 0) {
+          console.log(`[智能計算] 載入後發現 ${schemesNeedingCalculation.length} 個方案需要補充計算`)
+          ensureCurrentTabDataLoaded()
+        }
+      })
     }
   } catch (error) {
     console.error('載入對比數據失敗:', error)
@@ -1048,29 +1060,68 @@ const runningTasks = ref(new Set<string>())
 // 計算進度追蹤
 const backgroundProgress = computed(() => {
   const totalSchemes = allSchemes.value.length
-  if (totalSchemes === 0) return { completed: 0, total: 0, percentage: 100 }
+  
+  // 考虑上传队列中的方案数量
+  const uploading = allSchemes.value.filter(s => s.isCalculating || isAdding.value).length
+  const addingCount = isAdding.value ? selectedBuiltinSchemes.value.length : 0
+  
+  // 总任务数：包括现有方案和正在添加的方案
+  const totalSchemesIncludingAdding = totalSchemes + addingCount
+  
+  if (totalSchemesIncludingAdding === 0) return { completed: 0, total: 0, percentage: 100 }
   
   const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
-  const totalTasks = totalSchemes * allTabs.length
+  const totalTasks = totalSchemesIncludingAdding * allTabs.length
   
   let completed = 0
   for (const scheme of allSchemes.value) {
-    if (scheme.data?.dynamic) completed++
-    if (scheme.data?.static) completed++
-    if (scheme.data?.maxCandidates) completed++
-    if (scheme.data?.speedEquiv) completed++
+    // 只计算非计算中状态的完成数据
+    if (!scheme.isCalculating) {
+      if (scheme.data?.dynamic) completed++
+      if (scheme.data?.static) completed++
+      if (scheme.data?.maxCandidates) completed++
+      if (scheme.data?.speedEquiv) completed++
+    }
   }
+  
+  // 如果有正在运行的任务，显示进度
+  const hasRunning = runningTasks.value.size > 0 || uploading > 0 || isAdding.value
   
   return {
     completed,
     total: totalTasks,
-    percentage: Math.round((completed / totalTasks) * 100)
+    percentage: hasRunning ? Math.round((completed / totalTasks) * 100) : 100,
+    hasRunning
   }
 })
 
 // 是否有後台任務在運行
 const hasBackgroundTasks = computed(() => {
-  return runningTasks.value.size > 0
+  const hasCalculationTasks = runningTasks.value.size > 0
+  const hasUploadTasks = isAdding.value
+  const hasCalculatingSchemes = allSchemes.value.some(s => s.isCalculating)
+  
+  return hasCalculationTasks || hasUploadTasks || hasCalculatingSchemes
+})
+
+// 進度文本
+const progressText = computed(() => {
+  if (isAdding.value) {
+    return selectedBuiltinSchemes.value.length > 1 ? 
+      `添加方案中 (${selectedBuiltinSchemes.value.length}個)` : 
+      '添加方案中'
+  }
+  
+  const calculatingCount = allSchemes.value.filter(s => s.isCalculating).length
+  if (calculatingCount > 0) {
+    return `加載方案中 (${calculatingCount}個)`
+  }
+  
+  if (runningTasks.value.size > 0) {
+    return '後台預計算中'
+  }
+  
+  return '處理中'
 })
 
 // 清理已完成或被取消的任務
