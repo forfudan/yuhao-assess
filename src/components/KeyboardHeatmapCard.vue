@@ -147,7 +147,7 @@
       </div>
       
       <!-- 方案名稱標註 -->
-      <div v-if="codeTableName" class="scheme-name">
+      <div v-if="codeTableName" class="scheme-name-annotation">
         <span>當前方案：{{ codeTableName }}</span>
       </div>
     </div>

@@ -260,12 +260,13 @@
               <tr v-for="(scheme, index) in visibleSchemes" :key="scheme.id" class="scheme-row">
                 <td class="scheme-name">
                   <div class="scheme-info">
-                    <span class="scheme-title">{{ scheme.name }}</span>
-                    <span v-if="scheme.isBuiltin" class="scheme-source">預設方案</span>
-                    <span v-else-if="!scheme.codeTable" class="scheme-source">
-                      數據快照
+                    <span 
+                      class="scheme-title"
+                      @mouseenter="showTooltip($event, scheme)"
+                      @mouseleave="hideTooltip"
+                    >
+                      {{ scheme.name }}
                     </span>
-                    <span v-else class="scheme-source">上傳方案</span>
                   </div>
                 </td>
                 <td class="char-count">
@@ -652,6 +653,15 @@
       </div>
     </div>
   </Teleport>
+
+  <!-- Custom Tooltip -->
+  <div 
+    v-show="tooltip.show" 
+    class="custom-tooltip"
+    :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
+  >
+    {{ tooltip.text }}
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -810,6 +820,14 @@ const availableBuiltinSchemes = ref<BuiltinScheme[]>([])
 const fileInputCharCode = ref<HTMLInputElement>()
 const fileInputCodeChar = ref<HTMLInputElement>()
 const uploadPrefixFlag = ref(false) // 用户上传文件时的前缀码标志
+
+// Tooltip 狀態管理
+const tooltip = ref({
+  show: false,
+  text: '',
+  x: 0,
+  y: 0
+})
 
 // Tab 相關狀態
 const activeTab = ref<'dynamic' | 'static' | 'maxCandidates' | 'speedEquiv'>('dynamic')
@@ -2504,6 +2522,22 @@ async function exportCard() {
   }
 }
 
+// Tooltip 功能
+function showTooltip(event: MouseEvent, scheme: Scheme) {
+  const tooltipText = scheme.isBuiltin ? '預設方案' : scheme.codeTable ? '上傳方案' : '數據快照'
+  
+  tooltip.value = {
+    show: true,
+    text: tooltipText,
+    x: event.clientX + 10,
+    y: event.clientY - 30
+  }
+}
+
+function hideTooltip() {
+  tooltip.value.show = false
+}
+
 // 移除方案
 function removeScheme(scheme: Scheme) {
   if (!canRemoveScheme(scheme)) return
@@ -2896,6 +2930,7 @@ function clearAllSchemes() {
 .scheme-title {
   font-weight: 500;
   color: #374151;
+  cursor: help;
 }
 
 .scheme-source {
@@ -3476,5 +3511,31 @@ function clearAllSchemes() {
     flex-direction: column;
     align-items: stretch;
   }
+}
+
+/* Custom Tooltip Styles */
+.custom-tooltip {
+  position: fixed;
+  background: #1f2937;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 9999;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #374151;
+}
+
+.custom-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #1f2937;
 }
 </style>

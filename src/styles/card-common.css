@@ -74,7 +74,7 @@
 }
 
 /* 方案名称标注样式 */
-.scheme-name {
+.scheme-name-annotation {
   margin-top: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-md);
   background: rgba(74, 144, 226, 0.1);
@@ -84,7 +84,7 @@
   color: var(--color-text-secondary);
 }
 
-.scheme-name span {
+.scheme-name-annotation span {
   font-weight: 500;
   color: var(--primary-color);
 }
