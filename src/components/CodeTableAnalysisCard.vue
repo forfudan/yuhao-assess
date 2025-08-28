@@ -1,16 +1,23 @@
 <template>
-  <div class="code-table-viewer">
+  <div ref="cardRef" class="code-table-viewer">
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">碼表分析</h3>
           <p class="card-description">詳細分析碼表的基本信息。</p>
         </div>
-        <button @click="toggleCollapsed" class="collapse-button">
-          <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-          </svg>
-        </button>
+        <div class="header-buttons">
+          <button @click="exportCard" class="export-btn" :disabled="!analysis" title="导出图片">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+          </button>
+          <button @click="toggleCollapsed" class="collapse-button">
+            <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
     
@@ -65,28 +72,33 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useCollapse } from '../composables/useCollapse'
-import type { CodeTableAnalysis } from '../types/index'
+<script lang="ts" setup>
+import { ref } from 'vue'
+import { ExportService } from '../services/exportService'
+import type { CodeTableAnalysis } from '@/types/index'
 
 interface Props {
   analysis: CodeTableAnalysis | null
   codeTableName?: string
+  schemeName: string
 }
 
 const props = defineProps<Props>()
 
-// 摺疊功能
-const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
+const cardRef = ref<HTMLElement>()
+const isCollapsed = ref(false)
 
-// 暴露摺疊方法給父組件
-defineExpose({
-  collapse,
-  expand,
-  toggle: toggleCollapsed,
-  getCollapsedState
-})
+const toggleCollapsed = () => {
+  isCollapsed.value = !isCollapsed.value
+}
+
+const exportCard = async () => {
+  if (cardRef.value && props.analysis) {
+    await ExportService.exportElementToPNG(cardRef.value, '碼表分析', props.schemeName, {
+      copyToClipboard: ExportService.isClipboardSupported(),
+    })
+  }
+}
 </script>
 
 <style scoped>
@@ -102,6 +114,36 @@ defineExpose({
   flex: 1;
 }
 
+.header-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.export-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.export-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* 摺疊按鈕樣式 */
 .collapse-button {
   background: rgba(255, 255, 255, 0.2);
@@ -114,7 +156,6 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: var(--spacing-lg);
   backdrop-filter: blur(10px);
 }
 

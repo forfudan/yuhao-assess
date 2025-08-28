@@ -1,16 +1,23 @@
 <template>
-  <div class="maximum-candidates-card" :id="id">
+  <div ref="cardRef" class="maximum-candidates-card" :id="id">
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">候選個數</h3>
           <p class="card-description">分析不同字符集下方案的最大候選項個數，借以反映方案的檢字效率。</p>
         </div>
-        <button @click="toggleCollapsed" class="collapse-button">
-          <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-          </svg>
-        </button>
+        <div class="header-buttons">
+          <button @click="exportCard" class="export-btn" :disabled="loading || !!error || !analysisResults" title="导出图片">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+          </button>
+          <button @click="toggleCollapsed" class="collapse-button">
+            <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
     
@@ -109,6 +116,7 @@ import { ref, computed, watch, onMounted, Teleport } from 'vue'
 import { getAllMaximumCandidates, type MaximumCandidatesResult } from '../services/maximumCandidatesService'
 import { createTooltipManager, getCharacterTooltip } from '../services/uiService'
 import { useCollapse } from '../composables/useCollapse'
+import { ExportService } from '../services/exportService'
 import type { CodeTable } from '../types'
 
 // Props
@@ -122,6 +130,27 @@ const props = defineProps<Props>()
 
 // 折叠功能
 const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
+
+// 卡片引用
+const cardRef = ref<HTMLElement>()
+
+// 导出功能
+async function exportCard() {
+  if (!cardRef.value || !analysisResults.value) {
+    console.warn('卡片元素或数据不可用')
+    return
+  }
+
+  try {
+    await ExportService.exportElementToPNG(cardRef.value, '候選個數', props.codeTableName || '未命名方案', {
+      copyToClipboard: ExportService.isClipboardSupported(),
+      download: true
+    })
+  } catch (error) {
+    console.error('导出失败:', error)
+    alert('导出失败，请重试')
+  }
+}
 
 // 暴露折叠方法给父组件
 defineExpose({
@@ -233,6 +262,39 @@ onMounted(() => {
   flex: 1;
 }
 
+/* 头部按钮容器 */
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-left: var(--spacing-lg);
+}
+
+/* 导出按钮样式 */
+.export-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.export-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* 折叠按钮样式 */
 .collapse-button {
   background: rgba(255, 255, 255, 0.2);
@@ -245,7 +307,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: var(--spacing-lg);
   backdrop-filter: blur(10px);
 }
 
