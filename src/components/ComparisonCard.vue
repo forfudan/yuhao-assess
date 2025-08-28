@@ -81,37 +81,46 @@
                   <th class="metric-header sortable" @click="handleSort('dynamicDupRate')">
                     <div class="metric-header-content">
                       <div class="header-title">
-                        <span>知乎動態選重率</span>
+                        <span>知乎字頻</span>
                         <span class="sort-arrow">{{ getSortArrow('dynamicDupRate') }}</span>
                       </div>
-                      <small>基於知乎字頻</small>
+                      <small>簡體字頻</small>
                     </div>
                   </th>
                   <th class="metric-header sortable" @click="handleSort('dynamicDupRateSC')">
                     <div class="metric-header-content">
                       <div class="header-title">
-                        <span>簡體動態選重率</span>
+                        <span>北語字頻</span>
                         <span class="sort-arrow">{{ getSortArrow('dynamicDupRateSC') }}</span>
                       </div>
-                      <small>基於簡體字頻</small>
+                      <small>簡體字頻</small>
                     </div>
                   </th>
                   <th class="metric-header sortable" @click="handleSort('dynamicDupRateTC')">
                     <div class="metric-header-content">
                       <div class="header-title">
-                        <span>繁體動態選重率</span>
+                        <span>臺標字頻</span>
                         <span class="sort-arrow">{{ getSortArrow('dynamicDupRateTC') }}</span>
                       </div>
-                      <small>基於繁體字頻</small>
+                      <small>繁體字頻</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateTongguiTC')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>陸繁字頻</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateTongguiTC') }}</span>
+                      </div>
+                      <small>繁體字頻</small>
                     </div>
                   </th>
                   <th class="metric-header sortable" @click="handleSort('dynamicDupRateUnified')">
                     <div class="metric-header-content">
                       <div class="header-title">
-                        <span>聯合動態選重率</span>
+                        <span>繁簡聯合</span>
                         <span class="sort-arrow">{{ getSortArrow('dynamicDupRateUnified') }}</span>
                       </div>
-                      <small>基於繁簡聯合字頻</small>
+                      <small>繁簡聯合字頻</small>
                     </div>
                   </th>
                 </template>
@@ -219,37 +228,46 @@
                   <th class="metric-header sortable" @click="handleSort('zhihuEquiv')">
                     <div class="metric-header-content">
                       <div class="header-title">
-                        <span>知乎速度當量</span>
+                        <span>知乎字頻</span>
                         <span class="sort-arrow">{{ getSortArrow('zhihuEquiv') }}</span>
                       </div>
-                      <small>基於知乎字頻</small>
+                      <small>簡體字頻</small>
                     </div>
                   </th>
                   <th class="metric-header sortable" @click="handleSort('scEquiv')">
                     <div class="metric-header-content">
                       <div class="header-title">
-                        <span>簡體速度當量</span>
+                        <span>北語字頻</span>
                         <span class="sort-arrow">{{ getSortArrow('scEquiv') }}</span>
                       </div>
-                      <small>基於簡體字頻</small>
+                      <small>簡體字頻</small>
                     </div>
                   </th>
                   <th class="metric-header sortable" @click="handleSort('tcEquiv')">
                     <div class="metric-header-content">
                       <div class="header-title">
-                        <span>繁體速度當量</span>
+                        <span>臺標字頻</span>
                         <span class="sort-arrow">{{ getSortArrow('tcEquiv') }}</span>
                       </div>
-                      <small>基於繁體字頻</small>
+                      <small>繁體字頻</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('tongguiTCEquiv')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>陸繁字頻</span>
+                        <span class="sort-arrow">{{ getSortArrow('tongguiTCEquiv') }}</span>
+                      </div>
+                      <small>繁體字頻</small>
                     </div>
                   </th>
                   <th class="metric-header sortable" @click="handleSort('unifiedEquiv')">
                     <div class="metric-header-content">
                       <div class="header-title">
-                        <span>聯合速度當量</span>
+                        <span>繁簡字頻</span>
                         <span class="sort-arrow">{{ getSortArrow('unifiedEquiv') }}</span>
                       </div>
-                      <small>基於繁簡聯合字頻</small>
+                      <small>繁簡聯合字頻</small>
                     </div>
                   </th>
                 </template>
@@ -302,6 +320,15 @@
                     </div>
                     <span v-else class="metric-value">
                       {{ formatRate(scheme.data?.dynamic?.dynamicDupRateTC) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamic?.dynamicDupRateTongguiTC) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -440,6 +467,15 @@
                     </div>
                     <span v-else class="metric-value">
                       {{ formatEquiv(scheme.data?.speedEquiv?.tcEquiv) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatEquiv(scheme.data?.speedEquiv?.tongguiTCEquiv) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -692,6 +728,7 @@ import {
   loadCharFrequency,
   loadCharFrequencySC,
   loadCharFrequencyTC,
+  loadCharFrequencyTongguiTC,
   loadCharFrequencyUnified,
   loadAllCharFrequencies,
   getFrequencyCharsUnion
@@ -732,6 +769,7 @@ interface DynamicData {
   dynamicDupRate: number
   dynamicDupRateSC: number
   dynamicDupRateTC: number
+  dynamicDupRateTongguiTC: number
   dynamicDupRateUnified: number
 }
 
@@ -749,6 +787,7 @@ interface SpeedEquivData {
   zhihuEquiv: number
   scEquiv: number
   tcEquiv: number
+  tongguiTCEquiv: number
   unifiedEquiv: number
 }
 
@@ -840,12 +879,12 @@ const tabs = [
 
 // 排序相關狀態
 type SortDirection = 'desc' | 'asc' | 'none'
-type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateUnified' | 
+type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateTongguiTC' | 'dynamicDupRateUnified' | 
                       'gb2312DuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
                       'cjkToBDuplicateChars' | 'cjkToIDuplicateChars' |
                       'gb2312MaxCount' | 'guoziMaxCount' | 'cjkBasicMaxCount' | 
                       'cjkToBMaxCount' | 'cjkToIMaxCount' |
-                      'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'unifiedEquiv'
+                      'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'tongguiTCEquiv' | 'unifiedEquiv'
 type SortColumn = 'name' | 'charCount' | DataSortColumn
 
 const sortColumn = ref<SortColumn | null>(null)
@@ -1014,13 +1053,13 @@ const allSchemes = computed(() => {
       const column = sortColumn.value as DataSortColumn
       
       // 根據列名判斷是動態還是靜態數據
-      if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateUnified'].includes(column)) {
+      if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateTongguiTC', 'dynamicDupRateUnified'].includes(column)) {
         aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
         bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
       } else if (['gb2312MaxCount', 'guoziMaxCount', 'cjkBasicMaxCount', 'cjkToBMaxCount', 'cjkToIMaxCount'].includes(column)) {
         aValue = a.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
         bValue = b.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
-      } else if (['zhihuEquiv', 'scEquiv', 'tcEquiv', 'unifiedEquiv'].includes(column)) {
+      } else if (['zhihuEquiv', 'scEquiv', 'tcEquiv', 'tongguiTCEquiv', 'unifiedEquiv'].includes(column)) {
         aValue = a.data?.speedEquiv?.[column as keyof SpeedEquivData] ?? 0
         bValue = b.data?.speedEquiv?.[column as keyof SpeedEquivData] ?? 0
       } else {
@@ -1831,10 +1870,11 @@ async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
   const { fullCodeTable } = scheme.processedData
   
   // 加載所有字頻數據
-  const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyUnified] = await Promise.all([
+  const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyTongguiTC, charFrequencyUnified] = await Promise.all([
     loadCharFrequency(),
     loadCharFrequencySC(),
     loadCharFrequencyTC(),
+    loadCharFrequencyTongguiTC(),
     loadCharFrequencyUnified()
   ])
   
@@ -1842,6 +1882,7 @@ async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
   const dynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency)
   const dynamicDupRateSC = getDynamicDupRate(fullCodeTable, charFrequencySC)
   const dynamicDupRateTC = getDynamicDupRate(fullCodeTable, charFrequencyTC)
+  const dynamicDupRateTongguiTC = getDynamicDupRate(fullCodeTable, charFrequencyTongguiTC)
   const dynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
   
   console.timeEnd(`動態重碼計算-${scheme.name}`)
@@ -1849,6 +1890,7 @@ async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
     dynamicDupRate,
     dynamicDupRateSC,
     dynamicDupRateTC,
+    dynamicDupRateTongguiTC,
     dynamicDupRateUnified
   }
 }
@@ -1886,10 +1928,11 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     
     // 加載各種字頻表
     const builtinService = new BuiltinCodeTableService()
-    const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
+    const [zhihuFreq, scFreq, tcFreq, tongguiTCFreq, unifiedFreq] = await Promise.all([
       builtinService.loadCharFrequency(),
       builtinService.loadCharFrequencySC(),
       builtinService.loadCharFrequencyTC(),
+      builtinService.loadCharFrequencyTongguiTC(),
       builtinService.loadCharFrequencyUnified()
     ])
     
@@ -1897,6 +1940,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
     const scEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, scFreq, equivTable)
     const tcEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tcFreq, equivTable)
+    const tongguiTCEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tongguiTCFreq, equivTable)
     const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
     
     console.timeEnd(`速度當量計算-${scheme.name}`)
@@ -1904,6 +1948,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
       zhihuEquiv,
       scEquiv,
       tcEquiv,
+      tongguiTCEquiv,
       unifiedEquiv
     }
   } catch (error) {
@@ -1913,6 +1958,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
       zhihuEquiv: 0,
       scEquiv: 0,
       tcEquiv: 0,
+      tongguiTCEquiv: 0,
       unifiedEquiv: 0
     }
   }
@@ -1980,10 +2026,11 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
     
     // 加載各種字頻表
     const builtinService = new BuiltinCodeTableService()
-    const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
+    const [zhihuFreq, scFreq, tcFreq, tongguiTCFreq, unifiedFreq] = await Promise.all([
       builtinService.loadCharFrequency(),
       builtinService.loadCharFrequencySC(),
       builtinService.loadCharFrequencyTC(),
+      builtinService.loadCharFrequencyTongguiTC(),
       builtinService.loadCharFrequencyUnified()
     ])
     
@@ -1991,12 +2038,14 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
     const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
     const scEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, scFreq, equivTable)
     const tcEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tcFreq, equivTable)
+    const tongguiTCEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tongguiTCFreq, equivTable)
     const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
     
     return {
       zhihuEquiv,
       scEquiv,
       tcEquiv,
+      tongguiTCEquiv,
       unifiedEquiv
     }
   } catch (error) {
@@ -2005,6 +2054,7 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
       zhihuEquiv: 0,
       scEquiv: 0,
       tcEquiv: 0,
+      tongguiTCEquiv: 0,
       unifiedEquiv: 0
     }
   }
