@@ -252,6 +252,15 @@
                       <small>繁體字頻</small>
                     </div>
                   </th>
+                  <th class="metric-header sortable" @click="handleSort('tongguiTCEquiv')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>陸繁字頻</span>
+                        <span class="sort-arrow">{{ getSortArrow('tongguiTCEquiv') }}</span>
+                      </div>
+                      <small>繁體字頻</small>
+                    </div>
+                  </th>
                   <th class="metric-header sortable" @click="handleSort('unifiedEquiv')">
                     <div class="metric-header-content">
                       <div class="header-title">
@@ -458,6 +467,15 @@
                     </div>
                     <span v-else class="metric-value">
                       {{ formatEquiv(scheme.data?.speedEquiv?.tcEquiv) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatEquiv(scheme.data?.speedEquiv?.tongguiTCEquiv) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -769,6 +787,7 @@ interface SpeedEquivData {
   zhihuEquiv: number
   scEquiv: number
   tcEquiv: number
+  tongguiTCEquiv: number
   unifiedEquiv: number
 }
 
@@ -865,7 +884,7 @@ type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC'
                       'cjkToBDuplicateChars' | 'cjkToIDuplicateChars' |
                       'gb2312MaxCount' | 'guoziMaxCount' | 'cjkBasicMaxCount' | 
                       'cjkToBMaxCount' | 'cjkToIMaxCount' |
-                      'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'unifiedEquiv'
+                      'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'tongguiTCEquiv' | 'unifiedEquiv'
 type SortColumn = 'name' | 'charCount' | DataSortColumn
 
 const sortColumn = ref<SortColumn | null>(null)
@@ -1040,7 +1059,7 @@ const allSchemes = computed(() => {
       } else if (['gb2312MaxCount', 'guoziMaxCount', 'cjkBasicMaxCount', 'cjkToBMaxCount', 'cjkToIMaxCount'].includes(column)) {
         aValue = a.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
         bValue = b.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
-      } else if (['zhihuEquiv', 'scEquiv', 'tcEquiv', 'unifiedEquiv'].includes(column)) {
+      } else if (['zhihuEquiv', 'scEquiv', 'tcEquiv', 'tongguiTCEquiv', 'unifiedEquiv'].includes(column)) {
         aValue = a.data?.speedEquiv?.[column as keyof SpeedEquivData] ?? 0
         bValue = b.data?.speedEquiv?.[column as keyof SpeedEquivData] ?? 0
       } else {
@@ -1909,10 +1928,11 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     
     // 加載各種字頻表
     const builtinService = new BuiltinCodeTableService()
-    const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
+    const [zhihuFreq, scFreq, tcFreq, tongguiTCFreq, unifiedFreq] = await Promise.all([
       builtinService.loadCharFrequency(),
       builtinService.loadCharFrequencySC(),
       builtinService.loadCharFrequencyTC(),
+      builtinService.loadCharFrequencyTongguiTC(),
       builtinService.loadCharFrequencyUnified()
     ])
     
@@ -1920,6 +1940,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
     const scEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, scFreq, equivTable)
     const tcEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tcFreq, equivTable)
+    const tongguiTCEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tongguiTCFreq, equivTable)
     const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
     
     console.timeEnd(`速度當量計算-${scheme.name}`)
@@ -1927,6 +1948,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
       zhihuEquiv,
       scEquiv,
       tcEquiv,
+      tongguiTCEquiv,
       unifiedEquiv
     }
   } catch (error) {
@@ -1936,6 +1958,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
       zhihuEquiv: 0,
       scEquiv: 0,
       tcEquiv: 0,
+      tongguiTCEquiv: 0,
       unifiedEquiv: 0
     }
   }
@@ -2003,10 +2026,11 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
     
     // 加載各種字頻表
     const builtinService = new BuiltinCodeTableService()
-    const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
+    const [zhihuFreq, scFreq, tcFreq, tongguiTCFreq, unifiedFreq] = await Promise.all([
       builtinService.loadCharFrequency(),
       builtinService.loadCharFrequencySC(),
       builtinService.loadCharFrequencyTC(),
+      builtinService.loadCharFrequencyTongguiTC(),
       builtinService.loadCharFrequencyUnified()
     ])
     
@@ -2014,12 +2038,14 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
     const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
     const scEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, scFreq, equivTable)
     const tcEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tcFreq, equivTable)
+    const tongguiTCEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tongguiTCFreq, equivTable)
     const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
     
     return {
       zhihuEquiv,
       scEquiv,
       tcEquiv,
+      tongguiTCEquiv,
       unifiedEquiv
     }
   } catch (error) {
@@ -2028,6 +2054,7 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
       zhihuEquiv: 0,
       scEquiv: 0,
       tcEquiv: 0,
+      tongguiTCEquiv: 0,
       unifiedEquiv: 0
     }
   }
