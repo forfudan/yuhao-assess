@@ -75,17 +75,17 @@
               <span class="nav-icon">📈</span>
               <span class="nav-title">簡碼效率</span>
             </a>
-            <a v-if="analysisReady" @click="scrollToCard('comparison')" class="nav-item">
-              <span class="nav-icon">🆚</span>
-              <span class="nav-title">方案對比</span>
-            </a>
             <a v-if="analysisReady" @click="scrollToCard('heatmap')" class="nav-item">
               <span class="nav-icon">⌨️</span>
               <span class="nav-title">鍵位熱力</span>
             </a>
-            <a v-if="analysisReady" @click="scrollToCard('analysis')" class="nav-item">
+            <!-- <a v-if="analysisReady" @click="scrollToCard('analysis')" class="nav-item">
               <span class="nav-icon">📋</span>
               <span class="nav-title">碼表分析</span>
+            </a> -->
+            <a v-if="analysisReady" @click="scrollToCard('comparison')" class="nav-item">
+              <span class="nav-icon">🆚</span>
+              <span class="nav-title">方案對比</span>
             </a>
           </div>
         </div>
@@ -156,15 +156,6 @@
             :code-table-name="codeTableName"
           />
 
-          <!-- 方案對比卡片 -->
-          <ComparisonCard 
-            id="card-comparison"
-            ref="comparisonCardRef"
-            :currentCodeTable="codeTable" 
-            :currentCodeTableName="codeTableName" 
-            :globalPrefixKeys="uploadPrefixKeys"
-          />
-
           <!-- 鍵位熱力圖卡片 -->
           <KeyboardHeatmapCard 
             v-if="analysisReady" 
@@ -175,13 +166,27 @@
             :code-table-name="codeTableName"
           />
 
-          <!-- 碼表分析卡片 -->
+          <!-- 
+          碼表分析卡片
+          這個卡片的作用不大，暫時先注释掉。      
+          -->
+          <!-- 
           <CodeTableAnalysisCard 
             v-if="analysisReady" 
             id="card-analysis"
             ref="codeTableAnalysisCardRef"
             :analysis="analysisData" 
             :code-table-name="codeTableName"
+          />
+          -->
+
+          <!-- 方案對比卡片 -->
+          <ComparisonCard 
+            id="card-comparison"
+            ref="comparisonCardRef"
+            :currentCodeTable="codeTable" 
+            :currentCodeTableName="codeTableName" 
+            :globalPrefixKeys="uploadPrefixKeys"
           />
         </div>
       </div>
