@@ -18,7 +18,7 @@
           <div class="logo">
             <a href="https://shurufa.app/" target="_blank" class="logo-link">
               <img 
-                src="https://github.com/forfudan/yu/blob/main/src/public/logo_blue.png?raw=true" 
+                src="/logo_blue.png" 
                 alt="宇浩输入法 Logo" 
                 class="logo-image"
               >
