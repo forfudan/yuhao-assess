@@ -765,7 +765,7 @@ const clearAllCache = () => {
 .nav-item {
   display: flex;
   align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-lg);
   color: var(--color-text-primary);
   text-decoration: none;
   transition: all 0.2s ease;
