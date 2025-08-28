@@ -139,6 +139,18 @@ export async function loadCharFrequencyTC(): Promise<CharFrequency> {
 }
 
 /**
+ * 加載陸標繁體字頻數據
+ */
+export async function loadCharFrequencyTongguiTC(): Promise<CharFrequency> {
+  try {
+    return await builtinService.loadCharFrequencyTongguiTC()
+  } catch (error) {
+    console.error('加載陸標繁體字頻數據失敗:', error)
+    throw error
+  }
+}
+
+/**
  * 加載統一字頻數據
  */
 export async function loadCharFrequencyUnified(): Promise<CharFrequency> {
@@ -155,10 +167,11 @@ export async function loadCharFrequencyUnified(): Promise<CharFrequency> {
  * @returns 包含所有字頻數據的對象
  */
 export async function loadAllCharFrequencies() {
-  const [zhihuFreq, scFreq, tcFreq, unifiedFreq] = await Promise.all([
+  const [zhihuFreq, scFreq, tcFreq, tongguiTCFreq, unifiedFreq] = await Promise.all([
     loadCharFrequency(),
     loadCharFrequencySC(),
     loadCharFrequencyTC(),
+    loadCharFrequencyTongguiTC(),
     loadCharFrequencyUnified()
   ])
   
@@ -166,6 +179,7 @@ export async function loadAllCharFrequencies() {
     zhihuFreq,
     scFreq,
     tcFreq,
+    tongguiTCFreq,
     unifiedFreq
   }
 }

@@ -49,7 +49,7 @@
           <tbody>
             <tr>
               <td>
-                知乎動態選重率
+                知乎簡體動態選重率
                 <span 
                   class="info-icon" 
                   @mouseenter="showTooltip($event, '計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。')"
@@ -64,7 +64,7 @@
             </tr>
             <tr>
               <td>
-                簡體動態選重率
+                北語簡體動態選重率
                 <span 
                   class="info-icon" 
                   @mouseenter="showTooltip($event, '計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。')"
@@ -75,11 +75,11 @@
               </td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateSC.full * 10000).toFixed(2) }}‱</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateSC.short * 10000).toFixed(2) }}‱</td>
-              <td class="metric-desc">基於<a href="https://faculty.blcu.edu.cn/xinghb/zh_CN/article/167473/content/1437.htm" target="_blank" rel="noopener">簡體字頻表</a>的加權選重率</td>
+              <td class="metric-desc">基於北京語言大學邢紅兵<a href="https://faculty.blcu.edu.cn/xinghb/zh_CN/article/167473/content/1437.htm" target="_blank" rel="noopener">簡體字頻表</a>的加權選重率</td>
             </tr>
             <tr>
               <td>
-                繁體動態選重率
+                臺標繁體動態選重率
                 <span 
                   class="info-icon" 
                   @mouseenter="showTooltip($event, '計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。')"
@@ -90,7 +90,22 @@
               </td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateTC.full * 10000).toFixed(2) }}‱</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateTC.short * 10000).toFixed(2) }}‱</td>
-              <td class="metric-desc">基於<a href="https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PIN/biau1.htm" target="_blank" rel="noopener">繁體字頻表</a>的加權選重率</td>
+              <td class="metric-desc">基於<a href="https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PIN/biau1.htm" target="_blank" rel="noopener">臺灣繁體字頻表</a>的加權選重率</td>
+            </tr>
+            <tr>
+              <td>
+                陸標繁體動態選重率
+                <span 
+                  class="info-icon" 
+                  @mouseenter="showTooltip($event, '計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。')"
+                  @mouseleave="hideTooltip()"
+                >
+                  ⓘ
+                </span>
+              </td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateTongguiTC.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateTongguiTC.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-desc">基於陸標繁體字頻表的加權選重率</td>
             </tr>
             <tr>
               <td>
@@ -105,7 +120,7 @@
               </td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateUnified.full * 10000).toFixed(2) }}‱</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateUnified.short * 10000).toFixed(2) }}‱</td>
-              <td class="metric-desc">基於繁簡聯合字頻表的加權選重率</td>
+              <td class="metric-desc">基於繁簡聯合字頻表（北語字頻+臺標字頻）的加權選重率</td>
             </tr>
             <tr>
               <td>GB2312重碼組數</td>
@@ -226,6 +241,7 @@ import {
   loadCharFrequency,
   loadCharFrequencySC,
   loadCharFrequencyTC,
+  loadCharFrequencyTongguiTC,
   loadCharFrequencyUnified
 } from '../services/dataService'
 import { createTooltipManager } from '../services/uiService'
@@ -288,6 +304,7 @@ interface AnalysisResults {
   dynamicDupRate: DualValue
   dynamicDupRateSC: DualValue
   dynamicDupRateTC: DualValue
+  dynamicDupRateTongguiTC: DualValue
   dynamicDupRateUnified: DualValue
   gb2312DuplicateChars: DualValue
   guoziDuplicateChars: DualValue
@@ -560,10 +577,11 @@ async function calculateAllMetrics() {
     const shortCodeTable = processedTables.short
     
     // 加載所有字頻數據
-    const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyUnified] = await Promise.all([
+    const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyTongguiTC, charFrequencyUnified] = await Promise.all([
       loadCharFrequency(),
       loadCharFrequencySC(),
       loadCharFrequencyTC(),
+      loadCharFrequencyTongguiTC(),
       loadCharFrequencyUnified()
     ])
     
@@ -576,6 +594,9 @@ async function calculateAllMetrics() {
     
     const fullDynamicDupRateTC = getDynamicDupRate(fullCodeTable, charFrequencyTC)
     const shortDynamicDupRateTC = getDynamicDupRate(shortCodeTable, charFrequencyTC)
+    
+    const fullDynamicDupRateTongguiTC = getDynamicDupRate(fullCodeTable, charFrequencyTongguiTC)
+    const shortDynamicDupRateTongguiTC = getDynamicDupRate(shortCodeTable, charFrequencyTongguiTC)
     
     const fullDynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
     const shortDynamicDupRateUnified = getDynamicDupRate(shortCodeTable, charFrequencyUnified)
@@ -625,6 +646,7 @@ async function calculateAllMetrics() {
       dynamicDupRate: { full: fullDynamicDupRate, short: shortDynamicDupRate },
       dynamicDupRateSC: { full: fullDynamicDupRateSC, short: shortDynamicDupRateSC },
       dynamicDupRateTC: { full: fullDynamicDupRateTC, short: shortDynamicDupRateTC },
+      dynamicDupRateTongguiTC: { full: fullDynamicDupRateTongguiTC, short: shortDynamicDupRateTongguiTC },
       dynamicDupRateUnified: { full: fullDynamicDupRateUnified, short: shortDynamicDupRateUnified },
       gb2312DuplicateChars: gb2312Stats.duplicateChars,
       guoziDuplicateChars: guoziStats.duplicateChars,

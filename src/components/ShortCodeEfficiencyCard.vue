@@ -40,9 +40,10 @@
             <thead>
               <tr>
                 <th>簡碼數量</th>
-                <th>知乎字頻</th>
-                <th>簡體字頻</th>
-                <th>繁體字頻</th>
+                <th>知乎簡體字頻</th>
+                <th>北語簡體字頻</th>
+                <th>臺標繁體字頻</th>
+                <th>陸標繁體字頻</th>
                 <th>繁簡聯合字頻</th>
               </tr>
             </thead>
@@ -72,16 +73,25 @@
                   @mouseenter="showTooltip($event, row.TCChars, row.N, 'TC')"
                   @mouseleave="hideTooltip()"
                   @click="copyToClipboard(row.TCChars, row.N, 'TC')"
-                  :class="getCellClass(row.TC, [row.zhihu, row.SC, row.TC, row.combined])"
+                  :class="getCellClass(row.TC, [row.zhihu, row.SC, row.TC, row.tongguiTC, row.combined])"
                 >
                   {{ formatValue(row.TC) }}
+                </td>
+                <td 
+                  class="metric-value hoverable clickable"
+                  @mouseenter="showTooltip($event, row.tongguiTCChars, row.N, 'tongguiTC')"
+                  @mouseleave="hideTooltip()"
+                  @click="copyToClipboard(row.tongguiTCChars, row.N, 'tongguiTC')"
+                  :class="getCellClass(row.tongguiTC, [row.zhihu, row.SC, row.TC, row.tongguiTC, row.combined])"
+                >
+                  {{ formatValue(row.tongguiTC) }}
                 </td>
                 <td 
                   class="metric-value hoverable clickable"
                   @mouseenter="showTooltip($event, row.combinedChars, row.N, 'combined')"
                   @mouseleave="hideTooltip()"
                   @click="copyToClipboard(row.combinedChars, row.N, 'combined')"
-                  :class="getCellClass(row.combined, [row.zhihu, row.SC, row.TC, row.combined])"
+                  :class="getCellClass(row.combined, [row.zhihu, row.SC, row.TC, row.tongguiTC, row.combined])"
                 >
                   {{ formatValue(row.combined) }}
                 </td>
@@ -134,7 +144,7 @@
 import { ref, computed, watch, onMounted, Teleport } from 'vue'
 import { calculateShortCodeEfficiency } from '../services/shortCodeEfficiencyService'
 import { useCollapse } from '../composables/useCollapse'
-import { loadCharFrequency, loadCharFrequencySC, loadCharFrequencyTC } from '../services/dataService'
+import { loadCharFrequency, loadCharFrequencySC, loadCharFrequencyTC, loadCharFrequencyTongguiTC } from '../services/dataService'
 import { createTooltipManager } from '../services/uiService'
 import { ExportService } from '../services/exportService'
 import type { CodeTable, CharFrequency } from '../types'
@@ -194,11 +204,13 @@ const tooltipChars = ref('')
 const charFrequencies = ref<{
   charFrequencySC: CharFrequency
   charFrequencyTC: CharFrequency
+  charFrequencyTongguiTC: CharFrequency
   charFrequencyZhihu: CharFrequency
   combined: CharFrequency
 }>({
   charFrequencySC: {},
   charFrequencyTC: {},
+  charFrequencyTongguiTC: {},
   charFrequencyZhihu: {},
   combined: {}
 })
@@ -208,15 +220,17 @@ interface TableRow {
   zhihu: number
   SC: number  
   TC: number
+  tongguiTC: number
   combined: number
   zhihuChars: string[]
   SCChars: string[]
   TCChars: string[]
+  tongguiTCChars: string[]
   combinedChars: string[]
 }
 
 const tableData = computed<TableRow[]>(() => {
-  const frequencies = ['charFrequencyZhihu', 'charFrequencySC', 'charFrequencyTC', 'combined'] as const
+  const frequencies = ['charFrequencyZhihu', 'charFrequencySC', 'charFrequencyTC', 'charFrequencyTongguiTC', 'combined'] as const
   if (!frequencies.every(freq => efficiencyData.value[freq as string]?.length > 0)) return []
   
   // 獲取所有N值
@@ -226,6 +240,7 @@ const tableData = computed<TableRow[]>(() => {
     const zhihuResult = efficiencyData.value['charFrequencyZhihu']?.find((r: any) => r.N === N)
     const SCResult = efficiencyData.value['charFrequencySC']?.find((r: any) => r.N === N)
     const TCResult = efficiencyData.value['charFrequencyTC']?.find((r: any) => r.N === N)
+    const tongguiTCResult = efficiencyData.value['charFrequencyTongguiTC']?.find((r: any) => r.N === N)
     const combinedResult = efficiencyData.value['combined']?.find((r: any) => r.N === N)
     
     return {
@@ -233,35 +248,40 @@ const tableData = computed<TableRow[]>(() => {
       zhihu: zhihuResult?.efficiency || 0,
       SC: SCResult?.efficiency || 0,
       TC: TCResult?.efficiency || 0,
+      tongguiTC: tongguiTCResult?.efficiency || 0,
       combined: combinedResult?.efficiency || 0,
       zhihuChars: zhihuResult?.selectedChars || [],
       SCChars: SCResult?.selectedChars || [],
       TCChars: TCResult?.selectedChars || [],
+      tongguiTCChars: tongguiTCResult?.selectedChars || [],
       combinedChars: combinedResult?.selectedChars || []
     }
   })
 
-  // 過濾掉四列都沒有新增簡碼字的行
+  // 過濾掉五列都沒有新增簡碼字的行
   const filteredRows: TableRow[] = []
   let prevZhihuCount = 0
   let prevSCCount = 0
   let prevTCCount = 0
+  let prevTongguiTCCount = 0
   let prevCombinedCount = 0
 
   for (const row of allRows) {
     const currentZhihuCount = row.zhihuChars.length
     const currentSCCount = row.SCChars.length
     const currentTCCount = row.TCChars.length
+    const currentTongguiTCCount = row.tongguiTCChars.length
     const currentCombinedCount = row.combinedChars.length
 
     // 檢查是否有任何一列有新增簡碼字
     const hasNewZhihu = currentZhihuCount > prevZhihuCount
     const hasNewSC = currentSCCount > prevSCCount
     const hasNewTC = currentTCCount > prevTCCount
+    const hasNewTongguiTC = currentTongguiTCCount > prevTongguiTCCount
     const hasNewCombined = currentCombinedCount > prevCombinedCount
 
     // N=0是基準行，永遠顯示；其他行只有在有新增簡碼字時才顯示
-    if (row.N === 0 || hasNewZhihu || hasNewSC || hasNewTC || hasNewCombined) {
+    if (row.N === 0 || hasNewZhihu || hasNewSC || hasNewTC || hasNewTongguiTC || hasNewCombined) {
       filteredRows.push(row)
     }
 
@@ -269,6 +289,7 @@ const tableData = computed<TableRow[]>(() => {
     prevZhihuCount = currentZhihuCount
     prevSCCount = currentSCCount
     prevTCCount = currentTCCount
+    prevTongguiTCCount = currentTongguiTCCount
     prevCombinedCount = currentCombinedCount
   }
 
@@ -277,7 +298,7 @@ const tableData = computed<TableRow[]>(() => {
 
 // 檢查是否有被省略的行
 const hasOmittedRows = computed(() => {
-  const frequencies = ['charFrequencyZhihu', 'charFrequencySC', 'charFrequencyTC', 'combined'] as const
+  const frequencies = ['charFrequencyZhihu', 'charFrequencySC', 'charFrequencyTC', 'charFrequencyTongguiTC', 'combined'] as const
   if (!frequencies.every(freq => efficiencyData.value[freq as string]?.length > 0)) return false
   
   const nValues = efficiencyData.value['charFrequencyZhihu']?.map((r: any) => r.N) || []
@@ -288,9 +309,10 @@ const hasOmittedRows = computed(() => {
 const loadCharFrequencyData = async () => {
   try {
     // 加載字頻數據
-    const [charFreqSC, charFreqTC, charFreqZhihu] = await Promise.all([
+    const [charFreqSC, charFreqTC, charFreqTongguiTC, charFreqZhihu] = await Promise.all([
       loadCharFrequencySC(),
       loadCharFrequencyTC(),
+      loadCharFrequencyTongguiTC(),
       loadCharFrequency()
     ])
 
@@ -299,6 +321,7 @@ const loadCharFrequencyData = async () => {
     const allChars = new Set([
       ...Object.keys(charFreqSC),
       ...Object.keys(charFreqTC),
+      ...Object.keys(charFreqTongguiTC),
       ...Object.keys(charFreqZhihu)
     ])
 
@@ -306,6 +329,7 @@ const loadCharFrequencyData = async () => {
       const frequencies = [
         charFreqSC[char] || 0,
         charFreqTC[char] || 0,
+        charFreqTongguiTC[char] || 0,
         charFreqZhihu[char] || 0
       ].filter(f => f > 0)
       
@@ -317,6 +341,7 @@ const loadCharFrequencyData = async () => {
     charFrequencies.value = {
       charFrequencySC: charFreqSC,
       charFrequencyTC: charFreqTC,
+      charFrequencyTongguiTC: charFreqTongguiTC,
       charFrequencyZhihu: charFreqZhihu,
       combined: combined
     }
@@ -352,7 +377,7 @@ const updateEfficiency = async () => {
     const results: Record<string, Array<{ N: number; efficiency: number; selectedChars: string[] }>> = {}
 
     // 為每個字頻數據計算簡碼效率
-    const frequencies = ['charFrequencySC', 'charFrequencyTC', 'charFrequencyZhihu', 'combined']
+    const frequencies = ['charFrequencySC', 'charFrequencyTC', 'charFrequencyTongguiTC', 'charFrequencyZhihu', 'combined']
     for (const freqKey of frequencies) {
       const charFrequency = charFrequencies.value[freqKey as keyof typeof charFrequencies.value]
       if (charFrequency && Object.keys(charFrequency).length > 0) {
@@ -428,6 +453,7 @@ const getPreviousChars = (prevN: number, freqType: string): string[] => {
     case 'zhihu': return prevRow.zhihuChars
     case 'SC': return prevRow.SCChars
     case 'TC': return prevRow.TCChars
+    case 'tongguiTC': return prevRow.tongguiTCChars
     case 'combined': return prevRow.combinedChars
     default: return []
   }
@@ -473,9 +499,10 @@ const copyToClipboard = async (chars: string[], currentN: number, freqType: stri
     
     // 顯示復制成功提示
     const freqNames = {
-      'zhihu': '知乎字頻',
-      'SC': '簡體字頻', 
-      'TC': '繁體字頻',
+      'zhihu': '知乎簡體字頻',
+      'SC': '北語簡體字頻', 
+      'TC': '臺標繁體字頻',
+      'tongguiTC': '陸標繁體字頻',
       'combined': '聯合字頻'
     }
     

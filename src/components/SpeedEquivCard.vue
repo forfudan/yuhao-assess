@@ -44,19 +44,24 @@
           </thead>
           <tbody>
             <tr>
-              <td>知乎字頻</td>
+              <td>知乎簡體字頻</td>
               <td class="metric-value">{{ analysisResults.zhihuEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於<a href="https://github.com/forfudan/chinese-characters-frequency" target="_blank" rel="noopener">知乎字頻表</a>的加權速度當量</td>
             </tr>
             <tr>
-              <td>簡體字頻</td>
+              <td>北語簡體字頻</td>
               <td class="metric-value">{{ analysisResults.scEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於<a href="https://faculty.blcu.edu.cn/xinghb/zh_CN/article/167473/content/1437.htm" target="_blank" rel="noopener">簡體字頻表</a>的加權速度當量</td>
             </tr>
             <tr>
-              <td>繁體字頻</td>
+              <td>臺標繁體字頻</td>
               <td class="metric-value">{{ analysisResults.tcEquiv.toFixed(4) }}</td>
-              <td class="metric-desc">基於<a href="https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PIN/biau1.htm" target="_blank" rel="noopener">繁體字頻表</a>的加權速度當量</td>
+              <td class="metric-desc">基於<a href="https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PIN/biau1.htm" target="_blank" rel="noopener">臺標繁體字頻表</a>的加權速度當量</td>
+            </tr>
+            <tr>
+              <td>陸標繁體字頻</td>
+              <td class="metric-value">{{ analysisResults.tongguiTCEquiv.toFixed(4) }}</td>
+              <td class="metric-desc">基於陸標繁體字頻表的加權速度當量</td>
             </tr>
             <tr>
               <td>繁簡聯合字頻</td>
@@ -151,6 +156,7 @@ interface SpeedEquivResults {
   zhihuEquiv: number
   scEquiv: number
   tcEquiv: number
+  tongguiTCEquiv: number
   unifiedEquiv: number
 }
 
@@ -205,18 +211,20 @@ async function calculateSpeedEquivAnalysis() {
     const equivTable = await loadEquivTable()
     
     // 5. 加载各种字频表
-    const { zhihuFreq, scFreq, tcFreq, unifiedFreq } = await loadAllCharFrequencies()
+    const { zhihuFreq, scFreq, tcFreq, tongguiTCFreq, unifiedFreq } = await loadAllCharFrequencies()
     
     // 6. 计算各种字频下的速度当量
     const zhihuPairFreq = calculateCodePairFrequencies(processedCodeTable, zhihuFreq)
     const scPairFreq = calculateCodePairFrequencies(processedCodeTable, scFreq)
     const tcPairFreq = calculateCodePairFrequencies(processedCodeTable, tcFreq)
+    const tongguiTCPairFreq = calculateCodePairFrequencies(processedCodeTable, tongguiTCFreq)
     const unifiedPairFreq = calculateCodePairFrequencies(processedCodeTable, unifiedFreq)
     
     analysisResults.value = {
       zhihuEquiv: calculateSpeedEquiv(zhihuPairFreq, equivTable),
       scEquiv: calculateSpeedEquiv(scPairFreq, equivTable),
       tcEquiv: calculateSpeedEquiv(tcPairFreq, equivTable),
+      tongguiTCEquiv: calculateSpeedEquiv(tongguiTCPairFreq, equivTable),
       unifiedEquiv: calculateSpeedEquiv(unifiedPairFreq, equivTable)
     }
     
