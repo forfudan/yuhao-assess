@@ -191,6 +191,11 @@
       <div v-else class="empty-state">
         <p>請點擊「重新計算」來查看分析結果</p>
       </div>
+      
+      <!-- 方案名稱標註 -->
+      <div v-if="codeTableName" class="scheme-name">
+        <span>當前方案：{{ codeTableName }}</span>
+      </div>
     </div>
   </div>
 
@@ -223,11 +228,13 @@ import type { CodeTable, CharFrequency } from '../types'
 // Props
 interface Props {
   codeTable?: CodeTable
+  codeTableName?: string
   id?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  codeTable: () => new Map()
+  codeTable: () => new Map(),
+  codeTableName: ''
 })
 
 // 折叠功能
@@ -821,5 +828,20 @@ onMounted(() => {
 
 .tooltip-content {
   display: block;
+}
+
+/* 方案名稱標註樣式 */
+.scheme-name {
+  margin-top: 16px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.scheme-name span {
+  font-size: 0.85rem;
+  color: #4a5568;
+  font-weight: 500;
 }
 </style>

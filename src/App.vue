@@ -75,17 +75,17 @@
               <span class="nav-icon">📈</span>
               <span class="nav-title">簡碼效率</span>
             </a>
-            <a v-if="analysisReady" @click="scrollToCard('comparison')" class="nav-item">
-              <span class="nav-icon">🆚</span>
-              <span class="nav-title">方案對比</span>
-            </a>
             <a v-if="analysisReady" @click="scrollToCard('heatmap')" class="nav-item">
               <span class="nav-icon">⌨️</span>
               <span class="nav-title">鍵位熱力</span>
             </a>
-            <a v-if="analysisReady" @click="scrollToCard('analysis')" class="nav-item">
+            <!-- <a v-if="analysisReady" @click="scrollToCard('analysis')" class="nav-item">
               <span class="nav-icon">📋</span>
               <span class="nav-title">碼表分析</span>
+            </a> -->
+            <a v-if="analysisReady" @click="scrollToCard('comparison')" class="nav-item">
+              <span class="nav-icon">🆚</span>
+              <span class="nav-title">方案對比</span>
             </a>
           </div>
         </div>
@@ -123,6 +123,7 @@
             id="card-duplicate"
             ref="duplicateAnalysisCardRef"
             :code-table="codeTable" 
+            :code-table-name="codeTableName"
           />
 
           <!-- 最大候選個數卡片 -->
@@ -131,6 +132,7 @@
             id="card-maximum"
             ref="maximumCandidatesCardRef"
             :code-table="codeTable" 
+            :code-table-name="codeTableName"
           />
 
           <!-- 速度當量卡片 -->
@@ -151,15 +153,7 @@
             :code-table="codeTable" 
             :analysis-ready="analysisReady"
             :global-prefix-keys="uploadPrefixKeys"
-          />
-
-          <!-- 方案對比卡片 -->
-          <ComparisonCard 
-            id="card-comparison"
-            ref="comparisonCardRef"
-            :currentCodeTable="codeTable" 
-            :currentCodeTableName="codeTableName" 
-            :globalPrefixKeys="uploadPrefixKeys"
+            :code-table-name="codeTableName"
           />
 
           <!-- 鍵位熱力圖卡片 -->
@@ -169,14 +163,30 @@
             ref="keyboardHeatmapCardRef"
             :code-table="codeTable" 
             :analysis-ready="analysisReady" 
+            :code-table-name="codeTableName"
           />
 
-          <!-- 碼表分析卡片 -->
+          <!-- 
+          碼表分析卡片
+          這個卡片的作用不大，暫時先注释掉。      
+          -->
+          <!-- 
           <CodeTableAnalysisCard 
             v-if="analysisReady" 
             id="card-analysis"
             ref="codeTableAnalysisCardRef"
             :analysis="analysisData" 
+            :code-table-name="codeTableName"
+          />
+          -->
+
+          <!-- 方案對比卡片 -->
+          <ComparisonCard 
+            id="card-comparison"
+            ref="comparisonCardRef"
+            :currentCodeTable="codeTable" 
+            :currentCodeTableName="codeTableName" 
+            :globalPrefixKeys="uploadPrefixKeys"
           />
         </div>
       </div>
@@ -755,7 +765,7 @@ const clearAllCache = () => {
 .nav-item {
   display: flex;
   align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-lg);
   color: var(--color-text-primary);
   text-decoration: none;
   transition: all 0.2s ease;

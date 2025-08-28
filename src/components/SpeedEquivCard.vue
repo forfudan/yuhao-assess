@@ -71,6 +71,11 @@
           </ul>
           <p>檢測到的最大碼長為：{{ maxCodeLength }} 位{{ detectedIsPrefix ? '，檢測到本方案為前綴碼' : '' }}</p>
         </div>
+        
+        <!-- 方案名稱標註 -->
+        <div v-if="codeTableName" class="scheme-name">
+          <span>當前方案：{{ codeTableName }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -399,5 +404,20 @@ onMounted(async () => {
     padding: 6px 8px;
     font-size: 0.7rem;
   }
+}
+
+/* 方案名稱標註樣式 */
+.scheme-name {
+  margin-top: 16px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.scheme-name span {
+  font-size: 0.85rem;
+  color: #4a5568;
+  font-weight: 500;
 }
 </style>

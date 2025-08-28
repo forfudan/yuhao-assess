@@ -138,6 +138,11 @@
           </div>
         </div>
       </div>
+      
+      <!-- 方案名稱標註 -->
+      <div v-if="codeTableName" class="scheme-name">
+        <span>當前方案：{{ codeTableName }}</span>
+      </div>
     </div>
     </div>
   </div>
@@ -153,6 +158,7 @@ import type { CodeTable, KeyData, KeyInfo, AnalysisStats } from '../types/index'
 interface Props {
   codeTable: CodeTable
   analysisReady: boolean
+  codeTableName?: string
 }
 
 const props = defineProps<Props>()
@@ -963,5 +969,20 @@ const getKeyData = (key: string): KeyData => {
 
 .keyboard-wrapper::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-secondary);
+}
+
+/* 方案名稱標註樣式 */
+.scheme-name {
+  margin-top: 16px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.scheme-name span {
+  font-size: 0.85rem;
+  color: #4a5568;
+  font-weight: 500;
 }
 </style>
