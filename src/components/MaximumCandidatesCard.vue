@@ -84,6 +84,11 @@
             <li>鼠標懸停在編碼上可查看該編碼對應的所有漢字</li>
           </ul>
         </div>
+        
+        <!-- 方案名稱標註 -->
+        <div v-if="codeTableName" class="scheme-name">
+          <span>當前方案：{{ codeTableName }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -109,6 +114,7 @@ import type { CodeTable } from '../types'
 // Props
 interface Props {
   codeTable: CodeTable
+  codeTableName?: string
   id?: string
 }
 
@@ -610,5 +616,20 @@ onMounted(() => {
   .tooltip-chars {
     font-size: 0.9rem;
   }
+}
+
+/* 方案名稱標註樣式 */
+.scheme-name {
+  margin-top: 16px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.scheme-name span {
+  font-size: 0.85rem;
+  color: #4a5568;
+  font-weight: 500;
 }
 </style>

@@ -97,6 +97,11 @@
             <li>點擊數字可將當前區間的高效簡碼字復制到剪貼板</li>
           </ul>
         </div>
+        
+        <!-- 方案名稱標註 -->
+        <div v-if="codeTableName" class="scheme-name">
+          <span>當前方案：{{ codeTableName }}</span>
+        </div>
       </div>
 
       <div v-else class="no-data">
@@ -131,6 +136,7 @@ interface Props {
   codeTable: CodeTable
   analysisReady: boolean
   globalPrefixKeys?: string[]
+  codeTableName?: string
   id?: string
 }
 
@@ -474,7 +480,6 @@ onMounted(async () => {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  margin-bottom: 20px;
   overflow: hidden;
 }
 
@@ -821,5 +826,20 @@ onMounted(async () => {
   .tooltip-chars {
     font-size: 0.9rem;
   }
+}
+
+/* 方案名稱標註樣式 */
+.scheme-name {
+  margin-top: 16px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.scheme-name span {
+  font-size: 0.85rem;
+  color: #4a5568;
+  font-weight: 500;
 }
 </style>

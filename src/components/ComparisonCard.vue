@@ -2567,6 +2567,14 @@ function clearAllSchemes() {
 </script>
 
 <style scoped>
+/* 卡片根元素样式 */
+.comparison-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
 /* 卡片头部布局 */
 .header-content {
   display: flex;

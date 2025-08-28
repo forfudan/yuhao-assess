@@ -123,6 +123,7 @@
             id="card-duplicate"
             ref="duplicateAnalysisCardRef"
             :code-table="codeTable" 
+            :code-table-name="codeTableName"
           />
 
           <!-- 最大候選個數卡片 -->
@@ -131,6 +132,7 @@
             id="card-maximum"
             ref="maximumCandidatesCardRef"
             :code-table="codeTable" 
+            :code-table-name="codeTableName"
           />
 
           <!-- 速度當量卡片 -->
@@ -151,6 +153,7 @@
             :code-table="codeTable" 
             :analysis-ready="analysisReady"
             :global-prefix-keys="uploadPrefixKeys"
+            :code-table-name="codeTableName"
           />
 
           <!-- 方案對比卡片 -->
@@ -169,6 +172,7 @@
             ref="keyboardHeatmapCardRef"
             :code-table="codeTable" 
             :analysis-ready="analysisReady" 
+            :code-table-name="codeTableName"
           />
 
           <!-- 碼表分析卡片 -->
@@ -177,6 +181,7 @@
             id="card-analysis"
             ref="codeTableAnalysisCardRef"
             :analysis="analysisData" 
+            :code-table-name="codeTableName"
           />
         </div>
       </div>
