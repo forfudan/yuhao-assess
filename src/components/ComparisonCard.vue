@@ -1,16 +1,23 @@
 <template>
-  <div class="comparison-card" v-bind="$attrs">
+  <div ref="cardRef" class="comparison-card" v-bind="$attrs">
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">方案對比</h3>
           <p class="card-description">對比不同輸入法方案的各項數據，支持預設方案和文件上傳。</p>
         </div>
-        <button @click="toggleCollapsed" class="collapse-button">
-          <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-          </svg>
-        </button>
+        <div class="header-buttons">
+          <button @click="exportCard" class="export-btn" :disabled="!hasAnyScheme" title="导出图片">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+          </button>
+          <button @click="toggleCollapsed" class="collapse-button">
+            <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -253,12 +260,13 @@
               <tr v-for="(scheme, index) in visibleSchemes" :key="scheme.id" class="scheme-row">
                 <td class="scheme-name">
                   <div class="scheme-info">
-                    <span class="scheme-title">{{ scheme.name }}</span>
-                    <span v-if="scheme.isBuiltin" class="scheme-source">預設方案</span>
-                    <span v-else-if="!scheme.codeTable" class="scheme-source">
-                      數據快照
+                    <span 
+                      class="scheme-title"
+                      @mouseenter="showTooltip($event, scheme)"
+                      @mouseleave="hideTooltip"
+                    >
+                      {{ scheme.name }}
                     </span>
-                    <span v-else class="scheme-source">上傳方案</span>
                   </div>
                 </td>
                 <td class="char-count">
@@ -645,6 +653,15 @@
       </div>
     </div>
   </Teleport>
+
+  <!-- Custom Tooltip -->
+  <div 
+    v-show="tooltip.show" 
+    class="custom-tooltip"
+    :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
+  >
+    {{ tooltip.text }}
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -654,6 +671,7 @@ defineOptions({
 })
 
 import { ref, computed, onMounted, onUnmounted, watch, nextTick, Teleport } from 'vue'
+import { ExportService } from '../services/exportService'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
 import { getDynamicDupRate } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
@@ -789,6 +807,8 @@ interface BuiltinScheme {
 
 // 響應式數據
 const yuhaoDefaultScheme = ref<Scheme | null>(null) // 宇浩日月方案
+// 基本狀態管理
+const cardRef = ref<HTMLElement>()
 const currentUserScheme = ref<Scheme | null>(null) // 當前用戶方案
 const additionalSchemes = ref<Scheme[]>([]) // 額外添加的方案
 const showAddForm = ref(false)
@@ -800,6 +820,14 @@ const availableBuiltinSchemes = ref<BuiltinScheme[]>([])
 const fileInputCharCode = ref<HTMLInputElement>()
 const fileInputCodeChar = ref<HTMLInputElement>()
 const uploadPrefixFlag = ref(false) // 用户上传文件时的前缀码标志
+
+// Tooltip 狀態管理
+const tooltip = ref({
+  show: false,
+  text: '',
+  x: 0,
+  y: 0
+})
 
 // Tab 相關狀態
 const activeTab = ref<'dynamic' | 'static' | 'maxCandidates' | 'speedEquiv'>('dynamic')
@@ -2484,6 +2512,32 @@ function canRemoveScheme(scheme: Scheme): boolean {
   return additionalSchemes.value.some(s => s.id === scheme.id)
 }
 
+// 导出功能
+async function exportCard() {
+  if (cardRef.value && hasAnyScheme.value) {
+    const schemeNames = allSchemes.value.map(s => s.name).join('-')
+    await ExportService.exportElementToPNG(cardRef.value, '方案對比', schemeNames, {
+      copyToClipboard: ExportService.isClipboardSupported(),
+    })
+  }
+}
+
+// Tooltip 功能
+function showTooltip(event: MouseEvent, scheme: Scheme) {
+  const tooltipText = scheme.isBuiltin ? '預設方案' : scheme.codeTable ? '上傳方案' : '數據快照'
+  
+  tooltip.value = {
+    show: true,
+    text: tooltipText,
+    x: event.clientX + 10,
+    y: event.clientY - 30
+  }
+}
+
+function hideTooltip() {
+  tooltip.value.show = false
+}
+
 // 移除方案
 function removeScheme(scheme: Scheme) {
   if (!canRemoveScheme(scheme)) return
@@ -2573,47 +2627,6 @@ function clearAllSchemes() {
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-}
-
-/* 卡片头部布局 */
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  width: 100%;
-}
-
-.header-text {
-  flex: 1;
-}
-
-/* 折叠按钮样式 */
-.collapse-button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: var(--spacing-lg);
-  backdrop-filter: blur(10px);
-}
-
-.collapse-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-.collapse-button svg {
-  transition: transform 0.3s ease;
-}
-
-.collapse-button svg.rotated {
-  transform: rotate(180deg);
 }
 
 /* Tab 样式 */
@@ -2917,6 +2930,7 @@ function clearAllSchemes() {
 .scheme-title {
   font-weight: 500;
   color: #374151;
+  cursor: help;
 }
 
 .scheme-source {
@@ -3497,5 +3511,31 @@ function clearAllSchemes() {
     flex-direction: column;
     align-items: stretch;
   }
+}
+
+/* Custom Tooltip Styles */
+.custom-tooltip {
+  position: fixed;
+  background: #1f2937;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 9999;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #374151;
+}
+
+.custom-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #1f2937;
 }
 </style>

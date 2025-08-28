@@ -1,16 +1,23 @@
 <template>
-  <div class="duplicate-analysis-card" :id="id">
+  <div ref="cardRef" class="duplicate-analysis-card" :id="id">
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">重碼數據</h3>
           <p class="card-description">分析不同字符集下的重碼情況，計算靜態重碼率和動態選重率。閱讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
         </div>
-        <button @click="toggleCollapsed" class="collapse-button">
-          <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-          </svg>
-        </button>
+        <div class="header-buttons">
+          <button @click="exportCard" class="export-btn" :disabled="isCalculating || !analysisResults" title="导出图片">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+          </button>
+          <button @click="toggleCollapsed" class="collapse-button">
+            <svg :class="{ 'rotated': isCollapsed }" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -193,7 +200,7 @@
       </div>
       
       <!-- 方案名稱標註 -->
-      <div v-if="codeTableName" class="scheme-name">
+      <div v-if="codeTableName" class="scheme-name-annotation">
         <span>當前方案：{{ codeTableName }}</span>
       </div>
     </div>
@@ -223,6 +230,7 @@ import {
 } from '../services/dataService'
 import { createTooltipManager } from '../services/uiService'
 import { useCollapse } from '../composables/useCollapse'
+import { ExportService } from '../services/exportService'
 import type { CodeTable, CharFrequency } from '../types'
 
 // Props
@@ -239,6 +247,27 @@ const props = withDefaults(defineProps<Props>(), {
 
 // 折叠功能
 const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
+
+// 卡片引用
+const cardRef = ref<HTMLElement>()
+
+// 导出功能
+async function exportCard() {
+  if (!cardRef.value || !analysisResults.value) {
+    console.warn('卡片元素或数据不可用')
+    return
+  }
+
+  try {
+    await ExportService.exportElementToPNG(cardRef.value, '重碼數據', props.codeTableName || '未命名方案', {
+      copyToClipboard: ExportService.isClipboardSupported(),
+      download: true
+    })
+  } catch (error) {
+    console.error('导出失败:', error)
+    alert('导出失败，请重试')
+  }
+}
 
 // 暴露摺疊方法給父組件
 defineExpose({
@@ -644,47 +673,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 卡片头部布局 */
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  width: 100%;
-}
-
-.header-text {
-  flex: 1;
-}
-
-/* 折叠按钮样式 */
-.collapse-button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: var(--spacing-lg);
-  backdrop-filter: blur(10px);
-}
-
-.collapse-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-.collapse-button svg {
-  transition: transform 0.3s ease;
-}
-
-.collapse-button svg.rotated {
-  transform: rotate(180deg);
-}
-
 /* 原有样式 */
 .card-description a {
   color: rgba(255, 255, 255, 0.9);
