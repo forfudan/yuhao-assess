@@ -90,9 +90,7 @@ export { codeTableProcessingService } from './codeTableProcessingService'
 
 // 導出簡碼效率服務
 export {
-  calculateShortCodeEfficiency,
-  calculateFullCodeAverageLength,
-  calculateShortCodeAverageLength
+  calculateShortCodeEfficiency
 } from './shortCodeEfficiencyService'
 
 // 導出類型

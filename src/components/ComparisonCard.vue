@@ -638,8 +638,8 @@
                   v-model="uploadPrefixFlag"
                   class="prefix-checkbox"
                 >
-                <span class="prefix-label">我是前綴碼方案</span>
-                <span class="prefix-desc">（勾選即表示上傳的是前綴碼的碼表，影響空格鍵頻率計算）</span>
+                <span class="prefix-label">我是前綴或頂功方案</span>
+                <span class="prefix-desc">（勾選即表示上傳的是前綴或頂功方案，影響空格鍵頻率計算）</span>
               </label>
             </div>
             
