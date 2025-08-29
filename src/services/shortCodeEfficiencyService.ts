@@ -95,7 +95,7 @@ function preprocessCodeTable(
       }
     }
     
-    // 去重并排序
+    // 去重並排序
     const uniqueCodes = Array.from(new Map(
       codesWithLen.map(code => [`${code.char}_${code.actualLen}`, code])
     ).values()).sort((a, b) => a.actualLen - b.actualLen)

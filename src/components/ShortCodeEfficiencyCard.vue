@@ -895,7 +895,7 @@ onMounted(async () => {
   background: #e9d5ff !important;
 }
 
-/* 自定義工具提示 */
+/* 自定義工具提示容器 - 滑鼠懸停時顯示的浮動提示框 */
 .custom-tooltip {
   position: fixed;
   background: #1f2937;
@@ -904,25 +904,28 @@ onMounted(async () => {
   padding: 12px;
   font-size: 0.875rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  max-width: 400px; /* 增加最大宽度以容纳网格布局 */
+  max-width: 400px; /* 增加最大寬度以容納網格佈局 */
   z-index: 9999;
   pointer-events: none;
   min-width: 100px;
   min-height: 50px;
 }
 
+/* 提示框內容容器 - 包含標題和字符網格的垂直佈局 */
 .tooltip-content {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+/* 提示框標題樣式 - 顯示說明文字 */
 .tooltip-header {
   font-weight: 500;
   color: #d1d5db;
   font-size: 0.75rem;
 }
 
+/* 舊版提示框字符樣式 - 保留以防向後兼容性 */
 .tooltip-chars {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
   font-size: 1.2rem;
@@ -930,11 +933,12 @@ onMounted(async () => {
   word-break: break-all;
 }
 
-/* 字符表格樣式 - 每個單元格包含ruby */
+/* 字符網格容器樣式 - 設定中文字體族 */
 .tooltip-chars-grid {
   font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
+/* 字符表格容器樣式 - 用於tooltip中顯示漢字網格 */
 .char-table {
   width: 100%;
   border-collapse: separate;
@@ -945,6 +949,7 @@ onMounted(async () => {
   padding: 4px;
 }
 
+/* 字符表格行中的單元格樣式 - 每個漢字佔一個單元格 */
 .char-row td {
   border: 1px solid rgba(156, 163, 175, 0.4);
   text-align: center;
@@ -956,6 +961,7 @@ onMounted(async () => {
   border-color: rgba(79, 70, 229, 0.5);
 }
 
+/* 字符單元格樣式 - 包含漢字和編碼的容器 */
 .char-cell {
   height: 55px;
   position: relative;
@@ -964,6 +970,7 @@ onMounted(async () => {
   display: table-cell;
 }
 
+/* 漢字文本樣式 - ruby元素中的主要漢字 */
 .char-ruby {
   font-size: 1.6rem;
   font-weight: 600;
@@ -974,6 +981,7 @@ onMounted(async () => {
   margin: 0 auto;
 }
 
+/* 編碼文本樣式 - ruby元素中漢字上方的編碼 */
 .code-rt {
   font-size: 0.75rem;
   color: #d1d5db;
@@ -984,14 +992,14 @@ onMounted(async () => {
   display: block;
 }
 
-/* 空單元格樣式 */
+/* 空單元格樣式 - 用於填補行末不足10個字符的空位 */
 .char-cell.empty {
   background-color: transparent;
   border-color: rgba(75, 85, 99, 0.2);
   border-style: dashed;
 }
 
-/* 懸停效果 */
+/* 懸停效果 - 滑鼠經過表格時的視覺反饋 */
 .char-table:hover .char-cell:not(.empty) {
   background-color: rgba(79, 70, 229, 0.45);
   border-color: rgba(79, 70, 229, 0.7);
@@ -999,10 +1007,12 @@ onMounted(async () => {
   transition: all 0.2s ease;
 }
 
+/* 懸停時漢字顏色變化 - 增強可讀性 */
 .char-table:hover .char-ruby {
   color: #f8fafc;
 }
 
+/* 懸停時編碼顏色變化 - 增強可讀性 */
 .char-table:hover .code-rt {
   color: #e5e7eb;
 }
@@ -1122,19 +1132,21 @@ onMounted(async () => {
 }
 </style>
 
-<!-- 全局样式专门用于 Teleport 的 tooltip -->
+<!-- 全域樣式專門用於 Teleport 的 tooltip - 解決 scoped 樣式無法作用於 Teleport 內容的問題 -->
 <style>
-/* 专门为 custom-tooltip 设置的全局样式 */
+/* tooltip 字符單元格樣式 - 確保所有單元格內容居中對齊 */
 .custom-tooltip .char-cell {
   text-align: center !important;
   vertical-align: middle !important;
 }
 
+/* tooltip 表格行單元格樣式 - 確保表格結構正確對齊 */
 .custom-tooltip .char-row td {
   text-align: center !important;
   vertical-align: middle !important;
 }
 
+/* tooltip 漢字樣式 - 手機端基礎字體大小 */
 .custom-tooltip .char-ruby {
   font-size: 1.0rem !important;
   font-weight: 600;
@@ -1145,6 +1157,7 @@ onMounted(async () => {
   margin: 0 auto !important;
 }
 
+/* tooltip 編碼樣式 - 手機端基礎字體大小 */
 .custom-tooltip .code-rt {
   font-size: 0.5rem !important;
   color: #d1d5db;
@@ -1155,8 +1168,9 @@ onMounted(async () => {
   display: block !important;
 }
 
-/* 桌面模式下字体增大 */
+/* 桌面端響應式設計 - 螢幕寬度 ≥ 769px 時應用較大字體和容器 */
 @media (min-width: 769px) {
+  /* 桌面端漢字樣式 - 比手機端稍大以利用桌面螢幕空間 */
   .custom-tooltip .char-ruby {
     font-size: 1.2rem !important;
     text-align: center !important;
@@ -1164,12 +1178,14 @@ onMounted(async () => {
     margin: 0 auto !important;
   }
   
+  /* 桌面端編碼樣式 - 對應增大字體以保持比例 */
   .custom-tooltip .code-rt {
     font-size: 0.8rem !important;
     text-align: center !important;
     display: block !important;
   }
   
+  /* 桌面端字符單元格樣式 - 調整容器大小以適配較大字體 */
   .custom-tooltip .char-cell {
     height: 10px !important;
     min-width: 10px !important;
@@ -1177,6 +1193,7 @@ onMounted(async () => {
     vertical-align: middle !important;
   }
   
+  /* 桌面端表格單元格樣式 - 增大內邊距和最小寬度 */
   .custom-tooltip .char-row td {
     padding: 2px 2px !important;
     min-width: 10px !important;
