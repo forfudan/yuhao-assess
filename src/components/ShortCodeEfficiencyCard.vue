@@ -382,18 +382,6 @@ const updateEfficiency = async () => {
     shortWithSelectionTable.value = processedTables.shortWithSelection
     processedCodeTable.value = processedTables.original
 
-    // 轉換碼表格式為數組
-    const codeTableRows: Array<{ char: string; code: string }> = []
-    for (const [char, codes] of props.codeTable.entries()) {
-      for (const code of codes) {
-        codeTableRows.push({ char, code })
-      }
-    }
-
-    // 獲取配置參數
-    const maxLen = 4 // 默認最大長度
-    const isPrefix = !!props.globalPrefixKeys && props.globalPrefixKeys.length > 0
-
     const results: Record<string, Array<{ N: number; efficiency: number; selectedChars: string[] }>> = {}
 
     // 為每個字頻數據計算簡碼效率
@@ -402,10 +390,9 @@ const updateEfficiency = async () => {
       const charFrequency = charFrequencies.value[freqKey as keyof typeof charFrequencies.value]
       if (charFrequency && Object.keys(charFrequency).length > 0) {
         const efficiencyResults = calculateShortCodeEfficiency(
-          codeTableRows,
-          charFrequency,
-          maxLen,
-          isPrefix
+          processedTables.shortWithSelection,
+          processedTables.fullWithSelection,
+          charFrequency
         )
         results[freqKey] = efficiencyResults
       }
