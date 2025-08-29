@@ -471,15 +471,8 @@ const generateCharacterGrid = (chars: string[]): string => {
     return '<div>無字符</div>'
   }
   
-  // 根据字符数量动态计算每行显示的字符数
-  let charsPerRow: number
-  if (chars.length <= 8) {
-    charsPerRow = Math.min(chars.length, 4) // 少于8个字符时最多4列
-  } else if (chars.length <= 20) {
-    charsPerRow = Math.min(8, Math.ceil(chars.length / 3)) // 中等数量时3-4行
-  } else {
-    charsPerRow = Math.min(10, Math.ceil(chars.length / 4)) // 较多字符时4-5行
-  }
+  // 统一每行显示10个字符
+  const charsPerRow = 10
   
   // 生成表格行
   const rows: string[] = []
@@ -937,7 +930,7 @@ onMounted(async () => {
   word-break: break-all;
 }
 
-/* 新增：字符表格樣式 - 每個單元格包含ruby */
+/* 字符表格樣式 - 每個單元格包含ruby */
 .tooltip-chars-grid {
   font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
@@ -1121,3 +1114,45 @@ onMounted(async () => {
   font-weight: 500;
 }
 </style>
+
+<!-- 全局样式专门用于 Teleport 的 tooltip -->
+<style>
+/* 专门为 custom-tooltip 设置的全局样式 */
+.custom-tooltip .char-ruby {
+  font-size: 1.0rem !important;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.custom-tooltip .code-rt {
+  font-size: 0.5rem !important;
+  color: #d1d5db;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* 桌面模式下字体增大50% */
+@media (min-width: 769px) {
+  .custom-tooltip .char-ruby {
+    font-size: 1.2rem !important;
+  }
+  
+  .custom-tooltip .code-rt {
+    font-size: 0.65rem !important;
+  }
+  
+  .custom-tooltip .char-cell {
+    height: 20px !important;
+    min-width: 20px !important;
+  }
+  
+  .custom-tooltip .char-row td {
+    padding: 5px 4px !important;
+    min-width: 20px !important;
+  }
+}
+</style>
+
+
