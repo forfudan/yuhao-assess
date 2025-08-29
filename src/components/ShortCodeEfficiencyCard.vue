@@ -960,6 +960,8 @@ onMounted(async () => {
   height: 55px;
   position: relative;
   vertical-align: middle;
+  text-align: center;
+  display: table-cell;
 }
 
 .char-ruby {
@@ -967,6 +969,9 @@ onMounted(async () => {
   font-weight: 600;
   color: #ffffff;
   line-height: 1.4;
+  text-align: center;
+  display: block;
+  margin: 0 auto;
 }
 
 .code-rt {
@@ -975,6 +980,8 @@ onMounted(async () => {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
   font-weight: 500;
   line-height: 1;
+  text-align: center;
+  display: block;
 }
 
 /* 空單元格樣式 */
@@ -1118,11 +1125,24 @@ onMounted(async () => {
 <!-- 全局样式专门用于 Teleport 的 tooltip -->
 <style>
 /* 专门为 custom-tooltip 设置的全局样式 */
+.custom-tooltip .char-cell {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.custom-tooltip .char-row td {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
 .custom-tooltip .char-ruby {
   font-size: 1.0rem !important;
   font-weight: 600;
   color: #ffffff;
   line-height: 1.4;
+  text-align: center !important;
+  display: block !important;
+  margin: 0 auto !important;
 }
 
 .custom-tooltip .code-rt {
@@ -1131,26 +1151,37 @@ onMounted(async () => {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
   font-weight: 500;
   line-height: 1;
+  text-align: center !important;
+  display: block !important;
 }
 
-/* 桌面模式下字体增大50% */
+/* 桌面模式下字体增大 */
 @media (min-width: 769px) {
   .custom-tooltip .char-ruby {
     font-size: 1.2rem !important;
+    text-align: center !important;
+    display: block !important;
+    margin: 0 auto !important;
   }
   
   .custom-tooltip .code-rt {
-    font-size: 0.65rem !important;
+    font-size: 0.8rem !important;
+    text-align: center !important;
+    display: block !important;
   }
   
   .custom-tooltip .char-cell {
-    height: 20px !important;
-    min-width: 20px !important;
+    height: 10px !important;
+    min-width: 10px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
   }
   
   .custom-tooltip .char-row td {
-    padding: 5px 4px !important;
-    min-width: 20px !important;
+    padding: 2px 2px !important;
+    min-width: 10px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
   }
 }
 </style>
