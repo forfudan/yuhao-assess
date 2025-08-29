@@ -72,8 +72,8 @@
           <div class="prefix-keys-input" v-if="isPrefixCode">
             <input 
               v-model="prefixKeysInput"
-              placeholder="輸入上屏碼"
-              title="輸入前綴碼方案的上屏鍵，如: aoeiu"
+              placeholder="輸入已編入碼表的上屏碼，如 aoeiu_;"
+              title="輸入上屏碼，如: aoeiu;'"
               class="prefix-keys-field"
               type="text"
             />
@@ -84,7 +84,7 @@
             title="切換前綴碼模式"
             type="button"
           >
-            {{ isPrefixCode ? '✓ 我是前綴碼方案' : '我是前綴碼方案' }}
+            {{ isPrefixCode ? '✓ 我是前綴或頂功方案' : '我是前綴或頂功方案' }}
           </button>
         </div>
       </div>
@@ -703,7 +703,7 @@ loadBuiltinConfig()
   font-size: 14px;
   background: white;
   transition: all 0.2s ease;
-  min-width: 120px;
+  min-width: 300px;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
 }
 
@@ -728,6 +728,7 @@ loadBuiltinConfig()
   font-size: 14px;
   transition: all 0.2s ease;
   white-space: nowrap;
+  min-width: 300px;
 }
 
 /* 上传区域 */
