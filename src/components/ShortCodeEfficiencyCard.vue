@@ -134,7 +134,7 @@
     <div v-if="tooltipVisible" class="custom-tooltip" :style="tooltipStyle">
       <div class="tooltip-content">
         <div class="tooltip-header">本區間效率最高簡碼字（點擊數字複製漢字）：</div>
-        <div class="tooltip-chars">{{ tooltipChars }}</div>
+        <div class="tooltip-chars-grid" v-html="tooltipCharsWithCodes"></div>
       </div>
     </div>
   </Teleport>
@@ -147,6 +147,7 @@ import { useCollapse } from '../composables/useCollapse'
 import { loadCharFrequency, loadCharFrequencySC, loadCharFrequencyTC, loadCharFrequencyTongguiTC } from '../services/dataService'
 import { createTooltipManager } from '../services/uiService'
 import { ExportService } from '../services/exportService'
+import { codeTableProcessingService } from '../services'
 import type { CodeTable, CharFrequency } from '../types'
 
 // Props
@@ -199,6 +200,11 @@ const efficiencyData = ref<Record<string, Array<{ N: number; efficiency: number;
 // 工具提示管理器
 const { tooltipVisible, tooltipText, tooltipStyle, showTooltip: showTooltipBase, hideTooltip } = createTooltipManager()
 const tooltipChars = ref('')
+const tooltipCharsWithCodes = ref('')
+
+// 预处理的码表（包含简码加选重表）
+const processedCodeTable = ref<CodeTable>(new Map())
+const shortWithSelectionTable = ref<CodeTable>(new Map())
 
 // 字頻數據
 const charFrequencies = ref<{
@@ -362,6 +368,20 @@ const updateEfficiency = async () => {
   error.value = ''
 
   try {
+    // 預處理碼表以獲取簡碼加選重表
+    const processedTables = await codeTableProcessingService.processCodeTable(
+      props.codeTable,
+      {
+        isPrefix: props.globalPrefixKeys && props.globalPrefixKeys.length > 0,
+        maxLength: 4,
+        prefixKeys: props.globalPrefixKeys
+      }
+    )
+    
+    // 保存簡碼加選重表供tooltip使用
+    shortWithSelectionTable.value = processedTables.shortWithSelection
+    processedCodeTable.value = processedTables.original
+
     // 轉換碼表格式為數組
     const codeTableRows: Array<{ char: string; code: string }> = []
     for (const [char, codes] of props.codeTable.entries()) {
@@ -411,6 +431,7 @@ const showTooltip = (event: MouseEvent, chars: string[], currentN: number, freqT
   
   if (chars.length === 0) {
     tooltipChars.value = '無簡碼字'
+    tooltipCharsWithCodes.value = '<div>無簡碼字</div>'
   } else {
     // 根據不同的N值顯示差值字符
     if (prevN > 0) {
@@ -422,11 +443,18 @@ const showTooltip = (event: MouseEvent, chars: string[], currentN: number, freqT
       
       if (displayChars.length === 0) {
         tooltipChars.value = '無新增漢字'
+        tooltipCharsWithCodes.value = '<div>無新增漢字</div>'
       }
     } else {
       // 第一行顯示所有字符
       displayChars = chars
       tooltipChars.value = chars.join('')
+    }
+    
+    // 生成網格佈局的HTML，每行10個字符，帶有ruby文本顯示編碼
+    if (displayChars.length > 0) {
+      const gridHTML = generateCharacterGrid(displayChars)
+      tooltipCharsWithCodes.value = gridHTML
     }
   }
   
@@ -435,6 +463,98 @@ const showTooltip = (event: MouseEvent, chars: string[], currentN: number, freqT
     ? `N=${currentN}新增的${actualCount}個簡碼字：${tooltipChars.value}`
     : `N=${currentN}的${actualCount}個效率最高的簡碼字符：${tooltipChars.value}`
   showTooltipBase(event, tooltipText)
+}
+
+// 生成字符表格HTML - 每個單元格包含漢字和上方的ruby簡碼
+const generateCharacterGrid = (chars: string[]): string => {
+  if (chars.length === 0) {
+    return '<div>無字符</div>'
+  }
+  
+  // 根据字符数量动态计算每行显示的字符数
+  let charsPerRow: number
+  if (chars.length <= 8) {
+    charsPerRow = Math.min(chars.length, 4) // 少于8个字符时最多4列
+  } else if (chars.length <= 20) {
+    charsPerRow = Math.min(8, Math.ceil(chars.length / 3)) // 中等数量时3-4行
+  } else {
+    charsPerRow = Math.min(10, Math.ceil(chars.length / 4)) // 较多字符时4-5行
+  }
+  
+  // 生成表格行
+  const rows: string[] = []
+  for (let i = 0; i < chars.length; i += charsPerRow) {
+    const rowChars = chars.slice(i, i + charsPerRow)
+    
+    // 生成包含ruby的單元格
+    const cellsHTML = rowChars.map(char => {
+      const fullShortCode = getFullShortCodeWithSelection(char)
+      return `<td class="char-cell">
+        <ruby class="char-ruby">
+          ${char}
+          <rt class="code-rt">${fullShortCode}</rt>
+        </ruby>
+      </td>`
+    }).join('')
+    
+    // 如果行不完整，補充空單元格
+    const emptyCells = Math.max(0, charsPerRow - rowChars.length)
+    const emptyHTML = '<td class="char-cell empty"></td>'.repeat(emptyCells)
+    
+    rows.push(`<tr class="char-row">${cellsHTML}${emptyHTML}</tr>`)
+  }
+  
+  return `<table class="char-table">${rows.join('')}</table>`
+}
+
+// 獲取完整的簡碼（使用預生成的簡碼加選重表）
+const getFullShortCodeWithSelection = (char: string): string => {
+  // 優先使用預生成的簡碼加選重表
+  const shortCodes = shortWithSelectionTable.value.get(char)
+  if (shortCodes && shortCodes.length > 0) {
+    // 返回最短的簡碼（通常只有一個）
+    return shortCodes.reduce((a, b) => a.length <= b.length ? a : b)
+  }
+  
+  // 如果簡碼表中沒有，降級到原始碼表
+  const codes = props.codeTable.get(char) || []
+  if (codes.length === 0) return ''
+  
+  // 找到最短的編碼
+  const shortestCode = codes.reduce((a, b) => a.length <= b.length ? a : b)
+  
+  // 檢查是否需要選重複號（簡化邏輯，因為預生成表應該已經處理了這些）
+  // 找到所有具有相同簡碼的字符
+  const sameCodeChars: string[] = []
+  
+  // 遍歷碼表找到有相同簡碼的字符
+  for (const [otherChar, otherCodes] of props.codeTable.entries()) {
+    for (const otherCode of otherCodes) {
+      if (otherCode === shortestCode) {
+        sameCodeChars.push(otherChar)
+        break
+      }
+    }
+  }
+  
+  // 如果只有一個字符使用這個簡碼，不需要選重複號
+  if (sameCodeChars.length <= 1) {
+    return shortestCode
+  }
+  
+  // 如果有多個字符使用相同簡碼，需要添加選重複號
+  // 按字符的Unicode順序排序，確定位置
+  sameCodeChars.sort()
+  const position = sameCodeChars.indexOf(char)
+  
+  if (position === -1) {
+    return shortestCode // 如果沒找到（不應該發生），返回原簡碼
+  }
+  
+  // 添加選重複號（使用正確的選重鍵序列）
+  const selectionKeys = ['_', ';', "'", '4', '5', '6', '7', '8', '9', '0']
+  const selectionKey = position < selectionKeys.length ? selectionKeys[position] : '0'
+  return `${shortestCode}${selectionKey}`
 }
 
 // 獲取前一個N值
@@ -791,7 +911,7 @@ onMounted(async () => {
   padding: 12px;
   font-size: 0.875rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  max-width: 300px;
+  max-width: 400px; /* 增加最大宽度以容纳网格布局 */
   z-index: 9999;
   pointer-events: none;
   min-width: 100px;
@@ -815,6 +935,76 @@ onMounted(async () => {
   font-size: 1.2rem;
   line-height: 1.5;
   word-break: break-all;
+}
+
+/* 新增：字符表格樣式 - 每個單元格包含ruby */
+.tooltip-chars-grid {
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+.char-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 3px;
+  margin: 6px 0;
+  background-color: rgba(75, 85, 99, 0.15);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.char-row td {
+  border: 1px solid rgba(156, 163, 175, 0.4);
+  text-align: center;
+  vertical-align: middle;
+  padding: 8px 6px;
+  min-width: 38px;
+  border-radius: 4px;
+  background-color: rgba(79, 70, 229, 0.3);
+  border-color: rgba(79, 70, 229, 0.5);
+}
+
+.char-cell {
+  height: 55px;
+  position: relative;
+  vertical-align: middle;
+}
+
+.char-ruby {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.code-rt {
+  font-size: 0.75rem;
+  color: #d1d5db;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* 空單元格樣式 */
+.char-cell.empty {
+  background-color: transparent;
+  border-color: rgba(75, 85, 99, 0.2);
+  border-style: dashed;
+}
+
+/* 懸停效果 */
+.char-table:hover .char-cell:not(.empty) {
+  background-color: rgba(79, 70, 229, 0.45);
+  border-color: rgba(79, 70, 229, 0.7);
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+}
+
+.char-table:hover .char-ruby {
+  color: #f8fafc;
+}
+
+.char-table:hover .code-rt {
+  color: #e5e7eb;
 }
 
 .explanation {

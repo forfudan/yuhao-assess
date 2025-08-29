@@ -471,7 +471,7 @@ const maxKeyValue = computed(() => {
   return Math.max(...Array.from(stats.value.keyDistribution.values()))
 })
 
-// 手指负担百分比
+// 手指负担百分比 - 按照指定顺序排列
 const fingerLoadPercentages = computed(() => {
   const percentages: Record<string, number> = {}
   const totalLoad = Array.from(stats.value.fingerLoad.values()).reduce((sum, load) => sum + load, 0)
@@ -482,7 +482,21 @@ const fingerLoadPercentages = computed(() => {
     }
   }
   
-  return percentages
+  // 按照指定順序排列手指
+  const fingerOrder = [
+    '左小指', '左无名指', '左中指', '左食指', 
+    '双拇指', 
+    '右食指', '右中指', '右无名指', '右小指'
+  ]
+  
+  const orderedPercentages: Record<string, number> = {}
+  fingerOrder.forEach(finger => {
+    if (percentages[finger] !== undefined) {
+      orderedPercentages[finger] = percentages[finger]
+    }
+  })
+  
+  return orderedPercentages
 })
 
 // 按排分布百分比
@@ -628,7 +642,7 @@ const getKeyData = (key: string): KeyData => {
 .stats-container {
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md); /* 减少padding提高密度 */
   border: 1px solid var(--color-border-primary);
 }
 
@@ -807,8 +821,8 @@ const getKeyData = (key: string): KeyData => {
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   transform-origin: center top;
-  width: 95%; /* 使用容器的95%宽度 */
-  max-width: 1000px; /* 设置最大宽度避免过大 */
+  width: 98%; /* 增加到98%宽度，减少左右空隙 */
+  max-width: 1400px; /* 增加最大宽度 */
   min-width: 320px; /* 设置最小宽度保证可用性 */
   border: 1px solid var(--color-border-secondary);
   transition: transform 0.3s ease;
@@ -844,15 +858,15 @@ const getKeyData = (key: string): KeyData => {
 /* 统计网格 */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--spacing-md);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* 减小最小宽度提高密度 */
+  gap: var(--spacing-xs); /* 减小间距 */
 }
 
 /* 统计部分样式 */
 .stats-section {
   border-bottom: 1px solid var(--color-border);
-  padding-bottom: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-sm); /* 减少底部padding */
+  margin-bottom: var(--spacing-sm); /* 减少底部margin */
 }
 
 .stats-section:last-child {
@@ -862,10 +876,10 @@ const getKeyData = (key: string): KeyData => {
 }
 
 .section-title {
-  font-size: 1rem;
+  font-size: 0.9rem; /* 减小标题字体 */
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-xs); /* 减少底部margin */
   border-left: 3px solid var(--color-primary);
   padding-left: var(--spacing-sm);
 }
@@ -875,7 +889,7 @@ const getKeyData = (key: string): KeyData => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm); /* 减少padding */
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-secondary);
@@ -890,22 +904,22 @@ const getKeyData = (key: string): KeyData => {
 
 .stat-label {
   color: var(--color-text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.8rem; /* 减小字体 */
   font-weight: 500;
 }
 
 .stat-value {
   font-weight: 600;
   color: var(--color-text-primary);
-  font-size: 0.95rem;
+  font-size: 0.85rem; /* 减小字体 */
   text-align: right;
 }
 
 /* 大屏幕优化 */
 @media (min-width: 1200px) {
   .keyboard-layout {
-    width: 90%; /* 大屏幕上使用90%宽度 */
-    max-width: 1200px; /* 增加最大宽度 */
+    width: 95%; /* 大屏幕上使用95%宽度 */
+    max-width: 1600px; /* 增加最大宽度让键盘更大 */
   }
   
   .keyboard-wrapper {
