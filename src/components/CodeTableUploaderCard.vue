@@ -308,17 +308,32 @@ const handleFileSelection = (file: File) => {
   generatePreview(file)
 }
 
-// 生成文件预览
+// 生成文件預覽
 const generatePreview = async (file: File) => {
   try {
     const text = await readFileAsText(file)
-    const lines = text.split('\n').slice(0, 10) // 只预览前10行
+    const lines = text.split('\n').slice(0, 10) // 只預覽前10行
     
     previewData.value = lines.map(line => {
       const trimmed = line.trim()
       if (!trimmed) return { raw: line, char: '', code: '', valid: false }
       
-      const parts = trimmed.split(/[\t\s]+/)
+      // 更健壯的分割邏輯：使用制表符或多個空格作為分隔符
+      const parts = trimmed.split(/\t+|\s{2,}|\s+/)
+      // 如果只有一個空格分隔，確保只分割成2部分
+      if (parts.length < 2) {
+        // 嘗試按第一個空格分割
+        const spaceIndex = trimmed.indexOf(' ')
+        if (spaceIndex > 0) {
+          const char_part = trimmed.substring(0, spaceIndex).trim()
+          const code_part = trimmed.substring(spaceIndex + 1).trim()
+          if (char_part && code_part) {
+            parts.length = 0
+            parts.push(char_part, code_part)
+          }
+        }
+      }
+      
       if (parts.length < 2) return { raw: line, char: '', code: '', valid: false }
       
       let char: string, code: string
@@ -369,7 +384,21 @@ const parseCodeTable = (text: string, format: CodeTableFormat): ParseResult => {
     const trimmed = line.trim()
     if (!trimmed) continue
 
-    const parts = trimmed.split(/[\t\s]+/)
+    // 更健壮的分割逻辑：使用制表符或多个空格作为分隔符
+    let parts = trimmed.split(/\t+|\s{2,}|\s+/)
+    // 如果只有一个空格分隔，确保只分割成2部分
+    if (parts.length < 2) {
+      // 尝试按第一个空格分割
+      const spaceIndex = trimmed.indexOf(' ')
+      if (spaceIndex > 0) {
+        const char_part = trimmed.substring(0, spaceIndex).trim()
+        const code_part = trimmed.substring(spaceIndex + 1).trim()
+        if (char_part && code_part) {
+          parts = [char_part, code_part]
+        }
+      }
+    }
+    
     if (parts.length < 2) continue
 
     let char: string, code: string
