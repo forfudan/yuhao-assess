@@ -71,16 +71,16 @@ export class BuiltinCodeTableService {
     }
   }
 
-  // 加載陸標繁體字頻數據
-  async loadCharFrequencyTongguiTC(): Promise<CharFrequency> {
+  // 加載古籍字頻數據
+  async loadCharFrequencyGuji(): Promise<CharFrequency> {
     try {
-      const response = await fetch('/data/charFrequencyTongguiTC.json')
+      const response = await fetch('/data/charFrequencyGuji.json')
       if (!response.ok) {
-        throw new Error('Failed to load Tonggui TC character frequency data')
+        throw new Error('Failed to load Guji character frequency data')
       }
       return await response.json()
     } catch (error) {
-      console.error('Error loading Tonggui TC character frequency data:', error)
+      console.error('Error loading Guji character frequency data:', error)
       throw error
     }
   }

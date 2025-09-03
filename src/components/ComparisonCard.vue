@@ -105,11 +105,11 @@
                       <small>繁體字頻</small>
                     </div>
                   </th>
-                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateTongguiTC')">
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateGuji')">
                     <div class="metric-header-content">
                       <div class="header-title">
-                        <span>陸繁字頻</span>
-                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateTongguiTC') }}</span>
+                        <span>古籍字頻</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateGuji') }}</span>
                       </div>
                       <small>繁體字頻</small>
                     </div>
@@ -252,13 +252,13 @@
                       <small>繁體字頻</small>
                     </div>
                   </th>
-                  <th class="metric-header sortable" @click="handleSort('tongguiTCEquiv')">
+                  <th class="metric-header sortable" @click="handleSort('gujiEquiv')">
                     <div class="metric-header-content">
                       <div class="header-title">
-                        <span>陸繁字頻</span>
-                        <span class="sort-arrow">{{ getSortArrow('tongguiTCEquiv') }}</span>
+                        <span>古籍字頻</span>
+                        <span class="sort-arrow">{{ getSortArrow('gujiEquiv') }}</span>
                       </div>
-                      <small>繁體字頻</small>
+                      <small>古籍字頻</small>
                     </div>
                   </th>
                   <th class="metric-header sortable" @click="handleSort('unifiedEquiv')">
@@ -328,7 +328,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatRate(scheme.data?.dynamic?.dynamicDupRateTongguiTC) }}
+                      {{ formatRate(scheme.data?.dynamic?.dynamicDupRateGuji) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -475,7 +475,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatEquiv(scheme.data?.speedEquiv?.tongguiTCEquiv) }}
+                      {{ formatEquiv(scheme.data?.speedEquiv?.gujiEquiv) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -728,7 +728,7 @@ import {
   loadCharFrequency,
   loadCharFrequencySC,
   loadCharFrequencyTC,
-  loadCharFrequencyTongguiTC,
+  loadCharFrequencyGuji,
   loadCharFrequencyUnified,
   loadAllCharFrequencies,
   getFrequencyCharsUnion
@@ -769,7 +769,7 @@ interface DynamicData {
   dynamicDupRate: number
   dynamicDupRateSC: number
   dynamicDupRateTC: number
-  dynamicDupRateTongguiTC: number
+  dynamicDupRateGuji: number
   dynamicDupRateUnified: number
 }
 
@@ -787,7 +787,7 @@ interface SpeedEquivData {
   zhihuEquiv: number
   scEquiv: number
   tcEquiv: number
-  tongguiTCEquiv: number
+  gujiEquiv: number
   unifiedEquiv: number
 }
 
@@ -879,12 +879,12 @@ const tabs = [
 
 // 排序相關狀態
 type SortDirection = 'desc' | 'asc' | 'none'
-type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateTongguiTC' | 'dynamicDupRateUnified' | 
+type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateGuji' | 'dynamicDupRateUnified' | 
                       'gb2312DuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
                       'cjkToBDuplicateChars' | 'cjkToIDuplicateChars' |
                       'gb2312MaxCount' | 'guoziMaxCount' | 'cjkBasicMaxCount' | 
                       'cjkToBMaxCount' | 'cjkToIMaxCount' |
-                      'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'tongguiTCEquiv' | 'unifiedEquiv'
+                      'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'gujiEquiv' | 'unifiedEquiv'
 type SortColumn = 'name' | 'charCount' | DataSortColumn
 
 const sortColumn = ref<SortColumn | null>(null)
@@ -1053,13 +1053,13 @@ const allSchemes = computed(() => {
       const column = sortColumn.value as DataSortColumn
       
       // 根據列名判斷是動態還是靜態數據
-      if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateTongguiTC', 'dynamicDupRateUnified'].includes(column)) {
+      if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateGuji', 'dynamicDupRateUnified'].includes(column)) {
         aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
         bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
       } else if (['gb2312MaxCount', 'guoziMaxCount', 'cjkBasicMaxCount', 'cjkToBMaxCount', 'cjkToIMaxCount'].includes(column)) {
         aValue = a.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
         bValue = b.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
-      } else if (['zhihuEquiv', 'scEquiv', 'tcEquiv', 'tongguiTCEquiv', 'unifiedEquiv'].includes(column)) {
+      } else if (['zhihuEquiv', 'scEquiv', 'tcEquiv', 'gujiEquiv', 'unifiedEquiv'].includes(column)) {
         aValue = a.data?.speedEquiv?.[column as keyof SpeedEquivData] ?? 0
         bValue = b.data?.speedEquiv?.[column as keyof SpeedEquivData] ?? 0
       } else {
@@ -1870,11 +1870,11 @@ async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
   const { fullCodeTable } = scheme.processedData
   
   // 加載所有字頻數據
-  const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyTongguiTC, charFrequencyUnified] = await Promise.all([
+  const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyGuji, charFrequencyUnified] = await Promise.all([
     loadCharFrequency(),
     loadCharFrequencySC(),
     loadCharFrequencyTC(),
-    loadCharFrequencyTongguiTC(),
+    loadCharFrequencyGuji(),
     loadCharFrequencyUnified()
   ])
   
@@ -1882,7 +1882,7 @@ async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
   const dynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency)
   const dynamicDupRateSC = getDynamicDupRate(fullCodeTable, charFrequencySC)
   const dynamicDupRateTC = getDynamicDupRate(fullCodeTable, charFrequencyTC)
-  const dynamicDupRateTongguiTC = getDynamicDupRate(fullCodeTable, charFrequencyTongguiTC)
+  const dynamicDupRateGuji = getDynamicDupRate(fullCodeTable, charFrequencyGuji)
   const dynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
   
   console.timeEnd(`動態重碼計算-${scheme.name}`)
@@ -1890,7 +1890,7 @@ async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
     dynamicDupRate,
     dynamicDupRateSC,
     dynamicDupRateTC,
-    dynamicDupRateTongguiTC,
+    dynamicDupRateGuji,
     dynamicDupRateUnified
   }
 }
@@ -1928,11 +1928,11 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     
     // 加載各種字頻表
     const builtinService = new BuiltinCodeTableService()
-    const [zhihuFreq, scFreq, tcFreq, tongguiTCFreq, unifiedFreq] = await Promise.all([
+    const [zhihuFreq, scFreq, tcFreq, gujiFreq, unifiedFreq] = await Promise.all([
       builtinService.loadCharFrequency(),
       builtinService.loadCharFrequencySC(),
       builtinService.loadCharFrequencyTC(),
-      builtinService.loadCharFrequencyTongguiTC(),
+      builtinService.loadCharFrequencyGuji(),
       builtinService.loadCharFrequencyUnified()
     ])
     
@@ -1940,7 +1940,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
     const scEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, scFreq, equivTable)
     const tcEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tcFreq, equivTable)
-    const tongguiTCEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tongguiTCFreq, equivTable)
+    const gujiEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, gujiFreq, equivTable)
     const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
     
     console.timeEnd(`速度當量計算-${scheme.name}`)
@@ -1948,7 +1948,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
       zhihuEquiv,
       scEquiv,
       tcEquiv,
-      tongguiTCEquiv,
+      gujiEquiv,
       unifiedEquiv
     }
   } catch (error) {
@@ -1958,7 +1958,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
       zhihuEquiv: 0,
       scEquiv: 0,
       tcEquiv: 0,
-      tongguiTCEquiv: 0,
+      gujiEquiv: 0,
       unifiedEquiv: 0
     }
   }
@@ -2026,11 +2026,11 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
     
     // 加載各種字頻表
     const builtinService = new BuiltinCodeTableService()
-    const [zhihuFreq, scFreq, tcFreq, tongguiTCFreq, unifiedFreq] = await Promise.all([
+    const [zhihuFreq, scFreq, tcFreq, gujiFreq, unifiedFreq] = await Promise.all([
       builtinService.loadCharFrequency(),
       builtinService.loadCharFrequencySC(),
       builtinService.loadCharFrequencyTC(),
-      builtinService.loadCharFrequencyTongguiTC(),
+      builtinService.loadCharFrequencyGuji(),
       builtinService.loadCharFrequencyUnified()
     ])
     
@@ -2038,14 +2038,14 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
     const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
     const scEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, scFreq, equivTable)
     const tcEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tcFreq, equivTable)
-    const tongguiTCEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, tongguiTCFreq, equivTable)
+    const gujiEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, gujiFreq, equivTable)
     const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
     
     return {
       zhihuEquiv,
       scEquiv,
       tcEquiv,
-      tongguiTCEquiv,
+      gujiEquiv,
       unifiedEquiv
     }
   } catch (error) {
@@ -2054,7 +2054,7 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
       zhihuEquiv: 0,
       scEquiv: 0,
       tcEquiv: 0,
-      tongguiTCEquiv: 0,
+      gujiEquiv: 0,
       unifiedEquiv: 0
     }
   }

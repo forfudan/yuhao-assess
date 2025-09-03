@@ -19,7 +19,7 @@ let frequencyCharsCachePromise: Promise<Set<string>> | null = null
 
 /**
  * 獲取所有字頻表中字符的並集（高性能版本）
- * 只包含在 charFrequencySC.json, charFrequencyTC.json, charFrequencyZhihu.json 中出現的字符
+ * 包含在 charFrequencyZhihu.json, charFrequencySC.json, charFrequencyTC.json, charFrequencyGuji.json 中出現的字符
  * 用於優化「全碼加選重鍵」和「簡碼加選重鍵」的生成，排除字頻為0的字符
  */
 export async function getFrequencyCharsUnion(): Promise<Set<string>> {
@@ -53,11 +53,12 @@ async function loadFrequencyCharsUnion(): Promise<Set<string>> {
   console.time('加載字頻表字符並集')
   
   try {
-    // 並行加載三個字頻表（不包含 unified，因為它是合成的）
-    const [zhihuFreq, scFreq, tcFreq] = await Promise.all([
-      loadCharFrequency(),    // charFrequencyZhihu.json
-      loadCharFrequencySC(),  // charFrequencySC.json  
-      loadCharFrequencyTC()   // charFrequencyTC.json
+    // 並行加載四個字頻表（不包含 unified，因為它是合成的）
+    const [zhihuFreq, scFreq, tcFreq, gujiFreq] = await Promise.all([
+      loadCharFrequency(),        // charFrequencyZhihu.json
+      loadCharFrequencySC(),      // charFrequencySC.json  
+      loadCharFrequencyTC(),      // charFrequencyTC.json
+      loadCharFrequencyGuji()     // charFrequencyGuji.json
     ])
     
     // 使用Set進行高性能去重和並集運算
@@ -80,6 +81,13 @@ async function loadFrequencyCharsUnion(): Promise<Set<string>> {
     // 添加繁體字頻表中的字符
     for (const char in tcFreq) {
       if (tcFreq[char] > 0) {
+        allChars.add(char)
+      }
+    }
+    
+    // 添加古籍字頻表中的字符
+    for (const char in gujiFreq) {
+      if (gujiFreq[char] > 0) {
         allChars.add(char)
       }
     }
@@ -139,13 +147,13 @@ export async function loadCharFrequencyTC(): Promise<CharFrequency> {
 }
 
 /**
- * 加載陸標繁體字頻數據
+ * 加載古籍字頻數據
  */
-export async function loadCharFrequencyTongguiTC(): Promise<CharFrequency> {
+export async function loadCharFrequencyGuji(): Promise<CharFrequency> {
   try {
-    return await builtinService.loadCharFrequencyTongguiTC()
+    return await builtinService.loadCharFrequencyGuji()
   } catch (error) {
-    console.error('加載陸標繁體字頻數據失敗:', error)
+    console.error('加載古籍字頻數據失敗:', error)
     throw error
   }
 }
@@ -167,11 +175,11 @@ export async function loadCharFrequencyUnified(): Promise<CharFrequency> {
  * @returns 包含所有字頻數據的對象
  */
 export async function loadAllCharFrequencies() {
-  const [zhihuFreq, scFreq, tcFreq, tongguiTCFreq, unifiedFreq] = await Promise.all([
+  const [zhihuFreq, scFreq, tcFreq, gujiFreq, unifiedFreq] = await Promise.all([
     loadCharFrequency(),
     loadCharFrequencySC(),
     loadCharFrequencyTC(),
-    loadCharFrequencyTongguiTC(),
+    loadCharFrequencyGuji(),
     loadCharFrequencyUnified()
   ])
   
@@ -179,7 +187,7 @@ export async function loadAllCharFrequencies() {
     zhihuFreq,
     scFreq,
     tcFreq,
-    tongguiTCFreq,
+    gujiFreq,
     unifiedFreq
   }
 }

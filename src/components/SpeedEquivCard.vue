@@ -59,9 +59,9 @@
               <td class="metric-desc">基於<a href="https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PIN/biau1.htm" target="_blank" rel="noopener">臺標繁體字頻表</a>的加權速度當量</td>
             </tr>
             <tr>
-              <td>陸標繁體字頻</td>
-              <td class="metric-value">{{ analysisResults.tongguiTCEquiv.toFixed(4) }}</td>
-              <td class="metric-desc">基於陸標繁體字頻表的加權速度當量</td>
+              <td>古籍繁體字頻</td>
+              <td class="metric-value">{{ analysisResults.gujiEquiv.toFixed(4) }}</td>
+              <td class="metric-desc">基於古籍字頻的加權速度當量</td>
             </tr>
             <tr>
               <td>繁簡聯合字頻</td>
@@ -156,7 +156,7 @@ interface SpeedEquivResults {
   zhihuEquiv: number
   scEquiv: number
   tcEquiv: number
-  tongguiTCEquiv: number
+  gujiEquiv: number
   unifiedEquiv: number
 }
 
@@ -211,20 +211,20 @@ async function calculateSpeedEquivAnalysis() {
     const equivTable = await loadEquivTable()
     
     // 5. 加载各种字频表
-    const { zhihuFreq, scFreq, tcFreq, tongguiTCFreq, unifiedFreq } = await loadAllCharFrequencies()
+    const { zhihuFreq, scFreq, tcFreq, gujiFreq, unifiedFreq } = await loadAllCharFrequencies()
     
     // 6. 计算各种字频下的速度当量
     const zhihuPairFreq = calculateCodePairFrequencies(processedCodeTable, zhihuFreq)
     const scPairFreq = calculateCodePairFrequencies(processedCodeTable, scFreq)
     const tcPairFreq = calculateCodePairFrequencies(processedCodeTable, tcFreq)
-    const tongguiTCPairFreq = calculateCodePairFrequencies(processedCodeTable, tongguiTCFreq)
+    const gujiPairFreq = calculateCodePairFrequencies(processedCodeTable, gujiFreq)
     const unifiedPairFreq = calculateCodePairFrequencies(processedCodeTable, unifiedFreq)
     
     analysisResults.value = {
       zhihuEquiv: calculateSpeedEquiv(zhihuPairFreq, equivTable),
       scEquiv: calculateSpeedEquiv(scPairFreq, equivTable),
       tcEquiv: calculateSpeedEquiv(tcPairFreq, equivTable),
-      tongguiTCEquiv: calculateSpeedEquiv(tongguiTCPairFreq, equivTable),
+      gujiEquiv: calculateSpeedEquiv(gujiPairFreq, equivTable),
       unifiedEquiv: calculateSpeedEquiv(unifiedPairFreq, equivTable)
     }
     

@@ -94,7 +94,7 @@
             </tr>
             <tr>
               <td>
-                陸標繁體動態選重率
+                古籍動態選重率
                 <span 
                   class="info-icon" 
                   @mouseenter="showTooltip($event, '計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。')"
@@ -103,9 +103,9 @@
                   ⓘ
                 </span>
               </td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateTongguiTC.full * 10000).toFixed(2) }}‱</td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateTongguiTC.short * 10000).toFixed(2) }}‱</td>
-              <td class="metric-desc">基於陸標繁體字頻表的加權選重率</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateGuji.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateGuji.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-desc">基於古籍字頻的加權選重率</td>
             </tr>
             <tr>
               <td>
@@ -241,7 +241,7 @@ import {
   loadCharFrequency,
   loadCharFrequencySC,
   loadCharFrequencyTC,
-  loadCharFrequencyTongguiTC,
+  loadCharFrequencyGuji,
   loadCharFrequencyUnified
 } from '../services/dataService'
 import { createTooltipManager } from '../services/uiService'
@@ -304,7 +304,7 @@ interface AnalysisResults {
   dynamicDupRate: DualValue
   dynamicDupRateSC: DualValue
   dynamicDupRateTC: DualValue
-  dynamicDupRateTongguiTC: DualValue
+  dynamicDupRateGuji: DualValue
   dynamicDupRateUnified: DualValue
   gb2312DuplicateChars: DualValue
   guoziDuplicateChars: DualValue
@@ -577,11 +577,11 @@ async function calculateAllMetrics() {
     const shortCodeTable = processedTables.short
     
     // 加載所有字頻數據
-    const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyTongguiTC, charFrequencyUnified] = await Promise.all([
+    const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyGuji, charFrequencyUnified] = await Promise.all([
       loadCharFrequency(),
       loadCharFrequencySC(),
       loadCharFrequencyTC(),
-      loadCharFrequencyTongguiTC(),
+      loadCharFrequencyGuji(),
       loadCharFrequencyUnified()
     ])
     
@@ -595,8 +595,8 @@ async function calculateAllMetrics() {
     const fullDynamicDupRateTC = getDynamicDupRate(fullCodeTable, charFrequencyTC)
     const shortDynamicDupRateTC = getDynamicDupRate(shortCodeTable, charFrequencyTC)
     
-    const fullDynamicDupRateTongguiTC = getDynamicDupRate(fullCodeTable, charFrequencyTongguiTC)
-    const shortDynamicDupRateTongguiTC = getDynamicDupRate(shortCodeTable, charFrequencyTongguiTC)
+    const fullDynamicDupRateGuji = getDynamicDupRate(fullCodeTable, charFrequencyGuji)
+    const shortDynamicDupRateGuji = getDynamicDupRate(shortCodeTable, charFrequencyGuji)
     
     const fullDynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
     const shortDynamicDupRateUnified = getDynamicDupRate(shortCodeTable, charFrequencyUnified)
@@ -646,7 +646,7 @@ async function calculateAllMetrics() {
       dynamicDupRate: { full: fullDynamicDupRate, short: shortDynamicDupRate },
       dynamicDupRateSC: { full: fullDynamicDupRateSC, short: shortDynamicDupRateSC },
       dynamicDupRateTC: { full: fullDynamicDupRateTC, short: shortDynamicDupRateTC },
-      dynamicDupRateTongguiTC: { full: fullDynamicDupRateTongguiTC, short: shortDynamicDupRateTongguiTC },
+      dynamicDupRateGuji: { full: fullDynamicDupRateGuji, short: shortDynamicDupRateGuji },
       dynamicDupRateUnified: { full: fullDynamicDupRateUnified, short: shortDynamicDupRateUnified },
       gb2312DuplicateChars: gb2312Stats.duplicateChars,
       guoziDuplicateChars: guoziStats.duplicateChars,
