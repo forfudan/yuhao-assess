@@ -76,7 +76,7 @@ export function generateCharset(charsetType: CharsetType, allChars: Set<string>)
       }
       break
       
-    case 'cjk_to_i':
+    case 'cjk_to_j':
       for (let i = 0; i < chars.length; i++) {
         const codePoint = chars[i].codePointAt(0)
         if (codePoint && 
@@ -89,7 +89,8 @@ export function generateCharset(charsetType: CharsetType, allChars: Set<string>)
              (codePoint >= 0x2CEB0 && codePoint <= 0x2EBEF) ||
              (codePoint >= 0x30000 && codePoint <= 0x3134F) ||
              (codePoint >= 0x31350 && codePoint <= 0x323AF) ||
-             (codePoint >= 0x2EBF0 && codePoint <= 0x2EE5F))) {
+             (codePoint >= 0x2EBF0 && codePoint <= 0x2EE5F) ||
+             (codePoint >= 0x323B0 && codePoint <= 0x3247B))) {
           charset.add(chars[i])
         }
       }
@@ -124,7 +125,7 @@ export function calculateAllMaxCandidates(
   const results: Record<string, number> = {}
   
   // 为每个字符集计算最大候选数
-  const charsetTypes: CharsetType[] = ['gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_i']
+  const charsetTypes: CharsetType[] = ['gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j']
   
   for (const charsetType of charsetTypes) {
     const charset = charsetMap.get(charsetType)
@@ -176,7 +177,7 @@ export function calculateStaticDuplicates(
   }
   
   // 为每个字符集计算重码
-  const charsetTypes: CharsetType[] = ['gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_i']
+  const charsetTypes: CharsetType[] = ['gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j']
   
   for (const charsetType of charsetTypes) {
     const charset = charsetMap.get(charsetType)
@@ -209,7 +210,7 @@ export function calculateStaticDuplicates(
 
 /**
  * 修正的字符计数函数
- * 计算码表中在CJK-I范围内的唯一字符数量
+ * 计算码表中在CJK-J范围内的唯一字符数量
  */
 export function calculateCharCount(codeTable: CodeTable): number {
   const uniqueChars = new Set<string>()
@@ -227,7 +228,7 @@ export function calculateCharCount(codeTable: CodeTable): number {
   let cjkCount = 0
   for (const char of uniqueChars) {
     const codePoint = char.codePointAt(0)
-    if (codePoint && isInCJKToI(codePoint)) {
+    if (codePoint && isInCJKToJ(codePoint)) {
       cjkCount++
     }
   }
@@ -236,10 +237,10 @@ export function calculateCharCount(codeTable: CodeTable): number {
 }
 
 /**
- * 优化的CJK到I区检查
+ * 优化的CJK到J区检查
  * 使用位运算提高性能
  */
-function isInCJKToI(codePoint: number): boolean {
+function isInCJKToJ(codePoint: number): boolean {
   return (
     (codePoint >= 0x4E00 && codePoint <= 0x9FFF) ||
     (codePoint >= 0x3400 && codePoint <= 0x4DBF) ||
@@ -250,7 +251,8 @@ function isInCJKToI(codePoint: number): boolean {
     (codePoint >= 0x2CEB0 && codePoint <= 0x2EBEF) ||
     (codePoint >= 0x30000 && codePoint <= 0x3134F) ||
     (codePoint >= 0x31350 && codePoint <= 0x323AF) ||
-    (codePoint >= 0x2EBF0 && codePoint <= 0x2EE5F)
+    (codePoint >= 0x2EBF0 && codePoint <= 0x2EE5F) ||
+    (codePoint >= 0x323B0 && codePoint <= 0x3347B)
   )
 }
 
@@ -279,7 +281,7 @@ export function preprocessCodeTable(
   
   // 3. 批量生成所有需要的字符集
   const charsetMap = new Map<CharsetType, Set<string>>()
-  const charsetTypes: CharsetType[] = ['gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_i']
+  const charsetTypes: CharsetType[] = ['gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j']
   
   for (const charsetType of charsetTypes) {
     charsetMap.set(charsetType, generateCharset(charsetType, allUniqueChars))

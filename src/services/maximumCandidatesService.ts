@@ -80,7 +80,7 @@ export async function getAllMaximumCandidates(codeTable: CodeTable) {
     'cjk_to_a',
     'cjk_to_b',
     'cjk_to_f',
-    'cjk_to_i'
+    'cjk_to_j'
   ]
   
   const results: Record<string, MaximumCandidatesResult> = {}

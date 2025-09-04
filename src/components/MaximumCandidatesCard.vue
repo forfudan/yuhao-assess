@@ -83,6 +83,7 @@
         <!-- 數據說明 -->
         <div class="info-section">
           <p><strong>說明：</strong></p>
+          <p><strong>本方案累計收錄 {{ charCount.toLocaleString() }} 個漢字（CJK 基本區到擴展 J 區共 101,984 個漢字）</strong></p>
           <p>最大候選項個數評估輸入法的選字體驗，數值越小表示翻頁次數越少，檢字效率越高。計算考慮了：</p>
           <ul>
             <li>單字全碼和指定字符集，統計每個編碼對應的漢字數量</li>
@@ -115,6 +116,7 @@
 import { ref, computed, watch, onMounted, Teleport } from 'vue'
 import { getAllMaximumCandidates, type MaximumCandidatesResult } from '../services/maximumCandidatesService'
 import { createTooltipManager, getCharacterTooltip } from '../services/uiService'
+import { calculateCharCount } from '../services/calculationService'
 import { useCollapse } from '../composables/useCollapse'
 import { ExportService } from '../services/exportService'
 import type { CodeTable } from '../types'
@@ -164,6 +166,7 @@ defineExpose({
 const loading = ref(false)
 const error = ref<string | null>(null)
 const analysisResults = ref<Record<string, MaximumCandidatesResult> | null>(null)
+const charCount = ref<number>(0)
 
 // 工具提示管理器
 const { tooltipVisible, tooltipText, tooltipStyle, showTooltip: showTooltipBase, hideTooltip } = createTooltipManager()
@@ -189,8 +192,8 @@ const charsetInfo = {
   cjk_to_f: {
     name: '到CJK-F'
   },
-  cjk_to_i: {
-    name: '到CJK-I'
+  cjk_to_j: {
+    name: '到CJK-J'
   }
 }
 
@@ -224,8 +227,12 @@ const calculateData = async () => {
   error.value = null
   
   try {
-    const results = await getAllMaximumCandidates(props.codeTable)
+    const [results, charCountResult] = await Promise.all([
+      getAllMaximumCandidates(props.codeTable),
+      calculateCharCount(props.codeTable)
+    ])
     analysisResults.value = results
+    charCount.value = charCountResult
   } catch (err) {
     console.error('計算最大候選項失敗:', err)
     error.value = err instanceof Error ? err.message : '計算失敗，請重試'

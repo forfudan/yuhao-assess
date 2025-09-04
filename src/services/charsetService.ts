@@ -92,7 +92,13 @@ export function isInCJKH(char: string): boolean {
 export function isInCJKI(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x2EBF0 && codePoint <= 0x2EE5F // CJK擴展I区（部首補充）
+  return codePoint >= 0x2EBF0 && codePoint <= 0x2EE5F // CJK擴展I区
+}
+
+export function isInCJKJ(char: string): boolean {
+  const codePoint = char.codePointAt(0)
+  if (!codePoint) return false
+  return codePoint >= 0x323B0 && codePoint <= 0x3347F // CJK擴展J区
 }
 
 // 累積的CJK範圍檢查函數 - "到X區"
@@ -136,6 +142,10 @@ export function isInCJKToI(char: string): boolean {
   return isInCJKBasic(char) || isInCJKA(char) || isInCJKB(char) || isInCJKC(char) || isInCJKD(char) || isInCJKE(char) || isInCJKF(char) || isInCJKG(char) || isInCJKH(char) || isInCJKI(char)
 }
 
+export function isInCJKToJ(char: string): boolean {
+  return isInCJKBasic(char) || isInCJKA(char) || isInCJKB(char) || isInCJKC(char) || isInCJKD(char) || isInCJKE(char) || isInCJKF(char) || isInCJKG(char) || isInCJKH(char) || isInCJKI(char) || isInCJKJ(char)
+}
+
 // 字符集检查器映射
 export const charsetCheckers = {
   'gb2312': isInGB2312,
@@ -150,6 +160,7 @@ export const charsetCheckers = {
   'cjk_g': isInCJKG,
   'cjk_h': isInCJKH,
   'cjk_i': isInCJKI,
+  'cjk_j': isInCJKJ,
   'cjk_to_basic': isInCJKToBasic,
   'cjk_to_a': isInCJKToA,
   'cjk_to_b': isInCJKToB,
@@ -159,7 +170,8 @@ export const charsetCheckers = {
   'cjk_to_f': isInCJKToF,
   'cjk_to_g': isInCJKToG,
   'cjk_to_h': isInCJKToH,
-  'cjk_to_i': isInCJKToI
+  'cjk_to_i': isInCJKToI,
+  'cjk_to_j': isInCJKToJ
 }
 
 export type CharsetType = keyof typeof charsetCheckers
@@ -178,6 +190,7 @@ export const charsetInfo: Record<CharsetType, { name: string; description: strin
   'cjk_g': { name: 'CJK擴展G区', description: 'CJK統一漢字擴展G區 (U+30000-U+3134F)' },
   'cjk_h': { name: 'CJK擴展H区', description: 'CJK統一漢字擴展H區 (U+31350-U+323AF)' },
   'cjk_i': { name: 'CJK擴展I区', description: 'CJK統一漢字擴展I區 (U+2EBF0-U+2EE5F)' },
+  'cjk_j': { name: 'CJK擴展J区', description: 'CJK統一漢字擴展J區 (U+323B0-U+3247B)' },
   'cjk_to_basic': { name: '到CJK基本区', description: 'CJK基本區' },
   'cjk_to_a': { name: '到CJK-A区', description: 'CJK基本區+擴展A區' },
   'cjk_to_b': { name: '到CJK-B区', description: 'CJK基本區+擴展A+B區' },
@@ -187,7 +200,8 @@ export const charsetInfo: Record<CharsetType, { name: string; description: strin
   'cjk_to_f': { name: '到CJK-F区', description: 'CJK基本區+擴展A+B+C+D+E+F區' },
   'cjk_to_g': { name: '到CJK-G区', description: 'CJK基本區+擴展A+B+C+D+E+F+G區' },
   'cjk_to_h': { name: '到CJK-H区', description: 'CJK基本區+擴展A+B+C+D+E+F+G+H區' },
-  'cjk_to_i': { name: '到CJK-I区', description: 'CJK基本區+擴展A+B+C+D+E+F+G+H+I區' }
+  'cjk_to_i': { name: '到CJK-I区', description: 'CJK基本區+擴展A+B+C+D+E+F+G+H+I區' },
+  'cjk_to_j': { name: '到CJK-J区', description: 'CJK基本區+擴展A+B+C+D+E+F+G+H+I+J區' }
 }
 
 // 获取字符集大小的函数
@@ -233,8 +247,9 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     
     case 'cjk_c':
       // CJK擴展C：U+2A700-U+2B73F
-      // 注意：CJK擴展C區實際填充到 U+2B739
-      return 0x2B739 - 0x2A700 + 1
+      // 注意：CJK擴展C區實際填充到 U+2B739 (Unicode 16.0)
+      // 注意：CJK擴展C區完全填滿 (Unicode 17.0)
+      return 0x2B73F - 0x2A700 + 1
     
     case 'cjk_d':
       // CJK擴展D：U+2B740-U+2B81F
@@ -243,8 +258,9 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     
     case 'cjk_e':
       // CJK擴展E：U+2B820-U+2CEAF
-      // 注意：CJK擴展E區實際填充到 U+2CEA1
-      return 0x2CEA1 - 0x2B820 + 1
+      // 注意：CJK擴展E區實際填充到 U+2CEA1 (Unicode 16.0)
+      // 注意：CJK擴展E區實際填充到 U+2CEAD (Unicode 17.0)
+      return 0x2CEAD - 0x2B820 + 1
     
     case 'cjk_f':
       // CJK擴展F：U+2CEB0-U+2EBEF
@@ -264,6 +280,11 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
       // CJK擴展I：U+2EBF0-U+2EE5F
       // 注意：CJK擴展I區實際填充到 U+2EE5D
       return 0x2EE5D - 0x2EBF0 + 1
+    
+    case 'cjk_j':
+      // CJK擴展J：U+2F800-U+2FA1F
+      // 注意：CJK擴展J區實際填充到 U+33479 (Unicode 17.0)
+      return 0x33479 - 0x323B0 + 1
     
     // 累積字符集
     case 'cjk_to_a':
@@ -292,6 +313,9 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     
     case 'cjk_to_i':
       return await getTheoreticalCharsetSize('cjk_to_h') + await getTheoreticalCharsetSize('cjk_i')
+
+    case 'cjk_to_j':
+      return await getTheoreticalCharsetSize('cjk_to_i') + await getTheoreticalCharsetSize('cjk_j')
     
     default:
       console.error(`未知的字符集类型: ${charsetType}`)

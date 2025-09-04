@@ -206,6 +206,12 @@
               <td class="metric-value">{{ analysisResults.cjkToIDuplicateChars.short.toLocaleString() }}</td>
               <td class="metric-desc">{{ analysisResults.charsetSizes.cjkToI.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.cjkToI?.toLocaleString() || '未知' }} 有編碼</td>
             </tr>
+            <tr>
+              <td>到CJK-J重碼字數</td>
+              <td class="metric-value">{{ analysisResults.cjkToJDuplicateChars.full.toLocaleString() }}</td>
+              <td class="metric-value">{{ analysisResults.cjkToJDuplicateChars.short.toLocaleString() }}</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.cjkToJ.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.cjkToJ?.toLocaleString() || '未知' }} 有編碼</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -320,6 +326,7 @@ interface AnalysisResults {
   cjkToGDuplicateChars: DualValue
   cjkToHDuplicateChars: DualValue
   cjkToIDuplicateChars: DualValue
+  cjkToJDuplicateChars: DualValue
   charsetSizes: {
     gb2312: number
     guozi: number
@@ -333,6 +340,7 @@ interface AnalysisResults {
     cjkToG: number
     cjkToH: number
     cjkToI: number
+    cjkToJ: number
   }
   charsetEncodedSizes: {
     gb2312: number
@@ -347,6 +355,7 @@ interface AnalysisResults {
     cjkToG: number
     cjkToH: number
     cjkToI: number
+    cjkToJ: number
   }
 }
 
@@ -434,7 +443,7 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
 // 生成累積CJK字符集緩存
 async function generateCJKCharsetCache(allChars: Set<string>) {
   // 定義CJK擴展區順序
-  const cjkExtensions = ['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c', 'cjk_d', 'cjk_e', 'cjk_f', 'cjk_g', 'cjk_h', 'cjk_i'] as const
+  const cjkExtensions = ['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c', 'cjk_d', 'cjk_e', 'cjk_f', 'cjk_g', 'cjk_h', 'cjk_i', 'cjk_j'] as const
   
   // 生成各個單獨的实际字符集
   const actualCharsets = await Promise.all(
@@ -463,7 +472,8 @@ async function generateCJKCharsetCache(allChars: Set<string>) {
                       ext === 'cjk_e' ? 'cjkToE' :
                       ext === 'cjk_f' ? 'cjkToF' :
                       ext === 'cjk_g' ? 'cjkToG' :
-                      ext === 'cjk_h' ? 'cjkToH' : 'cjkToI'
+                      ext === 'cjk_h' ? 'cjkToH' : 
+                      ext === 'cjk_i' ? 'cjkToI' : 'cjkToJ'
     cumulativeActualCharsets[targetName] = actualAccumulated
   })
   
@@ -478,6 +488,7 @@ async function generateCJKCharsetCache(allChars: Set<string>) {
     cjkToG: Set<string>
     cjkToH: Set<string>
     cjkToI: Set<string>
+    cjkToJ: Set<string>
   }
 }
 
@@ -610,7 +621,7 @@ async function calculateAllMetrics() {
     const cjkCache = await generateCJKCharsetCache(allChars)
     
     // 使用緩存計算累積字符集的重碼統計
-    const cjkExtNames = ['cjkToA', 'cjkToB', 'cjkToC', 'cjkToD', 'cjkToE', 'cjkToF', 'cjkToG', 'cjkToH', 'cjkToI'] as const
+    const cjkExtNames = ['cjkToA', 'cjkToB', 'cjkToC', 'cjkToD', 'cjkToE', 'cjkToF', 'cjkToG', 'cjkToH', 'cjkToI', 'cjkToJ'] as const
     const cjkStats: Record<string, any> = {}
     for (const name of cjkExtNames) {
       const theoreticalSizeType = name === 'cjkToA' ? 'cjk_to_a' :
@@ -620,7 +631,8 @@ async function calculateAllMetrics() {
                                   name === 'cjkToE' ? 'cjk_to_e' :
                                   name === 'cjkToF' ? 'cjk_to_f' :
                                   name === 'cjkToG' ? 'cjk_to_g' :
-                                  name === 'cjkToH' ? 'cjk_to_h' : 'cjk_to_i'
+                                  name === 'cjkToH' ? 'cjk_to_h' : 
+                                  name === 'cjkToI' ? 'cjk_to_i' : 'cjk_to_j'
       
       cjkStats[name] = await calculateDirectCharsetDuplicates(
         cjkCache[name], 

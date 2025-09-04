@@ -163,11 +163,11 @@
                       <small>重碼字數</small>
                     </div>
                   </th>
-                  <th class="metric-header sortable" @click="handleSort('cjkToIDuplicateChars')">
+                  <th class="metric-header sortable" @click="handleSort('cjkToJDuplicateChars')">
                     <div class="metric-header-content">
                       <div class="header-title">
-                        <span>到CJK-I</span>
-                        <span class="sort-arrow">{{ getSortArrow('cjkToIDuplicateChars') }}</span>
+                        <span>到CJK-J</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToJDuplicateChars') }}</span>
                       </div>
                       <small>重碼字數</small>
                     </div>
@@ -212,11 +212,11 @@
                       <small>最大候選數</small>
                     </div>
                   </th>
-                  <th class="metric-header sortable" @click="handleSort('cjkToIMaxCount')">
+                  <th class="metric-header sortable" @click="handleSort('cjkToJMaxCount')">
                     <div class="metric-header-content">
                       <div class="header-title">
-                        <span>到CJK-I</span>
-                        <span class="sort-arrow">{{ getSortArrow('cjkToIMaxCount') }}</span>
+                        <span>到CJK-J</span>
+                        <span class="sort-arrow">{{ getSortArrow('cjkToJMaxCount') }}</span>
                       </div>
                       <small>最大候選數</small>
                     </div>
@@ -386,7 +386,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.static?.cjkToIDuplicateChars) }}
+                      {{ formatNumber(scheme.data?.static?.cjkToJDuplicateChars) }}
                     </span>
                   </td>
                 </template>
@@ -435,7 +435,7 @@
                       <span>計算中</span>
                     </div>
                     <span v-else class="metric-value">
-                      {{ formatNumber(scheme.data?.maxCandidates?.cjkToIMaxCount) }}
+                      {{ formatNumber(scheme.data?.maxCandidates?.cjkToJMaxCount) }}
                     </span>
                   </td>
                 </template>
@@ -780,7 +780,7 @@ interface StaticData {
   cjkToADuplicateChars: number
   cjkToBDuplicateChars: number
   cjkToFDuplicateChars: number
-  cjkToIDuplicateChars: number
+  cjkToJDuplicateChars: number
 }
 
 interface SpeedEquivData {
@@ -798,7 +798,7 @@ interface MaxCandidatesData {
   cjkToAMaxCount: number
   cjkToBMaxCount: number
   cjkToFMaxCount: number
-  cjkToIMaxCount: number
+  cjkToJMaxCount: number
 }
 
 interface SchemeData {
@@ -881,9 +881,9 @@ const tabs = [
 type SortDirection = 'desc' | 'asc' | 'none'
 type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateGuji' | 'dynamicDupRateUnified' | 
                       'gb2312DuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
-                      'cjkToBDuplicateChars' | 'cjkToIDuplicateChars' |
+                      'cjkToBDuplicateChars' | 'cjkToJDuplicateChars' |
                       'gb2312MaxCount' | 'guoziMaxCount' | 'cjkBasicMaxCount' | 
-                      'cjkToBMaxCount' | 'cjkToIMaxCount' |
+                      'cjkToBMaxCount' | 'cjkToJMaxCount' |
                       'zhihuEquiv' | 'scEquiv' | 'tcEquiv' | 'gujiEquiv' | 'unifiedEquiv'
 type SortColumn = 'name' | 'charCount' | DataSortColumn
 
@@ -1056,7 +1056,7 @@ const allSchemes = computed(() => {
       if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateGuji', 'dynamicDupRateUnified'].includes(column)) {
         aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
         bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
-      } else if (['gb2312MaxCount', 'guoziMaxCount', 'cjkBasicMaxCount', 'cjkToBMaxCount', 'cjkToIMaxCount'].includes(column)) {
+      } else if (['gb2312MaxCount', 'guoziMaxCount', 'cjkBasicMaxCount', 'cjkToBMaxCount', 'cjkToJMaxCount'].includes(column)) {
         aValue = a.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
         bValue = b.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
       } else if (['zhihuEquiv', 'scEquiv', 'tcEquiv', 'gujiEquiv', 'unifiedEquiv'].includes(column)) {
@@ -1607,7 +1607,7 @@ async function preprocessCodeTableDataComplete(codeTable: CodeTable, isPrefix = 
   // 並行生成字符集
   console.time(`生成字符集-${timerId}`)
   const charsetTypes: CharsetType[] = [
-    'gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_i'
+    'gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j'
   ]
   
   const charsetPromises = charsetTypes.map(async (type) => {
@@ -1669,7 +1669,7 @@ async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): 
   // 4. 並行生成所有字符集
   console.time(`生成所有字符集-${timerId}`)
   const charsetTypes: CharsetType[] = [
-    'gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_i'
+    'gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j'
   ]
   
   const charsetPromises = charsetTypes.map(async (type) => {
@@ -1701,7 +1701,7 @@ async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): 
   }
 }
 
-// 計算碼表中的字符總數（與CJK到I區取交集）- 高性能版本
+// 計算碼表中的字符總數（與CJK到J區取交集）- 高性能版本
 async function calculateCharCount(codeTable: CodeTable): Promise<number> {
   // 使用高性能的流式处理，避免创建大Set和重复字符集生成
   return calculateCharCountService(codeTable)
@@ -1855,7 +1855,7 @@ async function calculateStaticData(scheme: Scheme): Promise<StaticData> {
     cjkToADuplicateChars: results.cjk_to_aDuplicateChars || 0,
     cjkToBDuplicateChars: results.cjk_to_bDuplicateChars || 0,
     cjkToFDuplicateChars: results.cjk_to_fDuplicateChars || 0,
-    cjkToIDuplicateChars: results.cjk_to_iDuplicateChars || 0
+    cjkToJDuplicateChars: results.cjk_to_jDuplicateChars || 0
   }
 }
 
@@ -1988,7 +1988,7 @@ async function calculateMaxCandidatesData(scheme: Scheme): Promise<MaxCandidates
       cjkToAMaxCount: results.cjk_to_aMaxCount || 0,
       cjkToBMaxCount: results.cjk_to_bMaxCount || 0,
       cjkToFMaxCount: results.cjk_to_fMaxCount || 0,
-      cjkToIMaxCount: results.cjk_to_iMaxCount || 0
+      cjkToJMaxCount: results.cjk_to_jMaxCount || 0
     }
   } catch (error) {
     console.error('計算最大候選項數據失敗:', error)
@@ -1999,7 +1999,7 @@ async function calculateMaxCandidatesData(scheme: Scheme): Promise<MaxCandidates
       cjkToAMaxCount: 0,
       cjkToBMaxCount: 0,
       cjkToFMaxCount: 0,
-      cjkToIMaxCount: 0
+      cjkToJMaxCount: 0
     }
   }
 }
