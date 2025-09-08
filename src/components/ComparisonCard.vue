@@ -989,7 +989,7 @@ const loadComparisonData = async () => {
             setTimeout(async () => {
               if (restoredScheme.codeTable && !restoredScheme.charCount) {
                 try {
-                  restoredScheme.charCount = await calculateCharCount(restoredScheme.codeTable)
+                  restoredScheme.charCount = await calculateCharCountService(restoredScheme.codeTable)
                   saveComparisonData() // 保存更新後的數據
                 } catch (error) {
                   console.error(`計算方案 ${restoredScheme.name} 收字數失敗:`, error)

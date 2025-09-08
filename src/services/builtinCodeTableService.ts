@@ -1,9 +1,50 @@
 import type { CodeTableConfig, BuiltinCodeTable, CodeTable, CodeTableFormat, CharFrequency, EquivTable } from '../types/index'
 
+// CJK塊數據類型定義
+type CJKBlockData = {
+  version: string
+  description: string
+  lastUpdated: string
+  blocks: Record<string, {
+    name: string
+    description: string
+    start: string
+    end: string
+    comment: string
+    note?: string
+  }>
+}
+
 export class BuiltinCodeTableService {
   private config: CodeTableConfig | null = null
   private charFrequency: CharFrequency | null = null
   private equivTable: EquivTable | null = null
+  private cjkBlockData: CJKBlockData | null = null
+
+  // 加載CJK區塊數據
+  async loadCJKBlockData(): Promise<void> {
+    if (this.cjkBlockData) return
+    
+    try {
+      const response = await fetch('/data/cjkBlocks.json')
+      this.cjkBlockData = await response.json() as CJKBlockData
+    } catch (error) {
+      console.error('Failed to load CJK block data:', error)
+      // 使用空數據作為後備
+      this.cjkBlockData = { version: '', description: '', lastUpdated: '', blocks: {} }
+    }
+  }
+
+  // 獲取塊的起始和結束範圍
+  private getBlockRange(blockName: string): { start: number, end: number } | null {
+    if (!this.cjkBlockData) return null
+    const block = this.cjkBlockData.blocks[blockName]
+    if (!block) return null
+    return {
+      start: parseInt(block.start, 16),
+      end: parseInt(block.end, 16)
+    }
+  }
 
   // 加載預設碼表配置
   async loadConfig(): Promise<CodeTableConfig> {
@@ -235,41 +276,58 @@ export class BuiltinCodeTableService {
   }
 
   // 分析字符類型
-  analyzeCharacterType(char: string): {
+  // 字符分類函數
+  async classifyChar(char: string): Promise<{
     isRegular: boolean
     isGBK: boolean
     cjkBlock: string | null
-  } {
+  }> {
+    await this.loadCJKBlockData()
+    
     const codePoint = char.codePointAt(0)
     if (!codePoint) {
       return { isRegular: false, isGBK: false, cjkBlock: null }
     }
 
+    // 获取CJK基本区范围
+    const basicRange = this.getBlockRange('cjk_basic')
+    
     // 通規漢字 (常用漢字)
-    const isRegular = (codePoint >= 0x4E00 && codePoint <= 0x9FFF)
+    const isRegular = basicRange ? (codePoint >= basicRange.start && codePoint <= basicRange.end) : false
 
-    // GBK漢字範圍 (簡化判斷)
-    const isGBK = (codePoint >= 0x4E00 && codePoint <= 0x9FBF)
+    // GBK漢字範圍 (簡化判斷) - 这里保持原有逻辑，使用0x9FBF作为结束点
+    const isGBK = basicRange ? (codePoint >= basicRange.start && codePoint <= 0x9FBF) : false
 
     // CJK區塊判斷
     let cjkBlock: string | null = null
-    if (codePoint >= 0x4E00 && codePoint <= 0x9FFF) {
+    
+    const basicRangeCheck = this.getBlockRange('cjk_basic')
+    const aRangeCheck = this.getBlockRange('cjk_a')
+    const bRangeCheck = this.getBlockRange('cjk_b')
+    const cRangeCheck = this.getBlockRange('cjk_c')
+    const dRangeCheck = this.getBlockRange('cjk_d')
+    const eRangeCheck = this.getBlockRange('cjk_e')
+    const fRangeCheck = this.getBlockRange('cjk_f')
+    const gRangeCheck = this.getBlockRange('cjk_g')
+    const hRangeCheck = this.getBlockRange('cjk_h')
+    
+    if (basicRangeCheck && codePoint >= basicRangeCheck.start && codePoint <= basicRangeCheck.end) {
       cjkBlock = 'A' // CJK基本漢字
-    } else if (codePoint >= 0x3400 && codePoint <= 0x4DBF) {
+    } else if (aRangeCheck && codePoint >= aRangeCheck.start && codePoint <= aRangeCheck.end) {
       cjkBlock = 'B' // CJK擴展A
-    } else if (codePoint >= 0x20000 && codePoint <= 0x2A6DF) {
+    } else if (bRangeCheck && codePoint >= bRangeCheck.start && codePoint <= bRangeCheck.end) {
       cjkBlock = 'C' // CJK擴展B
-    } else if (codePoint >= 0x2A700 && codePoint <= 0x2B73F) {
+    } else if (cRangeCheck && codePoint >= cRangeCheck.start && codePoint <= cRangeCheck.end) {
       cjkBlock = 'D' // CJK擴展C
-    } else if (codePoint >= 0x2B740 && codePoint <= 0x2B81F) {
+    } else if (dRangeCheck && codePoint >= dRangeCheck.start && codePoint <= dRangeCheck.end) {
       cjkBlock = 'E' // CJK擴展D
-    } else if (codePoint >= 0x2B820 && codePoint <= 0x2CEAF) {
+    } else if (eRangeCheck && codePoint >= eRangeCheck.start && codePoint <= eRangeCheck.end) {
       cjkBlock = 'F' // CJK擴展E
-    } else if (codePoint >= 0x2CEB0 && codePoint <= 0x2EBEF) {
+    } else if (fRangeCheck && codePoint >= fRangeCheck.start && codePoint <= fRangeCheck.end) {
       cjkBlock = 'G' // CJK擴展F
-    } else if (codePoint >= 0x30000 && codePoint <= 0x3134F) {
+    } else if (gRangeCheck && codePoint >= gRangeCheck.start && codePoint <= gRangeCheck.end) {
       cjkBlock = 'H' // CJK擴展G
-    } else if (codePoint >= 0x31350 && codePoint <= 0x323AF) {
+    } else if (hRangeCheck && codePoint >= hRangeCheck.start && codePoint <= hRangeCheck.end) {
       cjkBlock = 'I' // CJK擴展H
     }
 

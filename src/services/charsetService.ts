@@ -1,4 +1,4 @@
-// 类型定义
+// 類型定義
 type CharsetRecord = {
   is_gb2312: boolean
   is_guozi: boolean
@@ -6,10 +6,25 @@ type CharsetRecord = {
 
 type CharsetData = Record<string, CharsetRecord>
 
-// 字符集数据缓存
-let charsetData: CharsetData | null = null
+type CJKBlockData = {
+  version: string
+  description: string
+  lastUpdated: string
+  blocks: Record<string, {
+    name: string
+    description: string
+    start: string
+    end: string
+    comment: string
+    note?: string
+  }>
+}
 
-// 加载字符集数据
+// 字符集數據緩存
+let charsetData: CharsetData | null = null
+let cjkBlockData: CJKBlockData | null = null
+
+// 加載字符集數據
 async function loadCharsetData(): Promise<void> {
   if (charsetData) return
   
@@ -18,12 +33,26 @@ async function loadCharsetData(): Promise<void> {
     charsetData = await response.json() as CharsetData
   } catch (error) {
     console.error('Failed to load charset data:', error)
-    // 使用空数据作为后备
+    // 使用空數據作為後備
     charsetData = {}
   }
 }
 
-// 字符集检查函数
+// 加載CJK區塊數據
+async function loadCJKBlockData(): Promise<void> {
+  if (cjkBlockData) return
+  
+  try {
+    const response = await fetch('/data/cjkBlocks.json')
+    cjkBlockData = await response.json() as CJKBlockData
+  } catch (error) {
+    console.error('Failed to load CJK block data:', error)
+    // 使用空數據作為後備
+    cjkBlockData = { version: '', description: '', lastUpdated: '', blocks: {} }
+  }
+}
+
+// 字符集檢查函數
 export async function isInGB2312(char: string): Promise<boolean> {
   await loadCharsetData()
   return charsetData?.[char]?.is_gb2312 ?? false
@@ -34,71 +63,126 @@ export async function isInGuozi(char: string): Promise<boolean> {
   return charsetData?.[char]?.is_guozi ?? false
 }
 
-// CJK Unicode范围检查函数 - 單個區域
+// CJK Unicode範圍檢查函數 - 單個區域
 export function isInCJKBasic(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x4E00 && codePoint <= 0x9FFF // CJK基本区
+  if (!cjkBlockData) return false
+  const block = cjkBlockData.blocks.cjk_basic
+  if (!block) return false
+  const start = parseInt(block.start, 16)
+  const end = parseInt(block.end, 16)
+  return codePoint >= start && codePoint <= end
 }
 
 export function isInCJKA(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x3400 && codePoint <= 0x4DBF // CJK擴展A区
+  if (!cjkBlockData) return false
+  const block = cjkBlockData.blocks.cjk_a
+  if (!block) return false
+  const start = parseInt(block.start, 16)
+  const end = parseInt(block.end, 16)
+  return codePoint >= start && codePoint <= end
 }
 
 export function isInCJKB(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x20000 && codePoint <= 0x2A6DF // CJK擴展B区
+  if (!cjkBlockData) return false
+  const block = cjkBlockData.blocks.cjk_b
+  if (!block) return false
+  const start = parseInt(block.start, 16)
+  const end = parseInt(block.end, 16)
+  return codePoint >= start && codePoint <= end
 }
 
 export function isInCJKC(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x2A700 && codePoint <= 0x2B73F // CJK擴展C区
+  if (!cjkBlockData) return false
+  const block = cjkBlockData.blocks.cjk_c
+  if (!block) return false
+  const start = parseInt(block.start, 16)
+  const end = parseInt(block.end, 16)
+  return codePoint >= start && codePoint <= end
 }
 
 export function isInCJKD(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x2B740 && codePoint <= 0x2B81F // CJK擴展D区
+  if (!cjkBlockData) return false
+  const block = cjkBlockData.blocks.cjk_d
+  if (!block) return false
+  const start = parseInt(block.start, 16)
+  const end = parseInt(block.end, 16)
+  return codePoint >= start && codePoint <= end
 }
 
 export function isInCJKE(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x2B820 && codePoint <= 0x2CEAF // CJK擴展E区
+  if (!cjkBlockData) return false
+  const block = cjkBlockData.blocks.cjk_e
+  if (!block) return false
+  const start = parseInt(block.start, 16)
+  const end = parseInt(block.end, 16)
+  return codePoint >= start && codePoint <= end
 }
 
 export function isInCJKF(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x2CEB0 && codePoint <= 0x2EBEF // CJK擴展F区
+  if (!cjkBlockData) return false
+  const block = cjkBlockData.blocks.cjk_f
+  if (!block) return false
+  const start = parseInt(block.start, 16)
+  const end = parseInt(block.end, 16)
+  return codePoint >= start && codePoint <= end
 }
 
 export function isInCJKG(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x30000 && codePoint <= 0x3134F // CJK擴展G区
+  if (!cjkBlockData) return false
+  const block = cjkBlockData.blocks.cjk_g
+  if (!block) return false
+  const start = parseInt(block.start, 16)
+  const end = parseInt(block.end, 16)
+  return codePoint >= start && codePoint <= end
 }
 
 export function isInCJKH(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x31350 && codePoint <= 0x323AF // CJK擴展H区
+  if (!cjkBlockData) return false
+  const block = cjkBlockData.blocks.cjk_h
+  if (!block) return false
+  const start = parseInt(block.start, 16)
+  const end = parseInt(block.end, 16)
+  return codePoint >= start && codePoint <= end
 }
 
 export function isInCJKI(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x2EBF0 && codePoint <= 0x2EE5F // CJK擴展I区
+  if (!cjkBlockData) return false
+  const block = cjkBlockData.blocks.cjk_i
+  if (!block) return false
+  const start = parseInt(block.start, 16)
+  const end = parseInt(block.end, 16)
+  return codePoint >= start && codePoint <= end
 }
 
 export function isInCJKJ(char: string): boolean {
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  return codePoint >= 0x323B0 && codePoint <= 0x3347F // CJK擴展J区
+  if (!cjkBlockData) return false
+  const block = cjkBlockData.blocks.cjk_j
+  if (!block) return false
+  const start = parseInt(block.start, 16)
+  const end = parseInt(block.end, 16)
+  return codePoint >= start && codePoint <= end
 }
 
 // 累積的CJK範圍檢查函數 - "到X區"
@@ -146,7 +230,7 @@ export function isInCJKToJ(char: string): boolean {
   return isInCJKBasic(char) || isInCJKA(char) || isInCJKB(char) || isInCJKC(char) || isInCJKD(char) || isInCJKE(char) || isInCJKF(char) || isInCJKG(char) || isInCJKH(char) || isInCJKI(char) || isInCJKJ(char)
 }
 
-// 字符集检查器映射
+// 字符集檢查器映射
 export const charsetCheckers = {
   'gb2312': isInGB2312,
   'guozi': isInGuozi,
@@ -204,7 +288,7 @@ export const charsetInfo: Record<CharsetType, { name: string; description: strin
   'cjk_to_j': { name: '到CJK-J区', description: 'CJK基本區+擴展A+B+C+D+E+F+G+H+I+J區' }
 }
 
-// 获取字符集大小的函数
+// 獲取字符集大小的函數
 export async function getCharsetSize(charsetType: CharsetType): Promise<number> {
   await loadCharsetData()
   if (!charsetData) return 0
@@ -225,66 +309,81 @@ export async function getCharsetSize(charsetType: CharsetType): Promise<number> 
   return count
 }
 
-// 获取理论字符集大小
+// 獲取理論字符集大小
 export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promise<number> {
+  await loadCJKBlockData()
+  
   switch (charsetType) {
     case 'gb2312':
     case 'guozi':
-      // 对于GB2312和国字，从JSON文件获取总字符数
+      // 對於GB2312和國字，從JSON文件獲取總字符數
       return await getCharsetSize(charsetType)
     
     case 'cjk_basic':
-      // CJK基本区：U+4E00-U+9FFF
-      return 0x9FFF - 0x4E00 + 1
+      if (!cjkBlockData) return 0
+      const basicBlock = cjkBlockData.blocks.cjk_basic
+      if (!basicBlock) return 0
+      return parseInt(basicBlock.end, 16) - parseInt(basicBlock.start, 16) + 1
     
     case 'cjk_a':
-      // CJK擴展A：U+3400-U+4DBF
-      return 0x4DBF - 0x3400 + 1
+      if (!cjkBlockData) return 0
+      const aBlock = cjkBlockData.blocks.cjk_a
+      if (!aBlock) return 0
+      return parseInt(aBlock.end, 16) - parseInt(aBlock.start, 16) + 1
     
     case 'cjk_b':
-      // CJK擴展B：U+20000-U+2A6DF
-      return 0x2A6DF - 0x20000 + 1
+      if (!cjkBlockData) return 0
+      const bBlock = cjkBlockData.blocks.cjk_b
+      if (!bBlock) return 0
+      return parseInt(bBlock.end, 16) - parseInt(bBlock.start, 16) + 1
     
     case 'cjk_c':
-      // CJK擴展C：U+2A700-U+2B73F
-      // 注意：CJK擴展C區實際填充到 U+2B739 (Unicode 16.0)
-      // 注意：CJK擴展C區完全填滿 (Unicode 17.0)
-      return 0x2B73F - 0x2A700 + 1
+      if (!cjkBlockData) return 0
+      const cBlock = cjkBlockData.blocks.cjk_c
+      if (!cBlock) return 0
+      return parseInt(cBlock.end, 16) - parseInt(cBlock.start, 16) + 1
     
     case 'cjk_d':
-      // CJK擴展D：U+2B740-U+2B81F
-      // 注意：CJK擴展D區實際填充到 U+2B81D
-      return 0x2B81D - 0x2B740 + 1
+      if (!cjkBlockData) return 0
+      const dBlock = cjkBlockData.blocks.cjk_d
+      if (!dBlock) return 0
+      return parseInt(dBlock.end, 16) - parseInt(dBlock.start, 16) + 1
     
     case 'cjk_e':
-      // CJK擴展E：U+2B820-U+2CEAF
-      // 注意：CJK擴展E區實際填充到 U+2CEA1 (Unicode 16.0)
-      // 注意：CJK擴展E區實際填充到 U+2CEAD (Unicode 17.0)
-      return 0x2CEAD - 0x2B820 + 1
+      if (!cjkBlockData) return 0
+      const eBlock = cjkBlockData.blocks.cjk_e
+      if (!eBlock) return 0
+      return parseInt(eBlock.end, 16) - parseInt(eBlock.start, 16) + 1
     
     case 'cjk_f':
-      // CJK擴展F：U+2CEB0-U+2EBEF
-      // 注意：CJK擴展F區實際填充到 U+2EBE0
-      return 0x2EBE0 - 0x2CEB0 + 1
+      if (!cjkBlockData) return 0
+      const fBlock = cjkBlockData.blocks.cjk_f
+      if (!fBlock) return 0
+      return parseInt(fBlock.end, 16) - parseInt(fBlock.start, 16) + 1
     
     case 'cjk_g':
-      // CJK擴展G：U+30000-U+
-      // 注意：CJK擴展G區實際填充到 U+3134A
-      return 0x3134A - 0x30000 + 1
+      if (!cjkBlockData) return 0
+      const gBlock = cjkBlockData.blocks.cjk_g
+      if (!gBlock) return 0
+      return parseInt(gBlock.end, 16) - parseInt(gBlock.start, 16) + 1
     
     case 'cjk_h':
-      // CJK擴展H：U+31350-U+323AF
-      return 0x323AF - 0x31350 + 1
+      if (!cjkBlockData) return 0
+      const hBlock = cjkBlockData.blocks.cjk_h
+      if (!hBlock) return 0
+      return parseInt(hBlock.end, 16) - parseInt(hBlock.start, 16) + 1
     
     case 'cjk_i':
-      // CJK擴展I：U+2EBF0-U+2EE5F
-      // 注意：CJK擴展I區實際填充到 U+2EE5D
-      return 0x2EE5D - 0x2EBF0 + 1
+      if (!cjkBlockData) return 0
+      const iBlock = cjkBlockData.blocks.cjk_i
+      if (!iBlock) return 0
+      return parseInt(iBlock.end, 16) - parseInt(iBlock.start, 16) + 1
     
     case 'cjk_j':
-      // CJK擴展J：U+2F800-U+2FA1F
-      // 注意：CJK擴展J區實際填充到 U+33479 (Unicode 17.0)
-      return 0x33479 - 0x323B0 + 1
+      if (!cjkBlockData) return 0
+      const jBlock = cjkBlockData.blocks.cjk_j
+      if (!jBlock) return 0
+      return parseInt(jBlock.end, 16) - parseInt(jBlock.start, 16) + 1
     
     // 累積字符集
     case 'cjk_to_a':
@@ -318,7 +417,7 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
       return await getTheoreticalCharsetSize('cjk_to_i') + await getTheoreticalCharsetSize('cjk_j')
     
     default:
-      console.error(`未知的字符集类型: ${charsetType}`)
+      console.error(`未知的字符集類型: ${charsetType}`)
       return 0
   }
 }
@@ -326,7 +425,7 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
 export async function generateCharset(charsetType: CharsetType, allChars: Set<string>): Promise<Set<string>> {
   const charset = new Set<string>()
   
-  // 对于 gb2312 和 guozi，直接从字符集数据中过滤
+  // 對於 gb2312 和 guozi，直接從字符集數據中過濾
   if (charsetType === 'gb2312' || charsetType === 'guozi') {
     await loadCharsetData()
     if (!charsetData) return charset
@@ -342,7 +441,8 @@ export async function generateCharset(charsetType: CharsetType, allChars: Set<st
       }
     }
   } else {
-    // 对于其他字符集，使用Unicode范围检查
+    // 對於其他字符集，加載CJK塊數據並使用Unicode範圍檢查
+    await loadCJKBlockData()
     const checker = charsetCheckers[charsetType]
     if (!checker) {
       console.error(`找不到字符集檢查器: ${charsetType}`)

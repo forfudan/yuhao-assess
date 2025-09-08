@@ -154,7 +154,7 @@ async function exportCard() {
   }
 }
 
-// 暴露折叠方法给父组件
+// 暴露折疊方法給父組件
 defineExpose({
   collapse,
   expand,
@@ -209,7 +209,7 @@ const tableData = computed(() => {
   }))
 })
 
-// 生成字符工具提示文本（适配器）
+// 生成字符工具提示文本（適配器）
 const showTooltip = (event: MouseEvent, chars: string[]) => {
   tooltipChars.value = chars.join('')
   const tooltipText = `該編碼對應的漢字：${chars.join('')}`
@@ -229,7 +229,7 @@ const calculateData = async () => {
   try {
     const [results, charCountResult] = await Promise.all([
       getAllMaximumCandidates(props.codeTable),
-      calculateCharCount(props.codeTable)
+      await calculateCharCount(props.codeTable)
     ])
     analysisResults.value = results
     charCount.value = charCountResult
