@@ -38,7 +38,7 @@ async function loadCJKBlockData(): Promise<void> {
     cjkBlockData = await response.json() as CJKBlockData
   } catch (error) {
     console.error('Failed to load CJK block data:', error)
-    // 使用空数据作为后备
+    // 使用空數據作為後備
     cjkBlockData = { version: '', description: '', lastUpdated: '', blocks: {} }
   }
 }
@@ -192,7 +192,7 @@ export function calculateAllMaxCandidates(
 
   const results: Record<string, number> = {}
   
-  // 为每个字符集计算最大候选数
+  // 為每個字符集計算最大候選數
   const charsetTypes: CharsetType[] = ['gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j']
   
   for (const charsetType of charsetTypes) {
@@ -298,7 +298,7 @@ function isInCJKToJ(codePoint: number): boolean {
  * 計算碼表中在CJK基本區到CJK-J範圍内的唯一字符數量
  */
 export async function calculateCharCount(codeTable: CodeTable): Promise<number> {
-  // 确保数据已加载
+  // 確保數據已加載
   await initializeCalculationService()
   
   const uniqueChars = new Set<string>()

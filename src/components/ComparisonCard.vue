@@ -7,7 +7,7 @@
           <p class="card-description">對比不同輸入法方案的各項數據，支持預設方案和文件上傳。</p>
         </div>
         <div class="header-buttons">
-          <button @click="exportCard" class="export-btn" :disabled="!hasAnyScheme" title="导出图片">
+          <button @click="exportCard" class="export-btn" :disabled="!hasAnyScheme" title="導出圖片">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
             </svg>
@@ -1004,7 +1004,7 @@ const loadComparisonData = async () => {
         }
       }
       
-      // 数据加载完成后，为缺少数据的方案启动智能计算
+      // 數據加載完成後，為缺少數據的方案啟動智能計算
       nextTick(() => {
         const schemesNeedingCalculation = additionalSchemes.value.filter(scheme => 
           scheme.codeTable && !scheme.isCalculating && (!scheme.data || Object.keys(scheme.data).length < 4)
@@ -1132,7 +1132,7 @@ const runningTasks = ref(new Set<string>())
 const backgroundProgress = computed(() => {
   const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
   
-  // 1. 当前表格中的方案数量（包括已完成和正在计算的）
+  // 1. 當前表格中的方案數量（包括已完成和正在計算的）
   const currentSchemes = allSchemes.value.length
   
   // 2. 如果正在上傳文件，使用上傳進度來計算待處理的方案數
@@ -1703,7 +1703,7 @@ async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): 
 
 // 計算碼表中的字符總數（與CJK到J區取交集）- 高性能版本
 async function calculateCharCount(codeTable: CodeTable): Promise<number> {
-  // 使用高性能的流式处理，避免创建大Set和重复字符集生成
+  // 使用高性能的流式處理，避免創建大Set和重複字符集生成
   return calculateCharCountService(codeTable)
 }
 
@@ -1811,7 +1811,7 @@ const loadCurrentUserScheme = async () => {
       data: undefined
     }
     
-    // 预处理数据并计算收字数（使用完整預處理以支持所有計算包括速度當量）
+    // 預處理數據並計算收字數（使用完整預處理以支持所有計算包括速度當量）
     currentUserScheme.value.processedData = await preprocessCodeTableDataComplete(props.currentCodeTable, globalIsPrefix, props.globalPrefixKeys)
     currentUserScheme.value.charCount = await calculateCharCount(props.currentCodeTable)
     
@@ -2088,7 +2088,7 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
   }
 }
 
-// 选择内置方案时自动添加
+// 選擇內置方案時自動添加
 async function onBuiltinSchemeSelect() {
   if (selectedBuiltinScheme.value && !isAdding.value) {
     await addBuiltinScheme()
@@ -2562,7 +2562,7 @@ function canRemoveScheme(scheme: Scheme): boolean {
   return additionalSchemes.value.some(s => s.id === scheme.id)
 }
 
-// 导出功能
+// 導出功能
 async function exportCard() {
   if (cardRef.value && hasAnyScheme.value) {
     const schemeNames = allSchemes.value.map(s => s.name).join('-')

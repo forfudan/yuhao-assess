@@ -1,22 +1,22 @@
 /**
- * 码表处理服务
- * 负责预处理各种类型的码表，避免在不同组件中重复计算
+ * 碼表處理服務
+ * 負責預處理各種類型的碼表，避免在不同組件中重複計算
  */
 
 import { generateFullCodeTable, generateShortCodeTable } from './codeTableCleanService'
 import { getFrequencyCharsUnion } from './dataService'
 import type { CodeTable } from '../types'
 
-// 处理后的码表结果接口
+// 處理後的碼表結果接口
 export interface ProcessedCodeTables {
   original: CodeTable
-  full: CodeTable                    // 全码表（每个字符只保留最长编码）
-  short: CodeTable                   // 简码表（每个字符只保留最短编码）
-  fullWithSelection: CodeTable       // 全码加选重按键表（用于当量计算等）
-  shortWithSelection: CodeTable      // 简码加选重按键表（补空格+选重键）
+  full: CodeTable                    // 全碼表（每個字符只保留最長編碼）
+  short: CodeTable                   // 簡碼表（每個字符只保留最短編碼）
+  fullWithSelection: CodeTable       // 全碼加選重按鍵表（用於當量計算等）
+  shortWithSelection: CodeTable      // 簡碼加選重按鍵表（補空格+選重鍵）
 }
 
-// 码表处理服务类
+// 碼表處理服務類
 export class CodeTableProcessingService {
   private static instance: CodeTableProcessingService
   private processedTables: ProcessedCodeTables | null = null
@@ -32,22 +32,22 @@ export class CodeTableProcessingService {
   }
 
   /**
-   * 处理原始码表，生成所有需要的派生码表
+   * 處理原始碼表，生成所有需要的派生碼表
    */
   async processCodeTable(originalCodeTable: CodeTable, options?: { isPrefix?: boolean, maxLength?: number, prefixKeys?: string[] }): Promise<ProcessedCodeTables> {
-    // 生成全码表和简码表
+    // 生成全碼表和簡碼表
     const fullResult = generateFullCodeTable(originalCodeTable)
     const shortResult = generateShortCodeTable(originalCodeTable)
     
-    // 计算最大码长
-    const maxLength = options?.maxLength || this.calculateMaxCodeLength(originalCodeTable)  // 使用原始码表计算
+    // 計算最大碼長
+    const maxLength = options?.maxLength || this.calculateMaxCodeLength(originalCodeTable)  // 使用原始碼表計算
     const isPrefix = options?.isPrefix || false
     const prefixKeys = options?.prefixKeys
     
-    // 保存处理选项
+    // 保存處理選項
     this.processingOptions = { isPrefix, maxLength }
     
-    // 并行获取字频字符并集和生成基础码表
+    // 並行獲取字頻字符並集和生成基礎碼表
     const [frequencyChars] = await Promise.all([
       getFrequencyCharsUnion().catch(() => {
         console.warn('無法獲取字頻字符並集，將使用完整碼表（性能較低）')
@@ -102,7 +102,7 @@ export class CodeTableProcessingService {
   }
 
   /**
-   * 获取已处理的码表
+   * 獲取已處理的碼表
    */
   getProcessedTables(): ProcessedCodeTables | null {
     return this.processedTables
@@ -113,7 +113,7 @@ export class CodeTableProcessingService {
   }
 
   /**
-   * 清除缓存的处理结果
+   * 清除緩存的處理結果
    */
   clearCache(): void {
     this.processedTables = null

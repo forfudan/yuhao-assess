@@ -7,7 +7,7 @@
           <p class="card-description">分析不同字符集下方案的最大候選項個數，借以反映方案的檢字效率。</p>
         </div>
         <div class="header-buttons">
-          <button @click="exportCard" class="export-btn" :disabled="loading || !!error || !analysisResults" title="导出图片">
+          <button @click="exportCard" class="export-btn" :disabled="loading || !!error || !analysisResults" title="導出圖片">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
             </svg>
@@ -136,10 +136,10 @@ const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = us
 // 卡片引用
 const cardRef = ref<HTMLElement>()
 
-// 导出功能
+// 導出功能
 async function exportCard() {
   if (!cardRef.value || !analysisResults.value) {
-    console.warn('卡片元素或数据不可用')
+    console.warn('卡片元素或數據不可用')
     return
   }
 
@@ -149,8 +149,8 @@ async function exportCard() {
       download: true
     })
   } catch (error) {
-    console.error('导出失败:', error)
-    alert('导出失败，请重试')
+    console.error('導出失敗:', error)
+    alert('導出失敗，請重試')
   }
 }
 

@@ -15,7 +15,7 @@ export function useCollapse(initialState = false) {
     isCollapsed.value = false
   }
 
-  // 获取当前折叠状态
+  // 獲取當前摺叠狀態
   const getCollapsedState = () => {
     return isCollapsed.value
   }

@@ -166,7 +166,7 @@
         @click="removeFile"
         :disabled="isUploading"
       >
-        重新选择
+        重新選擇
       </button>
     </div>
 
@@ -263,7 +263,7 @@ const builtinService = new BuiltinCodeTableService()
 const selectedBuiltinTable = ref('')
 const builtinTables = ref<Array<{key: string, name: string, description: string}>>([])
 
-// 响应式数据
+// 響應式數據
 const selectedFormat = ref<CodeTableFormat>('char_first')
 const selectedFile = ref<File | null>(null)
 const isDragOver = ref(false)
@@ -286,7 +286,7 @@ const formatFileSize = (bytes: number): string => {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
-// 触发文件选择
+// 觸發文件選擇
 const triggerFileInput = () => {
   if (!isUploading.value) {
     fileInput.value?.click()
@@ -298,7 +298,7 @@ const togglePrefixMode = () => {
   isPrefixCode.value = !isPrefixCode.value
 }
 
-// 处理拖拽
+// 處理拖拽
 const handleDragOver = (event: DragEvent) => {
   isDragOver.value = true
 }
@@ -315,7 +315,7 @@ const handleDrop = (event: DragEvent) => {
   }
 }
 
-// 处理文件选择
+// 處理文件選擇
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files && target.files.length > 0) {
@@ -323,7 +323,7 @@ const handleFileSelect = (event: Event) => {
   }
 }
 
-// 文件选择处理
+// 文件選擇處理
 const handleFileSelection = (file: File) => {
   // 检查文件类型
   const fileName = file.name.toLowerCase()
