@@ -210,7 +210,7 @@
           <button @click="showPrefixHelp = false" class="help-close-btn">×</button>
         </div>
         <div class="help-content">
-          <p><a href="https://shurufa.app/docs/concepts.html">前綴或頂功方案</a>是一類特殊上屏候選字的輸入方案，對於未達到最大碼長的後選項，在某些特殊的模式下，可以自動上屏，而不需要使用空格鍵。比如日月輸入法、聲筆飛單、逸碼等。</p>
+          <p><a href="https://shurufa.app/docs/concepts.html">前綴或頂功方案</a>是一類特殊上屏候選字的輸入方案，對於未達到最大碼長的候選項，在某些特殊的模式下，可以自動上屏，而不需要使用空格鍵。比如日月輸入法、聲筆飛單、逸碼等。</p>
           <p><strong>上屏碼設置：</strong></p>
           <p>勾選了前綴或頂功的方案，可以在輸入框中填入特定的上屏按鍵，例如："aoeiu_" 表示編碼結尾是 a、o、e、i、u、空格等按鍵的，不再自動添加空格；編碼結尾是其他按鍵的，未達到最大碼長時，仍舊添加空格。</p>
           <p>勾選了前綴或頂功的方案，且未填寫任何上屏按鍵的，則在任何情況下都不自動添加空格鍵。</p>
