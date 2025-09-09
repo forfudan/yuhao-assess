@@ -866,4 +866,58 @@ onMounted(() => {
   color: #4a5568;
   font-weight: 500;
 }
+
+/* 暗黑模式專用樣式 */
+[data-theme="dark"] .metrics-table {
+  background: var(--color-bg-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .metrics-table th {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .metrics-table td {
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-secondary);
+}
+
+[data-theme="dark"] .metrics-table tbody tr:hover {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .metric-value {
+  color: var(--color-success);
+}
+
+[data-theme="dark"] .metric-desc {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .info-icon {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .info-icon:hover {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .empty-state {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .empty-state p {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .scheme-name {
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-primary);
+}
+
+[data-theme="dark"] .scheme-name span {
+  color: var(--color-text-secondary);
+}
 </style>

@@ -262,12 +262,12 @@ export type CharsetType = keyof typeof charsetCheckers
 
 // 字符集信息
 export const charsetInfo: Record<CharsetType, { name: string; description: string }> = {
-  'gb2312': { name: 'GB2312', description: 'GB2312 简体中文字符集' },
-  'guozi': { name: '常用国字', description: '常用国字标准字体表' },
-  'cjk_basic': { name: 'CJK基本区', description: 'CJK统一汉字基本区 (U+4E00-U+9FFF)' },
-  'cjk_a': { name: 'CJK擴展A区', description: 'CJK統一漢字擴展A區 (U+3400-U+4DBF)' },
-  'cjk_b': { name: 'CJK擴展B区', description: 'CJK統一漢字擴展B區 (U+20000-U+2A6DF)' },
-  'cjk_c': { name: 'CJK擴展C区', description: 'CJK統一漢字擴展C區 (U+2A700-U+2B73F)' },
+  'gb2312': { name: 'GB2312', description: 'GB2312 簡體中文字符集' },
+  'guozi': { name: '常用國字', description: '常用國字標準字體表' },
+  'cjk_basic': { name: 'CJK基本區', description: 'CJK統一漢字基本區 (U+4E00-U+9FFF)' },
+  'cjk_a': { name: 'CJK擴展A區', description: 'CJK統一漢字擴展A區 (U+3400-U+4DBF)' },
+  'cjk_b': { name: 'CJK擴展B區', description: 'CJK統一漢字擴展B區 (U+20000-U+2A6DF)' },
+  'cjk_c': { name: 'CJK擴展C區', description: 'CJK統一漢字擴展C區 (U+2A700-U+2B73F)' },
   'cjk_d': { name: 'CJK擴展D区', description: 'CJK統一漢字擴展D區 (U+2B740-U+2B81F)' },
   'cjk_e': { name: 'CJK擴展E区', description: 'CJK統一漢字擴展E區 (U+2B820-U+2CEAF)' },
   'cjk_f': { name: 'CJK擴展F区', description: 'CJK統一漢字擴展F區 (U+2CEB0-U+2EBEF)' },

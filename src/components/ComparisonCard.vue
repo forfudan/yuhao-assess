@@ -7,7 +7,7 @@
           <p class="card-description">對比不同輸入法方案的各項數據，支持預設方案和文件上傳。</p>
         </div>
         <div class="header-buttons">
-          <button @click="exportCard" class="export-btn" :disabled="!hasAnyScheme" title="导出图片">
+          <button @click="exportCard" class="export-btn" :disabled="!hasAnyScheme" title="導出圖片">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
             </svg>
@@ -1004,7 +1004,7 @@ const loadComparisonData = async () => {
         }
       }
       
-      // 数据加载完成后，为缺少数据的方案启动智能计算
+      // 數據加載完成後，為缺少數據的方案啟動智能計算
       nextTick(() => {
         const schemesNeedingCalculation = additionalSchemes.value.filter(scheme => 
           scheme.codeTable && !scheme.isCalculating && (!scheme.data || Object.keys(scheme.data).length < 4)
@@ -1132,7 +1132,7 @@ const runningTasks = ref(new Set<string>())
 const backgroundProgress = computed(() => {
   const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
   
-  // 1. 当前表格中的方案数量（包括已完成和正在计算的）
+  // 1. 當前表格中的方案數量（包括已完成和正在計算的）
   const currentSchemes = allSchemes.value.length
   
   // 2. 如果正在上傳文件，使用上傳進度來計算待處理的方案數
@@ -1703,7 +1703,7 @@ async function preprocessCodeTableData(codeTable: CodeTable, isPrefix = false): 
 
 // 計算碼表中的字符總數（與CJK到J區取交集）- 高性能版本
 async function calculateCharCount(codeTable: CodeTable): Promise<number> {
-  // 使用高性能的流式处理，避免创建大Set和重复字符集生成
+  // 使用高性能的流式處理，避免創建大Set和重複字符集生成
   return calculateCharCountService(codeTable)
 }
 
@@ -1811,7 +1811,7 @@ const loadCurrentUserScheme = async () => {
       data: undefined
     }
     
-    // 预处理数据并计算收字数（使用完整預處理以支持所有計算包括速度當量）
+    // 預處理數據並計算收字數（使用完整預處理以支持所有計算包括速度當量）
     currentUserScheme.value.processedData = await preprocessCodeTableDataComplete(props.currentCodeTable, globalIsPrefix, props.globalPrefixKeys)
     currentUserScheme.value.charCount = await calculateCharCount(props.currentCodeTable)
     
@@ -2088,7 +2088,7 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
   }
 }
 
-// 选择内置方案时自动添加
+// 選擇內置方案時自動添加
 async function onBuiltinSchemeSelect() {
   if (selectedBuiltinScheme.value && !isAdding.value) {
     await addBuiltinScheme()
@@ -2562,7 +2562,7 @@ function canRemoveScheme(scheme: Scheme): boolean {
   return additionalSchemes.value.some(s => s.id === scheme.id)
 }
 
-// 导出功能
+// 導出功能
 async function exportCard() {
   if (cardRef.value && hasAnyScheme.value) {
     const schemeNames = allSchemes.value.map(s => s.name).join('-')
@@ -2731,6 +2731,11 @@ function clearAllSchemes() {
   transition: width 0.3s ease;
 }
 
+/* 为暗黑模式创建更深沉的渐变 */
+[data-theme="dark"] .progress-fill {
+  background: linear-gradient(90deg, #064e3b, #0d9488);
+}
+
 .tab-button {
   background: none;
   border: none;
@@ -2796,6 +2801,12 @@ function clearAllSchemes() {
   gap: 8px;
 }
 
+/* 为暗黑模式创建更深沉的渐变 */
+[data-theme="dark"] .hidden-schemes-notice {
+  background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+  border: 1px solid #a16207;
+}
+
 .notice-icon {
   font-size: 1.2rem;
 }
@@ -2815,6 +2826,11 @@ function clearAllSchemes() {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
+}
+
+/* 为暗黑模式创建更深沉的渐变 */
+[data-theme="dark"] .primary-btn {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
 }
 
 .primary-btn:hover {
@@ -2864,27 +2880,27 @@ function clearAllSchemes() {
 }
 
 .scheme-name-header {
-  background: #f9fafb;
+  background: var(--color-bg-tertiary);
   width: auto; /* 改为自动宽度 */
   min-width: 60px; /* 较小的最小宽度 */
   text-align: left !important;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .char-count-header {
-  background: #f9fafb;
+  background: var(--color-bg-tertiary);
   width: auto;
   min-width: 80px;
   text-align: center !important;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .char-count-header small {
   display: block;
   font-size: 0.7rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   margin-top: 2px;
 }
 
@@ -2895,11 +2911,11 @@ function clearAllSchemes() {
 }
 
 .metric-header {
-  background: #f9fafb;
+  background: var(--color-bg-tertiary);
   width: auto; /* 改为自动宽度 */
   min-width: 40px; /* 较小的最小宽度 */
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 /* 可排序的表頭樣式 */
@@ -2953,14 +2969,15 @@ function clearAllSchemes() {
   font-size: 0.6rem;
   opacity: 0.7;
   font-weight: 400;
+  color: var(--color-text-secondary);
 }
 
 .actions-header {
-  background: #f9fafb;
+  background: var(--color-bg-tertiary);
   width: 60px;
   min-width: 60px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .scheme-row:hover {
@@ -2979,13 +2996,13 @@ function clearAllSchemes() {
 
 .scheme-title {
   font-weight: 500;
-  color: #374151;
+  color: var(--color-text-primary);
   cursor: help;
 }
 
 .scheme-source {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 .scheme-source.warning {
@@ -3587,5 +3604,77 @@ function clearAllSchemes() {
   transform: translateX(-50%);
   border: 4px solid transparent;
   border-top-color: #1f2937;
+}
+
+/* 暗黑模式專用樣式 */
+[data-theme="dark"] .tab-list {
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .tab-button {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .tab-button:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .tab-button.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  background-color: var(--color-primary-light);
+}
+
+[data-theme="dark"] .comparison-table-container {
+  background: var(--color-bg-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .comparison-table {
+  background: var(--color-bg-primary);
+}
+
+[data-theme="dark"] .comparison-table th {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme="dark"] .comparison-table td {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme="dark"] .comparison-table thead tr:last-child th {
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .actions-header {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .scheme-name-cell {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .char-count-cell {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .metric-cell {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .empty-state {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .empty-state h4 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .empty-state p {
+  color: var(--color-text-secondary);
 }
 </style>

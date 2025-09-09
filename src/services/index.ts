@@ -17,7 +17,7 @@ export {
   calculateSpeedEquivFromCodeTable
 } from './speedAnalysisService'
 
-// 导出服务
+// 導出服務
 export { ExportService } from './exportService'
 
 // 導出碼表處理服務

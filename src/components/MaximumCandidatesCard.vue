@@ -7,7 +7,7 @@
           <p class="card-description">分析不同字符集下方案的最大候選項個數，借以反映方案的檢字效率。</p>
         </div>
         <div class="header-buttons">
-          <button @click="exportCard" class="export-btn" :disabled="loading || !!error || !analysisResults" title="导出图片">
+          <button @click="exportCard" class="export-btn" :disabled="loading || !!error || !analysisResults" title="導出圖片">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
             </svg>
@@ -136,10 +136,10 @@ const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = us
 // 卡片引用
 const cardRef = ref<HTMLElement>()
 
-// 导出功能
+// 導出功能
 async function exportCard() {
   if (!cardRef.value || !analysisResults.value) {
-    console.warn('卡片元素或数据不可用')
+    console.warn('卡片元素或數據不可用')
     return
   }
 
@@ -149,8 +149,8 @@ async function exportCard() {
       download: true
     })
   } catch (error) {
-    console.error('导出失败:', error)
-    alert('导出失败，请重试')
+    console.error('導出失敗:', error)
+    alert('導出失敗，請重試')
   }
 }
 
@@ -482,36 +482,6 @@ onMounted(() => {
   word-break: break-all;
 }
 
-/* 分析説明 */
-.info-section {
-  background: #f8fafc;
-  border-radius: 8px;
-  padding: 16px;
-  font-size: 0.9rem;
-}
-
-.info-section strong {
-  color: #495057;
-}
-
-.info-section p {
-  margin: 0 0 12px 0;
-  color: #6c757d;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
-.info-section ul {
-  margin: 8px 0 0 20px;
-  color: #6c757d;
-  font-size: 0.875rem;
-}
-
-.info-section li {
-  margin-bottom: 4px;
-  line-height: 1.4;
-}
-
 /* 響應式設計 */
 @media (max-width: 768px) {
   .results-table {
@@ -625,5 +595,74 @@ onMounted(() => {
   font-size: 0.85rem;
   color: #4a5568;
   font-weight: 500;
+}
+
+/* 暗黑模式專用樣式 */
+[data-theme="dark"] .results-table-container {
+  background: var(--color-bg-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .results-table {
+  background: var(--color-bg-primary);
+}
+
+[data-theme="dark"] .results-table th {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .results-table td {
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-secondary);
+}
+
+[data-theme="dark"] .result-row:hover {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .charset-name {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .count-value {
+  background: var(--color-success-light);
+  color: var(--color-success-dark);
+}
+
+[data-theme="dark"] .count-value.medium-count {
+  background: var(--color-warning-light);
+  color: var(--color-warning-dark);
+}
+
+[data-theme="dark"] .count-value.high-count {
+  background: var(--color-error-light);
+  color: var(--color-error-dark);
+}
+
+[data-theme="dark"] .code-text {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-secondary);
+}
+
+[data-theme="dark"] .hoverable:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+  text-decoration-color: var(--color-primary);
+}
+
+[data-theme="dark"] .code-separator {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .scheme-name {
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-primary);
+}
+
+[data-theme="dark"] .scheme-name span {
+  color: var(--color-text-secondary);
 }
 </style>
