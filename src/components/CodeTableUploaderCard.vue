@@ -191,14 +191,18 @@
     </div>
     
     <!-- 上傳狀態顯示 -->
+        <!-- 上傳狀態顯示 -->
     <div v-if="props.uploadStatus" class="upload-status" :class="props.uploadStatus.type">
       <span class="status-icon">
         {{ props.uploadStatus.type === 'success' ? '✓' : '✗' }}
       </span>
       {{ props.uploadStatus.message }}
     </div>
-    
-    <!-- 前綴碼幫助信息框 -->
+    </div>
+  </div>
+  
+  <!-- 前綴碼幫助信息框 - 使用 Teleport 傳送到 body -->
+  <Teleport to="body">
     <div v-if="showPrefixHelp" class="help-modal-overlay" @click="showPrefixHelp = false">
       <div class="help-modal" @click.stop>
         <div class="help-header">
@@ -219,8 +223,7 @@
         </div>
       </div>
     </div>
-    </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -829,11 +832,12 @@ loadBuiltinConfig()
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 999999; /* 極高的z-index值確保在最上層 */
+  backdrop-filter: blur(4px);
   animation: fadeIn 0.3s ease-out;
 }
 
