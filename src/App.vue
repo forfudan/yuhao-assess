@@ -25,7 +25,12 @@
               <h1>宇浩測評網</h1>
             </a>
           </div>
-          <div class="header-actions">
+                    <div class="header-actions">
+            <button @click="exportAllCards" class="export-btn" title="匯出所有分析卡片到一張圖片">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+              </svg>
+            </button>
             <button @click="clearAllCache" class="action-button" title="清理所有本地緩存數據">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                 <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
@@ -231,7 +236,7 @@ const analysisData = ref<CodeTableAnalysis | null>(null)
 const analysisResults = ref(null)
 const uploadPrefixFlag = ref<boolean>(false)
 const uploadPrefixKeys = ref<string[]>([])
-const globalMaxLength = ref<number>(4) // 全局最大码长，计算一次后不再改变
+const globalMaxLength = ref<number>(4) // 全局最大碼長，計算一次後不再改變
 
 // 上传卡片引用
 const uploaderCardRef = ref()
@@ -393,7 +398,7 @@ const restoreCodeTableData = async () => {
       uploadPrefixKeys.value = data.uploadPrefixKeys || []
       globalMaxLength.value = data.globalMaxLength || 4
       
-      // 重新处理码表以确保processing service有正确的数据（包含字频优化）
+      // 重新處理碼表以確保processing service有正確的數據（包含字頻優化）
       await codeTableProcessingService.processCodeTable(codeTable.value, {
         isPrefix: uploadPrefixFlag.value,
         maxLength: globalMaxLength.value
@@ -469,10 +474,10 @@ function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
   }
 }
 
-// 计算最大码长的测试字符
+// 計算最大碼長的測試字符
 const TEST_CHARS = ['灌', '瓣', '璧', '豁', '糯', '籍', '矗', '瓤', '嚼', '瞻', '覆', '馨', '徽', '警', '繁', '霜', '霞']
 
-// 计算最大码长
+// 計算最大碼長
 function calculateMaxCodeLength(codeTable: CodeTable): number {
   let maxLength = 0
   
@@ -505,7 +510,7 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
   // 先計算最大碼長
   const maxLength = calculateMaxCodeLength(data.codeTable)
   
-  // 立即处理码表，生成所有派生版本（包含字频优化）
+  // 立即處理碼表，生成所有派生版本（包含字頻優化）
   console.log('[App] 開始處理碼表...')
   await codeTableProcessingService.processCodeTable(data.codeTable, {
     isPrefix: data.isPrefix || false,
@@ -541,7 +546,7 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
   
   console.log('[App] 碼表上傳處理完成')
   
-  // 码表分析成功后，自动滚动到第一个分析卡片
+  // 碼表分析成功後，自動滾動到第一個分析卡片
   setTimeout(() => {
     const firstAnalysisCard = document.getElementById('card-duplicate')
     if (firstAnalysisCard) {
@@ -550,7 +555,7 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
         block: 'start'
       })
     }
-  }, 500) // 延迟500ms，让用户看到成功反馈
+  }, 500) // 延遲500ms，讓用戶看到成功反饋
   
   uploadStatus.value = {
     type: 'success',
@@ -633,6 +638,148 @@ const clearAllCache = () => {
   } catch (error) {
     console.error('清除緩存時發生錯誤:', error)
     alert('清除緩存失敗，請手動重新整理頁面')
+  }
+}
+
+// 導出所有分析卡片到一張圖片
+const exportAllCards = async () => {
+  try {
+    // 檢查是否有已上傳的碼表
+    if (!analysisReady.value) {
+      alert('請先上傳碼表文件後再進行導出操作')
+      return
+    }
+
+    // 確保所有卡片都展開，以便截圖包含完整內容
+    const cardsToExpand = [
+      duplicateAnalysisCardRef.value,
+      maximumCandidatesCardRef.value, 
+      speedEquivCardRef.value,
+      shortCodeEfficiencyCardRef.value,
+      keyboardHeatmapCardRef.value
+    ]
+
+    // 展開所有卡片
+    cardsToExpand.forEach(cardRef => {
+      if (cardRef && typeof cardRef.expand === 'function') {
+        cardRef.expand()
+      }
+    })
+
+    // 等待DOM更新
+    await nextTick()
+    
+    // 等待一點時間確保所有內容都渲染完成
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // 動態導入html2canvas
+    const { default: html2canvas } = await import('html2canvas')
+    
+    // 獲取所有要導出的卡片元素
+    const cardSelectors = [
+      '#card-duplicate',
+      '#card-maximum', 
+      '#card-speed',
+      '#card-shortcode',
+      '#card-heatmap'
+    ]
+    
+    const cardElements = cardSelectors
+      .map(selector => document.querySelector(selector))
+      .filter(element => element !== null)
+    
+    if (cardElements.length === 0) {
+      alert('未找到可導出的分析卡片')
+      return
+    }
+
+    // 創建一個容器來組合所有卡片
+    const container = document.createElement('div')
+    container.style.cssText = `
+      background: #f8fafc;
+      padding: 20px;
+      width: 1200px;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `
+
+    // 添加標題
+    const header = document.createElement('div')
+    header.style.cssText = `
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    `
+    header.innerHTML = `
+      <h1 style="margin: 0; font-size: 28px; font-weight: bold;">${codeTableName.value}</h1>
+      <p style="margin: 10px 0 5px 0; font-size: 16px; opacity: 0.9;">宇浩測評網 · ceping.shurufa.app</p>
+    `
+    container.appendChild(header)
+
+    // 複製每個卡片元素
+    for (const element of cardElements) {
+      const clonedElement = element.cloneNode(true) as HTMLElement
+      
+      // 確保樣式正確應用
+      clonedElement.style.cssText += `
+        margin-bottom: 25px;
+        width: 100%;
+        box-sizing: border-box;
+      `
+      
+      container.appendChild(clonedElement)
+    }
+
+    // 將容器暫時添加到body中（隱藏）
+    container.style.position = 'absolute'
+    container.style.left = '-9999px'
+    container.style.top = '0'
+    document.body.appendChild(container)
+
+    try {
+      // 使用html2canvas截圖
+      const canvas = await html2canvas(container, {
+        width: 1200,
+        height: container.offsetHeight,
+        scale: 2, // 提高圖片質量
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#f8fafc',
+        onclone: (clonedDoc) => {
+          // 確保克隆文檔中的樣式正確
+          const clonedContainer = clonedDoc.querySelector('div') as HTMLElement
+          if (clonedContainer) {
+            clonedContainer.style.position = 'static'
+            clonedContainer.style.left = 'auto'
+          }
+        }
+      })
+
+      // 創建下載鏈接
+      const link = document.createElement('a')
+      const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
+      link.download = `${codeTableName.value}_測評報告_宇浩測評網_ceping.shurufa.app_${today}.png`
+      link.href = canvas.toDataURL('image/png', 1.0)
+      
+      // 觸發下載
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      console.log('全部分析卡片導出成功')
+      
+    } finally {
+      // 清理：移除臨時容器
+      document.body.removeChild(container)
+    }
+
+  } catch (error) {
+    console.error('導出分析卡片失敗:', error)
+    alert('導出失敗，請稍後重試')
   }
 }
 </script>
@@ -726,6 +873,49 @@ const clearAllCache = () => {
   background: rgba(59, 130, 246, 0.2);
   border-color: rgba(59, 130, 246, 0.3);
   transform: scale(1.05);
+}
+
+/* 全局下載按鈕特殊樣式 */
+.download-all-button {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: white !important;
+  font-weight: 500;
+  gap: 6px;
+  min-width: 100px;
+  padding: 8px 12px !important;
+}
+
+.download-all-button:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* 頭部導出按鈕樣式 - 與卡片保持一致 */
+.header .export-btn {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 8px;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header .export-btn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: scale(1.05);
+}
+
+.header .export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* 悬浮导航菜单样式 */
