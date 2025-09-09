@@ -172,6 +172,7 @@ export interface KeyInfo {
   key: string
   width?: 'normal' | 'wide' | 'extra-wide' // 鍵位寬度
   label?: string // 顯示標籤
+  hidden?: boolean // 是否隐藏按键（用于布局对齐）
 }
 
 // 分析統計數據

@@ -1577,6 +1577,20 @@ const exportToPDF = async (container: HTMLElement) => {
     height: 16px !important;
   }
   
+  /* 头部导出按钮在移动端与其他按钮保持一致 */
+  .header .export-btn {
+    padding: 2px !important;
+    min-width: 28px !important;
+    width: 28px !important;
+    height: 28px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .header .export-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  
   .card-header {
     padding: var(--spacing-md);
   }
@@ -1642,6 +1656,21 @@ const exportToPDF = async (container: HTMLElement) => {
   
   .action-button svg {
     width: 14px !important; /* 更小图标 */
+    height: 14px !important;
+  }
+  
+  /* 头部导出按钮在小屏幕下与其他按钮保持一致 */
+  .header .export-btn {
+    padding: 1px !important;
+    min-width: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+    flex-shrink: 0 !important;
+    font-size: 0;
+  }
+  
+  .header .export-btn svg {
+    width: 14px !important;
     height: 14px !important;
   }
 }

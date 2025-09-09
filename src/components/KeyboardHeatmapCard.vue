@@ -331,12 +331,13 @@ watch(
 // 键盘布局定义
 const numberRowKeys: KeyInfo[] = [
   { key: '`' }, { key: '1' }, { key: '2' }, { key: '3' }, { key: '4' }, { key: '5' },
-  { key: '6' }, { key: '7' }, { key: '8' }, { key: '9' }, { key: '0' }, { key: '-' }, { key: '=' }
+  { key: '6' }, { key: '7' }, { key: '8' }, { key: '9' }, { key: '0' }
 ]
 
 const firstRowKeys: KeyInfo[] = [
   { key: 'q' }, { key: 'w' }, { key: 'e' }, { key: 'r' }, { key: 't' },
-  { key: 'y' }, { key: 'u' }, { key: 'i' }, { key: 'o' }, { key: 'p' }, { key: '[' }, { key: ']' }
+  { key: 'y' }, { key: 'u' }, { key: 'i' }, { key: 'o' }, { key: 'p' },
+  { key: 'hidden-bracket', hidden: true }
 ]
 
 const secondRowKeys: KeyInfo[] = [
@@ -346,11 +347,16 @@ const secondRowKeys: KeyInfo[] = [
 
 const thirdRowKeys: KeyInfo[] = [
   { key: 'z' }, { key: 'x' }, { key: 'c' }, { key: 'v' }, { key: 'b' },
-  { key: 'n' }, { key: 'm' }, { key: ',' }, { key: '.' }, { key: '/' }
+  { key: 'n' }, { key: 'm' }, { key: ',' }, { key: '.' }, { key: '/' },
+  { key: 'hidden-4', hidden: true }
 ]
 
 const spaceRowKeys: KeyInfo[] = [
-  { key: 'space', label: 'Space', width: 'wide' }
+  { key: 'hidden-7', hidden: true }, // 左侧隐藏按键 1
+  { key: 'hidden-8', hidden: true }, // 左侧隐藏按键 2
+  { key: 'space', label: 'Space', width: 'extra-wide' }, // 空格键占6格
+  { key: 'hidden-9', hidden: true },  // 右侧隐藏按键 1
+  { key: 'hidden-10', hidden: true }  // 右侧隐藏按键 2
 ]
 
 // 手指映射
@@ -813,6 +819,8 @@ const getKeyData = (key: string): KeyData => {
   padding: var(--spacing-md) 0;
   overflow: hidden; /* 防止出现滚动条 */
   width: 100%;
+  height: 100%; /* 占满容器高度 */
+  flex-direction: column; /* 垂直布局 */
 }
 
 /* 键盘布局 */
@@ -821,39 +829,34 @@ const getKeyData = (key: string): KeyData => {
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   transform-origin: center top;
-  width: 98%; /* 增加到98%宽度，减少左右空隙 */
-  max-width: 1400px; /* 增加最大宽度 */
+  width: 100%; /* 容器宽度百分比 */
+  height: 100%; /* 容器高度百分比 */
+  max-width: none; /* 最大宽度限制 */
+  max-height: none; /* 最大高度限制 */
   min-width: 320px; /* 设置最小宽度保证可用性 */
   border: 1px solid var(--color-border-secondary);
   transition: transform 0.3s ease;
+  margin: auto;
+  display: grid;
+  grid-template-rows: repeat(5, 1fr); /* 5行，每行等高 */
+  gap: 8px;
+  place-items: center;
 }
 
 .keyboard-row {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(11, 1fr); /* 11列，每列等宽 */
   gap: 4px;
-  margin-bottom: 8px;
-}
-
-.number-row {
-  margin-left: 0;
-}
-
-.first-row {
-  margin-left: 25px;
-}
-
-.second-row {
-  margin-left: 40px;
-}
-
-.third-row {
-  margin-left: 60px;
+  width: 100%;
+  height: 100%;
+  align-items: stretch;
 }
 
 .space-row {
-  margin-top: 8px;
+  margin-top: 0; /* 移除上边距，因为grid已经处理间距 */
 }
+
+/* 移除不再需要的行样式，因为现在使用grid布局 */
 
 /* 统计网格 */
 .stats-grid {
@@ -918,8 +921,8 @@ const getKeyData = (key: string): KeyData => {
 /* 大屏幕优化 */
 @media (min-width: 1200px) {
   .keyboard-layout {
-    width: 95%; /* 大屏幕上使用95%宽度 */
-    max-width: 1600px; /* 增加最大宽度让键盘更大 */
+    width: 100%; /* 大屏幕上占满整个容器宽度 */
+    max-width: none; /* 移除最大宽度限制，让键盘可以无限制撑大 */
   }
   
   .keyboard-wrapper {

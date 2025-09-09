@@ -3,9 +3,10 @@
     class="key-button"
     :class="[
       `key-${keyInfo.key}`,
-      `mode-${displayMode}`
+      `mode-${displayMode}`,
+      { 'hidden-key': keyInfo.hidden }
     ]"
-    :style="keyStyle"
+    :style="{ ...keyStyle, ...textColor }"
   >
     <div class="key-content">
       <div class="key-label">{{ keyInfo.label || keyInfo.key.toUpperCase() }}</div>
@@ -49,22 +50,24 @@ const showValue = computed(() => {
 
 // 按键样式
 const keyStyle = computed(() => {
-  let width = '50px'
+  let gridColumn = 'span 1' // 默认占1列
   
   switch (props.keyInfo.width) {
     case 'wide':
-      width = '150px' // 空格鍵等寬鍵
+      gridColumn = 'span 3' // 宽键占3列
       break
     case 'extra-wide':
-      width = '200px'
+      gridColumn = 'span 6' // 空格键占6列（11列布局中）
       break
     default:
-      width = '50px'
+      gridColumn = 'span 1' // 标准键占1列
   }
 
   return {
-    width,
-    height: '50px'
+    gridColumn,
+    aspectRatio: props.keyInfo.width === 'extra-wide' ? '7' : '1', // 空格键保持7:1比例，其他保持正方形
+    minWidth: '40px',
+    minHeight: '40px'
   }
 })
 
@@ -85,6 +88,25 @@ const heatmapStyle = computed(() => {
   return {
     '--intensity': normalizedIntensity,
     opacity: 1
+  }
+})
+
+// 動態文字顏色
+const textColor = computed(() => {
+  if (props.keyData.count === 0 || props.maxValue === 0) {
+    return {
+      '--key-text-color': 'var(--color-text-secondary)'
+    }
+  }
+
+  const intensity = props.keyData.count / props.maxValue
+  const normalizedIntensity = Math.min(Math.max(intensity, 0), 1)
+  
+  // 當熱力圖強度超過0.4時，使用白色文字以提高可見性
+  const textColor = normalizedIntensity > 0.4 ? '#ffffff' : 'var(--color-text-secondary)'
+  
+  return {
+    '--key-text-color': textColor
   }
 })
 
@@ -136,6 +158,13 @@ const getFingerColor = (key: string, intensity: number): string => {
   user-select: none;
   overflow: hidden;
   font-family: var(--font-mono);
+  width: 100%;
+  height: 100%;
+}
+
+/* 确保所有标准按键都是正方形 */
+.key-button:not(.key-space) {
+  aspect-ratio: 1;
 }
 
 .key-button:hover {
@@ -150,6 +179,21 @@ const getFingerColor = (key: string, intensity: number): string => {
   box-shadow: var(--shadow-lg);
 }
 
+/* 隐藏按键样式 */
+.key-button.hidden-key {
+  opacity: 0;
+  pointer-events: none;
+  border: none;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.key-button.hidden-key:hover {
+  transform: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
 .key-content {
   position: relative;
   z-index: 2;
@@ -160,17 +204,18 @@ const getFingerColor = (key: string, intensity: number): string => {
 }
 
 .key-label {
-  font-size: 0.875rem;
+  font-size: calc(0.2rem + 1.2vw); /* 优化的线性缩放：基础0.5rem + 1.2%视口宽度 */
   font-weight: 600;
   color: var(--color-text-primary);
   text-transform: uppercase;
   font-family: var(--font-mono);
+  min-height: 1.2em; /* 确保有足够的行高 */
 }
 
 .key-value {
-  font-size: 0.75rem;
+  font-size: calc(0.2rem + 1vw); /* 优化的线性缩放：基础0.4rem + 1%视口宽度 */
   font-weight: 500;
-  color: var(--color-text-secondary);
+  color: var(--key-text-color, var(--color-text-secondary));
   font-family: var(--font-mono);
   line-height: 1;
 }
@@ -212,28 +257,7 @@ const getFingerColor = (key: string, intensity: number): string => {
   background-color: rgba(34, 197, 94, calc(var(--intensity, 0) * 0.8 + 0.1));
 }
 
-/* 特殊按鍵樣式 */
-.key-button.key-space {
-  width: 200px;
-}
-
-.key-button.key-tab {
-  width: 75px;
-}
-
-.key-button.key-caps {
-  width: 90px;
-}
-
-.key-button.key-shift {
-  width: 110px;
-}
-
-.key-button.key-ctrl,
-.key-button.key-alt,
-.key-button.key-cmd {
-  width: 70px;
-}
+/* 特殊按鍵樣式 - 现在使用flex布局，移除固定宽度 */
 
 /* 模式特定樣式已通過熱力圖覆蓋層實現 */
 
