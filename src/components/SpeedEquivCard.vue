@@ -7,7 +7,7 @@
           <p class="card-description">分析輸入法的速度當量，計算基於字頻加權的全碼按鍵組合。閲讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
         </div>
         <div class="header-buttons">
-          <button @click="exportCard" class="export-btn" :disabled="isCalculating || !!error || !analysisResults" title="导出图片">
+          <button @click="exportCard" class="export-btn" :disabled="isCalculating || !!error || !analysisResults" title="導出圖片">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
             </svg>
@@ -93,7 +93,7 @@
           <p><strong>説明：</strong></p>
           <p>速度當量基於實驗統計結果，評估輸入法按鍵對的手感表現。數值越小表示輸入越流暢。本工具計算了：</p>
           <ul>
-            <li><strong>全碼速度當量</strong>（綠色）：使用全碼碼表（每個單字的最長編碼）進行計算</li>
+            <li><strong>全碼速度當量</strong>（緑色）：使用全碼碼表（每個單字的最長編碼）進行計算</li>
             <li><strong>一級簡碼速度當量</strong>（紫色）：優先使用一級簡碼（編碼長度不大於2且末尾是空格或上屏鍵）</li>
             <li><strong>二簡簡碼速度當量</strong>（橙色）：優先使用二級簡碼（編碼長度不大於3且末尾是空格或上屏鍵）</li>
             <li><strong>全部簡碼速度當量</strong>（紅色）：使用簡碼碼表（每個單字的最短編碼）進行計算</li>
@@ -166,8 +166,8 @@ async function exportCard() {
       download: true
     })
   } catch (error) {
-    console.error('导出失败:', error)
-    alert('导出失败，请重试')
+    console.error('導出失敗:', error)
+    alert('導出失敗，請重試')
   }
 }
 
@@ -241,13 +241,13 @@ function generateFirstShortCodeTable(
     const validCodes: string[] = []
     
     for (const code of codes) {
-      // 检查是否符合一级简码条件：长度≤2且末尾是空格或上屏键
+      // 檢查是否符合一級簡碼條件：長度≤2且末尾是空格或上屏鍵
       if (code.length <= 2 && validEndingKeys.has(code[code.length - 1])) {
         validCodes.push(code)
       }
     }
     
-    // 如果有符合条件的简码，使用简码；否则使用全码
+    // 如果有符合條件的簡碼，使用簡碼；否則使用全碼
     if (validCodes.length > 0) {
       result.set(char, validCodes)
     } else {
@@ -276,13 +276,13 @@ function generateSecondShortCodeTable(
     const validCodes: string[] = []
     
     for (const code of codes) {
-      // 检查是否符合二级简码条件：长度≤3且末尾是空格或上屏键
+      // 檢查是否符合二級簡碼條件：長度≤3且末尾是空格或上屏鍵
       if (code.length <= 3 && validEndingKeys.has(code[code.length - 1])) {
         validCodes.push(code)
       }
     }
     
-    // 如果有符合条件的简码，使用简码；否则使用全码
+    // 如果有符合條件的簡碼，使用簡碼；否則使用全碼
     if (validCodes.length > 0) {
       result.set(char, validCodes)
     } else {
@@ -332,34 +332,34 @@ async function calculateSpeedEquivAnalysis() {
       props.globalPrefixKeys
     )
     
-    // 4. 加载当量表
+    // 4. 加載當量表
     const equivTable = await loadEquivTable()
     
-    // 5. 加载各种字频表
+    // 5. 加載各種字頻表
     const { zhihuFreq, scFreq, tcFreq, gujiFreq, unifiedFreq } = await loadAllCharFrequencies()
     
-    // 6. 计算各种字频下的全码速度当量
+    // 6. 計算各種字頻下的全碼速度當量
     const zhihuPairFreq = calculateCodePairFrequencies(processedCodeTable, zhihuFreq)
     const scPairFreq = calculateCodePairFrequencies(processedCodeTable, scFreq)
     const tcPairFreq = calculateCodePairFrequencies(processedCodeTable, tcFreq)
     const gujiPairFreq = calculateCodePairFrequencies(processedCodeTable, gujiFreq)
     const unifiedPairFreq = calculateCodePairFrequencies(processedCodeTable, unifiedFreq)
     
-    // 7. 计算各种字频下的一级简码速度当量
+    // 7. 計算各種字頻下的一級簡碼速度當量
     const zhihuFirstShortPairFreq = calculateCodePairFrequencies(firstShortCodeTable, zhihuFreq)
     const scFirstShortPairFreq = calculateCodePairFrequencies(firstShortCodeTable, scFreq)
     const tcFirstShortPairFreq = calculateCodePairFrequencies(firstShortCodeTable, tcFreq)
     const gujiFirstShortPairFreq = calculateCodePairFrequencies(firstShortCodeTable, gujiFreq)
     const unifiedFirstShortPairFreq = calculateCodePairFrequencies(firstShortCodeTable, unifiedFreq)
     
-    // 8. 计算各种字频下的二级简码速度当量
+    // 8. 計算各種字頻下的二級簡碼速度當量
     const zhihuSecondShortPairFreq = calculateCodePairFrequencies(secondShortCodeTable, zhihuFreq)
     const scSecondShortPairFreq = calculateCodePairFrequencies(secondShortCodeTable, scFreq)
     const tcSecondShortPairFreq = calculateCodePairFrequencies(secondShortCodeTable, tcFreq)
     const gujiSecondShortPairFreq = calculateCodePairFrequencies(secondShortCodeTable, gujiFreq)
     const unifiedSecondShortPairFreq = calculateCodePairFrequencies(secondShortCodeTable, unifiedFreq)
     
-    // 9. 计算各种字频下的简码速度当量
+    // 9. 計算各種字頻下的簡碼速度當量
     const zhihuShortPairFreq = calculateCodePairFrequencies(shortProcessedCodeTable, zhihuFreq)
     const scShortPairFreq = calculateCodePairFrequencies(shortProcessedCodeTable, scFreq)
     const tcShortPairFreq = calculateCodePairFrequencies(shortProcessedCodeTable, tcFreq)
@@ -390,8 +390,8 @@ async function calculateSpeedEquivAnalysis() {
     }
     
   } catch (err) {
-    error.value = err instanceof Error ? err.message : '计算失败'
-    console.error('速度当量计算失败:', err)
+    error.value = err instanceof Error ? err.message : '計算失敗'
+    console.error('速度當量計算失敗:', err)
   } finally {
     isCalculating.value = false
   }
@@ -406,10 +406,10 @@ watch(() => props.codeTable, async (newCodeTable) => {
   }
 }, { immediate: false })  // 不立即执行，让组件挂载逻辑控制
 
-// 组件挂载时自动计算
+// 組件掛載時自動計算
 onMounted(async () => {
-  // SpeedEquivCard不再自己检测前缀码，完全依赖App.vue的处理结果
-  // 直接执行计算
+  // SpeedEquivCard不再自己檢測前綴碼，完全依賴App.vue的處理結果
+  // 直接執行計算
   if (props.codeTable && props.codeTable.size > 0) {
     calculateSpeedEquivAnalysis()
   }
@@ -581,15 +581,15 @@ onMounted(async () => {
 }
 
 .metric-value.first-short-equiv {
-  color: #7c3aed; /* 一级简码速度当量使用紫色 */
+  color: #7c3aed; /* 一級簡碼速度當量使用紫色 */
 }
 
 .metric-value.second-short-equiv {
-  color: #ea580c; /* 二级简码速度当量使用橙色 */
+  color: #ea580c; /* 二級簡碼速度當量使用橙色 */
 }
 
 .metric-value.short-equiv {
-  color: #dc2626; /* 简码速度当量使用红色 */
+  color: #dc2626; /* 簡碼速度當量使用紅色 */
 }
 
 .metric-desc {

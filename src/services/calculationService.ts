@@ -295,7 +295,7 @@ function isInCJKToJ(codePoint: number): boolean {
 
 /**
  * 修正的字符計數函數
- * 計算碼表中在CJK基本區到CJK-J範圍內的唯一字符數量
+ * 計算碼表中在CJK基本區到CJK-J範圍内的唯一字符數量
  */
 export async function calculateCharCount(codeTable: CodeTable): Promise<number> {
   // 确保数据已加载
@@ -312,7 +312,7 @@ export async function calculateCharCount(codeTable: CodeTable): Promise<number> 
     }
   }
   
-  // 計算在CJK-J範圍內的字符數量
+  // 計算在CJK-J範圍内的字符數量
   let cjkCount = 0
   for (const char of uniqueChars) {
     const codePoint = char.codePointAt(0)

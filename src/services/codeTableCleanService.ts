@@ -90,7 +90,7 @@ export function cleanCodeTable(
       return true
     })
 
-    // 如果沒有有效編碼，跳過該字符
+    // 如果没有有效編碼，跳過該字符
     if (filteredCodes.length === 0) {
       removedChars.push(char)
       continue
@@ -213,7 +213,7 @@ export function validateCodeTable(codeTable: CodeTable): {
 
     // 檢查編碼
     if (!codes || codes.length === 0) {
-      errors.push(`字符 "${char}" 沒有編碼`)
+      errors.push(`字符 "${char}" 没有編碼`)
     } else {
       for (const code of codes) {
         if (!code || !code.trim()) {

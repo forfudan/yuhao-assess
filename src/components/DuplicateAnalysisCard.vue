@@ -4,7 +4,7 @@
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">重碼數據</h3>
-          <p class="card-description">分析不同字符集下的重碼情況，計算靜態重碼率和動態選重率。閱讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
+          <p class="card-description">分析不同字符集下的重碼情况，計算靜態重碼率和動態選重率。閲讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
         </div>
         <div class="header-buttons">
           <button @click="exportCard" class="export-btn" :disabled="isCalculating || !analysisResults" title="导出图片">
@@ -37,7 +37,7 @@
                 出簡
                 <span 
                   class="info-icon" 
-                  @mouseenter="showTooltip($event, '計算簡碼時，會提取碼表相同漢字中編碼長度最小之編碼，並視之爲簡碼。故而出現多重簡碼、兼容編碼、無理碼等特殊情況時，該列數據會出現失真現象。欲獲取更加準確之統計，請對碼表進行處理。')"
+                  @mouseenter="showTooltip($event, '計算簡碼時，會提取碼表相同漢字中編碼長度最小之編碼，並視之爲簡碼。故而出現多重簡碼、兼容編碼、無理碼等特殊情况時，該列數據會出現失真現象。欲獲取更加準確之統計，請對碼表進行處理。')"
                   @mouseleave="hideTooltip()"
                 >
                   ⓘ

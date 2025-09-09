@@ -107,7 +107,7 @@
         <div class="explanation">
           <p><strong>説明：</strong></p>
           <ul>
-            <li>本模塊使用前 N 個（最大為 1000 個）最有效率的簡碼時的平均碼長</li>
+            <li>本模塊使用前 N 個（最大爲 1000 個）最有效率的簡碼時的平均碼長</li>
             <li>簡碼字的效率取決於於漢字字頻 × 節約碼長</li>
             <li>僅考慮簡碼長度小於全碼長度的漢字，實際簡碼數量可能小於 N</li>
             <li>鼠標懸停在數字上可查看當前區間對應的高效簡碼字</li>
@@ -574,7 +574,7 @@ const getPreviousChars = (prevN: number, freqType: string): string[] => {
 }
 
 const getCellClass = (value: number, rowValues: number[]): string => {
-  // 基於絕對值的五檔分級
+  // 基於絶對值的五檔分級
   if (value <= 0) return ''
   
   if (value >= 3.7) {
@@ -852,14 +852,14 @@ onMounted(async () => {
 }
 
 .high-value {
-  background: #fef3c7 !important;  /* 淺黃色背景 - >= 3.3 */
-  color: #92400e;                   /* 深黃色文字 */
+  background: #fef3c7 !important;  /* 淺黄色背景 - >= 3.3 */
+  color: #92400e;                   /* 深黄色文字 */
   font-weight: 700;
 }
 
 .medium-value {
-  background: #dcfce7 !important;  /* 淺綠色背景 - >= 2.9 */
-  color: #166534;                   /* 深綠色文字 */
+  background: #dcfce7 !important;  /* 淺緑色背景 - >= 2.9 */
+  color: #166534;                   /* 深緑色文字 */
   font-weight: 700;
 }
 
@@ -919,7 +919,7 @@ onMounted(async () => {
   gap: 8px;
 }
 
-/* 提示框標題樣式 - 顯示說明文字 */
+/* 提示框標題樣式 - 顯示説明文字 */
 .tooltip-header {
   font-weight: 500;
   color: #d1d5db;
@@ -1135,7 +1135,7 @@ onMounted(async () => {
 
 <!-- 全域樣式專門用於 Teleport 的 tooltip - 解決 scoped 樣式無法作用於 Teleport 内容的問題 -->
 <style>
-/* tooltip 字符單元格樣式 - 確保所有單元格內容居中對齊 */
+/* tooltip 字符單元格樣式 - 確保所有單元格内容居中對齊 */
 .custom-tooltip .char-cell {
   text-align: center !important;
   vertical-align: middle !important;
