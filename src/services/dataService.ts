@@ -53,7 +53,7 @@ async function loadFrequencyCharsUnion(): Promise<Set<string>> {
   console.time('加載字頻表字符並集')
   
   try {
-    // 並行加載四個字頻表（不包含 unified，因為它是合成的）
+    // 並行加載四個字頻表（不包含 unified，因爲它是合成的）
     const [zhihuFreq, scFreq, tcFreq, gujiFreq] = await Promise.all([
       loadCharFrequency(),        // charFrequencyZhihu.json
       loadCharFrequencySC(),      // charFrequencySC.json  

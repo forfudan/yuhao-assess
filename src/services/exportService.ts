@@ -33,7 +33,7 @@ export class ExportService {
     `
     watermarkDiv.textContent = watermarkText
     
-    // 添加到卡片內容的最底部
+    // 添加到卡片内容的最底部
     const cardContent = cardElement.querySelector('.card-content')
     if (cardContent) {
       cardContent.appendChild(watermarkDiv)

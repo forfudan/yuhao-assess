@@ -7,7 +7,7 @@
           <p class="card-description">分析輸入法的速度當量，計算基於字頻加權的全碼按鍵組合。閲讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
         </div>
         <div class="header-buttons">
-          <button @click="exportCard" class="export-btn" :disabled="isCalculating || !!error || !analysisResults" title="导出图片">
+          <button @click="exportCard" class="export-btn" :disabled="isCalculating || !!error || !analysisResults" title="導出圖片">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
             </svg>
@@ -38,7 +38,10 @@
           <thead>
             <tr>
               <th>字頻來源</th>
-              <th>速度當量</th>
+              <th>全碼當量</th>
+              <th>一簡當量</th>
+              <th>二簡當量</th>
+              <th>全簡當量</th>
               <th>説明</th>
             </tr>
           </thead>
@@ -46,26 +49,41 @@
             <tr>
               <td>知乎簡體字頻</td>
               <td class="metric-value">{{ analysisResults.zhihuEquiv.toFixed(4) }}</td>
+              <td class="metric-value first-short-equiv">{{ analysisResults.zhihuFirstShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value second-short-equiv">{{ analysisResults.zhihuSecondShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value short-equiv">{{ analysisResults.zhihuShortEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於<a href="https://github.com/forfudan/chinese-characters-frequency" target="_blank" rel="noopener">知乎字頻表</a>的加權速度當量</td>
             </tr>
             <tr>
               <td>北語簡體字頻</td>
               <td class="metric-value">{{ analysisResults.scEquiv.toFixed(4) }}</td>
+              <td class="metric-value first-short-equiv">{{ analysisResults.scFirstShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value second-short-equiv">{{ analysisResults.scSecondShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value short-equiv">{{ analysisResults.scShortEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於<a href="https://faculty.blcu.edu.cn/xinghb/zh_CN/article/167473/content/1437.htm" target="_blank" rel="noopener">簡體字頻表</a>的加權速度當量</td>
             </tr>
             <tr>
               <td>臺標繁體字頻</td>
               <td class="metric-value">{{ analysisResults.tcEquiv.toFixed(4) }}</td>
+              <td class="metric-value first-short-equiv">{{ analysisResults.tcFirstShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value second-short-equiv">{{ analysisResults.tcSecondShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value short-equiv">{{ analysisResults.tcShortEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於<a href="https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PIN/biau1.htm" target="_blank" rel="noopener">臺標繁體字頻表</a>的加權速度當量</td>
             </tr>
             <tr>
               <td>古籍繁體字頻</td>
               <td class="metric-value">{{ analysisResults.gujiEquiv.toFixed(4) }}</td>
+              <td class="metric-value first-short-equiv">{{ analysisResults.gujiFirstShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value second-short-equiv">{{ analysisResults.gujiSecondShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value short-equiv">{{ analysisResults.gujiShortEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於古籍字頻的加權速度當量</td>
             </tr>
             <tr>
               <td>繁簡聯合字頻</td>
               <td class="metric-value">{{ analysisResults.unifiedEquiv.toFixed(4) }}</td>
+              <td class="metric-value first-short-equiv">{{ analysisResults.unifiedFirstShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value second-short-equiv">{{ analysisResults.unifiedSecondShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value short-equiv">{{ analysisResults.unifiedShortEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於繁簡聯合字頻表的加權速度當量</td>
             </tr>
           </tbody>
@@ -73,12 +91,19 @@
 
         <div class="info-section">
           <p><strong>説明：</strong></p>
-          <p>速度當量基於實驗統計結果，評估輸入法按鍵對的手感表現。數值越小表示輸入越流暢。計算考慮了：</p>
+          <p>速度當量基於實驗統計結果，評估輸入法按鍵對的手感表現。數值越小表示輸入越流暢。本工具計算了：</p>
           <ul>
-            <li>使用全碼碼表（每個單字的最長編碼）</li>
+            <li><strong>全碼速度當量</strong>（緑色）：使用全碼碼表（每個單字的最長編碼）進行計算</li>
+            <li><strong>一級簡碼速度當量</strong>（紫色）：優先使用一級簡碼（編碼長度不大於2且末尾是空格或上屏鍵）</li>
+            <li><strong>二簡簡碼速度當量</strong>（橙色）：優先使用二級簡碼（編碼長度不大於3且末尾是空格或上屏鍵）</li>
+            <li><strong>全部簡碼速度當量</strong>（紅色）：使用簡碼碼表（每個單字的最短編碼）進行計算</li>
+          </ul>
+          <br></br>
+          <p>計算考慮了：</p>
+          <ul>
             <li>漢字的使用頻率</li>
             <li>檢測到的最大碼長爲 {{ maxCodeLength }} 位</li>
-            <li>{{ detectedIsPrefix ? '檢測到本方案爲前綴或頂功' : '' }}{{ detectedIsPrefix && props.globalPrefixKeys && props.globalPrefixKeys.length > 0 ? `，檢測到上屏鍵爲 ${props.globalPrefixKeys.join('')}` : '' }}</li>
+            <li v-if="detectedIsPrefix">{{ detectedIsPrefix ? '檢測到本方案爲前綴或頂功' : '' }}{{ detectedIsPrefix && props.globalPrefixKeys && props.globalPrefixKeys.length > 0 ? `，檢測到上屏鍵爲 ${props.globalPrefixKeys.join('')}` : '' }}</li>
             <li v-if="!detectedIsPrefix">碼表的規範化處理，即在未達到最大碼長時使用下劃線補充（代表空格）</li>
             <li v-else>前綴碼特性，未達到最大碼長時且末碼爲上屏碼時不補充下劃線（空格）</li>
             <li>多候選字的選擇鍵處理（第2候選加分號，第3候選加單引號）</li>
@@ -141,8 +166,8 @@ async function exportCard() {
       download: true
     })
   } catch (error) {
-    console.error('导出失败:', error)
-    alert('导出失败，请重试')
+    console.error('導出失敗:', error)
+    alert('導出失敗，請重試')
   }
 }
 
@@ -161,6 +186,21 @@ interface SpeedEquivResults {
   tcEquiv: number
   gujiEquiv: number
   unifiedEquiv: number
+  zhihuFirstShortEquiv: number
+  scFirstShortEquiv: number
+  tcFirstShortEquiv: number
+  gujiFirstShortEquiv: number
+  unifiedFirstShortEquiv: number
+  zhihuSecondShortEquiv: number
+  scSecondShortEquiv: number
+  tcSecondShortEquiv: number
+  gujiSecondShortEquiv: number
+  unifiedSecondShortEquiv: number
+  zhihuShortEquiv: number
+  scShortEquiv: number
+  tcShortEquiv: number
+  gujiShortEquiv: number
+  unifiedShortEquiv: number
 }
 
 // 響應式數據
@@ -186,6 +226,76 @@ async function loadEquivTable(): Promise<Record<string, number>> {
   }
 }
 
+// 生成一級簡碼表（長度≤2且末尾是空格或上屏鍵）
+function generateFirstShortCodeTable(
+  shortWithSelection: CodeTable, 
+  fullWithSelection: CodeTable,
+  prefixKeys: string[] = []
+): CodeTable {
+  const result: CodeTable = new Map()
+  
+  // 创建上屏键集合，包含空格(_)和用户设置的上屏键
+  const validEndingKeys = new Set(['_', ...prefixKeys])
+  
+  for (const [char, codes] of shortWithSelection) {
+    const validCodes: string[] = []
+    
+    for (const code of codes) {
+      // 檢查是否符合一級簡碼條件：長度≤2且末尾是空格或上屏鍵
+      if (code.length <= 2 && validEndingKeys.has(code[code.length - 1])) {
+        validCodes.push(code)
+      }
+    }
+    
+    // 如果有符合條件的簡碼，使用簡碼；否則使用全碼
+    if (validCodes.length > 0) {
+      result.set(char, validCodes)
+    } else {
+      const fullCodes = fullWithSelection.get(char)
+      if (fullCodes) {
+        result.set(char, [...fullCodes])
+      }
+    }
+  }
+  
+  return result
+}
+
+// 生成二級簡碼表（長度≤3且末尾是空格或上屏鍵）
+function generateSecondShortCodeTable(
+  shortWithSelection: CodeTable, 
+  fullWithSelection: CodeTable,
+  prefixKeys: string[] = []
+): CodeTable {
+  const result: CodeTable = new Map()
+  
+  // 创建上屏键集合，包含空格(_)和用户设置的上屏键
+  const validEndingKeys = new Set(['_', ...prefixKeys])
+  
+  for (const [char, codes] of shortWithSelection) {
+    const validCodes: string[] = []
+    
+    for (const code of codes) {
+      // 檢查是否符合二級簡碼條件：長度≤3且末尾是空格或上屏鍵
+      if (code.length <= 3 && validEndingKeys.has(code[code.length - 1])) {
+        validCodes.push(code)
+      }
+    }
+    
+    // 如果有符合條件的簡碼，使用簡碼；否則使用全碼
+    if (validCodes.length > 0) {
+      result.set(char, validCodes)
+    } else {
+      const fullCodes = fullWithSelection.get(char)
+      if (fullCodes) {
+        result.set(char, [...fullCodes])
+      }
+    }
+  }
+  
+  return result
+}
+
 // 主計算函數
 async function calculateSpeedEquivAnalysis() {
   if (!props.codeTable || props.codeTable.size === 0) {
@@ -202,38 +312,86 @@ async function calculateSpeedEquivAnalysis() {
       throw new Error('無法獲取處理後的碼表')
     }
     
-    const fullCodeTable = processedTables.full
     const processedCodeTable = processedTables.fullWithSelection
+    const shortProcessedCodeTable = processedTables.shortWithSelection
     
     // 2. 從處理服務獲取最大碼長和前綴碼檢測結果
     const processingOptions = codeTableProcessingService.getProcessingOptions()
     maxCodeLength.value = processingOptions?.maxLength || 4
     detectedIsPrefix.value = processingOptions?.isPrefix || false
     
-    // 3. 加载当量表
+    // 3. 生成一級和二級簡碼表
+    const firstShortCodeTable = generateFirstShortCodeTable(
+      shortProcessedCodeTable, 
+      processedCodeTable,
+      props.globalPrefixKeys
+    )
+    const secondShortCodeTable = generateSecondShortCodeTable(
+      shortProcessedCodeTable, 
+      processedCodeTable,
+      props.globalPrefixKeys
+    )
+    
+    // 4. 加載當量表
     const equivTable = await loadEquivTable()
     
-    // 5. 加载各种字频表
+    // 5. 加載各種字頻表
     const { zhihuFreq, scFreq, tcFreq, gujiFreq, unifiedFreq } = await loadAllCharFrequencies()
     
-    // 6. 计算各种字频下的速度当量
+    // 6. 計算各種字頻下的全碼速度當量
     const zhihuPairFreq = calculateCodePairFrequencies(processedCodeTable, zhihuFreq)
     const scPairFreq = calculateCodePairFrequencies(processedCodeTable, scFreq)
     const tcPairFreq = calculateCodePairFrequencies(processedCodeTable, tcFreq)
     const gujiPairFreq = calculateCodePairFrequencies(processedCodeTable, gujiFreq)
     const unifiedPairFreq = calculateCodePairFrequencies(processedCodeTable, unifiedFreq)
     
+    // 7. 計算各種字頻下的一級簡碼速度當量
+    const zhihuFirstShortPairFreq = calculateCodePairFrequencies(firstShortCodeTable, zhihuFreq)
+    const scFirstShortPairFreq = calculateCodePairFrequencies(firstShortCodeTable, scFreq)
+    const tcFirstShortPairFreq = calculateCodePairFrequencies(firstShortCodeTable, tcFreq)
+    const gujiFirstShortPairFreq = calculateCodePairFrequencies(firstShortCodeTable, gujiFreq)
+    const unifiedFirstShortPairFreq = calculateCodePairFrequencies(firstShortCodeTable, unifiedFreq)
+    
+    // 8. 計算各種字頻下的二級簡碼速度當量
+    const zhihuSecondShortPairFreq = calculateCodePairFrequencies(secondShortCodeTable, zhihuFreq)
+    const scSecondShortPairFreq = calculateCodePairFrequencies(secondShortCodeTable, scFreq)
+    const tcSecondShortPairFreq = calculateCodePairFrequencies(secondShortCodeTable, tcFreq)
+    const gujiSecondShortPairFreq = calculateCodePairFrequencies(secondShortCodeTable, gujiFreq)
+    const unifiedSecondShortPairFreq = calculateCodePairFrequencies(secondShortCodeTable, unifiedFreq)
+    
+    // 9. 計算各種字頻下的簡碼速度當量
+    const zhihuShortPairFreq = calculateCodePairFrequencies(shortProcessedCodeTable, zhihuFreq)
+    const scShortPairFreq = calculateCodePairFrequencies(shortProcessedCodeTable, scFreq)
+    const tcShortPairFreq = calculateCodePairFrequencies(shortProcessedCodeTable, tcFreq)
+    const gujiShortPairFreq = calculateCodePairFrequencies(shortProcessedCodeTable, gujiFreq)
+    const unifiedShortPairFreq = calculateCodePairFrequencies(shortProcessedCodeTable, unifiedFreq)
+    
     analysisResults.value = {
       zhihuEquiv: calculateSpeedEquiv(zhihuPairFreq, equivTable),
       scEquiv: calculateSpeedEquiv(scPairFreq, equivTable),
       tcEquiv: calculateSpeedEquiv(tcPairFreq, equivTable),
       gujiEquiv: calculateSpeedEquiv(gujiPairFreq, equivTable),
-      unifiedEquiv: calculateSpeedEquiv(unifiedPairFreq, equivTable)
+      unifiedEquiv: calculateSpeedEquiv(unifiedPairFreq, equivTable),
+      zhihuFirstShortEquiv: calculateSpeedEquiv(zhihuFirstShortPairFreq, equivTable),
+      scFirstShortEquiv: calculateSpeedEquiv(scFirstShortPairFreq, equivTable),
+      tcFirstShortEquiv: calculateSpeedEquiv(tcFirstShortPairFreq, equivTable),
+      gujiFirstShortEquiv: calculateSpeedEquiv(gujiFirstShortPairFreq, equivTable),
+      unifiedFirstShortEquiv: calculateSpeedEquiv(unifiedFirstShortPairFreq, equivTable),
+      zhihuSecondShortEquiv: calculateSpeedEquiv(zhihuSecondShortPairFreq, equivTable),
+      scSecondShortEquiv: calculateSpeedEquiv(scSecondShortPairFreq, equivTable),
+      tcSecondShortEquiv: calculateSpeedEquiv(tcSecondShortPairFreq, equivTable),
+      gujiSecondShortEquiv: calculateSpeedEquiv(gujiSecondShortPairFreq, equivTable),
+      unifiedSecondShortEquiv: calculateSpeedEquiv(unifiedSecondShortPairFreq, equivTable),
+      zhihuShortEquiv: calculateSpeedEquiv(zhihuShortPairFreq, equivTable),
+      scShortEquiv: calculateSpeedEquiv(scShortPairFreq, equivTable),
+      tcShortEquiv: calculateSpeedEquiv(tcShortPairFreq, equivTable),
+      gujiShortEquiv: calculateSpeedEquiv(gujiShortPairFreq, equivTable),
+      unifiedShortEquiv: calculateSpeedEquiv(unifiedShortPairFreq, equivTable)
     }
     
   } catch (err) {
-    error.value = err instanceof Error ? err.message : '计算失败'
-    console.error('速度当量计算失败:', err)
+    error.value = err instanceof Error ? err.message : '計算失敗'
+    console.error('速度當量計算失敗:', err)
   } finally {
     isCalculating.value = false
   }
@@ -248,10 +406,10 @@ watch(() => props.codeTable, async (newCodeTable) => {
   }
 }, { immediate: false })  // 不立即执行，让组件挂载逻辑控制
 
-// 组件挂载时自动计算
+// 組件掛載時自動計算
 onMounted(async () => {
-  // SpeedEquivCard不再自己检测前缀码，完全依赖App.vue的处理结果
-  // 直接执行计算
+  // SpeedEquivCard不再自己檢測前綴碼，完全依賴App.vue的處理結果
+  // 直接執行計算
   if (props.codeTable && props.codeTable.size > 0) {
     calculateSpeedEquivAnalysis()
   }
@@ -420,6 +578,18 @@ onMounted(async () => {
   color: #059669;
   font-family: var(--font-numeric);
   font-feature-settings: "tnum" 0; /* 禁用表格數字，使用比例數字 */
+}
+
+.metric-value.first-short-equiv {
+  color: #7c3aed; /* 一級簡碼速度當量使用紫色 */
+}
+
+.metric-value.second-short-equiv {
+  color: #ea580c; /* 二級簡碼速度當量使用橙色 */
+}
+
+.metric-value.short-equiv {
+  color: #dc2626; /* 簡碼速度當量使用紅色 */
 }
 
 .metric-desc {

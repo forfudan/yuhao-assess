@@ -60,7 +60,7 @@ export function getStaticDupRate(
  * 參考 Python: get_dynamic_dup_rate
  * 
  * 算法邏輯：
- * 1. 按編碼分組，每組內按字頻降序排列
+ * 1. 按編碼分組，每組内按字頻降序排列
  * 2. 對於每個編碼組，除了頻率最高的字符外，其他字符的頻率都需要選重
  * 3. 動態重碼率 = 總選重頻率 / 總字頻
  * 

@@ -88,9 +88,9 @@ const heatmapStyle = computed(() => {
   }
 })
 
-// 獲取手指顏色
+// 獲取手指顔色
 const getFingerColor = (key: string, intensity: number): string => {
-  // 手指顏色映射
+  // 手指顔色映射
   const fingerColors: Record<string, string> = {
     '左小指': `rgba(239, 68, 68, ${intensity * 0.8})`,    // 红色
     '左无名指': `rgba(249, 115, 22, ${intensity * 0.8})`,   // 橙色

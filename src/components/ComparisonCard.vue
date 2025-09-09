@@ -1439,7 +1439,7 @@ const calculateMissingData = async (scheme: Scheme) => {
       scheme.charCount = await calculateCharCount(scheme.codeTable!)
     }
     
-    // 檢查是否爲主方案（不可刪除的方案）
+    // 檢查是否爲主方案（不可删除的方案）
     const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
     
     if (activeTab.value === 'dynamic' && !scheme.data.dynamic) {
@@ -1478,7 +1478,7 @@ const recalculateScheme = async (scheme: Scheme) => {
   if (!scheme.codeTable) {
     if (!scheme.isBuiltin) {
       // 對於上傳方案，提示用户重新上傳
-      alert(`方案 "${scheme.name}" 的碼表數據已丟失（頁面刷新後上傳的文件會丟失）。\n\n請重新上傳該方案的碼表文件，或者移除該方案。`)
+      alert(`方案 "${scheme.name}" 的碼表數據已丢失（頁面刷新後上傳的文件會丢失）。\n\n請重新上傳該方案的碼表文件，或者移除該方案。`)
     } else {
       console.warn(`[刷新按鈕] 預設方案 ${scheme.name} 缺少 codeTable，這不應該發生`)
     }
@@ -1513,7 +1513,7 @@ const recalculateScheme = async (scheme: Scheme) => {
     } else if (activeTab.value === 'maxCandidates') {
       scheme.data.maxCandidates = await calculateMaxCandidatesData(scheme)
     } else if (activeTab.value === 'speedEquiv') {
-      // 檢查是否爲主方案（不可刪除的方案）
+      // 檢查是否爲主方案（不可删除的方案）
       const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
       if (isMainScheme) {
         // 主方案使用全局已處理的碼表
@@ -2553,7 +2553,7 @@ function parseCodeTableText(text: string, format: 'char_first' | 'code_first'): 
 // 移除方案
 // 判斷是否可以移除方案
 function canRemoveScheme(scheme: Scheme): boolean {
-  // 如果是當前用戶方案，不能移除
+  // 如果是當前用户方案，不能移除
   if (currentUserScheme.value && scheme.id === currentUserScheme.value.id) {
     return false
   }
