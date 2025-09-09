@@ -86,6 +86,9 @@
 
 /* 深色模式 */
 [data-theme="dark"] {
+  /* 色彩系統 - 深色模式 */
+  --color-primary-light: #1e3a5f;
+  
   /* 背景顏色 - 深色模式 */
   --color-bg-primary: #1a1a1a;
   --color-bg-secondary: #2d2d2d;
@@ -288,6 +291,38 @@ input:focus, select:focus, textarea:focus {
   color: var(--color-text-tertiary);
 }
 
+/* 通用信息說明欄樣式 */
+.info-section {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 0.9rem;
+  border: 1px solid #e5e7eb;
+}
+
+.info-section strong {
+  color: #495057;
+}
+
+.info-section p {
+  margin: 0 0 12px 0;
+  color: #6c757d;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.info-section ul {
+  margin: 8px 0 0 20px;
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.info-section li {
+  margin-bottom: 4px;
+  line-height: 1.4;
+  color: #6c757d;
+}
+
 .grid {
   display: grid;
   gap: var(--spacing-lg);
@@ -356,4 +391,81 @@ input:focus, select:focus, textarea:focus {
   .scheme-item {
     border: 1px solid CanvasText;
   }
+}
+
+/* 暗黑模式下的通用表格樣式 */
+[data-theme="dark"] table {
+  background: var(--color-bg-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] thead {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] th {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] td {
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-secondary);
+}
+
+[data-theme="dark"] tbody tr:hover {
+  background: var(--color-bg-tertiary);
+}
+
+/* 暗黑模式下的表單控件 */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* 暗黑模式下的按鈕 */
+[data-theme="dark"] button:not(.btn) {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] button:not(.btn):hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-secondary);
+}
+
+/* 暗黑模式下的卡片 */
+[data-theme="dark"] .card {
+  background: var(--color-bg-card);
+  border-color: var(--color-border-primary);
+}
+
+/* 暗黑模式下的說明欄 */
+[data-theme="dark"] .info-section,
+[data-theme="dark"] .scheme-name-annotation {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-primary);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .info-section p,
+[data-theme="dark"] .info-section ul,
+[data-theme="dark"] .info-section li {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .info-section strong {
+  color: var(--color-text-primary);
 }

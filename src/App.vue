@@ -1443,6 +1443,11 @@ const exportToPDF = async (container: HTMLElement) => {
   border-top-right-radius: 12px;
 }
 
+/* 暗黑模式下的基础卡片头部 */
+[data-theme="dark"] .card-header {
+  background: linear-gradient(135deg, #3b4498 0%, #4c3763 100%);
+}
+
 .card-header::before {
   content: '';
   position: absolute;
@@ -1519,6 +1524,35 @@ const exportToPDF = async (container: HTMLElement) => {
 
 .code-table-viewer .card-header {
   background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+/* 暗黑模式下的卡片头部渐变 - 保持颜色基调但更深沉 */
+[data-theme="dark"] .upload-card .card-header {
+  background: linear-gradient(135deg, #3b4498 0%, #4c3763 100%);
+}
+
+[data-theme="dark"] .duplicate-analysis-card .card-header {
+  background: linear-gradient(135deg, #8b1538 0%, #6b1728 100%);
+}
+
+[data-theme="dark"] .maximum-candidates-card .card-header {
+  background: linear-gradient(135deg, #5b21b6 0%, #4c1d95 100%);
+}
+
+[data-theme="dark"] .speed-equiv-card .card-header {
+  background: linear-gradient(135deg, #a16207 0%, #92400e 100%);
+}
+
+[data-theme="dark"] .comparison-card .card-header {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+}
+
+[data-theme="dark"] .keyboard-heatmap .card-header {
+  background: linear-gradient(135deg, #0e7490 0%, #155e75 100%);
+}
+
+[data-theme="dark"] .code-table-viewer .card-header {
+  background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
 }
 
 /* 响应式设计 */

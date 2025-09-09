@@ -104,7 +104,7 @@
           <p><strong>注意：</strong>繼續出簡不再降低碼長</p>
         </div>
         <!-- 説明文字 -->
-        <div class="explanation">
+        <div class="info-section">
           <p><strong>説明：</strong></p>
           <ul>
             <li>本模塊使用前 N 個（最大爲 1000 個）最有效率的簡碼時的平均碼長</li>
@@ -653,12 +653,6 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-.card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px 24px;
-  color: white;
-}
-
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -875,6 +869,37 @@ onMounted(async () => {
   font-weight: 700;
 }
 
+/* 暗黑模式下的效率值颜色分级 - 更深沉的配色方案 */
+[data-theme="dark"] .very-high-value {
+  background: #3f1d1d !important;  /* 非常深的红灰色背景 */
+  color: #fca5a5;                   /* 柔和的浅红色文字 */
+  font-weight: 700;
+}
+
+[data-theme="dark"] .high-value {
+  background: #3d2817 !important;  /* 非常深的黄灰色背景 */
+  color: #fbbf24;                   /* 柔和的浅黄色文字 */
+  font-weight: 700;
+}
+
+[data-theme="dark"] .medium-value {
+  background: #1a2e1a !important;  /* 非常深的绿灰色背景 */
+  color: #86efac;                   /* 柔和的浅绿色文字 */
+  font-weight: 700;
+}
+
+[data-theme="dark"] .low-value {
+  background: #1e2a3a !important;  /* 非常深的蓝灰色背景 */
+  color: #93c5fd;                   /* 柔和的浅蓝色文字 */
+  font-weight: 700;
+}
+
+[data-theme="dark"] .very-low-value {
+  background: #2d1b3d !important;  /* 非常深的紫灰色背景 */
+  color: #c4b5fd;                   /* 柔和的浅紫色文字 */
+  font-weight: 700;
+}
+
 /* 簡化的懸停效果 */
 .very-high-value:hover {
   background: #fecaca !important;
@@ -894,6 +919,27 @@ onMounted(async () => {
 
 .very-low-value:hover {
   background: #e9d5ff !important;
+}
+
+/* 暗黑模式下的懸停效果 - 深沉但有层次的变化 */
+[data-theme="dark"] .very-high-value:hover {
+  background: #4a2323 !important;  /* 稍微变亮的深红灰色 */
+}
+
+[data-theme="dark"] .high-value:hover {
+  background: #4a311d !important;  /* 稍微变亮的深黄灰色 */
+}
+
+[data-theme="dark"] .medium-value:hover {
+  background: #213621 !important;  /* 稍微变亮的深绿灰色 */
+}
+
+[data-theme="dark"] .low-value:hover {
+  background: #253242 !important;  /* 稍微变亮的深蓝灰色 */
+}
+
+[data-theme="dark"] .very-low-value:hover {
+  background: #362147 !important;  /* 稍微变亮的深紫灰色 */
 }
 
 /* 自定義工具提示容器 - 滑鼠懸停時顯示的浮動提示框 */
@@ -1016,27 +1062,6 @@ onMounted(async () => {
 /* 懸停時編碼顔色變化 - 增強可讀性 */
 .char-table:hover .code-rt {
   color: #e5e7eb;
-}
-
-.explanation {
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 8px;
-  font-size: 0.9rem;
-}
-
-.explanation strong {
-  color: #495057;
-}
-
-.explanation ul {
-  margin: 8px 0 0 20px;
-  color: #6c757d;
-}
-
-.explanation li {
-  margin-bottom: 4px;
-  line-height: 1.4;
 }
 
 .omitted-notice {
@@ -1201,6 +1226,77 @@ onMounted(async () => {
     text-align: center !important;
     vertical-align: middle !important;
   }
+}
+
+/* 暗黑模式專用樣式 */
+[data-theme="dark"] .table-container {
+  background: var(--color-bg-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .metrics-table {
+  background: var(--color-bg-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .metrics-table th {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .metrics-table td {
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-secondary);
+}
+
+[data-theme="dark"] .metrics-table tbody tr:hover {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .n-value {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .metric-value {
+  color: var(--color-success);
+}
+
+[data-theme="dark"] .hoverable:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .very-high-value {
+  background: var(--color-error-light) !important;
+  color: var(--color-error-dark);
+}
+
+[data-theme="dark"] .high-value {
+  background: var(--color-warning-light) !important;
+  color: var(--color-warning-dark);
+}
+
+[data-theme="dark"] .medium-value {
+  background: var(--color-success-light) !important;
+  color: var(--color-success-dark);
+}
+
+[data-theme="dark"] .low-value {
+  background: var(--color-bg-tertiary) !important;
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .very-low-value {
+  background: var(--color-bg-secondary) !important;
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .omitted-notice {
+  background: var(--color-warning-light);
+  border-color: var(--color-warning);
+  color: var(--color-warning-dark);
 }
 </style>
 

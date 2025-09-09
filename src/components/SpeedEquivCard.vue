@@ -606,35 +606,6 @@ onMounted(async () => {
   text-decoration: underline;
 }
 
-.info-section {
-  background: #f8fafc;
-  border-radius: 8px;
-  padding: 16px;
-  font-size: 0.9rem;
-}
-
-.info-section strong {
-  color: #495057;
-}
-
-.info-section p {
-  margin: 0 0 12px 0;
-  color: #6c757d;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
-.info-section ul {
-  margin: 8px 0 0 20px;
-  color: #6c757d;
-  font-size: 0.875rem;
-}
-
-.info-section li {
-  margin-bottom: 4px;
-  line-height: 1.4;
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
   .metrics-table {
@@ -661,5 +632,52 @@ onMounted(async () => {
   font-size: 0.85rem;
   color: #4a5568;
   font-weight: 500;
+}
+
+/* 暗黑模式專用樣式 */
+[data-theme="dark"] .loading {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .spinner {
+  border-color: var(--color-bg-tertiary);
+  border-top-color: var(--color-warning);
+}
+
+[data-theme="dark"] .error-state {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .metrics-table {
+  background: var(--color-bg-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .metrics-table th {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .metrics-table td {
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-secondary);
+}
+
+[data-theme="dark"] .metrics-table tbody tr:hover {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .metric-value {
+  color: var(--color-success);
+}
+
+[data-theme="dark"] .scheme-name {
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-primary);
+}
+
+[data-theme="dark"] .scheme-name span {
+  color: var(--color-text-secondary);
 }
 </style>

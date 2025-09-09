@@ -1262,4 +1262,82 @@ loadBuiltinConfig()
     width: 100%;
   }
 }
+
+/* 暗黑模式專用樣式 */
+[data-theme="dark"] .builtin-select {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .builtin-select:focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.1);
+}
+
+[data-theme="dark"] .prefix-button {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .prefix-button:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme="dark"] .prefix-button.active {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .help-button {
+  background: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .help-button:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme="dark"] .help-modal {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+}
+
+[data-theme="dark"] .help-header {
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .help-header h4 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .help-close-btn {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .help-close-btn:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .help-content {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .prefix-keys-field {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .prefix-keys-field:focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
 </style>
