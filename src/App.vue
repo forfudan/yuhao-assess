@@ -26,7 +26,7 @@
             </a>
           </div>
                     <div class="header-actions">
-            <button @click="exportAllCards" class="export-btn" title="匯出所有分析卡片到一張圖片">
+            <button @click="exportAllCards" class="export-btn" title="導出所有分析卡片到一張圖片">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
                 <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
               </svg>
@@ -794,8 +794,8 @@ const showFormatDialog = (): Promise<string | null> => {
         width: 90%;
         text-align: center;
       ">
-        <h3 style="margin: 0 0 20px 0; color: #374151; font-size: 24px;">選擇匯出格式</h3>
-        <p style="margin: 0 0 30px 0; color: #6b7280; line-height: 1.6;">請選擇您希望的匯出格式：</p>
+        <h3 style="margin: 0 0 20px 0; color: #374151; font-size: 24px;">選擇導出格式</h3>
+        <p style="margin: 0 0 30px 0; color: #6b7280; line-height: 1.6;">請選擇您希望的導出格式：</p>
         
         <div style="display: flex; gap: 15px; margin-bottom: 25px;">
           <button id="pdf-btn" style="
@@ -812,7 +812,7 @@ const showFormatDialog = (): Promise<string | null> => {
             box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
           ">
             📄 PDF 文檔<br>
-            <small style="opacity: 0.9; font-weight: 400;">高清晰度，可複製文字</small>
+            <small style="opacity: 0.9; font-weight: 400;">可複製文字</small>
           </button>
           
           <button id="image-btn" style="
@@ -904,7 +904,7 @@ const showFormatDialog = (): Promise<string | null> => {
   })
 }
 
-// 匯出為高清圖片
+// 導出為高清圖片
 const exportToImage = async (container: HTMLElement) => {
   // 動態導入html2canvas
   const { default: html2canvas } = await import('html2canvas')
@@ -940,10 +940,10 @@ const exportToImage = async (container: HTMLElement) => {
   link.click()
   document.body.removeChild(link)
 
-  console.log('高清圖片匯出成功')
+  console.log('高清圖片導出成功')
 }
 
-// 匯出為PDF
+// 導出為PDF
 const exportToPDF = async (container: HTMLElement) => {
   try {
     // 動態導入jsPDF和html2canvas
@@ -1008,11 +1008,11 @@ const exportToPDF = async (container: HTMLElement) => {
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
     pdf.save(`${codeTableName.value}_測評報告_宇浩測評網_${today}.pdf`)
     
-    console.log('PDF匯出成功')
+    console.log('PDF導出成功')
     
   } catch (error) {
-    console.error('PDF匯出失敗:', error)
-    alert('PDF匯出失敗，已改為圖片格式匯出')
+    console.error('PDF導出失敗:', error)
+    alert('PDF導出失敗，已改為圖片格式導出')
     // 如果PDF失敗，回退到圖片
     await exportToImage(container)
   }
