@@ -728,6 +728,8 @@ const exportAllCards = async () => {
 
     // 複製每個卡片元素（提高清晰度）
     for (const element of cardElements) {
+      if (!element) continue // 跳過空元素
+      
       const clonedElement = element.cloneNode(true) as HTMLElement
       
       // 確保樣式正確應用並提高清晰度
