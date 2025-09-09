@@ -57,7 +57,7 @@ const keyStyle = computed(() => {
       gridColumn = 'span 3' // 宽键占3列
       break
     case 'extra-wide':
-      gridColumn = 'span 6' // 超宽键(空格键)占6列
+      gridColumn = 'span 6' // 空格键占6列（11列布局中）
       break
     default:
       gridColumn = 'span 1' // 标准键占1列
@@ -65,7 +65,7 @@ const keyStyle = computed(() => {
 
   return {
     gridColumn,
-    aspectRatio: props.keyInfo.width === 'extra-wide' ? '6' : '1', // 空格键保持6:1比例，其他保持正方形
+    aspectRatio: props.keyInfo.width === 'extra-wide' ? '7' : '1', // 空格键保持7:1比例，其他保持正方形
     minWidth: '40px',
     minHeight: '40px'
   }
@@ -204,15 +204,16 @@ const getFingerColor = (key: string, intensity: number): string => {
 }
 
 .key-label {
-  font-size: 0.875rem;
+  font-size: calc(0.2rem + 1.2vw); /* 优化的线性缩放：基础0.5rem + 1.2%视口宽度 */
   font-weight: 600;
   color: var(--color-text-primary);
   text-transform: uppercase;
   font-family: var(--font-mono);
+  min-height: 1.2em; /* 确保有足够的行高 */
 }
 
 .key-value {
-  font-size: 0.75rem;
+  font-size: calc(0.2rem + 1vw); /* 优化的线性缩放：基础0.4rem + 1%视口宽度 */
   font-weight: 500;
   color: var(--key-text-color, var(--color-text-secondary));
   font-family: var(--font-mono);
