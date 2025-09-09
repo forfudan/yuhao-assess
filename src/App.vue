@@ -97,7 +97,7 @@
       <div v-if="showCardDirectory" class="nav-overlay" @click="toggleCardDirectory"></div>
     </Transition>
 
-    <!-- 主要內容區域 - 設計為單列模塊布局 -->
+    <!-- 主要内容區域 - 設計爲單列模塊布局 -->
     <main class="main">
       <div class="container">
         <!-- 

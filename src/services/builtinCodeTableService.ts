@@ -30,7 +30,7 @@ export class BuiltinCodeTableService {
       this.cjkBlockData = await response.json() as CJKBlockData
     } catch (error) {
       console.error('Failed to load CJK block data:', error)
-      // 使用空數據作為後備
+      // 使用空數據作爲後備
       this.cjkBlockData = { version: '', description: '', lastUpdated: '', blocks: {} }
     }
   }

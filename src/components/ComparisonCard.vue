@@ -701,7 +701,7 @@
 </template>
 
 <script setup lang="ts">
-// 禁用自動屬性繼承，因為我們有多個根節點（包括 Teleport）
+// 禁用自動屬性繼承，因爲我們有多個根節點（包括 Teleport）
 defineOptions({
   inheritAttrs: false
 })
@@ -813,7 +813,7 @@ interface ProcessedData {
   fullCodeTable: CodeTable                    // 全碼表
   shortCodeTable: CodeTable                   // 簡碼表
   fullWithSelectionTable: CodeTable           // 全碼加選重表（用於速度當量計算）
-  shortWithSelectionTable: CodeTable          // 簡碼加選重表（為未來擴展保留）
+  shortWithSelectionTable: CodeTable          // 簡碼加選重表（爲未來擴展保留）
   allUniqueChars: Set<string>                 // 所有唯一字符
   charsetMap: Map<CharsetType, Set<string>>   // 字符集映射
   maxLength: number                           // 最大碼長
@@ -848,7 +848,7 @@ interface BuiltinScheme {
 const yuhaoDefaultScheme = ref<Scheme | null>(null) // 宇浩日月方案
 // 基本狀態管理
 const cardRef = ref<HTMLElement>()
-const currentUserScheme = ref<Scheme | null>(null) // 當前用戶方案
+const currentUserScheme = ref<Scheme | null>(null) // 當前用户方案
 const additionalSchemes = ref<Scheme[]>([]) // 額外添加的方案
 const showAddForm = ref(false)
 const selectedBuiltinSchemes = ref<string[]>([]) // 多選預設方案
@@ -955,7 +955,7 @@ const loadComparisonData = async () => {
               finalIsPrefix: correctIsPrefix
             })
           } else if (savedScheme.isUploadedScheme) {
-            // 上傳方案：codeTable 沒有被保存，需要重新上傳
+            // 上傳方案：codeTable 没有被保存，需要重新上傳
             codeTable = undefined
             console.log(`恢復上傳方案 ${savedScheme.name}: 需要重新上傳碼表文件`, {
               savedIsPrefix: savedScheme.isPrefix,
@@ -983,7 +983,7 @@ const loadComparisonData = async () => {
             uploadedAt: savedScheme.uploadedAt ? new Date(savedScheme.uploadedAt) : undefined
           }
           
-          // 如果沒有保存的charCount或codeTable，異步計算
+          // 如果没有保存的charCount或codeTable，異步計算
           if ((!savedScheme.charCount || !codeTable) && savedScheme.isBuiltin && savedScheme.builtinKey) {
             // 對於預設方案，如果缺少charCount，後續重新計算
             setTimeout(async () => {
@@ -1032,7 +1032,7 @@ const allSchemes = computed(() => {
   if (currentUserScheme.value) schemes.push(currentUserScheme.value)
   schemes.push(...additionalSchemes.value)
   
-  // 如果沒有排序，直接返回
+  // 如果没有排序，直接返回
   if (!sortColumn.value || sortDirection.value === 'none') {
     return schemes
   }
@@ -1083,7 +1083,7 @@ const allSchemes = computed(() => {
   })
 })
 
-// 計算屬性 - 過濾掉收字為0的方案用於表格顯示
+// 計算屬性 - 過濾掉収字爲0的方案用於表格顯示
 const visibleSchemes = computed(() => {
   return allSchemes.value.filter(scheme => {
     // 正在計算中的方案始終顯示
@@ -1092,10 +1092,10 @@ const visibleSchemes = computed(() => {
     // 收字數量存在且大於0的方案顯示
     if (scheme.charCount && scheme.charCount > 0) return true
     
-    // 收字數量為undefined或null的方案也顯示（可能還未計算完成）
+    // 収字數量爲undefined或null的方案也顯示（可能還未計算完成）
     if (scheme.charCount === undefined || scheme.charCount === null) return true
     
-    // 只隱藏確實收字為0的方案
+    // 只隱藏確實収字爲0的方案
     return false
   })
 })
@@ -1215,7 +1215,7 @@ const backgroundProgress = computed(() => {
   return {
     completed: completedTasks,
     total: targetTotalTasks,
-    percentage: Math.max(0, Math.min(100, percentage)), // 確保在0-100範圍內
+    percentage: Math.max(0, Math.min(100, percentage)), // 確保在0-100範圍内
     hasRunning: shouldShowProgress,
     // 調試信息
     debug: {
@@ -1413,7 +1413,7 @@ const ensureCurrentTabDataLoaded = async () => {
   const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
   
   for (const tab of otherTabs) {
-    // 為每個其他Tab安排後台計算任務
+    // 爲每個其他Tab安排後台計算任務
     schemes.forEach(scheme => {
       scheduleCalculation(scheme, tab, 'low')
     })
@@ -1422,7 +1422,7 @@ const ensureCurrentTabDataLoaded = async () => {
   console.log(`[智能計算] 已安排 ${otherTabs.length} 個Tab的後台預計算任務`)
 }
 
-// 為方案計算缺失的數據
+// 爲方案計算缺失的數據
 const calculateMissingData = async (scheme: Scheme) => {
   if (!scheme.codeTable) {
     return
@@ -1433,13 +1433,13 @@ const calculateMissingData = async (scheme: Scheme) => {
       scheme.data = {}
     }
     
-    // 如果沒有預處理數據，先進行預處理（使用完整預處理以支持速度當量計算）
+    // 如果没有預處理數據，先進行預處理（使用完整預處理以支持速度當量計算）
     if (!scheme.processedData) {
       scheme.processedData = await preprocessCodeTableDataComplete(scheme.codeTable, scheme.isPrefix, scheme.prefixKeys)
       scheme.charCount = await calculateCharCount(scheme.codeTable!)
     }
     
-    // 檢查是否為主方案（不可刪除的方案）
+    // 檢查是否爲主方案（不可刪除的方案）
     const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
     
     if (activeTab.value === 'dynamic' && !scheme.data.dynamic) {
@@ -1477,7 +1477,7 @@ const recalculateScheme = async (scheme: Scheme) => {
   
   if (!scheme.codeTable) {
     if (!scheme.isBuiltin) {
-      // 對於上傳方案，提示用戶重新上傳
+      // 對於上傳方案，提示用户重新上傳
       alert(`方案 "${scheme.name}" 的碼表數據已丟失（頁面刷新後上傳的文件會丟失）。\n\n請重新上傳該方案的碼表文件，或者移除該方案。`)
     } else {
       console.warn(`[刷新按鈕] 預設方案 ${scheme.name} 缺少 codeTable，這不應該發生`)
@@ -1513,7 +1513,7 @@ const recalculateScheme = async (scheme: Scheme) => {
     } else if (activeTab.value === 'maxCandidates') {
       scheme.data.maxCandidates = await calculateMaxCandidatesData(scheme)
     } else if (activeTab.value === 'speedEquiv') {
-      // 檢查是否為主方案（不可刪除的方案）
+      // 檢查是否爲主方案（不可刪除的方案）
       const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
       if (isMainScheme) {
         // 主方案使用全局已處理的碼表
@@ -1746,7 +1746,7 @@ onMounted(async () => {
     // 載入保存的對比數據
     await loadComparisonData()
     
-    // 如果用戶有當前方案，也載入它
+    // 如果用户有當前方案，也載入它
     if (props.currentCodeTable) {
       loadCurrentUserScheme()
     }
@@ -1791,11 +1791,11 @@ watch([additionalSchemes], () => {
   }, 500)
 }, { deep: true })
 
-// 載入當前用戶方案
+// 載入當前用户方案
 const loadCurrentUserScheme = async () => {
   if (props.currentCodeTable) {
-    // 使用實際的方案名稱，如果沒有則使用默認名稱
-    const schemeName = props.currentCodeTableName || '用戶方案'
+    // 使用實際的方案名稱，如果没有則使用默認名稱
+    const schemeName = props.currentCodeTableName || '用户方案'
     
     // 獲取全局的前綴碼信息
     const processingOptions = codeTableProcessingService.getProcessingOptions()
@@ -1913,8 +1913,8 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
       console.log(`使用預處理的全碼加選重表 (${fullWithSelectionTable.size} 字符)`)
       processedCodeTable = fullWithSelectionTable
     } else {
-      // 回退到動態生成（為了向後兼容）
-      console.log(`預處理表為空，動態生成加選重鍵表`)
+      // 回退到動態生成（爲了向後兼容）
+      console.log(`預處理表爲空，動態生成加選重鍵表`)
       processedCodeTable = await CodeTableProcessingService.generateCodeTableWithSelection(fullCodeTable, maxLength, scheme.isPrefix)
     }
     
@@ -2061,7 +2061,7 @@ async function calculateMainSchemeSpeedEquivData(): Promise<SpeedEquivData> {
 }
 
 // 已废弃：保留兼容性，但推荐使用分离的函数
-// 這個函數將被移除，因為現在使用預處理的架構
+// 這個函數將被移除，因爲現在使用預處理的架構
 async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Promise<SchemeData> {
   // 創建臨時方案來使用新的計算邏輯
   const tempScheme: Scheme = {
@@ -2115,7 +2115,7 @@ async function addBuiltinScheme() {
       isCalculating: true,
       isPrefix: schemeConfig?.isPrefix || false,  // 從配置中獲取前綴碼屬性
       prefixKeys: schemeConfig?.prefixKeys, // 從配置中獲取前綴碼上屏键
-      source: selectedBuiltinScheme.value, // 記錄預設方案ID
+      source: selectedBuiltinScheme.value, // 記録預設方案ID
       uploadedAt: new Date() // 添加時間
     }
     
@@ -2126,7 +2126,7 @@ async function addBuiltinScheme() {
     const result = await builtinService.downloadCodeTable(selectedBuiltinScheme.value)
     newScheme.codeTable = result.codeTable
     
-    // 預處理碼表數據（內置方案使用完整預處理以支持所有計算）
+    // 預處理碼表數據（内置方案使用完整預處理以支持所有計算）
     newScheme.processedData = await preprocessCodeTableDataComplete(result.codeTable, newScheme.isPrefix, newScheme.prefixKeys)
     newScheme.charCount = await calculateCharCount(result.codeTable)
     
@@ -2199,7 +2199,7 @@ async function addAllBuiltinSchemes() {
           isCalculating: true,
           isPrefix: schemeConfig?.isPrefix || false,  // 從配置中獲取前綴碼屬性
           prefixKeys: schemeConfig?.prefixKeys, // 從配置中獲取前綴碼上屏键
-          source: builtinScheme.id, // 記錄預設方案ID
+          source: builtinScheme.id, // 記録預設方案ID
           uploadedAt: new Date() // 添加時間
         }
         
@@ -2297,7 +2297,7 @@ async function addSelectedBuiltinSchemes() {
           isCalculating: true,
           isPrefix: schemeConfig?.isPrefix || false,  // 從配置中獲取前綴碼屬性
           prefixKeys: schemeConfig?.prefixKeys, // 從配置中獲取前綴碼上屏键
-          source: builtinScheme.id, // 記錄預設方案ID
+          source: builtinScheme.id, // 記録預設方案ID
           uploadedAt: new Date() // 添加時間
         }
         
@@ -2375,8 +2375,8 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
       isCalculating: true,
       isPrefix: uploadPrefixFlag.value,  // 使用上傳時的前綴碼設置
       prefixKeys: props.globalPrefixKeys, // 使用上傳時的前綴碼上屏键
-      source: file.name, // 記錄文件名
-      uploadedAt: new Date() // 記錄上傳時間
+      source: file.name, // 記録文件名
+      uploadedAt: new Date() // 記録上傳時間
     }
     
     additionalSchemes.value.push(newScheme)
@@ -2453,8 +2453,8 @@ async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'co
           isCalculating: true,
           isPrefix: uploadPrefixFlag.value,  // 使用上傳時的前綴碼設置
           prefixKeys: props.globalPrefixKeys, // 使用上傳時的前綴碼上屏键
-          source: file.name, // 記錄文件名
-          uploadedAt: new Date() // 記錄上傳時間
+          source: file.name, // 記録文件名
+          uploadedAt: new Date() // 記録上傳時間
         }
         
         additionalSchemes.value.push(newScheme)

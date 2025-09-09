@@ -103,9 +103,9 @@
         <div v-if="hasOmittedRows" class="omitted-notice">
           <p><strong>注意：</strong>繼續出簡不再降低碼長</p>
         </div>
-        <!-- 說明文字 -->
+        <!-- 説明文字 -->
         <div class="explanation">
-          <p><strong>說明：</strong></p>
+          <p><strong>説明：</strong></p>
           <ul>
             <li>本模塊使用前 N 個（最大為 1000 個）最有效率的簡碼時的平均碼長</li>
             <li>簡碼字的效率取決於於漢字字頻 × 節約碼長</li>
@@ -264,7 +264,7 @@ const tableData = computed<TableRow[]>(() => {
     }
   })
 
-  // 過濾掉五列都沒有新增簡碼字的行
+  // 過濾掉五列都没有新增簡碼字的行
   const filteredRows: TableRow[] = []
   let prevZhihuCount = 0
   let prevSCCount = 0
@@ -397,7 +397,7 @@ const updateEfficiency = async () => {
 
     const results: Record<string, Array<{ N: number; efficiency: number; selectedChars: string[] }>> = {}
 
-    // 為每個字頻數據計算簡碼效率
+    // 爲每個字頻數據計算簡碼效率
     const frequencies = ['charFrequencySC', 'charFrequencyTC', 'charFrequencyGuji', 'charFrequencyZhihu', 'combined']
     for (const freqKey of frequencies) {
       const charFrequency = charFrequencies.value[freqKey as keyof typeof charFrequencies.value]
@@ -510,14 +510,14 @@ const getFullShortCodeWithSelection = (char: string): string => {
     return shortCodes.reduce((a, b) => a.length <= b.length ? a : b)
   }
   
-  // 如果簡碼表中沒有，降級到原始碼表
+  // 如果簡碼表中没有，降級到原始碼表
   const codes = props.codeTable.get(char) || []
   if (codes.length === 0) return ''
   
   // 找到最短的編碼
   const shortestCode = codes.reduce((a, b) => a.length <= b.length ? a : b)
   
-  // 檢查是否需要選重複號（簡化邏輯，因為預生成表應該已經處理了這些）
+  // 檢查是否需要選重複號（簡化邏輯，因爲預生成表應該已經處理了這些）
   // 找到所有具有相同簡碼的字符
   const sameCodeChars: string[] = []
   
@@ -542,7 +542,7 @@ const getFullShortCodeWithSelection = (char: string): string => {
   const position = sameCodeChars.indexOf(char)
   
   if (position === -1) {
-    return shortestCode // 如果沒找到（不應該發生），返回原簡碼
+    return shortestCode // 如果没找到（不應該發生），返回原簡碼
   }
   
   // 添加選重複號（使用正確的選重鍵序列）
@@ -626,10 +626,10 @@ const copyToClipboard = async (chars: string[], currentN: number, freqType: stri
       : `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}的${count}個簡碼字到剪貼板`
     
     console.log(successMessage, textToCopy)
-    // 可以在這裡添加 toast 提示
+    // 可以在這裏添加 toast 提示
   } catch (err) {
     console.error('復制到剪貼板失敗:', err)
-    // 可以在這裡添加錯誤提示
+    // 可以在這裏添加錯誤提示
   }
 }
 
@@ -844,7 +844,7 @@ onMounted(async () => {
   color: #1f2937;
 }
 
-/* 效率值的五檔簡約顏色分級 */
+/* 效率值的五檔簡約顔色分級 */
 .very-high-value {
   background: #fee2e2 !important;  /* 淺紅色背景 - >= 3.7 */
   color: #991b1b;                   /* 深紅色文字 */
@@ -912,7 +912,7 @@ onMounted(async () => {
   min-height: 50px;
 }
 
-/* 提示框內容容器 - 包含標題和字符網格的垂直佈局 */
+/* 提示框内容容器 - 包含標題和字符網格的垂直佈局 */
 .tooltip-content {
   display: flex;
   flex-direction: column;
@@ -1008,12 +1008,12 @@ onMounted(async () => {
   transition: all 0.2s ease;
 }
 
-/* 懸停時漢字顏色變化 - 增強可讀性 */
+/* 懸停時漢字顔色變化 - 增強可讀性 */
 .char-table:hover .char-ruby {
   color: #f8fafc;
 }
 
-/* 懸停時編碼顏色變化 - 增強可讀性 */
+/* 懸停時編碼顔色變化 - 增強可讀性 */
 .char-table:hover .code-rt {
   color: #e5e7eb;
 }
@@ -1133,7 +1133,7 @@ onMounted(async () => {
 }
 </style>
 
-<!-- 全域樣式專門用於 Teleport 的 tooltip - 解決 scoped 樣式無法作用於 Teleport 內容的問題 -->
+<!-- 全域樣式專門用於 Teleport 的 tooltip - 解決 scoped 樣式無法作用於 Teleport 内容的問題 -->
 <style>
 /* tooltip 字符單元格樣式 - 確保所有單元格內容居中對齊 */
 .custom-tooltip .char-cell {
@@ -1194,7 +1194,7 @@ onMounted(async () => {
     vertical-align: middle !important;
   }
   
-  /* 桌面端表格單元格樣式 - 增大內邊距和最小寬度 */
+  /* 桌面端表格單元格樣式 - 增大内邊距和最小寬度 */
   .custom-tooltip .char-row td {
     padding: 2px 2px !important;
     min-width: 10px !important;

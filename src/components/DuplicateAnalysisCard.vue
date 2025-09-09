@@ -37,13 +37,13 @@
                 出簡
                 <span 
                   class="info-icon" 
-                  @mouseenter="showTooltip($event, '計算簡碼時，會提取碼表相同漢字中編碼長度最小之編碼，並視之為簡碼。故而出現多重簡碼、兼容編碼、無理碼等特殊情況時，該列數據會出現失真現象。欲獲取更加準確之統計，請對碼表進行處理。')"
+                  @mouseenter="showTooltip($event, '計算簡碼時，會提取碼表相同漢字中編碼長度最小之編碼，並視之爲簡碼。故而出現多重簡碼、兼容編碼、無理碼等特殊情況時，該列數據會出現失真現象。欲獲取更加準確之統計，請對碼表進行處理。')"
                   @mouseleave="hideTooltip()"
                 >
                   ⓘ
                 </span>
               </th>
-              <th>說明</th>
+              <th>説明</th>
             </tr>
           </thead>
           <tbody>
@@ -453,7 +453,7 @@ async function generateCJKCharsetCache(allChars: Set<string>) {
   // 創建累積实际字符集
   const cumulativeActualCharsets: { [key: string]: Set<string> } = {}
   
-  // 為每個階段創建正確的累積集合
+  // 爲每個階段創建正確的累積集合
   cjkExtensions.forEach((ext, index) => {
     const actualAccumulated = new Set<string>()
     
@@ -558,7 +558,7 @@ async function calculateDirectCharsetDuplicates(actualCharset: Set<string>, theo
 // 計算所有指標
 async function calculateAllMetrics() {
   if (!props.codeTable || props.codeTable.size === 0) {
-    console.warn('沒有可用的碼表數據')
+    console.warn('没有可用的碼表數據')
     return
   }
   

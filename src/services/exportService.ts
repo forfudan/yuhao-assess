@@ -80,7 +80,7 @@ export class ExportService {
   }
 
   /**
-   * 將DOM元素導出為PNG圖片
+   * 將DOM元素導出爲PNG圖片
    * @param element 要導出的DOM元素
    * @param cardTitle 卡片标题，用于生成文件名
    * @param schemeName 方案名称，用于生成文件名
@@ -135,7 +135,7 @@ export class ExportService {
       // 複製到剪貼板
       if (copyToClipboard) {
         try {
-          // 將canvas轉換為blob
+          // 將canvas轉換爲blob
           const blob = await new Promise<Blob>((resolve) => {
             canvas.toBlob((blob) => {
               if (blob) resolve(blob)

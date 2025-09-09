@@ -318,7 +318,7 @@ const generatePreview = async (file: File) => {
       const trimmed = line.trim()
       if (!trimmed) return { raw: line, char: '', code: '', valid: false }
       
-      // 更健壯的分割邏輯：使用制表符或多個空格作為分隔符
+      // 更健壯的分割邏輯：使用制表符或多個空格作爲分隔符
       const parts = trimmed.split(/\t+|\s{2,}|\s+/)
       // 如果只有一個空格分隔，確保只分割成2部分
       if (parts.length < 2) {
@@ -410,7 +410,7 @@ const parseCodeTable = (text: string, format: CodeTableFormat): ParseResult => {
       char = parts[1].trim()
     }
 
-    // 檢查是否為單個Unicode字符（包括代理對）
+    // 檢查是否爲單個Unicode字符（包括代理對）
     const isValidChar = (str: string): boolean => {
       if (!str) return false
       // 使用Array.from來正確處理Unicode字符

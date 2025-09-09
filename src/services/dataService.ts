@@ -20,7 +20,7 @@ let frequencyCharsCachePromise: Promise<Set<string>> | null = null
 /**
  * 獲取所有字頻表中字符的並集（高性能版本）
  * 包含在 charFrequencyZhihu.json, charFrequencySC.json, charFrequencyTC.json, charFrequencyGuji.json 中出現的字符
- * 用於優化「全碼加選重鍵」和「簡碼加選重鍵」的生成，排除字頻為0的字符
+ * 用於優化「全碼加選重鍵」和「簡碼加選重鍵」的生成，排除字頻爲0的字符
  */
 export async function getFrequencyCharsUnion(): Promise<Set<string>> {
   // 如果已經有緩存，直接返回
