@@ -336,21 +336,34 @@ const numberRowKeys: KeyInfo[] = [
 
 const firstRowKeys: KeyInfo[] = [
   { key: 'q' }, { key: 'w' }, { key: 'e' }, { key: 'r' }, { key: 't' },
-  { key: 'y' }, { key: 'u' }, { key: 'i' }, { key: 'o' }, { key: 'p' }, { key: '[' }, { key: ']' }
+  { key: 'y' }, { key: 'u' }, { key: 'i' }, { key: 'o' }, { key: 'p' }, { key: '[' }, { key: ']' },
+  { key: 'hidden-1', hidden: true } // 隐藏按键补齐到13个
 ]
 
 const secondRowKeys: KeyInfo[] = [
   { key: 'a' }, { key: 's' }, { key: 'd' }, { key: 'f' }, { key: 'g' },
-  { key: 'h' }, { key: 'j' }, { key: 'k' }, { key: 'l' }, { key: ';' }, { key: '\'' }
+  { key: 'h' }, { key: 'j' }, { key: 'k' }, { key: 'l' }, { key: ';' }, { key: '\'' },
+  { key: 'hidden-2', hidden: true }, // 隐藏按键补齐到13个
+  { key: 'hidden-3', hidden: true }
 ]
 
 const thirdRowKeys: KeyInfo[] = [
   { key: 'z' }, { key: 'x' }, { key: 'c' }, { key: 'v' }, { key: 'b' },
-  { key: 'n' }, { key: 'm' }, { key: ',' }, { key: '.' }, { key: '/' }
+  { key: 'n' }, { key: 'm' }, { key: ',' }, { key: '.' }, { key: '/' },
+  { key: 'hidden-4', hidden: true }, // 隐藏按键补齐到13个
+  { key: 'hidden-5', hidden: true },
+  { key: 'hidden-6', hidden: true }
 ]
 
 const spaceRowKeys: KeyInfo[] = [
-  { key: 'space', label: 'Space', width: 'wide' }
+  { key: 'hidden-7', hidden: true }, // 左侧隐藏按键 1
+  { key: 'hidden-8', hidden: true }, // 左侧隐藏按键 2
+  { key: 'space', label: 'Space', width: 'extra-wide' }, // 空格键占6格
+  { key: 'hidden-9', hidden: true },  // 右侧隐藏按键 1
+  { key: 'hidden-10', hidden: true }, // 右侧隐藏按键 2
+  { key: 'hidden-11', hidden: true }, // 右侧隐藏按键 3
+  { key: 'hidden-12', hidden: true }, // 右侧隐藏按键 4
+  { key: 'hidden-13', hidden: true }  // 右侧隐藏按键 5
 ]
 
 // 手指映射
@@ -821,18 +834,22 @@ const getKeyData = (key: string): KeyData => {
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   transform-origin: center top;
-  width: 98%; /* 增加到98%宽度，减少左右空隙 */
-  max-width: 1400px; /* 增加最大宽度 */
+  width: fit-content; /* 调整为内容宽度 */
+  max-width: none; /* 移除最大宽度限制 */
   min-width: 320px; /* 设置最小宽度保证可用性 */
   border: 1px solid var(--color-border-secondary);
   transition: transform 0.3s ease;
+  margin: 0 auto; /* 水平居中 */
 }
 
 .keyboard-row {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start; /* 回到左对齐，因为现在每行按键数量相等 */
+  align-items: center;
   gap: 4px;
   margin-bottom: 8px;
+  margin-left: 0; /* 移除左边距，统一对齐 */
+  width: fit-content; /* 每行根据内容调整宽度 */
 }
 
 .number-row {
@@ -840,19 +857,20 @@ const getKeyData = (key: string): KeyData => {
 }
 
 .first-row {
-  margin-left: 25px;
+  margin-left: 0; /* 移除左边距 */
 }
 
 .second-row {
-  margin-left: 40px;
+  margin-left: 0; /* 移除左边距 */
 }
 
 .third-row {
-  margin-left: 60px;
+  margin-left: 0; /* 移除左边距 */
 }
 
 .space-row {
   margin-top: 8px;
+  justify-content: flex-start; /* 与其他行保持一致的左对齐 */
 }
 
 /* 统计网格 */
