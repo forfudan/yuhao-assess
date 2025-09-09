@@ -722,7 +722,7 @@ const exportAllCards = async () => {
     header.innerHTML = `
       <h1 style="margin: 0; font-size: 36px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">${codeTableName.value}</h1>
       <p style="margin: 15px 0 8px 0; font-size: 20px; opacity: 0.95;">輸入法分析報告</p>
-      <p style="margin: 0; font-size: 16px; opacity: 0.85;">宇浩測評網 · shurufa.app</p>
+      <p style="margin: 0; font-size: 16px; opacity: 0.85;">宇浩測評網 · ceping.shurufa.app</p>
     `
     container.appendChild(header)
 
@@ -811,8 +811,8 @@ const showFormatDialog = (): Promise<string | null> => {
             transition: all 0.2s ease;
             box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
           ">
-            📄 PDF 文檔<br>
-            <small style="opacity: 0.9; font-weight: 400;">可複製文字</small>
+            📄 文檔<br>
+            <small style="opacity: 0.9; font-weight: 400;">PDF 格式</small>
           </button>
           
           <button id="image-btn" style="
@@ -828,8 +828,8 @@ const showFormatDialog = (): Promise<string | null> => {
             transition: all 0.2s ease;
             box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
           ">
-            🖼️ PNG 圖片<br>
-            <small style="opacity: 0.9; font-weight: 400;">高分辨率圖像</small>
+            🖼️ 圖片<br>
+            <small style="opacity: 0.9; font-weight: 400;">PNG 格式</small>
           </button>
         </div>
         
@@ -954,11 +954,11 @@ const exportToPDF = async (container: HTMLElement) => {
     
     const { jsPDF } = jsPDFModule
     
-    // 使用html2canvas截圖（超高清設定）
+    // 使用html2canvas截圖（高清設定）
     const canvas = await html2canvas(container, {
       width: 1000,
       height: container.offsetHeight,
-      scale: 4, // PDF用更高分辨率
+      scale: 2, // 使用2倍分辨率
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#f8fafc',
@@ -973,42 +973,39 @@ const exportToPDF = async (container: HTMLElement) => {
       }
     })
 
-    // 創建PDF
-    const imgWidth = 210 // A4 寬度 (mm)
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
+    // 計算PDF尺寸 - 單頁模式，保持正確寬高比
+    const canvasWidth = canvas.width
+    const canvasHeight = canvas.height
+    const aspectRatio = canvasHeight / canvasWidth
     
+    const pdfWidth = 210 // A4 寬度 (mm)
+    const margin = 10
+    const availableWidth = pdfWidth - (margin * 2) // 可用寬度
+    
+    // 根據可用寬度計算圖片高度，保持寬高比
+    const imgWidth = availableWidth
+    const imgHeight = availableWidth * aspectRatio
+    
+    // PDF總高度 = 圖片高度 + 上下邊距
+    const pdfHeight = Math.max(297, imgHeight + (margin * 2))
+    
+    // 創建長頁PDF（單頁模式，不分頁）
     const pdf = new jsPDF({
-      orientation: imgHeight > 297 ? 'portrait' : 'portrait',
+      orientation: 'portrait',
       unit: 'mm',
-      format: 'a4'
+      format: [pdfWidth, pdfHeight] // 使用計算出的精確尺寸
     })
     
     const imgData = canvas.toDataURL('image/png', 1.0)
     
-    // 如果圖片高度超過一頁，需要分頁
-    if (imgHeight <= 297) {
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
-    } else {
-      // 分頁處理
-      let heightLeft = imgHeight
-      let position = 0
-      
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-      heightLeft -= 297
-      
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight
-        pdf.addPage()
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-        heightLeft -= 297
-      }
-    }
+    // 將整個圖片放在單頁上，保持正確比例
+    pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight)
     
     // 下載PDF
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
     pdf.save(`${codeTableName.value}_測評報告_宇浩測評網_${today}.pdf`)
     
-    console.log('PDF導出成功')
+    console.log('單頁PDF導出成功')
     
   } catch (error) {
     console.error('PDF導出失敗:', error)
@@ -1020,7 +1017,7 @@ const exportToPDF = async (container: HTMLElement) => {
 </script>
 
 <style scoped>
-/* 头部样式保持原有设计 */
+/* 頭部樣式保持原有設計 */
 .header {
   background-color: var(--color-bg-primary);
   border-bottom: 1px solid var(--color-border-primary);
@@ -1035,25 +1032,25 @@ const exportToPDF = async (container: HTMLElement) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: nowrap !important; /* 强制不换行 */
+  flex-wrap: nowrap !important; /* 強制不換行 */
   gap: var(--spacing-sm);
   width: 100%;
-  min-height: 0; /* 允许收缩 */
+  min-height: 0; /* 允許收縮 */
   overflow: hidden;
 }
 
 .logo {
-  flex: 1 1 auto; /* 允许logo收缩和扩展 */
-  min-width: 0; /* 允许收缩到内容以下 */
+  flex: 1 1 auto; /* 允許logo收縮和擴展 */
+  min-width: 0; /* 允許收縮到內容以下 */
   overflow: hidden;
-  text-overflow: ellipsis; /* 如果logo过长则用省略号 */
+  text-overflow: ellipsis; /* 如果logo過長則用省略號 */
 }
 
 .header-actions {
-  flex: 0 0 auto; /* 防止按钮收缩或扩展 */
+  flex: 0 0 auto; /* 防止按鈕收縮或擴展 */
   display: flex;
   align-items: center;
-  white-space: nowrap; /* 强制按钮容器不换行 */
+  white-space: nowrap; /* 強制按鈕容器不換行 */
   display: flex;
   align-items: center;
 }
@@ -1062,7 +1059,7 @@ const exportToPDF = async (container: HTMLElement) => {
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--color-primary);
-  margin: 0; /* 移除下边距，因为删除了副标题 */
+  margin: 0; /* 移除下邊距，因為刪除了副標題 */
 }
 
 .logo-link {
