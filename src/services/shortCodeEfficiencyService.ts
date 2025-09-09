@@ -61,10 +61,15 @@ function preprocessCodeTable(
   const charMap = new Map<string, CodeTableRow[]>()
   
   for (const row of codeTable) {
-    if (!charMap.has(row.char)) {
-      charMap.set(row.char, [])
+    // 過濾條件：
+    // 1. 必須是單字- 使用 Array.from 正確處理 Unicode Codepoint
+    // 2. 必須在字频表中存在
+    if (Array.from(row.char).length === 1 && charFrequency.hasOwnProperty(row.char)) {
+      if (!charMap.has(row.char)) {
+        charMap.set(row.char, [])
+      }
+      charMap.get(row.char)!.push(row)
     }
-    charMap.get(row.char)!.push(row)
   }
   
   const processedChars: ProcessedChar[] = []
