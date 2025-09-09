@@ -680,7 +680,7 @@ const exportAllCards = async () => {
       '#card-duplicate',
       '#card-maximum', 
       '#card-speed',
-      '#card-shortcode',
+      '#card-efficiency',
       '#card-heatmap'
     ]
     
