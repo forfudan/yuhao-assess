@@ -826,6 +826,8 @@ const getKeyData = (key: string): KeyData => {
   padding: var(--spacing-md) 0;
   overflow: hidden; /* 防止出现滚动条 */
   width: 100%;
+  height: 100%; /* 占满容器高度 */
+  flex-direction: column; /* 垂直布局 */
 }
 
 /* 键盘布局 */
@@ -834,44 +836,34 @@ const getKeyData = (key: string): KeyData => {
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   transform-origin: center top;
-  width: fit-content; /* 调整为内容宽度 */
+  width: 100%; /* 修改为占满容器宽度 */
+  height: 100%; /* 占满容器高度 */
   max-width: none; /* 移除最大宽度限制 */
+  max-height: none; /* 移除最大高度限制 */
   min-width: 320px; /* 设置最小宽度保证可用性 */
   border: 1px solid var(--color-border-secondary);
   transition: transform 0.3s ease;
-  margin: 0 auto; /* 水平居中 */
+  margin: 0; /* 移除auto居中，让其占满宽度 */
+  display: grid;
+  grid-template-rows: repeat(5, 1fr); /* 5行，每行等高 */
+  gap: 8px;
+  place-items: center;
 }
 
 .keyboard-row {
-  display: flex;
-  justify-content: flex-start; /* 回到左对齐，因为现在每行按键数量相等 */
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(13, 1fr); /* 13列，每列等宽 */
   gap: 4px;
-  margin-bottom: 8px;
-  margin-left: 0; /* 移除左边距，统一对齐 */
-  width: fit-content; /* 每行根据内容调整宽度 */
-}
-
-.number-row {
-  margin-left: 0;
-}
-
-.first-row {
-  margin-left: 0; /* 移除左边距 */
-}
-
-.second-row {
-  margin-left: 0; /* 移除左边距 */
-}
-
-.third-row {
-  margin-left: 0; /* 移除左边距 */
+  width: 100%;
+  height: 100%;
+  align-items: stretch;
 }
 
 .space-row {
-  margin-top: 8px;
-  justify-content: flex-start; /* 与其他行保持一致的左对齐 */
+  margin-top: 0; /* 移除上边距，因为grid已经处理间距 */
 }
+
+/* 移除不再需要的行样式，因为现在使用grid布局 */
 
 /* 统计网格 */
 .stats-grid {
@@ -936,8 +928,8 @@ const getKeyData = (key: string): KeyData => {
 /* 大屏幕优化 */
 @media (min-width: 1200px) {
   .keyboard-layout {
-    width: 95%; /* 大屏幕上使用95%宽度 */
-    max-width: 1600px; /* 增加最大宽度让键盘更大 */
+    width: 100%; /* 大屏幕上占满整个容器宽度 */
+    max-width: none; /* 移除最大宽度限制，让键盘可以无限制撑大 */
   }
   
   .keyboard-wrapper {

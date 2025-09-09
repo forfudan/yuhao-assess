@@ -50,22 +50,24 @@ const showValue = computed(() => {
 
 // 按键样式
 const keyStyle = computed(() => {
-  let width = '50px'
+  let gridColumn = 'span 1' // 默认占1列
   
   switch (props.keyInfo.width) {
     case 'wide':
-      width = '150px' // 空格鍵等寬鍵
+      gridColumn = 'span 3' // 宽键占3列
       break
     case 'extra-wide':
-      width = '320px' // 6个按键位置的宽度 (6×50px + 5×4px间隙)
+      gridColumn = 'span 6' // 超宽键(空格键)占6列
       break
     default:
-      width = '50px'
+      gridColumn = 'span 1' // 标准键占1列
   }
 
   return {
-    width,
-    height: '50px'
+    gridColumn,
+    aspectRatio: props.keyInfo.width === 'extra-wide' ? '6' : '1', // 空格键保持6:1比例，其他保持正方形
+    minWidth: '40px',
+    minHeight: '40px'
   }
 })
 
@@ -156,6 +158,13 @@ const getFingerColor = (key: string, intensity: number): string => {
   user-select: none;
   overflow: hidden;
   font-family: var(--font-mono);
+  width: 100%;
+  height: 100%;
+}
+
+/* 确保所有标准按键都是正方形 */
+.key-button:not(.key-space) {
+  aspect-ratio: 1;
 }
 
 .key-button:hover {
@@ -247,28 +256,7 @@ const getFingerColor = (key: string, intensity: number): string => {
   background-color: rgba(34, 197, 94, calc(var(--intensity, 0) * 0.8 + 0.1));
 }
 
-/* 特殊按鍵樣式 */
-.key-button.key-space {
-  width: 320px; /* 更新空格键宽度为6个按键位置 */
-}
-
-.key-button.key-tab {
-  width: 75px;
-}
-
-.key-button.key-caps {
-  width: 90px;
-}
-
-.key-button.key-shift {
-  width: 110px;
-}
-
-.key-button.key-ctrl,
-.key-button.key-alt,
-.key-button.key-cmd {
-  width: 70px;
-}
+/* 特殊按鍵樣式 - 现在使用flex布局，移除固定宽度 */
 
 /* 模式特定樣式已通過熱力圖覆蓋層實現 */
 
