@@ -116,7 +116,7 @@
       <input 
         ref="fileInput"
         type="file"
-        accept=".txt,.csv"
+        accept=".txt,.csv,.yaml,.yml"
         @change="handleFileSelect"
         style="display: none"
       />
@@ -141,7 +141,7 @@
         <div v-else class="upload-prompt">
           <div class="upload-icon">⬆️</div>
           <p class="upload-title">點擊上傳或拖拽文件到此處</p>
-          <p class="upload-subtitle">支持 .txt 和 .csv 格式</p>
+          <p class="upload-subtitle">支持 .txt、.csv、.yaml 和 .yml 格式</p>
           <p class="upload-note">
             文件格式：每行一個字符和編碼，用空格或制表符分隔
           </p>
@@ -172,7 +172,7 @@
 
     <!-- 预览区域 -->
     <div v-if="previewData.length > 0" class="preview-section">
-      <h4 class="preview-title">文件预览（前10行）</h4>
+      <h4 class="preview-title">文件预览（前100行）</h4>
       <div class="preview-content">
         <div 
           v-for="(line, index) in previewData" 
@@ -185,7 +185,7 @@
           <span v-if="line.valid" class="line-parsed">
             → {{ selectedFormat === 'char_first' ? line.char + ' : ' + line.code : line.code + ' : ' + line.char }}
           </span>
-          <span v-else class="line-error">格式错误</span>
+          <span v-else class="line-error">忽略本行</span>
         </div>
       </div>
     </div>
@@ -326,8 +326,9 @@ const handleFileSelect = (event: Event) => {
 // 文件选择处理
 const handleFileSelection = (file: File) => {
   // 检查文件类型
-  if (!file.name.toLowerCase().endsWith('.txt') && !file.name.toLowerCase().endsWith('.csv')) {
-    emit('uploadError', '请选择 .txt 或 .csv 格式的文件')
+  const fileName = file.name.toLowerCase()
+  if (!fileName.endsWith('.txt') && !fileName.endsWith('.csv') && !fileName.endsWith('.yaml') && !fileName.endsWith('.yml')) {
+    emit('uploadError', '请选择 .txt、.csv、.yaml 或 .yml 格式的文件')
     return
   }
 
@@ -344,47 +345,94 @@ const handleFileSelection = (file: File) => {
   generatePreview(file)
 }
 
+// YAML 行解析函數
+const parseYamlLine = (line: string): { char: string; code: string; valid: boolean } => {
+  const trimmed = line.trim()
+  
+  // 跳過註釋、空行、YAML 元數據
+  if (!trimmed || 
+      trimmed.startsWith('#') || 
+      trimmed.startsWith('---') || 
+      trimmed.startsWith('...') || 
+      trimmed.includes(':') && (trimmed.startsWith('name:') || trimmed.startsWith('version:') || trimmed.startsWith('sort:') || trimmed.startsWith('columns:'))) {
+    return { char: '', code: '', valid: false }
+  }
+  
+  // 跳過 columns 元素行
+  if (trimmed === '- text' || trimmed === '- code') {
+    return { char: '', code: '', valid: false }
+  }
+  
+  // 解析字符-編碼行，支持制表符分隔
+  const parts = trimmed.split(/\t+/)
+  if (parts.length >= 2) {
+    const char = parts[0].trim()
+    const code = parts[1].trim()
+    const valid = Array.from(char).length === 1 && code.length > 0
+    return { char, code, valid }
+  }
+  
+  return { char: '', code: '', valid: false }
+}
+
+// 通用行解析函數
+const parseLine = (line: string, isYaml: boolean): { char: string; code: string; valid: boolean } => {
+  if (isYaml) {
+    return parseYamlLine(line)
+  }
+  
+  // 原有的 TXT/CSV 解析邏輯
+  const trimmed = line.trim()
+  if (!trimmed) return { char: '', code: '', valid: false }
+  
+  // 更健壯的分割邏輯：使用制表符或多個空格作爲分隔符
+  const parts = trimmed.split(/\t+|\s{2,}|\s+/)
+  // 如果只有一個空格分隔，確保只分割成2部分
+  if (parts.length < 2) {
+    // 嘗試按第一個空格分割
+    const spaceIndex = trimmed.indexOf(' ')
+    if (spaceIndex > 0) {
+      const char_part = trimmed.substring(0, spaceIndex).trim()
+      const code_part = trimmed.substring(spaceIndex + 1).trim()
+      if (char_part && code_part) {
+        parts.length = 0
+        parts.push(char_part, code_part)
+      }
+    }
+  }
+  
+  if (parts.length < 2) return { char: '', code: '', valid: false }
+  
+  let char: string, code: string
+  if (selectedFormat.value === 'char_first') {
+    char = parts[0]
+    code = parts[1]
+  } else {
+    code = parts[0]
+    char = parts[1]
+  }
+  
+  // 验证是否为单个字符
+  const valid = Array.from(char).length === 1 && code.length > 0
+  
+  return { char, code, valid }
+}
+
 // 生成文件預覽
 const generatePreview = async (file: File) => {
   try {
     const text = await readFileAsText(file)
-    const lines = text.split('\n').slice(0, 10) // 只預覽前10行
+    const lines = text.split('\n').slice(0, 100) // 增加預覽行數，支持滾動查看
+    const isYaml = file.name.toLowerCase().endsWith('.yaml') || file.name.toLowerCase().endsWith('.yml')
     
     previewData.value = lines.map(line => {
-      const trimmed = line.trim()
-      if (!trimmed) return { raw: line, char: '', code: '', valid: false }
-      
-      // 更健壯的分割邏輯：使用制表符或多個空格作爲分隔符
-      const parts = trimmed.split(/\t+|\s{2,}|\s+/)
-      // 如果只有一個空格分隔，確保只分割成2部分
-      if (parts.length < 2) {
-        // 嘗試按第一個空格分割
-        const spaceIndex = trimmed.indexOf(' ')
-        if (spaceIndex > 0) {
-          const char_part = trimmed.substring(0, spaceIndex).trim()
-          const code_part = trimmed.substring(spaceIndex + 1).trim()
-          if (char_part && code_part) {
-            parts.length = 0
-            parts.push(char_part, code_part)
-          }
-        }
+      const result = parseLine(line, isYaml)
+      return { 
+        raw: line, 
+        char: result.char, 
+        code: result.code, 
+        valid: result.valid 
       }
-      
-      if (parts.length < 2) return { raw: line, char: '', code: '', valid: false }
-      
-      let char: string, code: string
-      if (selectedFormat.value === 'char_first') {
-        char = parts[0]
-        code = parts[1]
-      } else {
-        code = parts[0]
-        char = parts[1]
-      }
-      
-      // 验证是否为单个字符
-      const valid = Array.from(char).length === 1 && code.length > 0
-      
-      return { raw: line, char, code, valid }
     })
   } catch (error) {
     console.error('生成预览失败:', error)
@@ -411,39 +459,50 @@ const readFileAsText = (file: File): Promise<string> => {
 }
 
 // 解析码表
-const parseCodeTable = (text: string, format: CodeTableFormat): ParseResult => {
+const parseCodeTable = (text: string, format: CodeTableFormat, fileName: string): ParseResult => {
   const codeTable: CodeTable = new Map()
   const lines = text.split('\n')
   let totalCodes = 0
+  const isYaml = fileName.toLowerCase().endsWith('.yaml') || fileName.toLowerCase().endsWith('.yml')
 
   for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
+    let char: string, code: string
+    
+    if (isYaml) {
+      // YAML 格式解析
+      const result = parseYamlLine(line)
+      if (!result.valid) continue
+      char = result.char
+      code = result.code
+    } else {
+      // 原有的 TXT/CSV 解析邏輯
+      const trimmed = line.trim()
+      if (!trimmed) continue
 
-    // 更健壮的分割逻辑：使用制表符或多个空格作为分隔符
-    let parts = trimmed.split(/\t+|\s{2,}|\s+/)
-    // 如果只有一个空格分隔，确保只分割成2部分
-    if (parts.length < 2) {
-      // 尝试按第一个空格分割
-      const spaceIndex = trimmed.indexOf(' ')
-      if (spaceIndex > 0) {
-        const char_part = trimmed.substring(0, spaceIndex).trim()
-        const code_part = trimmed.substring(spaceIndex + 1).trim()
-        if (char_part && code_part) {
-          parts = [char_part, code_part]
+      // 更健壮的分割逻辑：使用制表符或多个空格作为分隔符
+      let parts = trimmed.split(/\t+|\s{2,}|\s+/)
+      // 如果只有一个空格分隔，确保只分割成2部分
+      if (parts.length < 2) {
+        // 尝试按第一个空格分割
+        const spaceIndex = trimmed.indexOf(' ')
+        if (spaceIndex > 0) {
+          const char_part = trimmed.substring(0, spaceIndex).trim()
+          const code_part = trimmed.substring(spaceIndex + 1).trim()
+          if (char_part && code_part) {
+            parts = [char_part, code_part]
+          }
         }
       }
-    }
-    
-    if (parts.length < 2) continue
+      
+      if (parts.length < 2) continue
 
-    let char: string, code: string
-    if (format === 'char_first') {
-      char = parts[0].trim()
-      code = parts[1].trim()
-    } else {
-      code = parts[0].trim()
-      char = parts[1].trim()
+      if (format === 'char_first') {
+        char = parts[0].trim()
+        code = parts[1].trim()
+      } else {
+        code = parts[0].trim()
+        char = parts[1].trim()
+      }
     }
 
     // 檢查是否爲單個Unicode字符（包括代理對）
@@ -480,7 +539,7 @@ const processFile = async () => {
 
   try {
     const text = await readFileAsText(selectedFile.value)
-    const result = parseCodeTable(text, selectedFormat.value)
+    const result = parseCodeTable(text, selectedFormat.value, selectedFile.value.name)
 
     if (result.totalChars === 0) {
       emit('uploadError', '未找到有效的字符编码对，请检查文件格式')
@@ -1091,22 +1150,36 @@ loadBuiltinConfig()
 .preview-content {
   font-family: var(--font-mono);
   font-size: 0.875rem;
+  max-height: 320px; /* 大约12-15行的高度 */
+  overflow-y: auto;
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg-primary);
 }
 
 .preview-line {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  padding: var(--spacing-xs) 0;
-  border-bottom: 1px solid var(--color-border-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border-secondary);
+  margin: 0 calc(-1 * var(--spacing-sm)); /* 抵消容器的padding */
+  padding-left: var(--spacing-sm);
+  padding-right: var(--spacing-sm);
 }
 
 .preview-line:last-child {
   border-bottom: none;
 }
 
+.preview-line:hover {
+  background-color: var(--color-bg-secondary);
+}
+
 .preview-line.invalid {
   opacity: 0.6;
+  background-color: var(--color-bg-tertiary);
 }
 
 .line-number {
