@@ -25,7 +25,12 @@
               <h1>宇浩測評網</h1>
             </a>
           </div>
-          <div class="header-actions">
+                    <div class="header-actions">
+            <button @click="exportAllCards" class="export-btn" title="導出所有分析卡片到一張圖片">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+              </svg>
+            </button>
             <button @click="clearAllCache" class="action-button" title="清理所有本地緩存數據">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                 <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
@@ -231,7 +236,7 @@ const analysisData = ref<CodeTableAnalysis | null>(null)
 const analysisResults = ref(null)
 const uploadPrefixFlag = ref<boolean>(false)
 const uploadPrefixKeys = ref<string[]>([])
-const globalMaxLength = ref<number>(4) // 全局最大码长，计算一次后不再改变
+const globalMaxLength = ref<number>(4) // 全局最大碼長，計算一次後不再改變
 
 // 上传卡片引用
 const uploaderCardRef = ref()
@@ -393,7 +398,7 @@ const restoreCodeTableData = async () => {
       uploadPrefixKeys.value = data.uploadPrefixKeys || []
       globalMaxLength.value = data.globalMaxLength || 4
       
-      // 重新处理码表以确保processing service有正确的数据（包含字频优化）
+      // 重新處理碼表以確保processing service有正確的數據（包含字頻優化）
       await codeTableProcessingService.processCodeTable(codeTable.value, {
         isPrefix: uploadPrefixFlag.value,
         maxLength: globalMaxLength.value
@@ -469,10 +474,10 @@ function generateAnalysis(codeTable: CodeTable): CodeTableAnalysis {
   }
 }
 
-// 计算最大码长的测试字符
+// 計算最大碼長的測試字符
 const TEST_CHARS = ['灌', '瓣', '璧', '豁', '糯', '籍', '矗', '瓤', '嚼', '瞻', '覆', '馨', '徽', '警', '繁', '霜', '霞']
 
-// 计算最大码长
+// 計算最大碼長
 function calculateMaxCodeLength(codeTable: CodeTable): number {
   let maxLength = 0
   
@@ -505,7 +510,7 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
   // 先計算最大碼長
   const maxLength = calculateMaxCodeLength(data.codeTable)
   
-  // 立即处理码表，生成所有派生版本（包含字频优化）
+  // 立即處理碼表，生成所有派生版本（包含字頻優化）
   console.log('[App] 開始處理碼表...')
   await codeTableProcessingService.processCodeTable(data.codeTable, {
     isPrefix: data.isPrefix || false,
@@ -541,7 +546,7 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
   
   console.log('[App] 碼表上傳處理完成')
   
-  // 码表分析成功后，自动滚动到第一个分析卡片
+  // 碼表分析成功後，自動滾動到第一個分析卡片
   setTimeout(() => {
     const firstAnalysisCard = document.getElementById('card-duplicate')
     if (firstAnalysisCard) {
@@ -550,7 +555,7 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
         block: 'start'
       })
     }
-  }, 500) // 延迟500ms，让用户看到成功反馈
+  }, 500) // 延遲500ms，讓用戶看到成功反饋
   
   uploadStatus.value = {
     type: 'success',
@@ -635,10 +640,386 @@ const clearAllCache = () => {
     alert('清除緩存失敗，請手動重新整理頁面')
   }
 }
+
+// 導出所有分析卡片到一張圖片
+const exportAllCards = async () => {
+  try {
+    // 檢查是否有已上傳的碼表
+    if (!analysisReady.value) {
+      alert('請先上傳碼表文件後再進行導出操作')
+      return
+    }
+
+    // 顯示格式選擇對話框
+    const formatChoice = await showFormatDialog()
+    if (!formatChoice) {
+      return // 用戶取消了操作
+    }
+
+    // 確保所有卡片都展開，以便截圖包含完整內容
+    const cardsToExpand = [
+      duplicateAnalysisCardRef.value,
+      maximumCandidatesCardRef.value, 
+      speedEquivCardRef.value,
+      shortCodeEfficiencyCardRef.value,
+      keyboardHeatmapCardRef.value
+    ]
+
+    // 展開所有卡片
+    cardsToExpand.forEach(cardRef => {
+      if (cardRef && typeof cardRef.expand === 'function') {
+        cardRef.expand()
+      }
+    })
+
+    // 等待DOM更新
+    await nextTick()
+    
+    // 等待一點時間確保所有內容都渲染完成
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    // 獲取所有要導出的卡片元素
+    const cardSelectors = [
+      '#card-duplicate',
+      '#card-maximum', 
+      '#card-speed',
+      '#card-efficiency',
+      '#card-heatmap'
+    ]
+    
+    const cardElements = cardSelectors
+      .map(selector => document.querySelector(selector))
+      .filter(element => element !== null)
+    
+    if (cardElements.length === 0) {
+      alert('未找到可導出的分析卡片')
+      return
+    }
+
+    // 創建一個高清容器來組合所有卡片
+    const container = document.createElement('div')
+    container.style.cssText = `
+      background: #f8fafc;
+      padding: 20px;
+      width: 1000px;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    `
+
+    // 添加標題
+    const header = document.createElement('div')
+    header.style.cssText = `
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    `
+    header.innerHTML = `
+      <h1 style="margin: 0; font-size: 36px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">${codeTableName.value}</h1>
+      <p style="margin: 15px 0 8px 0; font-size: 20px; opacity: 0.95;">輸入法分析報告</p>
+      <p style="margin: 0; font-size: 16px; opacity: 0.85;">宇浩測評網 · ceping.shurufa.app</p>
+    `
+    container.appendChild(header)
+
+    // 複製每個卡片元素（提高清晰度）
+    for (const element of cardElements) {
+      if (!element) continue // 跳過空元素
+      
+      const clonedElement = element.cloneNode(true) as HTMLElement
+      
+      // 確保樣式正確應用並提高清晰度
+      clonedElement.style.cssText += `
+        margin-bottom: 35px;
+        width: 100%;
+        box-sizing: border-box;
+        transform: scale(1);
+        font-size: 16px;
+        line-height: 1.6;
+      `
+      
+      container.appendChild(clonedElement)
+    }
+
+    // 將容器暫時添加到body中（隱藏）
+    container.style.position = 'absolute'
+    container.style.left = '-9999px'
+    container.style.top = '0'
+    document.body.appendChild(container)
+
+    try {
+      if (formatChoice === 'pdf') {
+        await exportToPDF(container)
+      } else {
+        await exportToImage(container)
+      }
+    } finally {
+      // 清理：移除臨時容器
+      document.body.removeChild(container)
+    }
+
+  } catch (error) {
+    console.error('導出分析卡片失敗:', error)
+    alert('導出失敗，請稍後重試')
+  }
+}
+
+// 顯示格式選擇對話框
+const showFormatDialog = (): Promise<string | null> => {
+  return new Promise((resolve) => {
+    const dialog = document.createElement('div')
+    dialog.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `
+    
+    dialog.innerHTML = `
+      <div style="
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        max-width: 400px;
+        width: 90%;
+        text-align: center;
+      ">
+        <h3 style="margin: 0 0 20px 0; color: #374151; font-size: 24px;">選擇導出格式</h3>
+        <p style="margin: 0 0 30px 0; color: #6b7280; line-height: 1.6;">請選擇您希望的導出格式：</p>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+          <button id="pdf-btn" style="
+            flex: 1;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+          ">
+            📄 文檔<br>
+            <small style="opacity: 0.9; font-weight: 400;">PDF 格式</small>
+          </button>
+          
+          <button id="image-btn" style="
+            flex: 1;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+          ">
+            🖼️ 圖片<br>
+            <small style="opacity: 0.9; font-weight: 400;">PNG 格式</small>
+          </button>
+        </div>
+        
+        <button id="cancel-btn" style="
+          padding: 12px 30px;
+          background: #f3f4f6;
+          color: #374151;
+          border: none;
+          border-radius: 8px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        ">取消</button>
+      </div>
+    `
+    
+    document.body.appendChild(dialog)
+    
+    // 添加懸停效果
+    const pdfBtn = dialog.querySelector('#pdf-btn') as HTMLElement
+    const imageBtn = dialog.querySelector('#image-btn') as HTMLElement
+    const cancelBtn = dialog.querySelector('#cancel-btn') as HTMLElement
+    
+    pdfBtn.addEventListener('mouseenter', () => {
+      pdfBtn.style.transform = 'translateY(-2px)'
+      pdfBtn.style.boxShadow = '0 8px 16px rgba(220, 38, 38, 0.4)'
+    })
+    pdfBtn.addEventListener('mouseleave', () => {
+      pdfBtn.style.transform = 'translateY(0)'
+      pdfBtn.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)'
+    })
+    
+    imageBtn.addEventListener('mouseenter', () => {
+      imageBtn.style.transform = 'translateY(-2px)'
+      imageBtn.style.boxShadow = '0 8px 16px rgba(5, 150, 105, 0.4)'
+    })
+    imageBtn.addEventListener('mouseleave', () => {
+      imageBtn.style.transform = 'translateY(0)'
+      imageBtn.style.boxShadow = '0 4px 8px rgba(5, 150, 105, 0.3)'
+    })
+    
+    cancelBtn.addEventListener('mouseenter', () => {
+      cancelBtn.style.background = '#e5e7eb'
+    })
+    cancelBtn.addEventListener('mouseleave', () => {
+      cancelBtn.style.background = '#f3f4f6'
+    })
+    
+    // 事件處理
+    pdfBtn.addEventListener('click', () => {
+      document.body.removeChild(dialog)
+      resolve('pdf')
+    })
+    
+    imageBtn.addEventListener('click', () => {
+      document.body.removeChild(dialog)
+      resolve('image')
+    })
+    
+    cancelBtn.addEventListener('click', () => {
+      document.body.removeChild(dialog)
+      resolve(null)
+    })
+    
+    // 點擊遮罩關閉
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) {
+        document.body.removeChild(dialog)
+        resolve(null)
+      }
+    })
+  })
+}
+
+// 導出為高清圖片
+const exportToImage = async (container: HTMLElement) => {
+  // 動態導入html2canvas
+  const { default: html2canvas } = await import('html2canvas')
+  
+  // 使用html2canvas截圖（高清設定）
+  const canvas = await html2canvas(container, {
+    width: 1000,
+    height: container.offsetHeight,
+    scale: 3, // 提高到3倍分辨率
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#f8fafc',
+    logging: false,
+    imageTimeout: 15000,
+    onclone: (clonedDoc) => {
+      // 確保克隆文檔中的樣式正確
+      const clonedContainer = clonedDoc.querySelector('div') as HTMLElement
+      if (clonedContainer) {
+        clonedContainer.style.position = 'static'
+        clonedContainer.style.left = 'auto'
+      }
+    }
+  })
+
+  // 創建下載鏈接
+  const link = document.createElement('a')
+  const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
+  link.download = `${codeTableName.value}_測評報告_宇浩測評網_${today}.png`
+  link.href = canvas.toDataURL('image/png', 1.0)
+  
+  // 觸發下載
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+  console.log('高清圖片導出成功')
+}
+
+// 導出為PDF
+const exportToPDF = async (container: HTMLElement) => {
+  try {
+    // 動態導入jsPDF和html2canvas
+    const [{ default: html2canvas }, jsPDFModule] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf')
+    ])
+    
+    const { jsPDF } = jsPDFModule
+    
+    // 使用html2canvas截圖（高清設定）
+    const canvas = await html2canvas(container, {
+      width: 1000,
+      height: container.offsetHeight,
+      scale: 2, // 使用2倍分辨率
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#f8fafc',
+      logging: false,
+      imageTimeout: 15000,
+      onclone: (clonedDoc) => {
+        const clonedContainer = clonedDoc.querySelector('div') as HTMLElement
+        if (clonedContainer) {
+          clonedContainer.style.position = 'static'
+          clonedContainer.style.left = 'auto'
+        }
+      }
+    })
+
+    // 計算PDF尺寸 - 單頁模式，保持正確寬高比
+    const canvasWidth = canvas.width
+    const canvasHeight = canvas.height
+    const aspectRatio = canvasHeight / canvasWidth
+    
+    const pdfWidth = 210 // A4 寬度 (mm)
+    const margin = 10
+    const availableWidth = pdfWidth - (margin * 2) // 可用寬度
+    
+    // 根據可用寬度計算圖片高度，保持寬高比
+    const imgWidth = availableWidth
+    const imgHeight = availableWidth * aspectRatio
+    
+    // PDF總高度 = 圖片高度 + 上下邊距
+    const pdfHeight = Math.max(297, imgHeight + (margin * 2))
+    
+    // 創建長頁PDF（單頁模式，不分頁）
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [pdfWidth, pdfHeight] // 使用計算出的精確尺寸
+    })
+    
+    const imgData = canvas.toDataURL('image/png', 1.0)
+    
+    // 將整個圖片放在單頁上，保持正確比例
+    pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight)
+    
+    // 下載PDF
+    const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
+    pdf.save(`${codeTableName.value}_測評報告_宇浩測評網_${today}.pdf`)
+    
+    console.log('單頁PDF導出成功')
+    
+  } catch (error) {
+    console.error('PDF導出失敗:', error)
+    alert('PDF導出失敗，已改為圖片格式導出')
+    // 如果PDF失敗，回退到圖片
+    await exportToImage(container)
+  }
+}
 </script>
 
 <style scoped>
-/* 头部样式保持原有设计 */
+/* 頭部樣式保持原有設計 */
 .header {
   background-color: var(--color-bg-primary);
   border-bottom: 1px solid var(--color-border-primary);
@@ -653,25 +1034,25 @@ const clearAllCache = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: nowrap !important; /* 强制不换行 */
+  flex-wrap: nowrap !important; /* 強制不換行 */
   gap: var(--spacing-sm);
   width: 100%;
-  min-height: 0; /* 允许收缩 */
+  min-height: 0; /* 允許收縮 */
   overflow: hidden;
 }
 
 .logo {
-  flex: 1 1 auto; /* 允许logo收缩和扩展 */
-  min-width: 0; /* 允许收缩到内容以下 */
+  flex: 1 1 auto; /* 允許logo收縮和擴展 */
+  min-width: 0; /* 允許收縮到內容以下 */
   overflow: hidden;
-  text-overflow: ellipsis; /* 如果logo过长则用省略号 */
+  text-overflow: ellipsis; /* 如果logo過長則用省略號 */
 }
 
 .header-actions {
-  flex: 0 0 auto; /* 防止按钮收缩或扩展 */
+  flex: 0 0 auto; /* 防止按鈕收縮或擴展 */
   display: flex;
   align-items: center;
-  white-space: nowrap; /* 强制按钮容器不换行 */
+  white-space: nowrap; /* 強制按鈕容器不換行 */
   display: flex;
   align-items: center;
 }
@@ -680,7 +1061,7 @@ const clearAllCache = () => {
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--color-primary);
-  margin: 0; /* 移除下边距，因为删除了副标题 */
+  margin: 0; /* 移除下邊距，因為刪除了副標題 */
 }
 
 .logo-link {
@@ -726,6 +1107,49 @@ const clearAllCache = () => {
   background: rgba(59, 130, 246, 0.2);
   border-color: rgba(59, 130, 246, 0.3);
   transform: scale(1.05);
+}
+
+/* 全局下載按鈕特殊樣式 */
+.download-all-button {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: white !important;
+  font-weight: 500;
+  gap: 6px;
+  min-width: 100px;
+  padding: 8px 12px !important;
+}
+
+.download-all-button:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* 頭部導出按鈕樣式 - 與卡片保持一致 */
+.header .export-btn {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 8px;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header .export-btn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: scale(1.05);
+}
+
+.header .export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* 悬浮导航菜单样式 */

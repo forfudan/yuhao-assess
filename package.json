@@ -12,6 +12,7 @@
   "dependencies": {
     "@vueuse/core": "^10.9.0",
     "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.2",
     "vue": "^3.4.0"
   },
   "devDependencies": {

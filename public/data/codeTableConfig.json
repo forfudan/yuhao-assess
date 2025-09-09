@@ -5,7 +5,7 @@
   "builtinCodeTables": [
     {
       "key": "yuhao-ming",
-      "name": "日月",
+      "name": "日月輸入法",
       "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-ming.txt",
       "format": "code_first",
       "description": "宇浩拆分·世上首款純形前綴碼",
@@ -18,7 +18,7 @@
     },
     {
       "key": "yuhao-joy",
-      "name": "卿雲",
+      "name": "卿雲輸入法",
       "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-joy.txt",
       "format": "code_first",
       "description": "宇浩拆分·四碼定長",
@@ -30,7 +30,7 @@
     },
     {
       "key": "yuhao-star",
-      "name": "星陳",
+      "name": "星陳輸入法",
       "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-star.txt",
       "format": "code_first",
       "description": "宇浩拆分·四碼定長",
@@ -42,7 +42,7 @@
     },
     {
       "key": "yuhao-light",
-      "name": "光華",
+      "name": "光華輸入法",
       "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-light.txt",
       "format": "code_first",
       "description": "宇浩拆分·四碼定長",
@@ -54,7 +54,7 @@
     },
     {
       "key": "sky",
-      "name": "天碼",
+      "name": "天碼輸入法",
       "url": "https://raw.githubusercontent.com/forfudan/tianma-sky/main/mabiao-sky.txt",
       "format": "code_first",
       "description": "宋天製作·表形碼·四碼定長",

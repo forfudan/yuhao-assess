@@ -8,7 +8,7 @@ export class ExportService {
    */
   static generateFileName(cardTitle: string, schemeName: string = '未命名方案'): string {
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
-    return `${schemeName}-${cardTitle}-宇浩測評網-ceping.shurufa.app-${today}.png`
+    return `${schemeName}_${cardTitle}_宇浩測評網_ceping.shurufa.app_${today}.png`
   }
 
   /**
