@@ -1,8 +1,8 @@
-# Services 模塊說明
+# Services 模塊説明
 
 ## 概述
 
-Services 文件夾包含應用的業務邏輯和數據處理模塊，按功能領域劃分為以下幾個模塊：
+Services 文件夾包含應用的業務邏輯和數據處理模塊，按功能領域劃分爲以下幾個模塊：
 
 ## 核心模块
 
@@ -38,7 +38,7 @@ Services 文件夾包含應用的業務邏輯和數據處理模塊，按功能�
 
 **主要函數:**
 
-- `formatRate()` - 格式化比率為萬分比
+- `formatRate()` - 格式化比率爲萬分比
 - `formatNumber()` - 格式化數字（千位分隔符）
 - `formatEquiv()` - 格式化當量
 - `createTooltipManager()` - 創建工具提示管理器

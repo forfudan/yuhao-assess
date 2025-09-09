@@ -244,7 +244,7 @@ export function calculateStaticDuplicates(
     }
   }
   
-  // 為每個字符集計算重碼
+  // 爲每個字符集計算重碼
   const charsetTypes: CharsetType[] = ['gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j']
   
   for (const charsetType of charsetTypes) {
@@ -263,7 +263,7 @@ export function calculateStaticDuplicates(
           }
         }
         
-        // 如果有多個字符在同一字符集中共享編碼，則計為重碼
+        // 如果有多個字符在同一字符集中共享編碼，則計爲重碼
         if (charsetCharsInGroup > 1) {
           duplicateCount += charsetCharsInGroup
         }
@@ -347,7 +347,7 @@ export async function preprocessCodeTable(
     }
   }
   
-  // 2. 生成全碼表（這裡假設已有generateFullCodeTable函數）
+  // 2. 生成全碼表（這裏假設已有generateFullCodeTable函數）
   const fullCodeTable = new Map<string, string[]>(codeTable)
   
   // 3. 批量生成所有需要的字符集

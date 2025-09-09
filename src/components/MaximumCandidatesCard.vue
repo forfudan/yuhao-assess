@@ -80,15 +80,15 @@
           </table>
         </div>
 
-        <!-- 數據說明 -->
+        <!-- 數據説明 -->
         <div class="info-section">
-          <p><strong>說明：</strong></p>
-          <p><strong>本方案累計收錄 {{ charCount.toLocaleString() }} 個漢字（CJK 基本區到擴展 J 區共 101,984 個漢字）</strong></p>
+          <p><strong>説明：</strong></p>
+          <p><strong>本方案累計収録 {{ charCount.toLocaleString() }} 個漢字（CJK 基本區到擴展 J 區共 101,984 個漢字）</strong></p>
           <p>最大候選項個數評估輸入法的選字體驗，數值越小表示翻頁次數越少，檢字效率越高。計算考慮了：</p>
           <ul>
             <li>單字全碼和指定字符集，統計每個編碼對應的漢字數量</li>
             <li>取所有編碼中候選項個數的最大值</li>
-            <li>顏色標示：<span style="color: #059669; font-weight: 600;">≤2</span>、<span style="color: #d97706; font-weight: 600;">3-5</span>、<span style="color: #dc2626; font-weight: 600;">>5</span></li>
+            <li>顔色標示：<span style="color: #059669; font-weight: 600;">≤2</span>、<span style="color: #d97706; font-weight: 600;">3-5</span>、<span style="color: #dc2626; font-weight: 600;">>5</span></li>
             <li>鼠標懸停在編碼上可查看該編碼對應的所有漢字</li>
           </ul>
         </div>
@@ -482,7 +482,7 @@ onMounted(() => {
   word-break: break-all;
 }
 
-/* 分析說明 */
+/* 分析説明 */
 .info-section {
   background: #f8fafc;
   border-radius: 8px;

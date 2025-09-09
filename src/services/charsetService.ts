@@ -33,7 +33,7 @@ async function loadCharsetData(): Promise<void> {
     charsetData = await response.json() as CharsetData
   } catch (error) {
     console.error('Failed to load charset data:', error)
-    // 使用空數據作為後備
+    // 使用空數據作爲後備
     charsetData = {}
   }
 }
@@ -47,7 +47,7 @@ async function loadCJKBlockData(): Promise<void> {
     cjkBlockData = await response.json() as CJKBlockData
   } catch (error) {
     console.error('Failed to load CJK block data:', error)
-    // 使用空數據作為後備
+    // 使用空數據作爲後備
     cjkBlockData = { version: '', description: '', lastUpdated: '', blocks: {} }
   }
 }

@@ -97,7 +97,7 @@
       <div v-if="showCardDirectory" class="nav-overlay" @click="toggleCardDirectory"></div>
     </Transition>
 
-    <!-- 主要內容區域 - 設計為單列模塊布局 -->
+    <!-- 主要内容區域 - 設計爲單列模塊布局 -->
     <main class="main">
       <div class="container">
         <!-- 
@@ -142,7 +142,8 @@
             ref="speedEquivCardRef"
             :code-table="codeTable" 
             :code-table-name="codeTableName" 
-            :initial-prefix="uploadPrefixFlag" 
+            :initial-prefix="uploadPrefixFlag"
+            :global-prefix-keys="uploadPrefixKeys"
           />
 
           <!-- 簡碼效率卡片 -->

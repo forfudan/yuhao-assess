@@ -207,7 +207,7 @@ const getFingerColor = (key: string, intensity: number): string => {
   background-color: rgba(0, 188, 212, calc(var(--intensity, 0) * 0.8 + 0.1));
 }
 
-/* 手指模式（綠色） */
+/* 手指模式（緑色） */
 .key-button.mode-finger .key-heatmap-overlay {
   background-color: rgba(34, 197, 94, calc(var(--intensity, 0) * 0.8 + 0.1));
 }

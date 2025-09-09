@@ -78,14 +78,24 @@
               type="text"
             />
           </div>
-          <button 
-            @click="togglePrefixMode" 
-            :class="['prefix-button', { 'active': isPrefixCode }]"
-            title="切換前綴碼模式"
-            type="button"
-          >
-            {{ isPrefixCode ? '✓ 我是前綴或頂功方案' : '我是前綴或頂功方案' }}
-          </button>
+          <div class="prefix-button-group">
+            <button 
+              @click="togglePrefixMode" 
+              :class="['prefix-button', { 'active': isPrefixCode }]"
+              title="切換前綴碼模式"
+              type="button"
+            >
+              {{ isPrefixCode ? '✓ 我是前綴或頂功方案' : '我是前綴或頂功方案' }}
+            </button>
+            <button 
+              @click="showPrefixHelp = true"
+              class="help-button"
+              title="點擊幫助"
+              type="button"
+            >
+              ?
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -181,6 +191,7 @@
     </div>
     
     <!-- 上傳狀態顯示 -->
+        <!-- 上傳狀態顯示 -->
     <div v-if="props.uploadStatus" class="upload-status" :class="props.uploadStatus.type">
       <span class="status-icon">
         {{ props.uploadStatus.type === 'success' ? '✓' : '✗' }}
@@ -189,6 +200,30 @@
     </div>
     </div>
   </div>
+  
+  <!-- 前綴碼幫助信息框 - 使用 Teleport 傳送到 body -->
+  <Teleport to="body">
+    <div v-if="showPrefixHelp" class="help-modal-overlay" @click="showPrefixHelp = false">
+      <div class="help-modal" @click.stop>
+        <div class="help-header">
+          <h4>前綴或頂功方案説明</h4>
+          <button @click="showPrefixHelp = false" class="help-close-btn">×</button>
+        </div>
+        <div class="help-content">
+          <p><a href="https://shurufa.app/docs/concepts.html">前綴或頂功方案</a>是一類特殊上屏候選字的輸入方案，對於未達到最大碼長的後選項，在某些特殊的模式下，可以自動上屏，而不需要使用空格鍵。比如日月輸入法、聲筆飛單、逸碼等。</p>
+          <p><strong>上屏碼設置：</strong></p>
+          <p>勾選了前綴或頂功的方案，可以在輸入框中填入特定的上屏按鍵，例如："aoeiu_" 表示編碼結尾是 a、o、e、i、u、空格等按鍵的，不再自動添加空格；編碼結尾是其他按鍵的，未達到最大碼長時，仍舊添加空格。</p>
+          <p>勾選了前綴或頂功的方案，且未填寫任何上屏按鍵的，則在任何情況下都不自動添加空格鍵。</p>
+          <p>如果你的碼表已經將空格鍵等特殊符號作爲編碼的一部分，可填寫到輸入框中，避免本測評工具自動添加空格鍵。</p>
+          <p><strong>注意：</strong></p>
+          <p>請謹慎使用本功能，不要利用它來取得更好的碼長計算結果。</p>
+        </div>
+        <div class="help-footer">
+          <button @click="showPrefixHelp = false" class="btn btn-primary">我知道了</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -235,6 +270,7 @@ const isDragOver = ref(false)
 const isUploading = ref(false)
 const isPrefixCode = ref(false)
 const prefixKeysInput = ref('')
+const showPrefixHelp = ref(false)
 const fileInput = ref<HTMLInputElement>()
 const previewData = ref<Array<{
   raw: string
@@ -318,7 +354,7 @@ const generatePreview = async (file: File) => {
       const trimmed = line.trim()
       if (!trimmed) return { raw: line, char: '', code: '', valid: false }
       
-      // 更健壯的分割邏輯：使用制表符或多個空格作為分隔符
+      // 更健壯的分割邏輯：使用制表符或多個空格作爲分隔符
       const parts = trimmed.split(/\t+|\s{2,}|\s+/)
       // 如果只有一個空格分隔，確保只分割成2部分
       if (parts.length < 2) {
@@ -410,7 +446,7 @@ const parseCodeTable = (text: string, format: CodeTableFormat): ParseResult => {
       char = parts[1].trim()
     }
 
-    // 檢查是否為單個Unicode字符（包括代理對）
+    // 檢查是否爲單個Unicode字符（包括代理對）
     const isValidChar = (str: string): boolean => {
       if (!str) return false
       // 使用Array.from來正確處理Unicode字符
@@ -719,6 +755,12 @@ loadBuiltinConfig()
   align-items: flex-start;
 }
 
+.prefix-button-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .prefix-keys-input {
   display: flex;
   align-items: center;
@@ -757,7 +799,141 @@ loadBuiltinConfig()
   font-size: 14px;
   transition: all 0.2s ease;
   white-space: nowrap;
-  min-width: 300px;
+  min-width: 280px;
+}
+
+.help-button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d1d5db;
+  border-radius: 50%;
+  background: white;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.help-button:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+/* 幫助信息框樣式 */
+.help-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999; /* 極高的z-index值確保在最上層 */
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.help-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.help-header h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.help-close-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.help-close-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.help-content {
+  padding: 20px 24px;
+  color: #374151;
+  line-height: 1.6;
+  overflow-y: auto;
+  max-height: 50vh;
+}
+
+.help-content p {
+  margin: 0 0 12px 0;
+}
+
+.help-content ul {
+  margin: 8px 0 16px 20px;
+  padding: 0;
+}
+
+.help-content li {
+  margin-bottom: 6px;
+}
+
+.help-content strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.help-footer {
+  padding: 16px 24px 20px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* 上传区域 */

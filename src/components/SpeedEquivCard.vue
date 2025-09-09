@@ -4,7 +4,7 @@
       <div class="header-content">
         <div class="header-text">
           <h3 class="card-title">速度當量</h3>
-          <p class="card-description">分析輸入法的速度當量，計算基於字頻加權的全碼按鍵組合。閱讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
+          <p class="card-description">分析輸入法的速度當量，計算基於字頻加權的全碼按鍵組合。閲讀<a href="https://shurufa.app/docs/concepts.html" target="_blank">瓊林擷英</a>瞭解詳細定義。</p>
         </div>
         <div class="header-buttons">
           <button @click="exportCard" class="export-btn" :disabled="isCalculating || !!error || !analysisResults" title="导出图片">
@@ -39,7 +39,7 @@
             <tr>
               <th>字頻來源</th>
               <th>速度當量</th>
-              <th>說明</th>
+              <th>説明</th>
             </tr>
           </thead>
           <tbody>
@@ -72,16 +72,17 @@
         </table>
 
         <div class="info-section">
-          <p><strong>說明：</strong></p>
+          <p><strong>説明：</strong></p>
           <p>速度當量基於實驗統計結果，評估輸入法按鍵對的手感表現。數值越小表示輸入越流暢。計算考慮了：</p>
           <ul>
-            <li>使用全碼碼表（每個單字的最長編碼）進行分析</li>
+            <li>使用全碼碼表（每個單字的最長編碼）</li>
             <li>漢字的使用頻率</li>
+            <li>檢測到的最大碼長爲 {{ maxCodeLength }} 位</li>
+            <li>{{ detectedIsPrefix ? '檢測到本方案爲前綴或頂功' : '' }}{{ detectedIsPrefix && props.globalPrefixKeys && props.globalPrefixKeys.length > 0 ? `，檢測到上屏鍵爲 ${props.globalPrefixKeys.join('')}` : '' }}</li>
             <li v-if="!detectedIsPrefix">碼表的規範化處理，即在未達到最大碼長時使用下劃線補充（代表空格）</li>
-            <li v-else>前綴碼特性，未達到最大碼長時不補充下劃線</li>
+            <li v-else>前綴碼特性，未達到最大碼長時且末碼爲上屏碼時不補充下劃線（空格）</li>
             <li>多候選字的選擇鍵處理（第2候選加分號，第3候選加單引號）</li>
           </ul>
-          <p>檢測到的最大碼長為：{{ maxCodeLength }} 位{{ detectedIsPrefix ? '，檢測到本方案為前綴碼' : '' }}</p>
         </div>
         
         <!-- 方案名稱標註 -->
@@ -111,12 +112,14 @@ interface Props {
   codeTable?: CodeTable
   codeTableName?: string
   initialPrefix?: boolean
+  globalPrefixKeys?: string[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
   codeTable: () => new Map(),
   codeTableName: '',
-  initialPrefix: false
+  initialPrefix: false,
+  globalPrefixKeys: () => []
 })
 
 // 摺疊功能

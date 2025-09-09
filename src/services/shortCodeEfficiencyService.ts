@@ -14,7 +14,7 @@ interface EfficiencyResult {
 /**
  * 計算簡碼效率
  * 
- * 算法說明：
+ * 算法説明：
  * 1. 對於每個簡碼數量N，選擇頻率加權碼長差值最大的前N個漢字使用簡碼
  * 2. 頻率差值 = 漢字頻率 * (全碼長度 - 簡碼長度)
  * 3. 計算使用N個簡碼後的平均碼長
@@ -61,10 +61,15 @@ function preprocessCodeTable(
   const charMap = new Map<string, CodeTableRow[]>()
   
   for (const row of codeTable) {
-    if (!charMap.has(row.char)) {
-      charMap.set(row.char, [])
+    // 過濾條件：
+    // 1. 必須是單字- 使用 Array.from 正確處理 Unicode Codepoint
+    // 2. 必須在字频表中存在
+    if (Array.from(row.char).length === 1 && charFrequency.hasOwnProperty(row.char)) {
+      if (!charMap.has(row.char)) {
+        charMap.set(row.char, [])
+      }
+      charMap.get(row.char)!.push(row)
     }
-    charMap.get(row.char)!.push(row)
   }
   
   const processedChars: ProcessedChar[] = []
