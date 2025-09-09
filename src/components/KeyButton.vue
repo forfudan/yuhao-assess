@@ -91,7 +91,7 @@ const heatmapStyle = computed(() => {
   }
 })
 
-// 動態文字顏色
+// 動態文字顔色
 const textColor = computed(() => {
   if (props.keyData.count === 0 || props.maxValue === 0) {
     return {

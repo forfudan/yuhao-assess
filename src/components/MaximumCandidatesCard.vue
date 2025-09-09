@@ -83,7 +83,7 @@
         <!-- 數據説明 -->
         <div class="info-section">
           <p><strong>説明：</strong></p>
-          <p><strong>本方案累計収録 {{ charCount.toLocaleString() }} 個漢字（CJK 基本區到擴展 J 區共 101,984 個漢字）</strong></p>
+          <p><strong>本方案累計收録 {{ charCount.toLocaleString() }} 個漢字（CJK 基本區到擴展 J 區共 101,984 個漢字）</strong></p>
           <p>最大候選項個數評估輸入法的選字體驗，數值越小表示翻頁次數越少，檢字效率越高。計算考慮了：</p>
           <ul>
             <li>單字全碼和指定字符集，統計每個編碼對應的漢字數量</li>

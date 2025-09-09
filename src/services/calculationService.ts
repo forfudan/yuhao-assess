@@ -38,7 +38,7 @@ async function loadCJKBlockData(): Promise<void> {
     cjkBlockData = await response.json() as CJKBlockData
   } catch (error) {
     console.error('Failed to load CJK block data:', error)
-    // 使用空數據作為後備
+    // 使用空數據作爲後備
     cjkBlockData = { version: '', description: '', lastUpdated: '', blocks: {} }
   }
 }
@@ -192,7 +192,7 @@ export function calculateAllMaxCandidates(
 
   const results: Record<string, number> = {}
   
-  // 為每個字符集計算最大候選數
+  // 爲每個字符集計算最大候選數
   const charsetTypes: CharsetType[] = ['gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j']
   
   for (const charsetType of charsetTypes) {

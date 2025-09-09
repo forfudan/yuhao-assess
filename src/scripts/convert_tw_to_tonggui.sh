@@ -5,7 +5,7 @@
 echo "開始轉換臺灣繁體字到大陸通規繁體字..."
 
 # 定義要處理的目錄
-DIRS=("src/components" "src/services")
+DIRS=("src" "docs")
 
 # 計數器
 total_files=0

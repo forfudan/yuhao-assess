@@ -295,7 +295,7 @@ export class BuiltinCodeTableService {
     // 通規漢字 (常用漢字)
     const isRegular = basicRange ? (codePoint >= basicRange.start && codePoint <= basicRange.end) : false
 
-    // GBK漢字範圍 (簡化判斷) - 這裡保持原有邏輯，使用0x9FBF作為結束點
+    // GBK漢字範圍 (簡化判斷) - 這裏保持原有邏輯，使用0x9FBF作爲結束點
     const isGBK = basicRange ? (codePoint >= basicRange.start && codePoint <= 0x9FBF) : false
 
     // CJK區塊判斷

@@ -1004,7 +1004,7 @@ const loadComparisonData = async () => {
         }
       }
       
-      // 數據加載完成後，為缺少數據的方案啟動智能計算
+      // 數據加載完成後，爲缺少數據的方案啟動智能計算
       nextTick(() => {
         const schemesNeedingCalculation = additionalSchemes.value.filter(scheme => 
           scheme.codeTable && !scheme.isCalculating && (!scheme.data || Object.keys(scheme.data).length < 4)
@@ -1083,7 +1083,7 @@ const allSchemes = computed(() => {
   })
 })
 
-// 計算屬性 - 過濾掉収字爲0的方案用於表格顯示
+// 計算屬性 - 過濾掉收字爲0的方案用於表格顯示
 const visibleSchemes = computed(() => {
   return allSchemes.value.filter(scheme => {
     // 正在計算中的方案始終顯示
@@ -1092,10 +1092,10 @@ const visibleSchemes = computed(() => {
     // 收字數量存在且大於0的方案顯示
     if (scheme.charCount && scheme.charCount > 0) return true
     
-    // 収字數量爲undefined或null的方案也顯示（可能還未計算完成）
+    // 收字數量爲undefined或null的方案也顯示（可能還未計算完成）
     if (scheme.charCount === undefined || scheme.charCount === null) return true
     
-    // 只隱藏確實収字爲0的方案
+    // 只隱藏確實收字爲0的方案
     return false
   })
 })
@@ -2088,7 +2088,7 @@ async function calculateSchemeData(codeTable: CodeTable, isPrefix = false): Prom
   }
 }
 
-// 選擇內置方案時自動添加
+// 選擇内置方案時自動添加
 async function onBuiltinSchemeSelect() {
   if (selectedBuiltinScheme.value && !isAdding.value) {
     await addBuiltinScheme()

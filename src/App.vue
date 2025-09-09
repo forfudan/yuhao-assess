@@ -58,7 +58,7 @@
       </div>
     </header>
 
-    <!-- 悬浮导航菜单 -->
+    <!-- 懸浮導航菜單 -->
     <Transition name="dropdown">
       <div v-if="showCardDirectory" class="floating-navigation">
         <div class="nav-dropdown">
@@ -244,7 +244,7 @@ const uploadPrefixFlag = ref<boolean>(false)
 const uploadPrefixKeys = ref<string[]>([])
 const globalMaxLength = ref<number>(4) // 全局最大碼長，計算一次後不再改變
 
-// 上传卡片引用
+// 上傳卡片引用
 const uploaderCardRef = ref()
 const duplicateAnalysisCardRef = ref()
 const maximumCandidatesCardRef = ref()
@@ -254,23 +254,23 @@ const comparisonCardRef = ref()
 const keyboardHeatmapCardRef = ref()
 const codeTableAnalysisCardRef = ref()
 
-// 卡片目录和折叠状态
+// 卡片目録和折疊狀態
 const showCardDirectory = ref(false)
 const allCardsCollapsed = ref(false)
 
-// 切换卡片目录显示
+// 切換卡片目録顯示
 const toggleCardDirectory = () => {
   showCardDirectory.value = !showCardDirectory.value
 }
 
-// 滚动到指定卡片
+// 滚動到指定卡片
 const scrollToCard = (cardId: string) => {
   const element = document.getElementById(`card-${cardId}`)
   if (element) {
-    // 先关闭导航菜单
+    // 先關閉導航菜單
     showCardDirectory.value = false
     
-    // 延迟滚动，让菜单先关闭
+    // 延遲滚動，讓菜單先關閉
     setTimeout(() => {
       element.scrollIntoView({ 
         behavior: 'smooth', 
@@ -278,15 +278,15 @@ const scrollToCard = (cardId: string) => {
         inline: 'nearest'
       })
       
-      // 滚动完成后，检查并展开卡片（如果是收起状态）
+      // 滚動完成後，檢查並展開卡片（如果是收起狀態）
       setTimeout(() => {
         expandCardIfCollapsed(cardId)
-      }, 800) // 等待滚动动画完成
+      }, 800) // 等待滚動動畫完成
     }, 150)
   }
 }
 
-// 如果卡片是收起状态，则展开它
+// 如果卡片是收起狀態，則展開它
 const expandCardIfCollapsed = (cardId: string) => {
   const cardRefMap: Record<string, any> = {
     'uploader': uploaderCardRef.value,
@@ -300,7 +300,7 @@ const expandCardIfCollapsed = (cardId: string) => {
   
   const cardRef = cardRefMap[cardId]
   if (cardRef && typeof cardRef.getCollapsedState === 'function' && typeof cardRef.expand === 'function') {
-    // 检查卡片是否是收起状态
+    // 檢查卡片是否是收起狀態
     const isCollapsed = cardRef.getCollapsedState()
     if (isCollapsed) {
       cardRef.expand()
@@ -308,11 +308,11 @@ const expandCardIfCollapsed = (cardId: string) => {
   }
 }
 
-// 切换所有卡片的折叠状态
+// 切換所有卡片的折疊狀態
 const toggleAllCards = () => {
   allCardsCollapsed.value = !allCardsCollapsed.value
   
-  // 获取所有卡片的引用
+  // 獲取所有卡片的引用
   const cardRefs = [
     uploaderCardRef.value,
     duplicateAnalysisCardRef.value,
@@ -324,7 +324,7 @@ const toggleAllCards = () => {
     codeTableAnalysisCardRef.value
   ]
   
-  // 根据状态折叠或展开所有卡片
+  // 根據狀態折疊或展開所有卡片
   cardRefs.forEach(cardRef => {
     if (cardRef) {
       if (allCardsCollapsed.value) {
@@ -552,7 +552,7 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
   
   console.log('[App] 碼表上傳處理完成')
   
-  // 碼表分析成功後，自動滾動到第一個分析卡片
+  // 碼表分析成功後，自動滚動到第一個分析卡片
   setTimeout(() => {
     const firstAnalysisCard = document.getElementById('card-duplicate')
     if (firstAnalysisCard) {
@@ -561,7 +561,7 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
         block: 'start'
       })
     }
-  }, 500) // 延遲500ms，讓用戶看到成功反饋
+  }, 500) // 延遲500ms，讓用户看到成功反饋
   
   uploadStatus.value = {
     type: 'success',
@@ -592,8 +592,8 @@ const handleUploadError = (error: string) => {
 // 清理所有本地緩存數據
 const clearAllCache = () => {
   try {
-    // 確認用戶是否真的要清理所有數據
-    if (!confirm('確定要清理所有本地緩存數據嗎？這將包括：\n\n• 已上傳的碼表數據\n• 所有方案對比數據\n• 分析結果\n• 用戶設定\n\n清理後頁面將重新載入。')) {
+    // 確認用户是否真的要清理所有數據
+    if (!confirm('確定要清理所有本地緩存數據嗎？這將包括：\n\n• 已上傳的碼表數據\n• 所有方案對比數據\n• 分析結果\n• 用户設定\n\n清理後頁面將重新載入。')) {
       return
     }
     
@@ -636,7 +636,7 @@ const clearAllCache = () => {
     // 清理所有sessionStorage（如果有的話）
     sessionStorage.clear()
     
-    // 提示用戶並重新載入頁面
+    // 提示用户並重新載入頁面
     alert('所有本地緩存數據已清除，頁面將重新載入')
     
     // 重新載入頁面
@@ -659,10 +659,10 @@ const exportAllCards = async () => {
     // 顯示格式選擇對話框
     const formatChoice = await showFormatDialog()
     if (!formatChoice) {
-      return // 用戶取消了操作
+      return // 用户取消了操作
     }
 
-    // 確保所有卡片都展開，以便截圖包含完整內容
+    // 確保所有卡片都展開，以便截圖包含完整内容
     const cardsToExpand = [
       duplicateAnalysisCardRef.value,
       maximumCandidatesCardRef.value, 
@@ -681,7 +681,7 @@ const exportAllCards = async () => {
     // 等待DOM更新
     await nextTick()
     
-    // 等待一點時間確保所有內容都渲染完成
+    // 等待一點時間確保所有内容都渲染完成
     await new Promise(resolve => setTimeout(resolve, 500))
 
     // 獲取所有要導出的卡片元素
@@ -912,7 +912,7 @@ const showFormatDialog = (): Promise<string | null> => {
   })
 }
 
-// 導出為高清圖片
+// 導出爲高清圖片
 const exportToImage = async (container: HTMLElement) => {
   // 動態導入html2canvas
   const { default: html2canvas } = await import('html2canvas')
@@ -951,7 +951,7 @@ const exportToImage = async (container: HTMLElement) => {
   console.log('高清圖片導出成功')
 }
 
-// 導出為PDF
+// 導出爲PDF
 const exportToPDF = async (container: HTMLElement) => {
   try {
     // 動態導入jsPDF和html2canvas
@@ -1017,7 +1017,7 @@ const exportToPDF = async (container: HTMLElement) => {
     
   } catch (error) {
     console.error('PDF導出失敗:', error)
-    alert('PDF導出失敗，已改為圖片格式導出')
+    alert('PDF導出失敗，已改爲圖片格式導出')
     // 如果PDF失敗，回退到圖片
     await exportToImage(container)
   }
@@ -1056,7 +1056,7 @@ const exportToPDF = async (container: HTMLElement) => {
 
 .logo {
   flex: 1 1 auto; /* 允許logo收縮和擴展 */
-  min-width: 0; /* 允許收縮到內容以下 */
+  min-width: 0; /* 允許收縮到内容以下 */
   overflow: hidden;
   text-overflow: ellipsis; /* 如果logo過長則用省略號 */
 }
@@ -1074,7 +1074,7 @@ const exportToPDF = async (container: HTMLElement) => {
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--color-primary);
-  margin: 0; /* 移除下邊距，因為刪除了副標題 */
+  margin: 0; /* 移除下邊距，因爲删除了副標題 */
 }
 
 .logo-link {
@@ -1091,12 +1091,12 @@ const exportToPDF = async (container: HTMLElement) => {
 }
 
 .logo-image {
-  height: 1.75rem; /* 与标题字体大小一致 */
+  height: 1.75rem; /* 與標題字體大小一致 */
   width: auto;
   object-fit: contain;
 }
 
-/* 头部操作按钮 */
+/* 頭部操作按鈕 */
 .header-actions {
   display: flex;
   gap: var(--spacing-md);
@@ -1165,11 +1165,11 @@ const exportToPDF = async (container: HTMLElement) => {
   cursor: not-allowed;
 }
 
-/* 悬浮导航菜单样式 */
+/* 懸浮導航菜單樣式 */
 .floating-navigation {
   position: fixed;
-  top: 80px; /* 从header下方开始 */
-  right: 20px; /* 对齐右侧按钮 */
+  top: 80px; /* 從header下方開始 */
+  right: 20px; /* 對齊右側按鈕 */
   z-index: 1000;
   transform-origin: top right;
 }
@@ -1228,7 +1228,7 @@ const exportToPDF = async (container: HTMLElement) => {
   font-weight: 500;
 }
 
-/* 遮罩层样式 */
+/* 遮罩層樣式 */
 .nav-overlay {
   position: fixed;
   top: 0;
@@ -1240,7 +1240,7 @@ const exportToPDF = async (container: HTMLElement) => {
   backdrop-filter: blur(2px);
 }
 
-/* 下拉动画 */
+/* 下拉動畫 */
 .dropdown-enter-active,
 .dropdown-leave-active {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1256,7 +1256,7 @@ const exportToPDF = async (container: HTMLElement) => {
   transform: translateY(-10px) scale(0.95);
 }
 
-/* 遮罩层淡入淡出动画 */
+/* 遮罩層淡入淡出動畫 */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -1267,13 +1267,13 @@ const exportToPDF = async (container: HTMLElement) => {
   opacity: 0;
 }
 
-/* 主要内容区域 - 卡片布局 */
+/* 主要内容區域 - 卡片佈局 */
 .main {
   padding: var(--spacing-2xl) 0;
   min-height: calc(100vh - 200px);
 }
 
-/* 卡片容器 - 单列布局 */
+/* 卡片容器 - 單列佈局 */
 .cards-container {
   display: flex;
   flex-direction: column;
@@ -1281,7 +1281,7 @@ const exportToPDF = async (container: HTMLElement) => {
   width: 100%;
 }
 
-/* 页脚样式 */
+/* 頁腳樣式 */
 .footer {
   background-color: var(--color-bg-primary);
   border-top: 1px solid var(--color-border-primary);
@@ -1312,7 +1312,7 @@ const exportToPDF = async (container: HTMLElement) => {
   margin: 0 var(--spacing-sm);
 }
 
-/* 动画效果 */
+/* 動畫效果 */
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -1331,23 +1331,23 @@ const exportToPDF = async (container: HTMLElement) => {
   }
   
   .header-content {
-    gap: var(--spacing-xs); /* 在小屏幕上减少logo和按钮之间的间距 */
+    gap: var(--spacing-xs); /* 在小屏幕上減少logo和按鈕之間的間距 */
   }
   
   .logo h1 {
-    font-size: 1.25rem; /* 进一步减小标题字体 */
+    font-size: 1.25rem; /* 進一步減小標題字體 */
   }
   
   .logo-image {
-    height: 1.25rem; /* 相应减少logo大小 */
+    height: 1.25rem; /* 相應減少logo大小 */
   }
   
   .logo-link {
-    gap: calc(var(--spacing-xs) / 2); /* 减少logo和标题之间的间距 */
+    gap: calc(var(--spacing-xs) / 2); /* 減少logo和標題之間的間距 */
   }
   
   .header-actions {
-    gap: var(--spacing-xs); /* 减少按钮间距 */
+    gap: var(--spacing-xs); /* 減少按鈕間距 */
   }
   
   .action-button {
@@ -1404,9 +1404,9 @@ const exportToPDF = async (container: HTMLElement) => {
 }
 </style>
 
-<!-- 全局卡片样式 -->
+<!-- 全局卡片樣式 -->
 <style>
-/* 各个卡片组件的外层容器样式 */
+/* 各個卡片組件的外層容器樣式 */
 .duplicate-analysis-card,
 .maximum-candidates-card,
 .speed-equiv-card,
@@ -1418,7 +1418,7 @@ const exportToPDF = async (container: HTMLElement) => {
   transition: all 0.3s ease;
   width: 100%;
   overflow: hidden;
-  border-radius: 12px; /* 确保外层容器有圆角 */
+  border-radius: 12px; /* 確保外層容器有圓角 */
 }
 
 .duplicate-analysis-card:hover,
@@ -1432,7 +1432,7 @@ const exportToPDF = async (container: HTMLElement) => {
   transform: translateY(-2px);
 }
 
-/* 卡片头部 - 统一渐变背景 */
+/* 卡片頭部 - 統一漸變背景 */
 .card-header {
   padding: var(--spacing-lg) var(--spacing-xl);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1443,7 +1443,7 @@ const exportToPDF = async (container: HTMLElement) => {
   border-top-right-radius: 12px;
 }
 
-/* 暗黑模式下的基础卡片头部 */
+/* 暗黑模式下的基礎卡片頭部 */
 [data-theme="dark"] .card-header {
   background: linear-gradient(135deg, #3b4498 0%, #4c3763 100%);
 }
@@ -1470,7 +1470,7 @@ const exportToPDF = async (container: HTMLElement) => {
   opacity: 1;
 }
 
-/* 卡片标题 - 统一字体样式 */
+/* 卡片標題 - 統一字體樣式 */
 .card-title {
   font-size: 1.25rem;
   font-weight: 700;
@@ -1480,7 +1480,7 @@ const exportToPDF = async (container: HTMLElement) => {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* 卡片描述 - 统一字体样式 */
+/* 卡片描述 - 統一字體樣式 */
 .card-description {
   font-size: 0.9rem;
   line-height: 1.5;
@@ -1497,7 +1497,7 @@ const exportToPDF = async (container: HTMLElement) => {
   border-bottom-right-radius: 12px;
 }
 
-/* 不同卡片的渐变色主题 - 更优雅的配色 */
+/* 不同卡片的漸變色主題 - 更優雅的配色 */
 .upload-card .card-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
@@ -1526,7 +1526,7 @@ const exportToPDF = async (container: HTMLElement) => {
   background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
 }
 
-/* 暗黑模式下的卡片头部渐变 - 保持颜色基调但更深沉 */
+/* 暗黑模式下的卡片頭部漸變 - 保持顔色基調但更深沉 */
 [data-theme="dark"] .upload-card .card-header {
   background: linear-gradient(135deg, #3b4498 0%, #4c3763 100%);
 }
@@ -1555,7 +1555,19 @@ const exportToPDF = async (container: HTMLElement) => {
   background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
 }
 
-/* 响应式设计 */
+/* 暗黑模式下的頭部導出按鈕樣式 - 統一爲白色 */
+[data-theme="dark"] .header .export-btn {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .header .export-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 響應式設計 */
 @media (max-width: 768px) {
   .card-header {
     padding: var(--spacing-lg);
@@ -1576,7 +1588,7 @@ const exportToPDF = async (container: HTMLElement) => {
   }
   
   .header-content {
-    gap: 2px !important; /* 强制最小间距 */
+    gap: 2px !important; /* 強制最小間距 */
     width: 100%;
     overflow: hidden;
   }
@@ -1607,16 +1619,16 @@ const exportToPDF = async (container: HTMLElement) => {
   
   .header-actions {
     gap: 2px !important;
-    flex: 0 0 auto !important; /* 强制固定尺寸 */
+    flex: 0 0 auto !important; /* 強制固定尺寸 */
     white-space: nowrap !important;
   }
   
   .action-button {
     padding: 2px !important; /* 最小padding */
-    min-width: 28px; /* 固定最小宽度 */
-    width: 28px; /* 固定宽度 */
+    min-width: 28px; /* 固定最小寬度 */
+    width: 28px; /* 固定寬度 */
     height: 28px; /* 固定高度 */
-    flex-shrink: 0 !important; /* 绝对不允许收缩 */
+    flex-shrink: 0 !important; /* 絶對不允許收縮 */
   }
   
   .action-button svg {
@@ -1624,7 +1636,7 @@ const exportToPDF = async (container: HTMLElement) => {
     height: 16px !important;
   }
   
-  /* 头部导出按钮在移动端与其他按钮保持一致 */
+  /* 頭部導出按鈕在移動端與其他按鈕保持一致 */
   .header .export-btn {
     padding: 2px !important;
     min-width: 28px !important;
@@ -1651,62 +1663,62 @@ const exportToPDF = async (container: HTMLElement) => {
   }
 }
 
-/* 极小屏幕优化 - 最强约束 */
+/* 極小屏幕優化 - 最強約束 */
 @media (max-width: 360px) {
   .header {
     padding: 2px 0 !important; /* 最小header padding */
   }
   
   .header-content {
-    gap: 1px !important; /* 最小间距 */
+    gap: 1px !important; /* 最小間距 */
     width: 100%;
   }
   
   .logo {
-    flex: 1 1 40% !important; /* 进一步限制logo空间 */
+    flex: 1 1 40% !important; /* 進一步限制logo空間 */
     max-width: 40%;
     min-width: 0;
   }
   
   .logo h1 {
-    font-size: 0.7rem !important; /* 极小字体 */
+    font-size: 0.7rem !important; /* 極小字體 */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   
   .logo-image {
-    height: 0.7rem; /* 极小logo */
+    height: 0.7rem; /* 極小logo */
     flex-shrink: 0;
   }
   
   .logo-link {
-    gap: 1px; /* 最小间距 */
+    gap: 1px; /* 最小間距 */
     min-width: 0;
     overflow: hidden;
   }
   
   .header-actions {
-    gap: 1px !important; /* 最小按钮间距 */
+    gap: 1px !important; /* 最小按鈕間距 */
     flex: 0 0 auto !important;
     white-space: nowrap !important;
   }
   
   .action-button {
     padding: 1px !important; /* 最小padding */
-    min-width: 24px !important; /* 更小的固定宽度 */
+    min-width: 24px !important; /* 更小的固定寬度 */
     width: 24px !important;
     height: 24px !important;
     flex-shrink: 0 !important;
-    font-size: 0; /* 隐藏可能的文本 */
+    font-size: 0; /* 隱藏可能的文本 */
   }
   
   .action-button svg {
-    width: 14px !important; /* 更小图标 */
+    width: 14px !important; /* 更小圖標 */
     height: 14px !important;
   }
   
-  /* 头部导出按钮在小屏幕下与其他按钮保持一致 */
+  /* 頭部導出按鈕在小屏幕下與其他按鈕保持一致 */
   .header .export-btn {
     padding: 1px !important;
     min-width: 24px !important;

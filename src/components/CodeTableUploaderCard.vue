@@ -422,7 +422,7 @@ const parseLine = (line: string, isYaml: boolean): { char: string; code: string;
 const generatePreview = async (file: File) => {
   try {
     const text = await readFileAsText(file)
-    const lines = text.split('\n').slice(0, 100) // 增加預覽行數，支持滾動查看
+    const lines = text.split('\n').slice(0, 100) // 增加預覽行數，支持滚動查看
     const isYaml = file.name.toLowerCase().endsWith('.yaml') || file.name.toLowerCase().endsWith('.yml')
     
     previewData.value = lines.map(line => {
