@@ -75,13 +75,14 @@
           <p><strong>説明：</strong></p>
           <p>速度當量基於實驗統計結果，評估輸入法按鍵對的手感表現。數值越小表示輸入越流暢。計算考慮了：</p>
           <ul>
-            <li>使用全碼碼表（每個單字的最長編碼）進行分析</li>
+            <li>使用全碼碼表（每個單字的最長編碼）</li>
             <li>漢字的使用頻率</li>
+            <li>檢測到的最大碼長爲 {{ maxCodeLength }} 位</li>
+            <li>{{ detectedIsPrefix ? '檢測到本方案爲前綴或頂功' : '' }}{{ detectedIsPrefix && props.globalPrefixKeys && props.globalPrefixKeys.length > 0 ? `，檢測到上屏鍵爲 ${props.globalPrefixKeys.join('')}` : '' }}</li>
             <li v-if="!detectedIsPrefix">碼表的規範化處理，即在未達到最大碼長時使用下劃線補充（代表空格）</li>
-            <li v-else>前綴碼特性，未達到最大碼長時不補充下劃線</li>
+            <li v-else>前綴碼特性，未達到最大碼長時且末碼爲上屏碼時不補充下劃線（空格）</li>
             <li>多候選字的選擇鍵處理（第2候選加分號，第3候選加單引號）</li>
           </ul>
-          <p>檢測到的最大碼長爲：{{ maxCodeLength }} 位{{ detectedIsPrefix ? '，檢測到本方案爲前綴碼' : '' }}</p>
         </div>
         
         <!-- 方案名稱標註 -->
@@ -111,12 +112,14 @@ interface Props {
   codeTable?: CodeTable
   codeTableName?: string
   initialPrefix?: boolean
+  globalPrefixKeys?: string[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
   codeTable: () => new Map(),
   codeTableName: '',
-  initialPrefix: false
+  initialPrefix: false,
+  globalPrefixKeys: () => []
 })
 
 // 摺疊功能

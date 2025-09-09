@@ -142,7 +142,8 @@
             ref="speedEquivCardRef"
             :code-table="codeTable" 
             :code-table-name="codeTableName" 
-            :initial-prefix="uploadPrefixFlag" 
+            :initial-prefix="uploadPrefixFlag"
+            :global-prefix-keys="uploadPrefixKeys"
           />
 
           <!-- 簡碼效率卡片 -->
