@@ -650,6 +650,12 @@ const exportAllCards = async () => {
       return
     }
 
+    // 顯示格式選擇對話框
+    const formatChoice = await showFormatDialog()
+    if (!formatChoice) {
+      return // 用戶取消了操作
+    }
+
     // 確保所有卡片都展開，以便截圖包含完整內容
     const cardsToExpand = [
       duplicateAnalysisCardRef.value,
@@ -672,9 +678,6 @@ const exportAllCards = async () => {
     // 等待一點時間確保所有內容都渲染完成
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    // 動態導入html2canvas
-    const { default: html2canvas } = await import('html2canvas')
-    
     // 獲取所有要導出的卡片元素
     const cardSelectors = [
       '#card-duplicate',
@@ -693,42 +696,48 @@ const exportAllCards = async () => {
       return
     }
 
-    // 創建一個容器來組合所有卡片
+    // 創建一個高清容器來組合所有卡片
     const container = document.createElement('div')
     container.style.cssText = `
       background: #f8fafc;
       padding: 20px;
-      width: 1200px;
+      width: 1000px;
       min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
     `
 
     // 添加標題
     const header = document.createElement('div')
     header.style.cssText = `
       text-align: center;
-      margin-bottom: 30px;
-      padding: 20px;
+      margin-bottom: 40px;
+      padding: 30px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
     `
     header.innerHTML = `
-      <h1 style="margin: 0; font-size: 28px; font-weight: bold;">${codeTableName.value}</h1>
-      <p style="margin: 10px 0 5px 0; font-size: 16px; opacity: 0.9;">宇浩測評網 · ceping.shurufa.app</p>
+      <h1 style="margin: 0; font-size: 36px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">${codeTableName.value}</h1>
+      <p style="margin: 15px 0 8px 0; font-size: 20px; opacity: 0.95;">輸入法分析報告</p>
+      <p style="margin: 0; font-size: 16px; opacity: 0.85;">宇浩測評網 · shurufa.app</p>
     `
     container.appendChild(header)
 
-    // 複製每個卡片元素
+    // 複製每個卡片元素（提高清晰度）
     for (const element of cardElements) {
       const clonedElement = element.cloneNode(true) as HTMLElement
       
-      // 確保樣式正確應用
+      // 確保樣式正確應用並提高清晰度
       clonedElement.style.cssText += `
-        margin-bottom: 25px;
+        margin-bottom: 35px;
         width: 100%;
         box-sizing: border-box;
+        transform: scale(1);
+        font-size: 16px;
+        line-height: 1.6;
       `
       
       container.appendChild(clonedElement)
@@ -741,37 +750,11 @@ const exportAllCards = async () => {
     document.body.appendChild(container)
 
     try {
-      // 使用html2canvas截圖
-      const canvas = await html2canvas(container, {
-        width: 1200,
-        height: container.offsetHeight,
-        scale: 2, // 提高圖片質量
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#f8fafc',
-        onclone: (clonedDoc) => {
-          // 確保克隆文檔中的樣式正確
-          const clonedContainer = clonedDoc.querySelector('div') as HTMLElement
-          if (clonedContainer) {
-            clonedContainer.style.position = 'static'
-            clonedContainer.style.left = 'auto'
-          }
-        }
-      })
-
-      // 創建下載鏈接
-      const link = document.createElement('a')
-      const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
-      link.download = `${codeTableName.value}_測評報告_宇浩測評網_ceping.shurufa.app_${today}.png`
-      link.href = canvas.toDataURL('image/png', 1.0)
-      
-      // 觸發下載
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      console.log('全部分析卡片導出成功')
-      
+      if (formatChoice === 'pdf') {
+        await exportToPDF(container)
+      } else {
+        await exportToImage(container)
+      }
     } finally {
       // 清理：移除臨時容器
       document.body.removeChild(container)
@@ -780,6 +763,258 @@ const exportAllCards = async () => {
   } catch (error) {
     console.error('導出分析卡片失敗:', error)
     alert('導出失敗，請稍後重試')
+  }
+}
+
+// 顯示格式選擇對話框
+const showFormatDialog = (): Promise<string | null> => {
+  return new Promise((resolve) => {
+    const dialog = document.createElement('div')
+    dialog.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `
+    
+    dialog.innerHTML = `
+      <div style="
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        max-width: 400px;
+        width: 90%;
+        text-align: center;
+      ">
+        <h3 style="margin: 0 0 20px 0; color: #374151; font-size: 24px;">選擇匯出格式</h3>
+        <p style="margin: 0 0 30px 0; color: #6b7280; line-height: 1.6;">請選擇您希望的匯出格式：</p>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+          <button id="pdf-btn" style="
+            flex: 1;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+          ">
+            📄 PDF 文檔<br>
+            <small style="opacity: 0.9; font-weight: 400;">高清晰度，可複製文字</small>
+          </button>
+          
+          <button id="image-btn" style="
+            flex: 1;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+          ">
+            🖼️ PNG 圖片<br>
+            <small style="opacity: 0.9; font-weight: 400;">高分辨率圖像</small>
+          </button>
+        </div>
+        
+        <button id="cancel-btn" style="
+          padding: 12px 30px;
+          background: #f3f4f6;
+          color: #374151;
+          border: none;
+          border-radius: 8px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        ">取消</button>
+      </div>
+    `
+    
+    document.body.appendChild(dialog)
+    
+    // 添加懸停效果
+    const pdfBtn = dialog.querySelector('#pdf-btn') as HTMLElement
+    const imageBtn = dialog.querySelector('#image-btn') as HTMLElement
+    const cancelBtn = dialog.querySelector('#cancel-btn') as HTMLElement
+    
+    pdfBtn.addEventListener('mouseenter', () => {
+      pdfBtn.style.transform = 'translateY(-2px)'
+      pdfBtn.style.boxShadow = '0 8px 16px rgba(220, 38, 38, 0.4)'
+    })
+    pdfBtn.addEventListener('mouseleave', () => {
+      pdfBtn.style.transform = 'translateY(0)'
+      pdfBtn.style.boxShadow = '0 4px 8px rgba(220, 38, 38, 0.3)'
+    })
+    
+    imageBtn.addEventListener('mouseenter', () => {
+      imageBtn.style.transform = 'translateY(-2px)'
+      imageBtn.style.boxShadow = '0 8px 16px rgba(5, 150, 105, 0.4)'
+    })
+    imageBtn.addEventListener('mouseleave', () => {
+      imageBtn.style.transform = 'translateY(0)'
+      imageBtn.style.boxShadow = '0 4px 8px rgba(5, 150, 105, 0.3)'
+    })
+    
+    cancelBtn.addEventListener('mouseenter', () => {
+      cancelBtn.style.background = '#e5e7eb'
+    })
+    cancelBtn.addEventListener('mouseleave', () => {
+      cancelBtn.style.background = '#f3f4f6'
+    })
+    
+    // 事件處理
+    pdfBtn.addEventListener('click', () => {
+      document.body.removeChild(dialog)
+      resolve('pdf')
+    })
+    
+    imageBtn.addEventListener('click', () => {
+      document.body.removeChild(dialog)
+      resolve('image')
+    })
+    
+    cancelBtn.addEventListener('click', () => {
+      document.body.removeChild(dialog)
+      resolve(null)
+    })
+    
+    // 點擊遮罩關閉
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) {
+        document.body.removeChild(dialog)
+        resolve(null)
+      }
+    })
+  })
+}
+
+// 匯出為高清圖片
+const exportToImage = async (container: HTMLElement) => {
+  // 動態導入html2canvas
+  const { default: html2canvas } = await import('html2canvas')
+  
+  // 使用html2canvas截圖（高清設定）
+  const canvas = await html2canvas(container, {
+    width: 1000,
+    height: container.offsetHeight,
+    scale: 3, // 提高到3倍分辨率
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#f8fafc',
+    logging: false,
+    imageTimeout: 15000,
+    onclone: (clonedDoc) => {
+      // 確保克隆文檔中的樣式正確
+      const clonedContainer = clonedDoc.querySelector('div') as HTMLElement
+      if (clonedContainer) {
+        clonedContainer.style.position = 'static'
+        clonedContainer.style.left = 'auto'
+      }
+    }
+  })
+
+  // 創建下載鏈接
+  const link = document.createElement('a')
+  const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
+  link.download = `${codeTableName.value}_測評報告_宇浩測評網_${today}.png`
+  link.href = canvas.toDataURL('image/png', 1.0)
+  
+  // 觸發下載
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+  console.log('高清圖片匯出成功')
+}
+
+// 匯出為PDF
+const exportToPDF = async (container: HTMLElement) => {
+  try {
+    // 動態導入jsPDF和html2canvas
+    const [{ default: html2canvas }, jsPDFModule] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf')
+    ])
+    
+    const { jsPDF } = jsPDFModule
+    
+    // 使用html2canvas截圖（超高清設定）
+    const canvas = await html2canvas(container, {
+      width: 1000,
+      height: container.offsetHeight,
+      scale: 4, // PDF用更高分辨率
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#f8fafc',
+      logging: false,
+      imageTimeout: 15000,
+      onclone: (clonedDoc) => {
+        const clonedContainer = clonedDoc.querySelector('div') as HTMLElement
+        if (clonedContainer) {
+          clonedContainer.style.position = 'static'
+          clonedContainer.style.left = 'auto'
+        }
+      }
+    })
+
+    // 創建PDF
+    const imgWidth = 210 // A4 寬度 (mm)
+    const imgHeight = (canvas.height * imgWidth) / canvas.width
+    
+    const pdf = new jsPDF({
+      orientation: imgHeight > 297 ? 'portrait' : 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    })
+    
+    const imgData = canvas.toDataURL('image/png', 1.0)
+    
+    // 如果圖片高度超過一頁，需要分頁
+    if (imgHeight <= 297) {
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
+    } else {
+      // 分頁處理
+      let heightLeft = imgHeight
+      let position = 0
+      
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+      heightLeft -= 297
+      
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight
+        pdf.addPage()
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+        heightLeft -= 297
+      }
+    }
+    
+    // 下載PDF
+    const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
+    pdf.save(`${codeTableName.value}_測評報告_宇浩測評網_${today}.pdf`)
+    
+    console.log('PDF匯出成功')
+    
+  } catch (error) {
+    console.error('PDF匯出失敗:', error)
+    alert('PDF匯出失敗，已改為圖片格式匯出')
+    // 如果PDF失敗，回退到圖片
+    await exportToImage(container)
   }
 }
 </script>
