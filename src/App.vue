@@ -36,6 +36,12 @@
                 <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
               </svg>
             </button>
+            <button @click="toggleTheme" class="action-button" :title="isDarkMode ? '切換到淺色模式' : '切換到深色模式'">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path v-if="isDarkMode" d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41L6 7.41c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41L5.99 4.58zM18.36 16.95c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.42 1.42c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.42-1.42zm0-10.37l1.42-1.42c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.42 1.42c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0zm-12.37 12.37l-1.42 1.42c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.42-1.42c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0z"/>
+                <path v-else d="M9 2c-1.05 0-2.05.16-3 .46 4.06 1.27 7 5.06 7 9.54 0 4.48-2.94 8.27-7 9.54.95.3 1.95.46 3 .46 5.52 0 10-4.48 10-10S14.52 2 9 2z"/>
+              </svg>
+            </button>
             <button @click="toggleAllCards" class="action-button" :title="allCardsCollapsed ? '展開所有卡片' : '摺疊所有卡片'">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                 <path v-if="allCardsCollapsed" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
@@ -1019,6 +1025,13 @@ const exportToPDF = async (container: HTMLElement) => {
 </script>
 
 <style scoped>
+/* App根元素样式 */
+#app {
+  min-height: 100vh;
+  background-color: var(--color-bg-secondary);
+  transition: background-color var(--transition-base);
+}
+
 /* 頭部樣式保持原有設計 */
 .header {
   background-color: var(--color-bg-primary);
