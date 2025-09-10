@@ -298,6 +298,17 @@ const getFingerColor = (key: string, intensity: number): string => {
   }
 }
 
+/* 960px以上固定字體大小 */
+@media (min-width: 961px) {
+  .key-label {
+    font-size: 0.92rem; /* 固定在960px時的大小 */
+  }
+  
+  .key-value {
+    font-size: 0.8rem; /* 固定在960px時的大小 */
+  }
+}
+
 /* 按鍵動畫 */
 @keyframes keyPress {
   0% {

@@ -257,11 +257,22 @@ const calculateAdaptiveScale = () => {
   const wrapperWidth = keyboardWrapper.value.clientWidth
   const layoutWidth = keyboardLayout.value.offsetWidth
   
-  // 更激进的缩放策略：确保键盘占用容器的大部分宽度
+  // 固定960px样式：当容器宽度超过960px时，按960px计算缩放
   if (layoutWidth > 0) {
-    const availableWidth = wrapperWidth - 20 // 减去最小边距
-    const scale = Math.min(1.5, availableWidth / layoutWidth) // 允许放大到1.5倍，确保充分利用空间
-    keyboardScale.value = Math.max(0.5, scale) // 最小缩放0.5倍
+    const targetWidth = Math.min(wrapperWidth, 960) // 最大按960px计算
+    
+    // 根据屏幕宽度调整边距策略
+    let margin = 20 // 默认边距
+    if (targetWidth <= 600) {
+      margin = 10 // 中等屏幕减少边距
+    }
+    if (targetWidth <= 480) {
+      margin = 5 // 小屏幕进一步减少边距
+    }
+    
+    const availableWidth = targetWidth - margin
+    const scale = Math.min(1.5, availableWidth / layoutWidth) // 允许放大到1.5倍
+    keyboardScale.value = Math.max(0.3, scale) // 降低最小缩放到0.3倍，允许更小
   } else {
     keyboardScale.value = 1.0
   }
@@ -840,13 +851,13 @@ const getKeyData = (key: string): KeyData => {
 
 /* Tab 样式 */
 .tabs-container {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm); /* 进一步减少底部间距从md改为sm */
 }
 
 .tab-list {
   display: flex;
   border-bottom: 2px solid var(--color-border-secondary);
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-xs); /* 进一步减少底部间距从sm改为xs */
 }
 
 .tab-button {
@@ -903,7 +914,7 @@ const getKeyData = (key: string): KeyData => {
   height: 100%; /* 容器高度百分比 */
   max-width: none; /* 最大宽度限制 */
   max-height: none; /* 最大高度限制 */
-  min-width: 320px; /* 设置最小宽度保证可用性 */
+  min-width: 280px; /* 减小最小宽度，允许在更窄屏幕上缩小 */
   border: 1px solid var(--color-border-secondary);
   transition: transform 0.3s ease;
   margin: auto;
@@ -996,6 +1007,20 @@ const getKeyData = (key: string): KeyData => {
   }
 }
 
+/* 中等屏幕优化（600px左右） */
+@media (max-width: 768px) and (min-width: 481px) {
+  .keyboard-wrapper {
+    padding: var(--spacing-xs) 0; /* 进一步减少包装器padding */
+  }
+  
+  .keyboard-layout {
+    padding: var(--spacing-sm); /* 减少内边距 */
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: 100%;
+  }
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .module-container {
@@ -1031,7 +1056,7 @@ const getKeyData = (key: string): KeyData => {
   
   .keyboard-layout {
     padding: var(--spacing-md);
-    width: 98% !important; /* 在平板上使用更多宽度 */
+    width: 99% !important; /* 在平板上使用更多宽度，从98%改为99% */
     min-width: unset !important;
     max-width: 100%;
   }
@@ -1071,6 +1096,15 @@ const getKeyData = (key: string): KeyData => {
     font-size: 1rem;
   }
   
+  /* 移动端Tab间距进一步缩减 */
+  .tabs-container {
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .tab-list {
+    margin-bottom: 4px; /* 极小间距 */
+  }
+  
   .keyboard-wrapper {
     padding: 0; /* 移除包装器padding */
     margin: 0 calc(-1 * var(--spacing-md)); /* 负边距来抵消card-content的padding */
@@ -1078,9 +1112,9 @@ const getKeyData = (key: string): KeyData => {
   
   .keyboard-layout {
     width: 100% !important;
-    min-width: unset !important;
+    min-width: 250px !important; /* 进一步减小最小宽度 */
     max-width: 100%;
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs); /* 减少内边距 */
     border-radius: 0; /* 移除圆角以避免在边缘的视觉问题 */
     border-left: none;
     border-right: none;
@@ -1091,8 +1125,8 @@ const getKeyData = (key: string): KeyData => {
   }
   
   .keyboard-row {
-    gap: 2px;
-    margin-bottom: 4px;
+    gap: 1px; /* 进一步减小按键间距 */
+    margin-bottom: 2px; /* 减小行间距 */
   }
 }
 
