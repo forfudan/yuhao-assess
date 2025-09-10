@@ -170,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import KeyButton from './KeyButton.vue'
 import { useCollapse } from '../composables/useCollapse'
 import { codeTableProcessingService } from '../services'
@@ -199,9 +199,19 @@ async function exportCard() {
   }
 
   try {
-    await ExportService.exportElementToPNG(cardRef.value, '鍵位熱力', props.codeTableName || '未命名方案', {
+    await ExportService.exportDualModeCard(cardRef.value, '鍵位熱力', props.codeTableName || '未命名方案', {
       copyToClipboard: ExportService.isClipboardSupported(),
-      download: true
+      download: true,
+      switchTabCallback: (mode: 'full' | 'short') => {
+        // 切換標籤頁的回調函數
+        activeTab.value = mode
+        // 等待DOM更新
+        return new Promise(resolve => {
+          nextTick(() => {
+            setTimeout(resolve, 100) // 額外等待100ms確保渲染完成
+          })
+        })
+      }
     })
   } catch (error) {
     console.error('導出失敗:', error)

@@ -190,4 +190,160 @@ export class ExportService {
       'write' in navigator.clipboard
     )
   }
+
+  /**
+   * 導出包含全碼和簡碼兩種模式的合併圖片
+   * @param element 要導出的DOM元素
+   * @param cardTitle 卡片標題
+   * @param schemeName 方案名稱
+   * @param options 導出選項
+   */
+  static async exportDualModeCard(
+    element: HTMLElement,
+    cardTitle: string,
+    schemeName: string = '未命名方案',
+    options: {
+      copyToClipboard?: boolean
+      download?: boolean
+      scale?: number
+      backgroundColor?: string
+      addWatermark?: boolean
+      switchTabCallback?: (mode: 'full' | 'short') => Promise<void>
+    } = {}
+  ) {
+    const {
+      copyToClipboard = true,
+      download = true,
+      scale = 2,
+      backgroundColor = '#ffffff',
+      addWatermark = true,
+      switchTabCallback
+    } = options
+
+    if (!switchTabCallback) {
+      throw new Error('switchTabCallback 是必需的參數')
+    }
+
+    try {
+      // 動態導入html2canvas
+      const html2canvas = (await import('html2canvas')).default
+
+      // 捕獲全碼模式（包含完整標題欄）
+      await switchTabCallback('full')
+      
+      const fullModeCanvas = await html2canvas(element, {
+        backgroundColor,
+        scale,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        ignoreElements: (element: any) => {
+          return element.classList.contains('export-btn') || 
+                 element.classList.contains('collapse-button')
+        }
+      })
+
+      // 捕獲簡碼模式（僅捕獲卡片內容，不包含標題欄）
+      await switchTabCallback('short')
+      
+      // 查找卡片內容區域，跳過標題欄
+      const cardContentElement = element.querySelector('.card-content')
+      if (!cardContentElement) {
+        throw new Error('找不到卡片內容區域')
+      }
+      
+      const shortModeCanvas = await html2canvas(cardContentElement as HTMLElement, {
+        backgroundColor,
+        scale,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        ignoreElements: (element: any) => {
+          return element.classList.contains('export-btn') || 
+                 element.classList.contains('collapse-button')
+        }
+      })
+
+      // 創建合併的canvas
+      const combinedCanvas = document.createElement('canvas')
+      const ctx = combinedCanvas.getContext('2d')
+      if (!ctx) {
+        throw new Error('無法創建canvas上下文')
+      }
+
+      // 設置合併canvas的尺寸
+      const spacing = 20 * scale // 兩個圖片之間的間距
+      const separatorHeight = 2 * scale // 分隔線高度
+      combinedCanvas.width = Math.max(fullModeCanvas.width, shortModeCanvas.width)
+      combinedCanvas.height = fullModeCanvas.height + shortModeCanvas.height + spacing + separatorHeight
+
+      // 填充背景色
+      ctx.fillStyle = backgroundColor
+      ctx.fillRect(0, 0, combinedCanvas.width, combinedCanvas.height)
+
+      // 繪製全碼圖片（上方）
+      const fullX = (combinedCanvas.width - fullModeCanvas.width) / 2
+      ctx.drawImage(fullModeCanvas, fullX, 0)
+
+      // 繪製分隔線
+      const separatorY = fullModeCanvas.height + (spacing - separatorHeight) / 2
+      ctx.fillStyle = '#e2e8f0' // 淺灰色分隔線
+      ctx.fillRect(50 * scale, separatorY, combinedCanvas.width - 100 * scale, separatorHeight)
+
+      // 繪製簡碼圖片（下方）
+      const shortX = (combinedCanvas.width - shortModeCanvas.width) / 2
+      const shortY = fullModeCanvas.height + spacing
+      ctx.drawImage(shortModeCanvas, shortX, shortY)
+
+      // 添加水印到合併圖片
+      let finalCanvas = combinedCanvas
+      if (addWatermark) {
+        finalCanvas = this.addWatermark(combinedCanvas)
+      }
+
+      // 生成文件名
+      const filename = this.generateFileName(`${cardTitle}`, schemeName)
+      
+      // 獲取圖片數據
+      const dataUrl = finalCanvas.toDataURL('image/png', 1.0)
+      
+      // 複製到剪貼板
+      if (copyToClipboard && this.isClipboardSupported()) {
+        try {
+          const blob = await new Promise<Blob>((resolve) => {
+            finalCanvas.toBlob((blob) => resolve(blob!), 'image/png', 1.0)
+          })
+          
+          await Promise.all([
+            navigator.clipboard.write([
+              new ClipboardItem({
+                'image/png': blob
+              })
+            ])
+          ])
+          
+          console.log('合併圖片已複製到剪貼板')
+        } catch (clipboardError) {
+          console.warn('複製到剪貼板失敗，將進行下載:', clipboardError)
+        }
+      }
+
+      // 下載文件
+      if (download) {
+        const link = document.createElement('a')
+        link.download = filename
+        link.href = dataUrl
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        console.log('合併圖片已下載:', filename)
+      }
+
+      return dataUrl
+    } catch (error) {
+      console.error('導出合併圖片失敗:', error)
+      throw error
+    }
+  }
 }
