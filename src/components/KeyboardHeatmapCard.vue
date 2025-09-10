@@ -219,14 +219,6 @@ async function exportCard() {
   }
 }
 
-// 暴露折疊方法給父組件
-defineExpose({
-  collapse,
-  expand,
-  toggle: toggleCollapsed,
-  getCollapsedState
-})
-
 // 字符頻率數據
 const charFrequency = ref<Record<string, number>>({})
 
@@ -584,6 +576,17 @@ const getKeyData = (key: string): KeyData => {
     position: { x: 0, y: 0 } // 簡化版本，不需要精確位置
   }
 }
+// 暴露方法給父組件（包括標籤頁控制）
+defineExpose({
+  collapse,
+  expand,
+  toggle: toggleCollapsed,
+  getCollapsedState,
+  activeTab,
+  setActiveTab: (tab: 'full' | 'short') => {
+    activeTab.value = tab
+  }
+})
 </script>
 
 <style scoped>

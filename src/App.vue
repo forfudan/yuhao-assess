@@ -647,6 +647,122 @@ const clearAllCache = () => {
   }
 }
 
+// 生成雙模式熱力圖內容（用於全局導出）
+const generateDualModeHeatmap = async (): Promise<HTMLElement> => {
+  if (!keyboardHeatmapCardRef.value) {
+    throw new Error('鍵盤熱力圖組件引用不可用')
+  }
+
+  // 動態導入html2canvas
+  const html2canvas = (await import('html2canvas')).default
+  
+  const heatmapElement = document.querySelector('#card-heatmap') as HTMLElement
+  if (!heatmapElement) {
+    throw new Error('找不到鍵盤熱力圖元素')
+  }
+
+  // 獲取當前標籤狀態並保存
+  const originalTab = keyboardHeatmapCardRef.value.activeTab?.value || 'full'
+
+  try {
+    // 1. 捕獲全碼模式（包含完整標題欄）
+    keyboardHeatmapCardRef.value.setActiveTab('full')
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    const fullModeCanvas = await html2canvas(heatmapElement, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      logging: false,
+      ignoreElements: (element: any) => {
+        return element.classList.contains('export-btn') || 
+               element.classList.contains('collapse-button')
+      }
+    })
+
+    // 2. 捕獲簡碼模式（僅內容區域）
+    keyboardHeatmapCardRef.value.setActiveTab('short')
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    const cardContentElement = heatmapElement.querySelector('.card-content')
+    if (!cardContentElement) {
+      throw new Error('找不到卡片內容區域')
+    }
+
+    const shortModeCanvas = await html2canvas(cardContentElement as HTMLElement, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      logging: false,
+      ignoreElements: (element: any) => {
+        return element.classList.contains('export-btn') || 
+               element.classList.contains('collapse-button')
+      }
+    })
+
+    // 3. 合併兩個canvas
+    const combinedCanvas = document.createElement('canvas')
+    const ctx = combinedCanvas.getContext('2d')
+    if (!ctx) {
+      throw new Error('無法創建canvas上下文')
+    }
+
+    const scale = 2
+    const spacing = 20 * scale
+    const separatorHeight = 2 * scale
+    combinedCanvas.width = Math.max(fullModeCanvas.width, shortModeCanvas.width)
+    combinedCanvas.height = fullModeCanvas.height + shortModeCanvas.height + spacing + separatorHeight
+
+    // 填充背景色
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, combinedCanvas.width, combinedCanvas.height)
+
+    // 繪製全碼圖片（上方）
+    const fullX = (combinedCanvas.width - fullModeCanvas.width) / 2
+    ctx.drawImage(fullModeCanvas, fullX, 0)
+
+    // 繪製分隔線
+    const separatorY = fullModeCanvas.height + (spacing - separatorHeight) / 2
+    ctx.fillStyle = '#e2e8f0'
+    ctx.fillRect(50 * scale, separatorY, combinedCanvas.width - 100 * scale, separatorHeight)
+
+    // 繪製簡碼圖片（下方）
+    const shortX = (combinedCanvas.width - shortModeCanvas.width) / 2
+    const shortY = fullModeCanvas.height + spacing
+    ctx.drawImage(shortModeCanvas, shortX, shortY)
+
+    // 4. 創建包含合併圖片的DOM元素
+    const resultElement = document.createElement('div')
+    resultElement.style.cssText = `
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: white;
+    `
+
+    const img = document.createElement('img')
+    img.src = combinedCanvas.toDataURL('image/png', 1.0)
+    img.style.cssText = `
+      max-width: 100%;
+      height: auto;
+      display: block;
+    `
+
+    resultElement.appendChild(img)
+    return resultElement
+
+  } finally {
+    // 恢復原始標籤狀態
+    keyboardHeatmapCardRef.value.setActiveTab(originalTab)
+    await nextTick()
+  }
+}
+
 // 導出所有分析卡片到一張圖片
 const exportAllCards = async () => {
   try {
@@ -733,22 +849,60 @@ const exportAllCards = async () => {
     container.appendChild(header)
 
     // 複製每個卡片元素（提高清晰度）
-    for (const element of cardElements) {
+    for (let i = 0; i < cardElements.length; i++) {
+      const element = cardElements[i]
       if (!element) continue // 跳過空元素
       
-      const clonedElement = element.cloneNode(true) as HTMLElement
-      
-      // 確保樣式正確應用並提高清晰度
-      clonedElement.style.cssText += `
-        margin-bottom: 35px;
-        width: 100%;
-        box-sizing: border-box;
-        transform: scale(1);
-        font-size: 16px;
-        line-height: 1.6;
-      `
-      
-      container.appendChild(clonedElement)
+      // 特殊處理鍵盤熱力圖卡片 - 生成雙模式合併圖片
+      if (element.id === 'card-heatmap' && keyboardHeatmapCardRef.value) {
+        try {
+          // 創建雙模式熱力圖的容器
+          const heatmapContainer = document.createElement('div')
+          heatmapContainer.style.cssText = `
+            margin-bottom: 35px;
+            width: 100%;
+            box-sizing: border-box;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+          `
+          
+          // 生成雙模式熱力圖內容
+          const dualModeContent = await generateDualModeHeatmap()
+          heatmapContainer.appendChild(dualModeContent)
+          
+          container.appendChild(heatmapContainer)
+        } catch (error) {
+          console.error('生成雙模式熱力圖失敗，使用默認單模式:', error)
+          // 如果雙模式生成失敗，回退到原始克隆方式
+          const clonedElement = element.cloneNode(true) as HTMLElement
+          clonedElement.style.cssText += `
+            margin-bottom: 35px;
+            width: 100%;
+            box-sizing: border-box;
+            transform: scale(1);
+            font-size: 16px;
+            line-height: 1.6;
+          `
+          container.appendChild(clonedElement)
+        }
+      } else {
+        // 其他卡片使用原始克隆方式
+        const clonedElement = element.cloneNode(true) as HTMLElement
+        
+        // 確保樣式正確應用並提高清晰度
+        clonedElement.style.cssText += `
+          margin-bottom: 35px;
+          width: 100%;
+          box-sizing: border-box;
+          transform: scale(1);
+          font-size: 16px;
+          line-height: 1.6;
+        `
+        
+        container.appendChild(clonedElement)
+      }
     }
 
     // 將容器暫時添加到body中（隱藏）
