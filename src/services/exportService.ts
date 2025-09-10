@@ -1,10 +1,8 @@
-import html2canvas from 'html2canvas'
-
 export class ExportService {
   /**
    * 生成文件名
-   * @param cardTitle 卡片标题
-   * @param schemeName 方案名称
+   * @param cardTitle 卡片標題
+   * @param schemeName 方案名稱
    */
   static generateFileName(cardTitle: string, schemeName: string = '未命名方案'): string {
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
@@ -113,13 +111,16 @@ export class ExportService {
     }
 
     try {
+      // 动态导入html2canvas
+      const html2canvas = (await import('html2canvas')).default
+      
       const canvas = await html2canvas(element, {
         backgroundColor,
         scale,
         useCORS: true,
         allowTaint: false,
         logging: false,
-        ignoreElements: (element) => {
+        ignoreElements: (element: any) => {
           // 忽略導出按鈕和折疊按鈕
           return element.classList.contains('export-btn') || 
                  element.classList.contains('collapse-button')

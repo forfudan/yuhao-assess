@@ -88,3 +88,12 @@
   font-weight: 500;
   color: var(--primary-color);
 }
+
+[data-theme="dark"] .scheme-name-annotation {
+  background: rgba(74, 144, 226, 0.15);
+  border-left-color: var(--color-accent);
+}
+
+[data-theme="dark"] .scheme-name-annotation span {
+  color: var(--color-accent);
+}
