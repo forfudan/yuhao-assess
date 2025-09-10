@@ -48,24 +48,24 @@ const showValue = computed(() => {
   return props.keyData.count > 0 && props.displayMode !== 'finger'
 })
 
-// 按键样式
+// 按鍵樣式
 const keyStyle = computed(() => {
-  let gridColumn = 'span 1' // 默认占1列
+  let gridColumn = 'span 1' // 預設佔1列
   
   switch (props.keyInfo.width) {
     case 'wide':
-      gridColumn = 'span 3' // 宽键占3列
+      gridColumn = 'span 3' // 寬鍵佔3列
       break
     case 'extra-wide':
-      gridColumn = 'span 6' // 空格键占6列（11列布局中）
+      gridColumn = 'span 6' // 空格鍵佔6列（11列佈局中）
       break
     default:
-      gridColumn = 'span 1' // 标准键占1列
+      gridColumn = 'span 1' // 標準鍵佔1列
   }
 
   return {
     gridColumn,
-    aspectRatio: props.keyInfo.width === 'extra-wide' ? '7' : '1', // 空格键保持7:1比例，其他保持正方形
+    aspectRatio: props.keyInfo.width === 'extra-wide' ? '7' : '1', // 空格鍵保持7:1比例，其他保持正方形
     minWidth: '40px',
     minHeight: '40px'
   }
@@ -114,28 +114,28 @@ const textColor = computed(() => {
 const getFingerColor = (key: string, intensity: number): string => {
   // 手指顔色映射
   const fingerColors: Record<string, string> = {
-    '左小指': `rgba(239, 68, 68, ${intensity * 0.8})`,    // 红色
-    '左无名指': `rgba(249, 115, 22, ${intensity * 0.8})`,   // 橙色
+    '左小指': `rgba(239, 68, 68, ${intensity * 0.8})`,    // 紅色
+    '左無名指': `rgba(249, 115, 22, ${intensity * 0.8})`,   // 橙色
     '左中指': `rgba(251, 191, 36, ${intensity * 0.8})`,    // 黄色
-    '左食指': `rgba(34, 197, 94, ${intensity * 0.8})`,     // 绿色
-    '右食指': `rgba(34, 197, 94, ${intensity * 0.8})`,     // 绿色
-    '右中指': `rgba(59, 130, 246, ${intensity * 0.8})`,    // 蓝色
-    '右无名指': `rgba(139, 92, 246, ${intensity * 0.8})`,   // 紫色
+    '左食指': `rgba(34, 197, 94, ${intensity * 0.8})`,     // 緑色
+    '右食指': `rgba(34, 197, 94, ${intensity * 0.8})`,     // 緑色
+    '右中指': `rgba(59, 130, 246, ${intensity * 0.8})`,    // 藍色
+    '右無名指': `rgba(139, 92, 246, ${intensity * 0.8})`,   // 紫色
     '右小指': `rgba(236, 72, 153, ${intensity * 0.8})`     // 粉色
   }
 
   // 手指映射
   const fingerMapping: Record<string, string> = {
     'q': '左小指', 'a': '左小指', 'z': '左小指',
-    'w': '左无名指', 's': '左无名指', 'x': '左无名指',
+    'w': '左無名指', 's': '左無名指', 'x': '左無名指',
     'e': '左中指', 'd': '左中指', 'c': '左中指',
     'r': '左食指', 'f': '左食指', 'v': '左食指', 't': '左食指', 'g': '左食指', 'b': '左食指',
     'y': '右食指', 'h': '右食指', 'n': '右食指', 'u': '右食指', 'j': '右食指', 'm': '右食指',
     'i': '右中指', 'k': '右中指', ',': '右中指',
-    'o': '右无名指', 'l': '右无名指', '.': '右无名指',
+    'o': '右無名指', 'l': '右無名指', '.': '右無名指',
     'p': '右小指', ';': '右小指', '/': '右小指',
-    '1': '左小指', '2': '左无名指', '3': '左中指', '4': '左食指', '5': '左食指',
-    '6': '右食指', '7': '右食指', '8': '右中指', '9': '右无名指', '0': '右小指'
+    '1': '左小指', '2': '左無名指', '3': '左中指', '4': '左食指', '5': '左食指',
+    '6': '右食指', '7': '右食指', '8': '右中指', '9': '右無名指', '0': '右小指'
   }
 
   const finger = fingerMapping[key.toLowerCase()]
@@ -162,7 +162,7 @@ const getFingerColor = (key: string, intensity: number): string => {
   height: 100%;
 }
 
-/* 确保所有标准按键都是正方形 */
+/* 確保所有標準按鍵都是正方形 */
 .key-button:not(.key-space) {
   aspect-ratio: 1;
 }
@@ -179,7 +179,7 @@ const getFingerColor = (key: string, intensity: number): string => {
   box-shadow: var(--shadow-lg);
 }
 
-/* 隐藏按键样式 */
+/* 隱藏按鍵樣式 */
 .key-button.hidden-key {
   opacity: 0;
   pointer-events: none;
@@ -204,16 +204,16 @@ const getFingerColor = (key: string, intensity: number): string => {
 }
 
 .key-label {
-  font-size: calc(0.2rem + 1.2vw); /* 优化的线性缩放：基础0.5rem + 1.2%视口宽度 */
+  font-size: calc(0.2rem + 1.2vw); /* 優化的線性縮放：基礎0.5rem + 1.2%視窗寬度 */
   font-weight: 600;
   color: var(--color-text-primary);
   text-transform: uppercase;
   font-family: var(--font-mono);
-  min-height: 1.2em; /* 确保有足够的行高 */
+  min-height: 1.2em; /* 確保有足够的行高 */
 }
 
 .key-value {
-  font-size: calc(0.2rem + 1vw); /* 优化的线性缩放：基础0.4rem + 1%视口宽度 */
+  font-size: calc(0.2rem + 1vw); /* 優化的線性縮放：基礎0.4rem + 1%視窗寬度 */
   font-weight: 500;
   color: var(--key-text-color, var(--color-text-secondary));
   font-family: var(--font-mono);
@@ -232,34 +232,37 @@ const getFingerColor = (key: string, intensity: number): string => {
   transition: all 0.3s ease;
 }
 
-/* 頻率模式 - 淺色主題（蓝色） */
+/* 頻率模式 - 淺色主題（全碼數據 - 現代藍色漸變） */
 .key-button.mode-frequency .key-heatmap-overlay {
-  background-color: rgba(59, 130, 246, calc(var(--intensity, 0) * 0.8 + 0.1));
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, calc(var(--intensity, 0) * 0.9 + 0.1)), 
+    rgba(59, 130, 246, calc(var(--intensity, 0) * 0.8 + 0.1))
+  );
 }
 
-/* 頻率模式 - 深色主題（青色） */
+/* 頻率模式 - 深色主題（全碼數據 - 現代青藍色） */
 [data-theme="dark"] .key-button.mode-frequency .key-heatmap-overlay {
-  background-color: rgba(0, 188, 212, calc(var(--intensity, 0) * 0.8 + 0.1));
+  background: linear-gradient(135deg, 
+    rgba(14, 165, 233, calc(var(--intensity, 0) * 0.9 + 0.1)), 
+    rgba(6, 182, 212, calc(var(--intensity, 0) * 0.8 + 0.1))
+  );
 }
 
-/* 負擔模式（藍色 - 與頻率模式相同） */
+/* 簡碼模式 - 淺色主題（簡碼數據 - 暖橙色漸變） */
 .key-button.mode-load .key-heatmap-overlay {
-  background-color: rgba(59, 130, 246, calc(var(--intensity, 0) * 0.8 + 0.1));
+  background: linear-gradient(135deg, 
+    rgba(249, 115, 22, calc(var(--intensity, 0) * 0.9 + 0.1)), 
+    rgba(234, 88, 12, calc(var(--intensity, 0) * 0.8 + 0.1))
+  );
 }
 
-/* 負擔模式 - 深色主題（青色 - 與頻率模式相同） */
+/* 簡碼模式 - 深色主題（簡碼數據 - 亮橙色漸變） */
 [data-theme="dark"] .key-button.mode-load .key-heatmap-overlay {
-  background-color: rgba(0, 188, 212, calc(var(--intensity, 0) * 0.8 + 0.1));
+  background: linear-gradient(135deg, 
+    rgba(251, 146, 60, calc(var(--intensity, 0) * 0.9 + 0.1)), 
+    rgba(249, 115, 22, calc(var(--intensity, 0) * 0.8 + 0.1))
+  );
 }
-
-/* 手指模式（緑色） */
-.key-button.mode-finger .key-heatmap-overlay {
-  background-color: rgba(34, 197, 94, calc(var(--intensity, 0) * 0.8 + 0.1));
-}
-
-/* 特殊按鍵樣式 - 现在使用flex布局，移除固定宽度 */
-
-/* 模式特定樣式已通過熱力圖覆蓋層實現 */
 
 /* 數字行按鍵 */
 .key-button.key-1,
@@ -326,13 +329,13 @@ const getFingerColor = (key: string, intensity: number): string => {
   animation: keyPress 0.1s ease-in-out;
 }
 
-/* 無障礙支持 */
+/* 無障礙支援 */
 .key-button:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* 高對比度模式支持 */
+/* 高對比度模式支援 */
 @media (prefers-contrast: high) {
   .key-button {
     border-width: 3px;

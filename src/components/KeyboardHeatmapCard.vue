@@ -29,7 +29,7 @@
       <p class="placeholder-subtitle">上傳碼表後將顯示鍵位熱力圖分析</p>
     </div>
 
-    <!-- 熱力圖內容 -->
+    <!-- 熱力圖内容 -->
     <div v-else class="keyboard-heatmap-content">
       <!-- Tab 切換器 -->
       <div class="tabs-container">
@@ -144,7 +144,7 @@
           </div>
         </div>
 
-        <!-- 手指负担 -->
+        <!-- 手指負擔 -->
         <div class="stats-section">
           <h5 class="section-title">手指負擔</h5>
           <div class="stats-grid">
@@ -185,16 +185,16 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// 折叠功能
+// 折疊功能
 const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
 
 // 卡片引用
 const cardRef = ref<HTMLElement>()
 
-// 导出功能
+// 導出功能
 async function exportCard() {
   if (!cardRef.value || !props.analysisReady || !processedCodeTable.value) {
-    console.warn('卡片元素或数据不可用')
+    console.warn('卡片元素或數據不可用')
     return
   }
 
@@ -204,12 +204,12 @@ async function exportCard() {
       download: true
     })
   } catch (error) {
-    console.error('导出失败:', error)
-    alert('导出失败，请重试')
+    console.error('導出失敗:', error)
+    alert('導出失敗，請重試')
   }
 }
 
-// 暴露折叠方法给父组件
+// 暴露折疊方法給父組件
 defineExpose({
   collapse,
   expand,
@@ -217,10 +217,10 @@ defineExpose({
   getCollapsedState
 })
 
-// 字符频率数据
+// 字符頻率數據
 const charFrequency = ref<Record<string, number>>({})
 
-// 载入字符频率数据
+// 載入字符頻率數據
 const loadCharFrequency = async () => {
   try {
     const response = await fetch('/data/charFrequencyZhihu.json')
@@ -230,14 +230,13 @@ const loadCharFrequency = async () => {
     const data = await response.json()
     charFrequency.value = data
   } catch (error) {
-    console.error('载入字符频率数据失败:', error)
+    console.error('載入字符頻率數據失敗:', error)
   }
 }
 
-// 响应式数据
-const displayMode = ref<'load'>('load') // 固定为按键频率模式
+// 響應式數據
 const keyboardScale = ref(1.0)
-const refreshTrigger = ref(0) // 用于强制刷新的触发器
+const refreshTrigger = ref(0) // 用於強制刷新的觸發器
 
 // Tab 切換相關
 const activeTab = ref<'full' | 'short'>('full')
@@ -246,48 +245,53 @@ const tabs = [
   { key: 'short', label: '出簡數據' }
 ] as const
 
-// 自适应缩放相关
+// 根據當前tab計算displayMode
+const displayMode = computed(() => {
+  return activeTab.value === 'full' ? 'frequency' : 'load'
+})
+
+// 自適應縮放相關
 const keyboardWrapper = ref<HTMLElement>()
 const keyboardLayout = ref<HTMLElement>()
 
-// 计算自适应缩放
+// 計算自適應縮放
 const calculateAdaptiveScale = () => {
   if (!keyboardWrapper.value || !keyboardLayout.value) return
   
   const wrapperWidth = keyboardWrapper.value.clientWidth
   const layoutWidth = keyboardLayout.value.offsetWidth
   
-  // 固定960px样式：当容器宽度超过960px时，按960px计算缩放
+  // 固定960px樣式：當容器寬度超過960px時，按960px計算縮放
   if (layoutWidth > 0) {
-    const targetWidth = Math.min(wrapperWidth, 960) // 最大按960px计算
+    const targetWidth = Math.min(wrapperWidth, 960) // 最大按960px計算
     
-    // 根据屏幕宽度调整边距策略
-    let margin = 20 // 默认边距
+    // 根據屏幕寬度調整邊距策略
+    let margin = 20 // 默認邊距
     if (targetWidth <= 600) {
-      margin = 10 // 中等屏幕减少边距
+      margin = 10 // 中等屏幕減少邊距
     }
     if (targetWidth <= 480) {
-      margin = 5 // 小屏幕进一步减少边距
+      margin = 5 // 小屏幕進一步減少邊距
     }
     
     const availableWidth = targetWidth - margin
-    const scale = Math.min(1.5, availableWidth / layoutWidth) // 允许放大到1.5倍
-    keyboardScale.value = Math.max(0.3, scale) // 降低最小缩放到0.3倍，允许更小
+    const scale = Math.min(1.5, availableWidth / layoutWidth) // 允許放大到1.5倍
+    keyboardScale.value = Math.max(0.3, scale) // 降低最小縮放到0.3倍，允許更小
   } else {
     keyboardScale.value = 1.0
   }
 }
 
-// 窗口大小变化监听
+// 窗口大小變化監聽
 const handleResize = () => {
   calculateAdaptiveScale()
 }
 
-// 生命周期钩子
+// 生命週期鈎子
 onMounted(() => {
   loadCharFrequency()
   
-  // 延迟计算缩放，确保DOM已渲染
+  // 延遲計算縮放，確保DOM已渲染
   setTimeout(() => {
     calculateAdaptiveScale()
   }, 100)
@@ -299,7 +303,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
 })
 
-// 监听分析状态变化，重新计算缩放
+// 監聽分析狀態變化，重新計算縮放
 watch(
   () => props.analysisReady,
   (newReady) => {
@@ -311,9 +315,9 @@ watch(
   }
 )
 
-// 获取处理后的码表（根据Tab切换全码或简码）
+// 獲取處理後的碼表（根據Tab切換全碼或簡碼）
 const processedCodeTable = computed(() => {
-  // 依赖refreshTrigger来强制刷新
+  // 依賴refreshTrigger來強制刷新
   refreshTrigger.value
   
   if (!props.analysisReady) return new Map()
@@ -321,19 +325,19 @@ const processedCodeTable = computed(() => {
   const processedTables = codeTableProcessingService.getProcessedTables()
   if (!processedTables) return new Map()
   
-  // 根据activeTab选择不同的码表
+  // 根據activeTab選擇不同的碼表
   const selectedTable = activeTab.value === 'full' 
     ? processedTables.fullWithSelection 
     : processedTables.shortWithSelection
   
-  // 调试：输出前100个末尾是下划线的编码
+  // 調試：輸出前100個末尾是下划線的編碼
   debugUnderscoreEndings(selectedTable)
   
-  // 使用选定的码表，注意下划线代表空格
+  // 使用選定的碼表，注意下划線代表空格
   return selectedTable
 })
 
-// 调试函数：分析末尾是下划线的编码
+// 調試函數：分析末尾是下划線的編碼
 const debugUnderscoreEndings = (codeTable: CodeTable) => {
   const underscoreEndingCodes: string[] = []
   
@@ -345,18 +349,18 @@ const debugUnderscoreEndings = (codeTable: CodeTable) => {
     }
   }
   
-  // 删除调试输出，只保留isPrefix相关的追踪
+  // 删除調試輸出，只保留isPrefix相關的追蹤
 }
 
-// 监听码表变化，确保切换方案时热力图会刷新
+// 監聽碼表變化，確保切換方案時熱力圖會刷新
 watch(
   () => props.codeTable,
   (newCodeTable) => {
     if (props.analysisReady && newCodeTable.size > 0) {
-      // 触发刷新
+      // 觸發刷新
       refreshTrigger.value++
       
-      // 重新计算缩放
+      // 重新計算縮放
       setTimeout(() => {
         calculateAdaptiveScale()
       }, 100)
@@ -365,7 +369,7 @@ watch(
   { deep: true }
 )
 
-// 键盘布局定义
+// 鍵盤佈局定義
 const numberRowKeys: KeyInfo[] = [
   { key: '`' }, { key: '1' }, { key: '2' }, { key: '3' }, { key: '4' }, { key: '5' },
   { key: '6' }, { key: '7' }, { key: '8' }, { key: '9' }, { key: '0' }
@@ -674,11 +678,11 @@ const getKeyData = (key: string): KeyData => {
   opacity: 0.8;
 }
 
-/* 鍵盤熱力圖內容 */
+/* 鍵盤熱力圖内容 */
 .keyboard-heatmap-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm); /* 從xl改為sm，大幅減少組件間間距 */
+  gap: var(--spacing-sm); /* 從xl改爲sm，大幅減少組件間間距 */
 }
 
 /* 統計容器 */
@@ -832,7 +836,7 @@ const getKeyData = (key: string): KeyData => {
   transform: rotate(-90deg);
 }
 
-/* 模塊內容 */
+/* 模塊内容 */
 .module-content {
   padding: var(--spacing-lg);
   animation: fadeIn 0.3s ease;
@@ -853,8 +857,8 @@ const getKeyData = (key: string): KeyData => {
 .keyboard-wrapper {
   display: flex;
   justify-content: center;
-  padding: var(--spacing-xs) 0; /* 從md改為xs，減少上下內邊距 */
-  overflow: hidden; /* 防止出現滾動條 */
+  padding: var(--spacing-xs) 0; /* 從md改爲xs，減少上下内邊距 */
+  overflow: hidden; /* 防止出現滚動條 */
   width: 100%;
   height: 100%; /* 佔滿容器高度 */
   flex-direction: column; /* 垂直佈局 */
@@ -863,9 +867,9 @@ const getKeyData = (key: string): KeyData => {
 /* 大屏幕寬度限制 */
 @media (min-width: 1200px) {
   .keyboard-wrapper {
-    max-width: 80%; /* 限制為容器的80%宽度 */
+    max-width: 80%; /* 限制爲容器的80%宽度 */
     margin: 0 auto; /* 居中顯示 */
-    padding: var(--spacing-sm) 0; /* 減少垂直padding，從lg改為sm */
+    padding: var(--spacing-sm) 0; /* 減少垂直padding，從lg改爲sm */
   }
 }
 
@@ -899,7 +903,7 @@ const getKeyData = (key: string): KeyData => {
 }
 
 .space-row {
-  margin-top: 0; /* 移除上邊距，因為grid已經處理間距 */
+  margin-top: 0; /* 移除上邊距，因爲grid已經處理間距 */
 }
 
 /* 統計網格 */
@@ -977,7 +981,7 @@ const getKeyData = (key: string): KeyData => {
   }
   
   .keyboard-layout {
-    padding: var(--spacing-sm); /* 減少內邊距 */
+    padding: var(--spacing-sm); /* 減少内邊距 */
     width: 100% !important;
     min-width: unset !important;
     max-width: 100%;
@@ -1019,7 +1023,7 @@ const getKeyData = (key: string): KeyData => {
   
   .keyboard-layout {
     padding: var(--spacing-md);
-    width: 99% !important; /* 在平板上使用更多寬度，從98%改為99% */
+    width: 99% !important; /* 在平板上使用更多寬度，從98%改爲99% */
     min-width: unset !important;
     max-width: 100%;
   }
@@ -1077,7 +1081,7 @@ const getKeyData = (key: string): KeyData => {
     width: 100% !important;
     min-width: 250px !important; /* 進一步減小最小寬度 */
     max-width: 100%;
-    padding: var(--spacing-xs); /* 減少內邊距 */
+    padding: var(--spacing-xs); /* 減少内邊距 */
     border-radius: 0; /* 移除圓角以避免在邊緣的視覺問題 */
     border-left: none;
     border-right: none;
@@ -1093,7 +1097,7 @@ const getKeyData = (key: string): KeyData => {
   }
 }
 
-/* 滾動條樣式優化 */
+/* 滚動條樣式優化 */
 .keyboard-wrapper::-webkit-scrollbar {
   height: 6px;
 }
