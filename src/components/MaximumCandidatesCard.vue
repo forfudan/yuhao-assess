@@ -60,7 +60,7 @@
                 <td class="codes-cell">
                   <div class="codes-list">
                     <span 
-                      v-for="(codeInfo, index) in item.codes" 
+                      v-for="(codeInfo, index) in item.displayCodes" 
                       :key="codeInfo.code"
                       class="code-item"
                     >
@@ -71,8 +71,19 @@
                       >
                         {{ codeInfo.code }}
                       </span>
-                      <span v-if="index < item.codes.length - 1" class="code-separator">, </span>
+                      <span v-if="index < item.displayCodes.length - 1" class="code-separator">, </span>
                     </span>
+                    
+                    <!-- 省略号和展开按钮 -->
+                    <span v-if="item.hasMoreCodes && !item.isExpanded" class="ellipsis">...</span>
+                    <button 
+                      v-if="item.hasMoreCodes" 
+                      @click="toggleCodeExpansion(item.charset)"
+                      class="expand-btn"
+                      :title="item.isExpanded ? '收起' : '展開全部'"
+                    >
+                      {{ item.isExpanded ? '收起' : `展開全部(${item.codes.length})` }}
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -168,6 +179,18 @@ const error = ref<string | null>(null)
 const analysisResults = ref<Record<string, MaximumCandidatesResult> | null>(null)
 const charCount = ref<number>(0)
 
+// 编码展开状态管理
+const expandedCodes = ref<Set<string>>(new Set())
+
+// 切换编码展开状态
+const toggleCodeExpansion = (charset: string) => {
+  if (expandedCodes.value.has(charset)) {
+    expandedCodes.value.delete(charset)
+  } else {
+    expandedCodes.value.add(charset)
+  }
+}
+
 // 工具提示管理器
 const { tooltipVisible, tooltipText, tooltipStyle, showTooltip: showTooltipBase, hideTooltip } = createTooltipManager()
 const tooltipChars = ref('')
@@ -201,12 +224,20 @@ const charsetInfo = {
 const tableData = computed(() => {
   if (!analysisResults.value) return []
   
-  return Object.entries(analysisResults.value).map(([charset, result]) => ({
-    charset,
-    name: charsetInfo[charset as keyof typeof charsetInfo]?.name || charset,
-    count: result.maxCount,
-    codes: result.codes
-  }))
+  return Object.entries(analysisResults.value).map(([charset, result]) => {
+    const isExpanded = expandedCodes.value.has(charset)
+    const hasMoreThan3Codes = result.codes.length > 3
+    
+    return {
+      charset,
+      name: charsetInfo[charset as keyof typeof charsetInfo]?.name || charset,
+      count: result.maxCount,
+      codes: result.codes,
+      displayCodes: isExpanded ? result.codes : result.codes.slice(0, 3),
+      hasMoreCodes: hasMoreThan3Codes,
+      isExpanded
+    }
+  })
 })
 
 // 生成字符工具提示文本（適配器）
@@ -411,6 +442,35 @@ onMounted(() => {
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
+}
+
+.ellipsis {
+  color: #6b7280;
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+.expand-btn {
+  background: none;
+  border: 1px solid #d1d5db;
+  color: #3b82f6;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+.expand-btn:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.expand-btn:active {
+  transform: scale(0.95);
 }
 
 .code-item {
@@ -655,6 +715,21 @@ onMounted(() => {
 
 [data-theme="dark"] .code-separator {
   color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .ellipsis {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .expand-btn {
+  border-color: var(--color-border-secondary);
+  color: var(--color-accent);
+}
+
+[data-theme="dark"] .expand-btn:hover {
+  background: var(--color-accent-bg);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 [data-theme="dark"] .scheme-name {
