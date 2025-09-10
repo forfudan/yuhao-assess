@@ -22,19 +22,33 @@
     </div>
     
     <div v-show="!isCollapsed" class="card-content">
-    <!-- 分析状态 -->
+    <!-- 分析狀態 -->
     <div v-if="!analysisReady" class="analysis-placeholder">
       <div class="placeholder-icon">⌨️</div>
-      <p class="placeholder-title">等待码表上传</p>
-      <p class="placeholder-subtitle">上传码表后将显示键位热力图分析</p>
+      <p class="placeholder-title">等待碼表上傳</p>
+      <p class="placeholder-subtitle">上傳碼表後將顯示鍵位熱力圖分析</p>
     </div>
 
-    <!-- 热力图内容 -->
+    <!-- 熱力圖內容 -->
     <div v-else class="keyboard-heatmap-content">
-      <!-- 键盘热力图 -->
+      <!-- Tab 切換器 -->
+      <div class="tabs-container">
+        <div class="tab-list">
+          <button 
+            v-for="tab in tabs" 
+            :key="tab.key"
+            :class="['tab-button', { 'active': activeTab === tab.key }]"
+            @click="activeTab = tab.key"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- 鍵盤熱力圖 -->
       <div class="keyboard-wrapper" ref="keyboardWrapper">
         <div class="keyboard-layout" ref="keyboardLayout" :style="{ transform: `scale(${keyboardScale})` }">
-          <!-- 数字行 -->
+          <!-- 數字行 -->
           <div class="keyboard-row number-row">
             <KeyButton 
               v-for="key in numberRowKeys"
@@ -225,6 +239,13 @@ const displayMode = ref<'load'>('load') // 固定为按键频率模式
 const keyboardScale = ref(1.0)
 const refreshTrigger = ref(0) // 用于强制刷新的触发器
 
+// Tab 切換相關
+const activeTab = ref<'full' | 'short'>('full')
+const tabs = [
+  { key: 'full', label: '全碼數據' },
+  { key: 'short', label: '出簡數據' }
+] as const
+
 // 自适应缩放相关
 const keyboardWrapper = ref<HTMLElement>()
 const keyboardLayout = ref<HTMLElement>()
@@ -279,7 +300,7 @@ watch(
   }
 )
 
-// 获取处理后的码表（全码加选重按键表）
+// 获取处理后的码表（根据Tab切换全码或简码）
 const processedCodeTable = computed(() => {
   // 依赖refreshTrigger来强制刷新
   refreshTrigger.value
@@ -289,11 +310,16 @@ const processedCodeTable = computed(() => {
   const processedTables = codeTableProcessingService.getProcessedTables()
   if (!processedTables) return new Map()
   
-  // 调试：输出前100个末尾是下划线的编码
-  debugUnderscoreEndings(processedTables.fullWithSelection)
+  // 根据activeTab选择不同的码表
+  const selectedTable = activeTab.value === 'full' 
+    ? processedTables.fullWithSelection 
+    : processedTables.shortWithSelection
   
-  // 使用全码加选重按键表，注意下划线代表空格
-  return processedTables.fullWithSelection
+  // 调试：输出前100个末尾是下划线的编码
+  debugUnderscoreEndings(selectedTable)
+  
+  // 使用选定的码表，注意下划线代表空格
+  return selectedTable
 })
 
 // 调试函数：分析末尾是下划线的编码
@@ -812,6 +838,41 @@ const getKeyData = (key: string): KeyData => {
   }
 }
 
+/* Tab 样式 */
+.tabs-container {
+  margin-bottom: var(--spacing-lg);
+}
+
+.tab-list {
+  display: flex;
+  border-bottom: 2px solid var(--color-border-secondary);
+  margin-bottom: var(--spacing-md);
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tab-button:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+}
+
+.tab-button.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+  background-color: var(--color-accent-bg);
+}
+
 /* 键盘包装器 */
 .keyboard-wrapper {
   display: flex;
@@ -821,6 +882,15 @@ const getKeyData = (key: string): KeyData => {
   width: 100%;
   height: 100%; /* 占满容器高度 */
   flex-direction: column; /* 垂直布局 */
+}
+
+/* 大屏幕宽度限制 */
+@media (min-width: 1200px) {
+  .keyboard-wrapper {
+    max-width: 80%; /* 限制为容器的80%宽度 */
+    margin: 0 auto; /* 居中显示 */
+    padding: var(--spacing-lg) 0; /* 增加垂直padding */
+  }
 }
 
 /* 键盘布局 */
@@ -921,12 +991,8 @@ const getKeyData = (key: string): KeyData => {
 /* 大屏幕优化 */
 @media (min-width: 1200px) {
   .keyboard-layout {
-    width: 100%; /* 大屏幕上占满整个容器宽度 */
-    max-width: none; /* 移除最大宽度限制，让键盘可以无限制撑大 */
-  }
-  
-  .keyboard-wrapper {
-    padding: var(--spacing-lg) 0; /* 增加垂直padding */
+    width: 100%; /* 在wrapper限制下占满宽度 */
+    max-width: none; /* 移除最大宽度限制 */
   }
 }
 
@@ -1062,5 +1128,33 @@ const getKeyData = (key: string): KeyData => {
   font-size: 0.85rem;
   color: #4a5568;
   font-weight: 500;
+}
+
+/* 黑暗模式下的Tab样式 */
+[data-theme="dark"] .tab-button {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .tab-button:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+}
+
+[data-theme="dark"] .tab-button.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+  background-color: var(--color-accent-bg);
+}
+
+[data-theme="dark"] .tab-list {
+  border-bottom-color: var(--color-border-secondary);
+}
+
+[data-theme="dark"] .scheme-name {
+  background: var(--color-bg-secondary);
+}
+
+[data-theme="dark"] .scheme-name span {
+  color: var(--color-text-secondary);
 }
 </style>
