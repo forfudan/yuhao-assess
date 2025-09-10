@@ -2679,17 +2679,6 @@ function clearAllSchemes() {
   overflow: hidden;
 }
 
-/* Tab 样式 */
-.tabs-container {
-  margin-bottom: var(--spacing-lg);
-}
-
-.tab-list {
-  display: flex;
-  border-bottom: 2px solid #e5e7eb;
-  margin-bottom: var(--spacing-md);
-}
-
 /* 後台計算進度指示器 */
 .background-progress {
   margin-top: 8px;
@@ -2734,30 +2723,6 @@ function clearAllSchemes() {
 /* 为暗黑模式创建更深沉的渐变 */
 [data-theme="dark"] .progress-fill {
   background: linear-gradient(90deg, #064e3b, #0d9488);
-}
-
-.tab-button {
-  background: none;
-  border: none;
-  padding: 12px 24px;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #6b7280;
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.tab-button:hover {
-  color: #374151;
-  background-color: #f9fafb;
-}
-
-.tab-button.active {
-  color: #3b82f6;
-  border-bottom-color: #3b82f6;
-  background-color: #eff6ff;
 }
 
 .collapse-button svg.rotated {
@@ -3607,25 +3572,6 @@ function clearAllSchemes() {
 }
 
 /* 暗黑模式專用樣式 */
-[data-theme="dark"] .tab-list {
-  border-bottom-color: var(--color-border-primary);
-}
-
-[data-theme="dark"] .tab-button {
-  color: var(--color-text-secondary);
-}
-
-[data-theme="dark"] .tab-button:hover {
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-tertiary);
-}
-
-[data-theme="dark"] .tab-button.active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  background-color: var(--color-primary-light);
-}
-
 [data-theme="dark"] .comparison-table-container {
   background: var(--color-bg-primary);
   border-color: var(--color-border-primary);

@@ -22,19 +22,33 @@
     </div>
     
     <div v-show="!isCollapsed" class="card-content">
-    <!-- 分析状态 -->
+    <!-- 分析狀態 -->
     <div v-if="!analysisReady" class="analysis-placeholder">
       <div class="placeholder-icon">⌨️</div>
-      <p class="placeholder-title">等待码表上传</p>
-      <p class="placeholder-subtitle">上传码表后将显示键位热力图分析</p>
+      <p class="placeholder-title">等待碼表上傳</p>
+      <p class="placeholder-subtitle">上傳碼表後將顯示鍵位熱力圖分析</p>
     </div>
 
-    <!-- 热力图内容 -->
+    <!-- 熱力圖內容 -->
     <div v-else class="keyboard-heatmap-content">
-      <!-- 键盘热力图 -->
+      <!-- Tab 切換器 -->
+      <div class="tabs-container">
+        <div class="tab-list">
+          <button 
+            v-for="tab in tabs" 
+            :key="tab.key"
+            :class="['tab-button', { 'active': activeTab === tab.key }]"
+            @click="activeTab = tab.key"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- 鍵盤熱力圖 -->
       <div class="keyboard-wrapper" ref="keyboardWrapper">
         <div class="keyboard-layout" ref="keyboardLayout" :style="{ transform: `scale(${keyboardScale})` }">
-          <!-- 数字行 -->
+          <!-- 數字行 -->
           <div class="keyboard-row number-row">
             <KeyButton 
               v-for="key in numberRowKeys"
@@ -225,6 +239,13 @@ const displayMode = ref<'load'>('load') // 固定为按键频率模式
 const keyboardScale = ref(1.0)
 const refreshTrigger = ref(0) // 用于强制刷新的触发器
 
+// Tab 切換相關
+const activeTab = ref<'full' | 'short'>('full')
+const tabs = [
+  { key: 'full', label: '全碼數據' },
+  { key: 'short', label: '出簡數據' }
+] as const
+
 // 自适应缩放相关
 const keyboardWrapper = ref<HTMLElement>()
 const keyboardLayout = ref<HTMLElement>()
@@ -236,11 +257,22 @@ const calculateAdaptiveScale = () => {
   const wrapperWidth = keyboardWrapper.value.clientWidth
   const layoutWidth = keyboardLayout.value.offsetWidth
   
-  // 更激进的缩放策略：确保键盘占用容器的大部分宽度
+  // 固定960px样式：当容器宽度超过960px时，按960px计算缩放
   if (layoutWidth > 0) {
-    const availableWidth = wrapperWidth - 20 // 减去最小边距
-    const scale = Math.min(1.5, availableWidth / layoutWidth) // 允许放大到1.5倍，确保充分利用空间
-    keyboardScale.value = Math.max(0.5, scale) // 最小缩放0.5倍
+    const targetWidth = Math.min(wrapperWidth, 960) // 最大按960px计算
+    
+    // 根据屏幕宽度调整边距策略
+    let margin = 20 // 默认边距
+    if (targetWidth <= 600) {
+      margin = 10 // 中等屏幕减少边距
+    }
+    if (targetWidth <= 480) {
+      margin = 5 // 小屏幕进一步减少边距
+    }
+    
+    const availableWidth = targetWidth - margin
+    const scale = Math.min(1.5, availableWidth / layoutWidth) // 允许放大到1.5倍
+    keyboardScale.value = Math.max(0.3, scale) // 降低最小缩放到0.3倍，允许更小
   } else {
     keyboardScale.value = 1.0
   }
@@ -279,7 +311,7 @@ watch(
   }
 )
 
-// 获取处理后的码表（全码加选重按键表）
+// 获取处理后的码表（根据Tab切换全码或简码）
 const processedCodeTable = computed(() => {
   // 依赖refreshTrigger来强制刷新
   refreshTrigger.value
@@ -289,11 +321,16 @@ const processedCodeTable = computed(() => {
   const processedTables = codeTableProcessingService.getProcessedTables()
   if (!processedTables) return new Map()
   
-  // 调试：输出前100个末尾是下划线的编码
-  debugUnderscoreEndings(processedTables.fullWithSelection)
+  // 根据activeTab选择不同的码表
+  const selectedTable = activeTab.value === 'full' 
+    ? processedTables.fullWithSelection 
+    : processedTables.shortWithSelection
   
-  // 使用全码加选重按键表，注意下划线代表空格
-  return processedTables.fullWithSelection
+  // 调试：输出前100个末尾是下划线的编码
+  debugUnderscoreEndings(selectedTable)
+  
+  // 使用选定的码表，注意下划线代表空格
+  return selectedTable
 })
 
 // 调试函数：分析末尾是下划线的编码
@@ -471,13 +508,13 @@ const stats = computed<AnalysisStats>(() => {
   }
 })
 
-// 计算最大键值（用于归一化）
+// 計算最大鍵值（用于歸一化）
 const maxKeyValue = computed(() => {
   if (stats.value.keyDistribution.size === 0) return 1
   return Math.max(...Array.from(stats.value.keyDistribution.values()))
 })
 
-// 手指负担百分比 - 按照指定顺序排列
+// 手指負擔百分比 - 按照指定順序排列
 const fingerLoadPercentages = computed(() => {
   const percentages: Record<string, number> = {}
   const totalLoad = Array.from(stats.value.fingerLoad.values()).reduce((sum, load) => sum + load, 0)
@@ -519,10 +556,10 @@ const rowDistributionPercentages = computed(() => {
   return percentages
 })
 
-// 获取键位数据
+// 獲取鍵位數據
 const getKeyData = (key: string): KeyData => {
   const count = stats.value.keyDistribution.get(key.toLowerCase()) || 0
-  // 计算總的加權按鍵使用量
+  // 計算總的加權按鍵使用量
   const totalWeightedKeyUsage = Array.from(stats.value.keyDistribution.values()).reduce((sum, val) => sum + val, 0)
   const frequency = totalWeightedKeyUsage > 0 ? count / totalWeightedKeyUsage : 0
   
@@ -530,13 +567,13 @@ const getKeyData = (key: string): KeyData => {
     key: key.toLowerCase(),
     count,
     frequency,
-    position: { x: 0, y: 0 } // 简化版本，不需要精确位置
+    position: { x: 0, y: 0 } // 簡化版本，不需要精確位置
   }
 }
 </script>
 
 <style scoped>
-/* 卡片头部布局 */
+/* 卡片頭部佈局 */
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -548,7 +585,7 @@ const getKeyData = (key: string): KeyData => {
   flex: 1;
 }
 
-/* 头部按钮容器 */
+/* 頭部按鈕容器 */
 .header-buttons {
   display: flex;
   align-items: center;
@@ -556,7 +593,7 @@ const getKeyData = (key: string): KeyData => {
   margin-left: var(--spacing-lg);
 }
 
-/* 导出按钮样式 */
+/* 導出按鈕樣式 */
 .export-btn {
   background: rgba(255, 255, 255, 0.2);
   border: none;
@@ -581,7 +618,7 @@ const getKeyData = (key: string): KeyData => {
   cursor: not-allowed;
 }
 
-/* 折叠按钮样式 */
+/* 折疊按鈕樣式 */
 .collapse-button {
   background: rgba(255, 255, 255, 0.2);
   border: none;
@@ -637,18 +674,18 @@ const getKeyData = (key: string): KeyData => {
   opacity: 0.8;
 }
 
-/* 键盘热力图内容 */
+/* 鍵盤熱力圖內容 */
 .keyboard-heatmap-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-sm); /* 從xl改為sm，大幅減少組件間間距 */
 }
 
-/* 统计容器 */
+/* 統計容器 */
 .stats-container {
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-md); /* 减少padding提高密度 */
+  padding: var(--spacing-md); /* 減少padding提高密度 */
   border: 1px solid var(--color-border-primary);
 }
 
@@ -661,7 +698,7 @@ const getKeyData = (key: string): KeyData => {
   padding-bottom: var(--spacing-sm);
 }
 
-/* 模块容器 - 单列布局 */
+/* 模塊容器 - 單列佈局 */
 .module-container {
   display: flex;
   flex-direction: column;
@@ -669,7 +706,7 @@ const getKeyData = (key: string): KeyData => {
   width: 100%;
 }
 
-/* 全局控制栏 */
+/* 全局控制欄 */
 .global-controls {
   display: flex;
   justify-content: space-between;
@@ -748,7 +785,7 @@ const getKeyData = (key: string): KeyData => {
   transform: translateY(-2px);
 }
 
-/* 模块头部 */
+/* 模塊頭部 */
 .module-header {
   display: flex;
   justify-content: space-between;
@@ -765,7 +802,7 @@ const getKeyData = (key: string): KeyData => {
   margin: 0;
 }
 
-/* 折叠/展开按钮 */
+/* 折疊/展開按鈕 */
 .toggle-button {
   background: none;
   border: none;
@@ -795,7 +832,7 @@ const getKeyData = (key: string): KeyData => {
   transform: rotate(-90deg);
 }
 
-/* 模块内容 */
+/* 模塊內容 */
 .module-content {
   padding: var(--spacing-lg);
   animation: fadeIn 0.3s ease;
@@ -816,11 +853,20 @@ const getKeyData = (key: string): KeyData => {
 .keyboard-wrapper {
   display: flex;
   justify-content: center;
-  padding: var(--spacing-md) 0;
-  overflow: hidden; /* 防止出现滚动条 */
+  padding: var(--spacing-xs) 0; /* 從md改為xs，減少上下內邊距 */
+  overflow: hidden; /* 防止出現滾動條 */
   width: 100%;
-  height: 100%; /* 占满容器高度 */
-  flex-direction: column; /* 垂直布局 */
+  height: 100%; /* 佔滿容器高度 */
+  flex-direction: column; /* 垂直佈局 */
+}
+
+/* 大屏幕寬度限制 */
+@media (min-width: 1200px) {
+  .keyboard-wrapper {
+    max-width: 80%; /* 限制為容器的80%宽度 */
+    margin: 0 auto; /* 居中顯示 */
+    padding: var(--spacing-sm) 0; /* 減少垂直padding，從lg改為sm */
+  }
 }
 
 /* 键盘布局 */
@@ -829,11 +875,11 @@ const getKeyData = (key: string): KeyData => {
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   transform-origin: center top;
-  width: 100%; /* 容器宽度百分比 */
+  width: 100%; /* 容器寬度百分比 */
   height: 100%; /* 容器高度百分比 */
-  max-width: none; /* 最大宽度限制 */
+  max-width: none; /* 最大寬度限制 */
   max-height: none; /* 最大高度限制 */
-  min-width: 320px; /* 设置最小宽度保证可用性 */
+  min-width: 280px; /* 減小最小寬度，允許在更窄屏幕上縮小 */
   border: 1px solid var(--color-border-secondary);
   transition: transform 0.3s ease;
   margin: auto;
@@ -845,7 +891,7 @@ const getKeyData = (key: string): KeyData => {
 
 .keyboard-row {
   display: grid;
-  grid-template-columns: repeat(11, 1fr); /* 11列，每列等宽 */
+  grid-template-columns: repeat(11, 1fr); /* 11列，每列等寬 */
   gap: 4px;
   width: 100%;
   height: 100%;
@@ -853,23 +899,21 @@ const getKeyData = (key: string): KeyData => {
 }
 
 .space-row {
-  margin-top: 0; /* 移除上边距，因为grid已经处理间距 */
+  margin-top: 0; /* 移除上邊距，因為grid已經處理間距 */
 }
 
-/* 移除不再需要的行样式，因为现在使用grid布局 */
-
-/* 统计网格 */
+/* 統計網格 */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* 减小最小宽度提高密度 */
-  gap: var(--spacing-xs); /* 减小间距 */
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* 減小最小寬度提高密度 */
+  gap: var(--spacing-xs); /* 減小間距 */
 }
 
-/* 统计部分样式 */
+/* 統計部分樣式 */
 .stats-section {
   border-bottom: 1px solid var(--color-border);
-  padding-bottom: var(--spacing-sm); /* 减少底部padding */
-  margin-bottom: var(--spacing-sm); /* 减少底部margin */
+  padding-bottom: var(--spacing-sm); /* 減少底部padding */
+  margin-bottom: var(--spacing-sm); /* 減少底部margin */
 }
 
 .stats-section:last-child {
@@ -879,20 +923,20 @@ const getKeyData = (key: string): KeyData => {
 }
 
 .section-title {
-  font-size: 0.9rem; /* 减小标题字体 */
+  font-size: 0.9rem; /* 減小標題字體 */
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-xs); /* 减少底部margin */
+  margin-bottom: var(--spacing-xs); /* 減少底部margin */
   border-left: 3px solid var(--color-primary);
   padding-left: var(--spacing-sm);
 }
 
-/* 统计项样式 */
+/* 統計項樣式 */
 .stat-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-xs) var(--spacing-sm); /* 减少padding */
+  padding: var(--spacing-xs) var(--spacing-sm); /* 減少padding */
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-secondary);
@@ -907,30 +951,40 @@ const getKeyData = (key: string): KeyData => {
 
 .stat-label {
   color: var(--color-text-secondary);
-  font-size: 0.8rem; /* 减小字体 */
+  font-size: 0.8rem; /* 減小字體 */
   font-weight: 500;
 }
 
 .stat-value {
   font-weight: 600;
   color: var(--color-text-primary);
-  font-size: 0.85rem; /* 减小字体 */
+  font-size: 0.85rem; /* 減小字體 */
   text-align: right;
 }
 
-/* 大屏幕优化 */
+/* 大屏幕優化 */
 @media (min-width: 1200px) {
   .keyboard-layout {
-    width: 100%; /* 大屏幕上占满整个容器宽度 */
-    max-width: none; /* 移除最大宽度限制，让键盘可以无限制撑大 */
-  }
-  
-  .keyboard-wrapper {
-    padding: var(--spacing-lg) 0; /* 增加垂直padding */
+    width: 100%; /* 在wrapper限制下佔滿寬度 */
+    max-width: none; /* 移除最大寬度限制 */
   }
 }
 
-/* 响应式设计 */
+/* 中等屏幕優化（600px左右） */
+@media (max-width: 768px) and (min-width: 481px) {
+  .keyboard-wrapper {
+    padding: var(--spacing-xs) 0; /* 進一步減少包裝器padding */
+  }
+  
+  .keyboard-layout {
+    padding: var(--spacing-sm); /* 減少內邊距 */
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: 100%;
+  }
+}
+
+/* 響應式設計 */
 @media (max-width: 768px) {
   .module-container {
     gap: var(--spacing-md);
@@ -960,18 +1014,18 @@ const getKeyData = (key: string): KeyData => {
   }
   
   .keyboard-wrapper {
-    padding: var(--spacing-sm) 0; /* 减少包装器的padding */
+    padding: var(--spacing-sm) 0; /* 減少包裝器的padding */
   }
   
   .keyboard-layout {
     padding: var(--spacing-md);
-    width: 98% !important; /* 在平板上使用更多宽度 */
+    width: 99% !important; /* 在平板上使用更多寬度，從98%改為99% */
     min-width: unset !important;
     max-width: 100%;
   }
   
   .stats-container {
-    padding: var(--spacing-md); /* 减少统计容器的padding */
+    padding: var(--spacing-md); /* 減少統計容器的padding */
   }
   
   .stats-grid {
@@ -998,24 +1052,33 @@ const getKeyData = (key: string): KeyData => {
   }
   
   .btn-text {
-    display: none; /* 在小屏幕上只显示图标 */
+    display: none; /* 在小屏幕上只顯示圖標 */
   }
   
   .module-title {
     font-size: 1rem;
   }
   
+  /* 移動端Tab間距進一步縮減 */
+  .tabs-container {
+    margin-bottom: 2px; /* 極小間距，從xs進一步減少 */
+  }
+  
+  .tab-list {
+    margin-bottom: 2px; /* 保持極小間距 */
+  }
+  
   .keyboard-wrapper {
-    padding: 0; /* 移除包装器padding */
-    margin: 0 calc(-1 * var(--spacing-md)); /* 负边距来抵消card-content的padding */
+    padding: 0; /* 移除包裝器padding */
+    margin: 0 calc(-1 * var(--spacing-md)); /* 負邊距來抵消card-content的padding */
   }
   
   .keyboard-layout {
     width: 100% !important;
-    min-width: unset !important;
+    min-width: 250px !important; /* 進一步減小最小寬度 */
     max-width: 100%;
-    padding: var(--spacing-sm);
-    border-radius: 0; /* 移除圆角以避免在边缘的视觉问题 */
+    padding: var(--spacing-xs); /* 減少內邊距 */
+    border-radius: 0; /* 移除圓角以避免在邊緣的視覺問題 */
     border-left: none;
     border-right: none;
   }
@@ -1025,12 +1088,12 @@ const getKeyData = (key: string): KeyData => {
   }
   
   .keyboard-row {
-    gap: 2px;
-    margin-bottom: 4px;
+    gap: 1px; /* 進一步減小按鍵間距 */
+    margin-bottom: 2px; /* 減小行間距 */
   }
 }
 
-/* 滚动条样式优化 */
+/* 滾動條樣式優化 */
 .keyboard-wrapper::-webkit-scrollbar {
   height: 6px;
 }
@@ -1062,5 +1125,13 @@ const getKeyData = (key: string): KeyData => {
   font-size: 0.85rem;
   color: #4a5568;
   font-weight: 500;
+}
+
+[data-theme="dark"] .scheme-name {
+  background: var(--color-bg-secondary);
+}
+
+[data-theme="dark"] .scheme-name span {
+  color: var(--color-text-secondary);
 }
 </style>

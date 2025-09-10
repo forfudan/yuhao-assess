@@ -1,0 +1,86 @@
+/* 公共Tab樣式 */
+
+/* Tab容器 */
+.tabs-container {
+  margin-bottom: var(--spacing-lg); /* 默認使用較大的間距，適用於大多數卡片 */
+}
+
+.tab-list {
+  display: flex;
+  border-bottom: 2px solid var(--color-border-secondary);
+  margin-bottom: var(--spacing-md); /* 默認的tab-list間距 */
+}
+
+/* Tab按鈕 */
+.tab-button {
+  background: none;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tab-button:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+}
+
+.tab-button.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+  background-color: var(--color-accent-bg);
+}
+
+/* 移動端Tab樣式優化 */
+@media (max-width: 480px) {
+  .tabs-container {
+    margin-bottom: 2px; /* 移動端極小間距 */
+  }
+  
+  .tab-list {
+    margin-bottom: 2px; /* 移動端極小間距 */
+  }
+  
+  /* 移動端KeyboardHeatmapCard保持極小間距 */
+  .keyboard-heatmap .tabs-container {
+    margin-bottom: 2px;
+  }
+  
+  .keyboard-heatmap .tab-list {
+    margin-bottom: 2px;
+  }
+}
+
+/* KeyboardHeatmapCard專用的緊湊間距 */
+.keyboard-heatmap .tabs-container {
+  margin-bottom: var(--spacing-xs); /* KeyboardHeatmapCard使用更緊湊的間距 */
+}
+
+.keyboard-heatmap .tab-list {
+  margin-bottom: 2px; /* KeyboardHeatmapCard使用極小間距 */
+}
+
+/* 黑暗模式下的Tab樣式 */
+[data-theme="dark"] .tab-button {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .tab-button:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+}
+
+[data-theme="dark"] .tab-button.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+  background-color: var(--color-accent-bg);
+}
+
+[data-theme="dark"] .tab-list {
+  border-bottom-color: var(--color-border-secondary);
+}
