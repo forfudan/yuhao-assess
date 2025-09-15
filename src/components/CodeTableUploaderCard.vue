@@ -149,7 +149,7 @@
       </div>
     </div>
 
-    <!-- 上传按钮 -->
+    <!-- 上傳按鈕 -->
     <div class="upload-actions">
       <button 
         class="btn btn-primary upload-btn"
@@ -157,7 +157,7 @@
         @click="processFile"
       >
         <span v-if="isUploading">解析中...</span>
-        <span v-else>开始分析</span>
+        <span v-else>開始分析</span>
       </button>
       
       <button 
@@ -170,9 +170,9 @@
       </button>
     </div>
 
-    <!-- 预览区域 -->
+    <!-- 預覽區域 -->
     <div v-if="previewData.length > 0" class="preview-section">
-      <h4 class="preview-title">文件预览（前100行）</h4>
+      <h4 class="preview-title">文件預覽（前100行）</h4>
       <div class="preview-content">
         <div 
           v-for="(line, index) in previewData" 
@@ -187,6 +187,35 @@
           </span>
           <span v-else class="line-error">忽略本行</span>
         </div>
+      </div>
+    </div>
+
+    <!-- 碼表編碼分析預覽 -->
+    <div v-if="encodingPreviewData.length > 0" class="encoding-preview-section">
+      <h4 class="preview-title">編碼預覽（前100字）</h4>
+      <div class="encoding-table-container">
+        <table class="encoding-table">
+          <thead>
+            <tr>
+              <th class="row-header">行號</th>
+              <th class="char-header">漢字</th>
+              <th class="code-header">全碼</th>
+              <th class="code-header">簡碼</th>
+              <th class="code-header">全碼及選重鍵</th>
+              <th class="code-header">簡碼及選重鍵</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in encodingPreviewData" :key="index" class="encoding-row">
+              <td class="row-number">{{ index + 1 }}</td>
+              <td class="char-cell">{{ item.char }}</td>
+              <td class="code-cell">{{ item.fullCode || '-' }}</td>
+              <td class="code-cell">{{ item.shortCode || '-' }}</td>
+              <td class="code-cell selection">{{ item.fullWithSelection || '-' }}</td>
+              <td class="code-cell selection">{{ item.shortWithSelection || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
     
@@ -227,10 +256,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, CodeTableFormat, ParseResult, UploadStatus } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
+import { CodeTableProcessingService } from '../services/codeTableProcessingService'
 
 // 定义 props
 interface Props {
@@ -278,6 +308,43 @@ const previewData = ref<Array<{
   code: string
   valid: boolean
 }>>([])
+
+// 編碼預覽數據
+const encodingPreviewData = ref<Array<{
+  char: string
+  fullCode: string
+  shortCode: string
+  fullWithSelection: string
+  shortWithSelection: string
+}>>([])
+
+// 碼表處理服務實例
+const processingService = CodeTableProcessingService.getInstance()
+
+// 檢查處理狀態並生成編碼預覽
+const checkProcessingStatus = () => {
+  const processedTables = processingService.getProcessedTables()
+  if (processedTables && encodingPreviewData.value.length === 0) {
+    // 短暫延遲確保處理完成
+    setTimeout(() => {
+      generateEncodingPreview()
+    }, 100)
+  }
+}
+
+// 定期檢查處理狀態
+let statusCheckInterval: number | null = null
+const startStatusCheck = () => {
+  if (statusCheckInterval) clearInterval(statusCheckInterval)
+  statusCheckInterval = setInterval(checkProcessingStatus, 500)
+}
+
+const stopStatusCheck = () => {
+  if (statusCheckInterval) {
+    clearInterval(statusCheckInterval)
+    statusCheckInterval = null
+  }
+}
 
 // 文件大小格式化
 const formatFileSize = (bytes: number): string => {
@@ -439,10 +506,78 @@ const generatePreview = async (file: File) => {
   }
 }
 
+// 生成編碼預覽數據
+const generateEncodingPreview = () => {
+  const processedTables = processingService.getProcessedTables()
+  if (!processedTables) {
+    encodingPreviewData.value = []
+    return
+  }
+
+  const { original, full, short, fullWithSelection, shortWithSelection } = processedTables
+  const previewItems: Array<{
+    char: string
+    fullCode: string
+    shortCode: string
+    fullWithSelection: string
+    shortWithSelection: string
+  }> = []
+
+  // 為了保持原始碼表的順序，我們需要從 previewData 中獲取單字順序
+  const orderedChars: string[] = []
+  
+  if (previewData.value.length > 0) {
+    // 從文件預覽數據中獲取已解析的單字，保持原始文件順序
+    for (const line of previewData.value) {
+      if (line.valid && line.char && Array.from(line.char).length === 1) {
+        if (!orderedChars.includes(line.char)) {
+          orderedChars.push(line.char)
+        }
+      }
+    }
+  }
+  
+  // 如果從預覽數據中獲取的單字不足100個，從原始碼表中補充
+  if (orderedChars.length < 100) {
+    for (const char of original.keys()) {
+      if (orderedChars.length >= 100) break
+      if (Array.from(char).length === 1 && !orderedChars.includes(char)) {
+        orderedChars.push(char)
+      }
+    }
+  }
+
+  // 獲取前100個單字的編碼信息
+  const maxCount = Math.min(100, orderedChars.length)
+  for (let i = 0; i < maxCount; i++) {
+    const char = orderedChars[i]
+    
+    // 檢查該字符是否在所有碼表中都存在
+    if (!original.has(char)) continue
+
+    const fullCodes = full.get(char) || []
+    const shortCodes = short.get(char) || []
+    const fullWithSelectionCodes = fullWithSelection.get(char) || []
+    const shortWithSelectionCodes = shortWithSelection.get(char) || []
+
+    previewItems.push({
+      char,
+      fullCode: fullCodes[0] || '-',
+      shortCode: shortCodes[0] || '-',
+      fullWithSelection: fullWithSelectionCodes[0] || '-',
+      shortWithSelection: shortWithSelectionCodes[0] || '-'
+    })
+  }
+
+  encodingPreviewData.value = previewItems
+}
+
 // 移除文件
 const removeFile = () => {
   selectedFile.value = null
   previewData.value = []
+  encodingPreviewData.value = []
+  stopStatusCheck()
   if (fileInput.value) {
     fileInput.value.value = ''
   }
@@ -559,6 +694,9 @@ const processFile = async () => {
       prefixKeys: prefixKeys
     })
 
+    // 啟動狀態檢查以生成編碼預覽
+    startStatusCheck()
+
   } catch (error) {
     emit('uploadError', `文件处理失败: ${error instanceof Error ? error.message : '未知错误'}`)
   } finally {
@@ -619,12 +757,21 @@ async function loadBuiltinTable() {
       isPrefix: isBuiltinPrefix,  // 使用配置中的前缀码属性
       prefixKeys: builtinPrefixKeys
     })
+
+    // 啟動狀態檢查以生成編碼預覽
+    startStatusCheck()
+
   } catch (error) {
     emit('uploadError', `載入預設碼表失敗: ${error instanceof Error ? error.message : String(error)}`)
   } finally {
     isUploading.value = false
   }
 }
+
+// 組件清理
+onUnmounted(() => {
+  stopStatusCheck()
+})
 
 // 初始化
 loadBuiltinConfig()
@@ -1339,5 +1486,114 @@ loadBuiltinConfig()
 [data-theme="dark"] .prefix-keys-field:focus {
   border-color: var(--color-border-focus);
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* 編碼預覽表格樣式 - 與文件預覽保持一致 */
+.encoding-preview-section {
+  margin-top: var(--spacing-lg);
+}
+
+.encoding-table-container {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-primary);
+}
+
+.encoding-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+.encoding-table thead {
+  position: sticky;
+  top: 0;
+  background-color: var(--color-bg-secondary);
+  z-index: 1;
+}
+
+.encoding-table th {
+  padding: var(--spacing-sm) var(--spacing-xs);
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border-secondary);
+  border-right: 1px solid var(--color-border-secondary);
+  background-color: var(--color-bg-secondary);
+}
+
+.encoding-table th:last-child {
+  border-right: none;
+}
+
+.row-header {
+  width: 40px;
+  text-align: center !important;
+}
+
+.char-header {
+  width: 50px;
+  text-align: center !important;
+}
+
+.code-header {
+  min-width: 90px;
+  font-size: 0.75rem;
+}
+
+.encoding-row {
+  transition: background-color 0.15s ease;
+}
+
+.encoding-row:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.encoding-table td {
+  padding: var(--spacing-xs) var(--spacing-xs);
+  border-bottom: 1px solid var(--color-border-secondary);
+  border-right: 1px solid var(--color-border-secondary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.encoding-table td:last-child {
+  border-right: none;
+}
+
+.encoding-row:last-child td {
+  border-bottom: none;
+}
+
+.row-number {
+  width: 30px;
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: 0.8rem;
+}
+
+.char-cell {
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+}
+
+.code-cell {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  text-align: left;
+  padding: var(--spacing-xs);
+}
+
+.code-cell.selection {
+  color: var(--color-success);
+  font-weight: 500;
 }
 </style>
