@@ -157,6 +157,7 @@ interface Props {
   globalPrefixKeys?: string[]
   codeTableName?: string
   id?: string
+  processedTables?: any | null  // 處理後的碼表數據
 }
 
 const props = defineProps<Props>()
@@ -221,7 +222,7 @@ const checkProcessingStatus = () => {
     return
   }
   
-  const processedTables = processingService.getProcessedTables()
+  const processedTables = props.processedTables || processingService.getProcessedTables()
   
   // 檢查是否有新的處理結果且當前沒有計算結果
   if (processedTables && 
@@ -499,7 +500,7 @@ const updateEfficiency = async () => {
 
   try {
     // 使用全局已處理的碼表結果，避免重複計算
-    const processedTables = processingService.getProcessedTables()
+    const processedTables = props.processedTables || processingService.getProcessedTables()
     
     if (!processedTables) {
       // 如果全局處理結果不存在，停止加載狀態並等待狀態檢查重試
@@ -678,45 +679,26 @@ const getFullShortCodeWithSelection = (char: string): string => {
     return shortCodes.reduce((a, b) => a.length <= b.length ? a : b)
   }
   
-  // 如果簡碼表中没有，降級到原始碼表
-  const codes = props.codeTable.get(char) || []
-  if (codes.length === 0) return ''
+  // 如果簡碼表中没有該字符，檢查是否真的有簡碼優勢
+  const processedTables = CodeTableProcessingService.getInstance().getProcessedTables()
+  if (!processedTables) return ''
   
-  // 找到最短的編碼
-  const shortestCode = codes.reduce((a, b) => a.length <= b.length ? a : b)
+  const shortCodes2 = processedTables.short.get(char) || []
+  const fullCodes = processedTables.full.get(char) || []
   
-  // 檢查是否需要選重複號（簡化邏輯，因爲預生成表應該已經處理了這些）
-  // 找到所有具有相同簡碼的字符
-  const sameCodeChars: string[] = []
+  if (shortCodes2.length === 0 || fullCodes.length === 0) return ''
   
-  // 遍歷碼表找到有相同簡碼的字符
-  for (const [otherChar, otherCodes] of props.codeTable.entries()) {
-    for (const otherCode of otherCodes) {
-      if (otherCode === shortestCode) {
-        sameCodeChars.push(otherChar)
-        break
-      }
-    }
+  // 找到最短的簡碼和全碼
+  const shortestShortCode = shortCodes2.reduce((a, b) => a.length <= b.length ? a : b)
+  const shortestFullCode = fullCodes.reduce((a, b) => a.length <= b.length ? a : b)
+  
+  // 只有當簡碼真的比全碼短時才顯示
+  if (shortestShortCode.length >= shortestFullCode.length) {
+    return '' // 不顯示沒有優勢的簡碼
   }
   
-  // 如果只有一個字符使用這個簡碼，不需要選重複號
-  if (sameCodeChars.length <= 1) {
-    return shortestCode
-  }
-  
-  // 如果有多個字符使用相同簡碼，需要添加選重複號
-  // 按字符的Unicode順序排序，確定位置
-  sameCodeChars.sort()
-  const position = sameCodeChars.indexOf(char)
-  
-  if (position === -1) {
-    return shortestCode // 如果没找到（不應該發生），返回原簡碼
-  }
-  
-  // 添加選重複號（使用正確的選重鍵序列）
-  const selectionKeys = ['_', ';', "'", '4', '5', '6', '7', '8', '9', '0']
-  const selectionKey = position < selectionKeys.length ? selectionKeys[position] : '0'
-  return `${shortestCode}${selectionKey}`
+  return shortestShortCode
+
 }
 
 // 獲取前一個N值

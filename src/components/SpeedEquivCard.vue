@@ -138,13 +138,15 @@ interface Props {
   codeTableName?: string
   initialPrefix?: boolean
   globalPrefixKeys?: string[]
+  processedTables?: any | null  // 處理後的碼表數據
 }
 
 const props = withDefaults(defineProps<Props>(), {
   codeTable: () => new Map(),
   codeTableName: '',
   initialPrefix: false,
-  globalPrefixKeys: () => []
+  globalPrefixKeys: () => [],
+  processedTables: null
 })
 
 // 摺疊功能
@@ -306,8 +308,8 @@ async function calculateSpeedEquivAnalysis() {
   error.value = null
 
   try {
-    // 1. 直接獲取已處理的碼表（由App.vue統一處理）
-    const processedTables = codeTableProcessingService.getProcessedTables()
+    // 1. 使用從 props 傳入的處理後碼表數據
+    const processedTables = props.processedTables
     if (!processedTables) {
       throw new Error('無法獲取處理後的碼表')
     }
@@ -315,7 +317,7 @@ async function calculateSpeedEquivAnalysis() {
     const processedCodeTable = processedTables.fullWithSelection
     const shortProcessedCodeTable = processedTables.shortWithSelection
     
-    // 2. 從處理服務獲取最大碼長和前綴碼檢測結果
+    // 2. 從處理服務獲取最大碼長和前綴碼檢測結果（使用全局統一數據源）
     const processingOptions = codeTableProcessingService.getProcessingOptions()
     maxCodeLength.value = processingOptions?.maxLength || 4
     detectedIsPrefix.value = processingOptions?.isPrefix || false

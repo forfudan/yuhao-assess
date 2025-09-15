@@ -193,6 +193,9 @@
     <!-- 碼表編碼分析預覽 -->
     <div v-if="encodingPreviewData.length > 0" class="encoding-preview-section">
       <h4 class="preview-title">編碼預覽（前100字）</h4>
+      <p class="preview-note">
+        <strong>注意：</strong>「及選重鍵」欄位只顯示高頻字符的編碼（性能優化），低頻字符會顯示為「-」。
+      </p>
       <div class="encoding-table-container">
         <table class="encoding-table">
           <thead>
@@ -209,6 +212,40 @@
             <tr v-for="(item, index) in encodingPreviewData" :key="index" class="encoding-row">
               <td class="row-number">{{ index + 1 }}</td>
               <td class="char-cell">{{ item.char }}</td>
+              <td class="code-cell">{{ item.fullCode || '-' }}</td>
+              <td class="code-cell">{{ item.shortCode || '-' }}</td>
+              <td class="code-cell selection">{{ item.fullWithSelection || '-' }}</td>
+              <td class="code-cell selection">{{ item.shortWithSelection || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 檢視最長編碼 -->
+    <div v-if="longestCodesData.length > 0" class="longest-codes-section">
+      <h4 class="preview-title">檢視最長編碼（前10個最長編碼的字）</h4>
+      <div class="max-length-info">
+        <p><strong>當前計算的全局最大碼長：</strong>{{ globalMaxLengthDisplay }}</p>
+      </div>
+      <div class="encoding-table-container">
+        <table class="encoding-table">
+          <thead>
+            <tr>
+              <th class="row-header">序號</th>
+              <th class="char-header">漢字</th>
+              <th class="code-header">該字最大碼長</th>
+              <th class="code-header">全碼</th>
+              <th class="code-header">簡碼</th>
+              <th class="code-header">全碼及選重鍵</th>
+              <th class="code-header">簡碼及選重鍵</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in longestCodesData" :key="index" class="encoding-row">
+              <td class="row-number">{{ index + 1 }}</td>
+              <td class="char-cell">{{ item.char }}</td>
+              <td class="code-cell max-length">{{ item.maxLength }}</td>
               <td class="code-cell">{{ item.fullCode || '-' }}</td>
               <td class="code-cell">{{ item.shortCode || '-' }}</td>
               <td class="code-cell selection">{{ item.fullWithSelection || '-' }}</td>
@@ -265,10 +302,12 @@ import { CodeTableProcessingService } from '../services/codeTableProcessingServi
 // 定义 props
 interface Props {
   uploadStatus?: UploadStatus | null
+  processedTables?: any | null  // 處理後的碼表數據
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  uploadStatus: null
+  uploadStatus: null,
+  processedTables: null
 })
 
 // 折叠功能
@@ -318,13 +357,25 @@ const encodingPreviewData = ref<Array<{
   shortWithSelection: string
 }>>([])
 
+// 最長編碼檢視數據
+const longestCodesData = ref<Array<{
+  char: string
+  fullCode: string
+  shortCode: string
+  fullWithSelection: string
+  shortWithSelection: string
+  maxLength: number
+}>>([])
+
+// 全局最大碼長顯示
+const globalMaxLengthDisplay = ref<number>(4)
+
 // 碼表處理服務實例
 const processingService = CodeTableProcessingService.getInstance()
 
 // 檢查處理狀態並生成編碼預覽
 const checkProcessingStatus = () => {
-  const processedTables = processingService.getProcessedTables()
-  if (processedTables && encodingPreviewData.value.length === 0) {
+  if (props.processedTables && encodingPreviewData.value.length === 0) {
     // 短暫延遲確保處理完成
     setTimeout(() => {
       generateEncodingPreview()
@@ -332,11 +383,10 @@ const checkProcessingStatus = () => {
   }
 }
 
-// 定期檢查處理狀態
+// 這些處理狀態檢查函數現在不再需要，因為我們直接從 props 獲取數據
 let statusCheckInterval: number | null = null
 const startStatusCheck = () => {
-  if (statusCheckInterval) clearInterval(statusCheckInterval)
-  statusCheckInterval = setInterval(checkProcessingStatus, 500)
+  // 不再需要定期檢查
 }
 
 const stopStatusCheck = () => {
@@ -508,11 +558,11 @@ const generatePreview = async (file: File) => {
 
 // 生成編碼預覽數據
 const generateEncodingPreview = () => {
-  const processedTables = processingService.getProcessedTables()
-  if (!processedTables) {
+  if (!props.processedTables) {
     encodingPreviewData.value = []
     return
   }
+  const processedTables = props.processedTables
 
   const { original, full, short, fullWithSelection, shortWithSelection } = processedTables
   const previewItems: Array<{
@@ -570,6 +620,59 @@ const generateEncodingPreview = () => {
   }
 
   encodingPreviewData.value = previewItems
+  
+  // 同時生成最長編碼檢視數據
+  generateLongestCodesData(processedTables)
+}
+
+// 生成最長編碼檢視數據
+const generateLongestCodesData = (processedTables: any) => {
+  const { original, full, short, fullWithSelection, shortWithSelection } = processedTables
+  
+  // 找出全碼最長的10個字符
+  const charsWithMaxLength: Array<{
+    char: string
+    maxLength: number
+    fullCode: string
+    shortCode: string
+    fullWithSelection: string
+    shortWithSelection: string
+  }> = []
+
+  // 從 processingOptions 獲取全局最大碼長，而不是重新計算
+  const processingOptions = CodeTableProcessingService.getInstance().getProcessingOptions()
+  const calculatedGlobalMaxLength = processingOptions?.maxLength || 4
+
+  for (const [char, codes] of original.entries()) {
+    if (Array.from(char).length !== 1) continue // 只處理單字
+    
+    // 計算該字符的最大編碼長度
+    let maxLength = 0
+    for (const code of codes) {
+      maxLength = Math.max(maxLength, code.length)
+    }
+    
+    const fullCodes = full.get(char) || []
+    const shortCodes = short.get(char) || []
+    const fullWithSelectionCodes = fullWithSelection.get(char) || []
+    const shortWithSelectionCodes = shortWithSelection.get(char) || []
+
+    charsWithMaxLength.push({
+      char,
+      maxLength,
+      fullCode: fullCodes[0] || '-',
+      shortCode: shortCodes[0] || '-',
+      fullWithSelection: fullWithSelectionCodes[0] || '-',
+      shortWithSelection: shortWithSelectionCodes[0] || '-'
+    })
+  }
+
+  // 按最大編碼長度降序排序，取前10個
+  charsWithMaxLength.sort((a, b) => b.maxLength - a.maxLength)
+  longestCodesData.value = charsWithMaxLength.slice(0, 10)
+  
+  // 更新全局最大碼長顯示（直接使用從 processingOptions 獲取的值）
+  globalMaxLengthDisplay.value = calculatedGlobalMaxLength
 }
 
 // 移除文件
@@ -577,6 +680,8 @@ const removeFile = () => {
   selectedFile.value = null
   previewData.value = []
   encodingPreviewData.value = []
+  longestCodesData.value = []
+  globalMaxLengthDisplay.value = 4
   stopStatusCheck()
   if (fileInput.value) {
     fileInput.value.value = ''
@@ -767,6 +872,14 @@ async function loadBuiltinTable() {
     isUploading.value = false
   }
 }
+
+// 監聽處理後的碼表數據變化
+watch(() => props.processedTables, (newTables) => {
+  if (newTables) {
+    // 生成編碼預覽和最長編碼數據
+    generateEncodingPreview()
+  }
+}, { immediate: true })
 
 // 組件清理
 onUnmounted(() => {
@@ -1595,5 +1708,28 @@ loadBuiltinConfig()
 .code-cell.selection {
   color: var(--color-success);
   font-weight: 500;
+}
+
+/* 最長編碼表格樣式 */
+.longest-codes-section {
+  margin-top: var(--spacing-lg);
+  border-top: 2px solid var(--color-border-primary);
+  padding-top: var(--spacing-lg);
+}
+
+.max-length-info {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+}
+
+.max-length-info strong {
+  color: var(--color-text-primary);
+}
+
+.code-cell.max-length {
+  text-align: center;
 }
 </style>
