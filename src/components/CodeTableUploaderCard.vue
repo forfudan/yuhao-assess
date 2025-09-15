@@ -192,10 +192,7 @@
 
     <!-- 碼表編碼分析預覽 -->
     <div v-if="encodingPreviewData.length > 0" class="encoding-preview-section">
-      <h4 class="preview-title">編碼預覽（前100字）</h4>
-      <p class="preview-note">
-        <strong>注意：</strong>「及選重鍵」欄位只顯示高頻字符的編碼（性能優化），低頻字符會顯示為「-」。
-      </p>
+      <h4 class="preview-title">編碼預覽（100個）</h4>
       <div class="encoding-table-container">
         <table class="encoding-table">
           <thead>
@@ -224,7 +221,7 @@
 
     <!-- 檢視最長編碼 -->
     <div v-if="longestCodesData.length > 0" class="longest-codes-section">
-      <h4 class="preview-title">檢視最長編碼（前10個最長編碼的字）</h4>
+      <h4 class="preview-title">檢視最長編碼（10個編碼最長的字）</h4>
       <div class="max-length-info">
         <p><strong>當前計算的全局最大碼長：</strong>{{ globalMaxLengthDisplay }}</p>
       </div>
@@ -610,12 +607,21 @@ const generateEncodingPreview = () => {
     const fullWithSelectionCodes = fullWithSelection.get(char) || []
     const shortWithSelectionCodes = shortWithSelection.get(char) || []
 
+    // 過濾掉不在字頻表中的字符（及選重鍵為 "-" 的字符）
+    const fullWithSelectionCode = fullWithSelectionCodes[0] || '-'
+    const shortWithSelectionCode = shortWithSelectionCodes[0] || '-'
+    
+    // 如果全碼及選重鍵和簡碼及選重鍵都是 "-"，則跳過這個字符
+    if (fullWithSelectionCode === '-' && shortWithSelectionCode === '-') {
+      continue
+    }
+
     previewItems.push({
       char,
       fullCode: fullCodes[0] || '-',
       shortCode: shortCodes[0] || '-',
-      fullWithSelection: fullWithSelectionCodes[0] || '-',
-      shortWithSelection: shortWithSelectionCodes[0] || '-'
+      fullWithSelection: fullWithSelectionCode,
+      shortWithSelection: shortWithSelectionCode
     })
   }
 
@@ -657,13 +663,22 @@ const generateLongestCodesData = (processedTables: any) => {
     const fullWithSelectionCodes = fullWithSelection.get(char) || []
     const shortWithSelectionCodes = shortWithSelection.get(char) || []
 
+    // 過濾掉不在字頻表中的字符（及選重鍵為 "-" 的字符）
+    const fullWithSelectionCode = fullWithSelectionCodes[0] || '-'
+    const shortWithSelectionCode = shortWithSelectionCodes[0] || '-'
+    
+    // 如果全碼及選重鍵和簡碼及選重鍵都是 "-"，則跳過這個字符
+    if (fullWithSelectionCode === '-' && shortWithSelectionCode === '-') {
+      continue
+    }
+
     charsWithMaxLength.push({
       char,
       maxLength,
       fullCode: fullCodes[0] || '-',
       shortCode: shortCodes[0] || '-',
-      fullWithSelection: fullWithSelectionCodes[0] || '-',
-      shortWithSelection: shortWithSelectionCodes[0] || '-'
+      fullWithSelection: fullWithSelectionCode,
+      shortWithSelection: shortWithSelectionCode
     })
   }
 
