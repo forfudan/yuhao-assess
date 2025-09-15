@@ -663,7 +663,7 @@ onMounted(async () => {
   flex: 1;
 }
 
-/* 头部按钮容器 */
+/* 頭部按鈕容器 */
 .header-buttons {
   display: flex;
   align-items: center;
@@ -671,7 +671,7 @@ onMounted(async () => {
   margin-left: var(--spacing-lg);
 }
 
-/* 导出按钮样式 */
+/* 導出按鈕樣式 */
 .export-btn {
   background: rgba(255, 255, 255, 0.2);
   border: none;
@@ -921,25 +921,25 @@ onMounted(async () => {
   background: #e9d5ff !important;
 }
 
-/* 暗黑模式下的懸停效果 - 深沉但有层次的变化 */
+/* 暗黑模式下的懸停效果 - 深沈但有層次的變化 */
 [data-theme="dark"] .very-high-value:hover {
-  background: #4a2323 !important;  /* 稍微变亮的深红灰色 */
+  background: #4a2323 !important;  /* 稍微變亮的深紅灰色 */
 }
 
 [data-theme="dark"] .high-value:hover {
-  background: #4a311d !important;  /* 稍微变亮的深黄灰色 */
+  background: #4a311d !important;  /* 稍微變亮的深黃灰色 */
 }
 
 [data-theme="dark"] .medium-value:hover {
-  background: #213621 !important;  /* 稍微变亮的深绿灰色 */
+  background: #213621 !important;  /* 稍微變亮的深綠灰色 */
 }
 
 [data-theme="dark"] .low-value:hover {
-  background: #253242 !important;  /* 稍微变亮的深蓝灰色 */
+  background: #253242 !important;  /* 稍微變亮的深藍灰色 */
 }
 
 [data-theme="dark"] .very-low-value:hover {
-  background: #362147 !important;  /* 稍微变亮的深紫灰色 */
+  background: #362147 !important;  /* 稍微變亮的深紫灰色 */
 }
 
 /* 自定義工具提示容器 - 滑鼠懸停時顯示的浮動提示框 */
