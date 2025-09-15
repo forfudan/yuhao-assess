@@ -126,6 +126,7 @@
             @upload-success="handleCodeTableUpload"
             @upload-error="handleUploadError"
             :upload-status="uploadStatus"
+            :processed-tables="processedTables"
           />
 
           <!-- 重碼數據卡片 -->
@@ -155,6 +156,7 @@
             :code-table-name="codeTableName" 
             :initial-prefix="uploadPrefixFlag"
             :global-prefix-keys="uploadPrefixKeys"
+            :processed-tables="processedTables"
           />
 
           <!-- 簡碼效率卡片 -->
@@ -166,6 +168,7 @@
             :analysis-ready="analysisReady"
             :global-prefix-keys="uploadPrefixKeys"
             :code-table-name="codeTableName"
+            :processed-tables="processedTables"
           />
 
           <!-- 鍵位熱力圖卡片 -->
@@ -231,6 +234,7 @@ import ComparisonCard from './components/ComparisonCard.vue'
 import SpeedEquivCard from './components/SpeedEquivCard.vue'
 import ShortCodeEfficiencyCard from './components/ShortCodeEfficiencyCard.vue'
 import { codeTableProcessingService } from './services/codeTableProcessingService'
+import { isInCJKToJ } from './services/charsetService' 
 import type { CodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
 
 // 響應式數據
@@ -243,6 +247,7 @@ const analysisResults = ref(null)
 const uploadPrefixFlag = ref<boolean>(false)
 const uploadPrefixKeys = ref<string[]>([])
 const globalMaxLength = ref<number>(4) // 全局最大碼長，計算一次後不再改變
+const processedTables = ref<any>(null) // 處理後的碼表數據，作為 golden source
 
 // 上傳卡片引用
 const uploaderCardRef = ref()
@@ -486,22 +491,33 @@ const TEST_CHARS = ['灌', '瓣', '璧', '豁', '糯', '籍', '矗', '瓤', '嚼
 // 計算最大碼長
 function calculateMaxCodeLength(codeTable: CodeTable): number {
   let maxLength = 0
+  let foundTestChars = false
   
-  // 首先尝试使用测试字符
+  // 首先尝试使用测试字符，檢查所有編碼
   for (const char of TEST_CHARS) {
+    // 只處理 CJK 字符
+    if (!isInCJKToJ(char)) continue
+    
     const codes = codeTable.get(char)
     if (codes && codes.length > 0) {
-      const codeLength = codes[0].length
-      maxLength = Math.max(maxLength, codeLength)
+      foundTestChars = true
+      for (const code of codes) {
+        maxLength = Math.max(maxLength, code.length)
+      }
     }
   }
   
-  // 如果测试字符没有找到合适的结果，遍历所有字符
-  if (maxLength === 0) {
-    for (const codes of codeTable.values()) {
+  // 如果测试字符沒有找到任何結果，才遍歷所有字符
+  // 只處理 CJK 字符，過濾掉特殊符號等
+  if (!foundTestChars) {
+    for (const [char, codes] of codeTable.entries()) {
+      // 只處理 CJK 字符
+      if (!isInCJKToJ(char)) continue
+      
       if (codes && codes.length > 0) {
-        const codeLength = codes[0].length
-        maxLength = Math.max(maxLength, codeLength)
+        for (const code of codes) {
+          maxLength = Math.max(maxLength, code.length)
+        }
       }
     }
   }
@@ -534,6 +550,9 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
   globalMaxLength.value = maxLength
   uploadPrefixFlag.value = data.isPrefix || false
   uploadPrefixKeys.value = data.prefixKeys || []
+  
+  // 獲取處理後的表格數據作為 golden source
+  processedTables.value = codeTableProcessingService.getProcessedTables()
   
   // 如果是預設方案，从fileName中提取名称（格式：預設方案：方案名）
   if (data.tableKey && data.fileName.startsWith('預設方案：')) {

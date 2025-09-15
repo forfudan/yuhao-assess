@@ -5,6 +5,7 @@
 
 import { generateFullCodeTable, generateShortCodeTable } from './codeTableCleanService'
 import { getFrequencyCharsUnion } from './dataService'
+import { isInCJKToJ } from './charsetService'
 import type { CodeTable } from '../types'
 
 // 處理後的碼表結果接口
@@ -32,15 +33,35 @@ export class CodeTableProcessingService {
   }
 
   /**
+   * 過濾原始碼表，只保留 CJK 漢字（單字）
+   */
+  private filterOriginalCodeTable(originalCodeTable: CodeTable): CodeTable {
+    const filteredCodeTable: CodeTable = new Map()
+    
+    for (const [char, codes] of originalCodeTable.entries()) {
+      // 只保留單個 CJK 漢字
+      if (Array.from(char).length === 1 && isInCJKToJ(char)) {
+        filteredCodeTable.set(char, codes)
+      }
+    }
+    
+    console.log(`[CodeTableProcessingService] 原始碼表過濾：${originalCodeTable.size} -> ${filteredCodeTable.size} 個 CJK 漢字`)
+    return filteredCodeTable
+  }
+
+  /**
    * 處理原始碼表，生成所有需要的派生碼表
    */
   async processCodeTable(originalCodeTable: CodeTable, options?: { isPrefix?: boolean, maxLength?: number, prefixKeys?: string[] }): Promise<ProcessedCodeTables> {
-    // 生成全碼表和簡碼表
-    const fullResult = generateFullCodeTable(originalCodeTable)
-    const shortResult = generateShortCodeTable(originalCodeTable)
+    // 首先過濾原始碼表，只保留 CJK 漢字
+    const filteredOriginalCodeTable = this.filterOriginalCodeTable(originalCodeTable)
     
-    // 計算最大碼長
-    const maxLength = options?.maxLength || this.calculateMaxCodeLength(originalCodeTable)  // 使用原始碼表計算
+    // 生成全碼表和簡碼表（使用過濾後的碼表）
+    const fullResult = generateFullCodeTable(filteredOriginalCodeTable)
+    const shortResult = generateShortCodeTable(filteredOriginalCodeTable)
+    
+    // 計算最大碼長（使用過濾後的碼表）
+    const maxLength = options?.maxLength || this.calculateMaxCodeLength(filteredOriginalCodeTable)
     const isPrefix = options?.isPrefix || false
     const prefixKeys = options?.prefixKeys
     
@@ -60,7 +81,7 @@ export class CodeTableProcessingService {
     const shortWithSelection = await this.generateCodeTableWithSelection(shortResult.codeTable, maxLength, isPrefix, frequencyChars, prefixKeys)
     
     this.processedTables = {
-      original: originalCodeTable,
+      original: filteredOriginalCodeTable,  // 使用過濾後的碼表作為「原始」碼表
       full: fullResult.codeTable,
       short: shortResult.codeTable,
       fullWithSelection: fullWithSelection,

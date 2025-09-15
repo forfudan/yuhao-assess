@@ -141,13 +141,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, Teleport } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, Teleport } from 'vue'
 import { calculateShortCodeEfficiency } from '../services/shortCodeEfficiencyService'
 import { useCollapse } from '../composables/useCollapse'
 import { loadCharFrequency, loadCharFrequencySC, loadCharFrequencyTC, loadCharFrequencyGuji } from '../services/dataService'
 import { createTooltipManager } from '../services/uiService'
 import { ExportService } from '../services/exportService'
-import { codeTableProcessingService } from '../services'
+import { CodeTableProcessingService } from '../services/codeTableProcessingService'
 import type { CodeTable, CharFrequency } from '../types'
 
 // Props
@@ -157,6 +157,7 @@ interface Props {
   globalPrefixKeys?: string[]
   codeTableName?: string
   id?: string
+  processedTables?: any | null  // 處理後的碼表數據
 }
 
 const props = defineProps<Props>()
@@ -205,6 +206,66 @@ const tooltipCharsWithCodes = ref('')
 // 预处理的码表（包含简码加选重表）
 const processedCodeTable = ref<CodeTable>(new Map())
 const shortWithSelectionTable = ref<CodeTable>(new Map())
+
+// 碼表處理服務實例
+const processingService = CodeTableProcessingService.getInstance()
+
+// 檢查處理狀態
+const checkProcessingStatus = () => {
+  // 超時檢查（10秒）
+  const elapsed = Date.now() - statusCheckStartTime
+  if (elapsed > 10000) {
+    console.warn('[ShortCodeEfficiencyCard] 等待全局處理結果超時')
+    stopStatusCheck()
+    isLoading.value = false
+    error.value = '等待碼表處理結果超時，請嘗試重新上傳碼表'
+    return
+  }
+  
+  const processedTables = props.processedTables || processingService.getProcessedTables()
+  
+  // 檢查是否有新的處理結果且當前沒有計算結果
+  if (processedTables && 
+      Object.keys(efficiencyData.value).length === 0 && 
+      props.codeTable && 
+      props.codeTable.size > 0) {
+    
+    console.log('[ShortCodeEfficiencyCard] 檢測到新的全局處理結果，開始計算效率...')
+    // 短暫延遲確保處理完成，但不需要設置isLoading，updateEfficiency會處理
+    setTimeout(() => {
+      updateEfficiency()
+    }, 50)
+  }
+}
+
+// 定期檢查處理狀態
+let statusCheckInterval: number | null = null
+let statusCheckStartTime: number = 0
+
+const startStatusCheck = () => {
+  if (statusCheckInterval) clearInterval(statusCheckInterval)
+  
+  // 記錄開始時間
+  statusCheckStartTime = Date.now()
+  
+  // 如果還沒有計算結果，顯示加載狀態
+  if (Object.keys(efficiencyData.value).length === 0) {
+    isLoading.value = true
+    error.value = ''
+  }
+  
+  // 立即檢查一次
+  checkProcessingStatus()
+  // 然後每200ms檢查一次，響應更快
+  statusCheckInterval = setInterval(checkProcessingStatus, 200)
+}
+
+const stopStatusCheck = () => {
+  if (statusCheckInterval) {
+    clearInterval(statusCheckInterval)
+    statusCheckInterval = null
+  }
+}
 
 // 字頻數據
 const charFrequencies = ref<{
@@ -311,6 +372,76 @@ const hasOmittedRows = computed(() => {
   return nValues.length > tableData.value.length
 })
 
+// 使用加選重碼表計算簡碼效率的函數
+const calculateShortCodeEfficiencyWithMaps = (
+  charFrequency: CharFrequency, 
+  shortCodeMap: Map<string, string>, 
+  fullCodeMap: Map<string, string>
+): Array<{ N: number; efficiency: number; selectedChars: string[] }> => {
+  
+  // 預處理字符數據
+  const processedChars: Array<{
+    char: string
+    shortLen: number
+    fullLen: number
+    lenDiff: number
+    freq: number
+    freqLenDiff: number
+  }> = []
+
+  for (const [char, freq] of Object.entries(charFrequency)) {
+    if (freq <= 0) continue
+    
+    const shortCode = shortCodeMap.get(char)
+    const fullCode = fullCodeMap.get(char)
+    
+    if (!shortCode || !fullCode) continue
+    
+    const shortLen = shortCode.length
+    const fullLen = fullCode.length
+    const lenDiff = fullLen - shortLen
+    
+    processedChars.push({
+      char,
+      shortLen,
+      fullLen,
+      lenDiff,
+      freq,
+      freqLenDiff: freq * lenDiff
+    })
+  }
+
+  // 計算不同N值下的效率
+  const nValues = [0, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+  const results: Array<{ N: number; efficiency: number; selectedChars: string[] }> = []
+  
+  for (const N of nValues) {
+    // 只考慮簡碼長度小於全碼長度的漢字
+    const validShortCodeChars = processedChars.filter(char => char.shortLen < char.fullLen)
+    
+    // 按頻率差值排序，選擇前N個字符使用簡碼
+    const sortedByFreqDiff = [...validShortCodeChars].sort((a, b) => b.freqLenDiff - a.freqLenDiff)
+    const actualSelectedCount = Math.min(N, sortedByFreqDiff.length)
+    const selectedCharsList = sortedByFreqDiff.slice(0, actualSelectedCount).map(c => c.char)
+    const selectedChars = new Set(selectedCharsList)
+    
+    // 計算加權平均碼長：前N個字符使用簡碼，其餘使用全碼
+    let totalFreqLen = 0
+    let totalFreq = 0
+    
+    for (const char of processedChars) {
+      const finalLen = selectedChars.has(char.char) ? char.shortLen : char.fullLen
+      totalFreqLen += char.freq * finalLen
+      totalFreq += char.freq
+    }
+    
+    const efficiency = totalFreq > 0 ? totalFreqLen / totalFreq : 0
+    results.push({ N, efficiency, selectedChars: selectedCharsList })
+  }
+  
+  return results
+}
+
 // 載入字頻數據
 const loadCharFrequencyData = async () => {
   try {
@@ -368,21 +499,26 @@ const updateEfficiency = async () => {
   error.value = ''
 
   try {
-    // 預處理碼表以獲取簡碼加選重表
-    const processedTables = await codeTableProcessingService.processCodeTable(
-      props.codeTable,
-      {
-        isPrefix: props.globalPrefixKeys && props.globalPrefixKeys.length > 0,
-        maxLength: 4,
-        prefixKeys: props.globalPrefixKeys
-      }
-    )
+    // 使用全局已處理的碼表結果，避免重複計算
+    const processedTables = props.processedTables || processingService.getProcessedTables()
+    
+    if (!processedTables) {
+      // 如果全局處理結果不存在，停止加載狀態並等待狀態檢查重試
+      console.warn('[ShortCodeEfficiencyCard] 全局碼表處理結果不存在，等待處理完成...')
+      isLoading.value = false
+      return
+    }
+    
+    console.log('[ShortCodeEfficiencyCard] 使用全局處理結果計算簡碼效率')
+    
+    // 處理成功，停止狀態檢查
+    stopStatusCheck()
     
     // 保存簡碼加選重表供tooltip使用
     shortWithSelectionTable.value = processedTables.shortWithSelection
     processedCodeTable.value = processedTables.original
 
-    // 将原始码表转换为CodeTableRow[]格式
+    // 將加選重碼表轉換為CodeTableRow[]格式，用於簡碼效率計算
     const convertCodeTableToRows = (codeTable: CodeTable): { char: string; code: string }[] => {
       const rows: { char: string; code: string }[] = []
       for (const [char, codes] of codeTable) {
@@ -393,7 +529,41 @@ const updateEfficiency = async () => {
       return rows
     }
 
-    const codeTableRows = convertCodeTableToRows(processedTables.original)
+    // 合併簡碼加選重和全碼加選重表，用於正確的效率計算
+    const shortRows = convertCodeTableToRows(processedTables.shortWithSelection)
+    const fullRows = convertCodeTableToRows(processedTables.fullWithSelection)
+    
+    // 創建字符到編碼的映射
+    const shortCodeMap = new Map<string, string>()
+    const fullCodeMap = new Map<string, string>()
+    
+    shortRows.forEach(row => {
+      if (!shortCodeMap.has(row.char) || row.code.length < shortCodeMap.get(row.char)!.length) {
+        shortCodeMap.set(row.char, row.code)
+      }
+    })
+    
+    fullRows.forEach(row => {
+      if (!fullCodeMap.has(row.char) || row.code.length > fullCodeMap.get(row.char)!.length) {
+        fullCodeMap.set(row.char, row.code)
+      }
+    })
+    
+    // 合併為完整的碼表，包含簡碼和全碼
+    const combinedRows: { char: string; code: string; isShort: boolean }[] = []
+    const allChars = new Set([...shortCodeMap.keys(), ...fullCodeMap.keys()])
+    
+    for (const char of allChars) {
+      const shortCode = shortCodeMap.get(char)
+      const fullCode = fullCodeMap.get(char)
+      
+      if (shortCode) {
+        combinedRows.push({ char, code: shortCode, isShort: true })
+      }
+      if (fullCode && fullCode !== shortCode) {
+        combinedRows.push({ char, code: fullCode, isShort: false })
+      }
+    }
 
     const results: Record<string, Array<{ N: number; efficiency: number; selectedChars: string[] }>> = {}
 
@@ -402,11 +572,10 @@ const updateEfficiency = async () => {
     for (const freqKey of frequencies) {
       const charFrequency = charFrequencies.value[freqKey as keyof typeof charFrequencies.value]
       if (charFrequency && Object.keys(charFrequency).length > 0) {
-        const efficiencyResults = calculateShortCodeEfficiency(
-          codeTableRows,
+        const efficiencyResults = calculateShortCodeEfficiencyWithMaps(
           charFrequency,
-          4,  // maxLen
-          props.globalPrefixKeys && props.globalPrefixKeys.length > 0  // isPrefix
+          shortCodeMap,
+          fullCodeMap
         )
         results[freqKey] = efficiencyResults
       }
@@ -510,45 +679,26 @@ const getFullShortCodeWithSelection = (char: string): string => {
     return shortCodes.reduce((a, b) => a.length <= b.length ? a : b)
   }
   
-  // 如果簡碼表中没有，降級到原始碼表
-  const codes = props.codeTable.get(char) || []
-  if (codes.length === 0) return ''
+  // 如果簡碼表中没有該字符，檢查是否真的有簡碼優勢
+  const processedTables = CodeTableProcessingService.getInstance().getProcessedTables()
+  if (!processedTables) return ''
   
-  // 找到最短的編碼
-  const shortestCode = codes.reduce((a, b) => a.length <= b.length ? a : b)
+  const shortCodes2 = processedTables.short.get(char) || []
+  const fullCodes = processedTables.full.get(char) || []
   
-  // 檢查是否需要選重複號（簡化邏輯，因爲預生成表應該已經處理了這些）
-  // 找到所有具有相同簡碼的字符
-  const sameCodeChars: string[] = []
+  if (shortCodes2.length === 0 || fullCodes.length === 0) return ''
   
-  // 遍歷碼表找到有相同簡碼的字符
-  for (const [otherChar, otherCodes] of props.codeTable.entries()) {
-    for (const otherCode of otherCodes) {
-      if (otherCode === shortestCode) {
-        sameCodeChars.push(otherChar)
-        break
-      }
-    }
+  // 找到最短的簡碼和全碼
+  const shortestShortCode = shortCodes2.reduce((a, b) => a.length <= b.length ? a : b)
+  const shortestFullCode = fullCodes.reduce((a, b) => a.length <= b.length ? a : b)
+  
+  // 只有當簡碼真的比全碼短時才顯示
+  if (shortestShortCode.length >= shortestFullCode.length) {
+    return '' // 不顯示沒有優勢的簡碼
   }
   
-  // 如果只有一個字符使用這個簡碼，不需要選重複號
-  if (sameCodeChars.length <= 1) {
-    return shortestCode
-  }
-  
-  // 如果有多個字符使用相同簡碼，需要添加選重複號
-  // 按字符的Unicode順序排序，確定位置
-  sameCodeChars.sort()
-  const position = sameCodeChars.indexOf(char)
-  
-  if (position === -1) {
-    return shortestCode // 如果没找到（不應該發生），返回原簡碼
-  }
-  
-  // 添加選重複號（使用正確的選重鍵序列）
-  const selectionKeys = ['_', ';', "'", '4', '5', '6', '7', '8', '9', '0']
-  const selectionKey = position < selectionKeys.length ? selectionKeys[position] : '0'
-  return `${shortestCode}${selectionKey}`
+  return shortestShortCode
+
 }
 
 // 獲取前一個N值
@@ -590,7 +740,7 @@ const getCellClass = (value: number, rowValues: number[]): string => {
   }
 }
 
-// 復制字符到剪貼板
+// 複製字符到剪貼板
 const copyToClipboard = async (chars: string[], currentN: number, freqType: string) => {
   try {
     // 獲取要復制的字符（與懸停顯示邏輯一致）
@@ -634,14 +784,49 @@ const copyToClipboard = async (chars: string[], currentN: number, freqType: stri
 }
 
 // 監聽 props 變化
-watch(() => props.codeTable, updateEfficiency, { deep: true })
-watch(() => props.globalPrefixKeys, updateEfficiency, { deep: true })
+watch(() => props.codeTable, () => {
+  stopStatusCheck()
+  // 清空舊的計算結果
+  efficiencyData.value = {}
+  isLoading.value = false
+  error.value = ''
+  
+  if (props.codeTable && props.codeTable.size > 0) {
+    startStatusCheck()
+  }
+}, { deep: true })
+
+watch(() => props.globalPrefixKeys, () => {
+  // 清空舊的計算結果，因為前綴碼變化會影響計算
+  efficiencyData.value = {}
+  isLoading.value = false  
+  error.value = ''
+  
+  if (props.codeTable && props.codeTable.size > 0) {
+    startStatusCheck()
+  }
+}, { deep: true })
+
+// 監聽 analysisReady 變化
+watch(() => props.analysisReady, (newReady) => {
+  if (newReady && props.codeTable && props.codeTable.size > 0) {
+    // 清空舊結果並啟動狀態檢查
+    efficiencyData.value = {}
+    isLoading.value = false
+    error.value = ''
+    startStatusCheck()
+  }
+})
 
 onMounted(async () => {
   await loadCharFrequencyData()
-  if (props.analysisReady) {
-    await updateEfficiency()
+  if (props.analysisReady && props.codeTable && props.codeTable.size > 0) {
+    startStatusCheck()
   }
+})
+
+onUnmounted(() => {
+  stopStatusCheck()
 })
 </script>
 
@@ -663,7 +848,7 @@ onMounted(async () => {
   flex: 1;
 }
 
-/* 头部按钮容器 */
+/* 頭部按鈕容器 */
 .header-buttons {
   display: flex;
   align-items: center;
@@ -671,7 +856,7 @@ onMounted(async () => {
   margin-left: var(--spacing-lg);
 }
 
-/* 导出按钮样式 */
+/* 導出按鈕樣式 */
 .export-btn {
   background: rgba(255, 255, 255, 0.2);
   border: none;
@@ -921,25 +1106,25 @@ onMounted(async () => {
   background: #e9d5ff !important;
 }
 
-/* 暗黑模式下的懸停效果 - 深沉但有层次的变化 */
+/* 暗黑模式下的懸停效果 - 深沈但有層次的變化 */
 [data-theme="dark"] .very-high-value:hover {
-  background: #4a2323 !important;  /* 稍微变亮的深红灰色 */
+  background: #4a2323 !important;  /* 稍微變亮的深紅灰色 */
 }
 
 [data-theme="dark"] .high-value:hover {
-  background: #4a311d !important;  /* 稍微变亮的深黄灰色 */
+  background: #4a311d !important;  /* 稍微變亮的深黃灰色 */
 }
 
 [data-theme="dark"] .medium-value:hover {
-  background: #213621 !important;  /* 稍微变亮的深绿灰色 */
+  background: #213621 !important;  /* 稍微變亮的深綠灰色 */
 }
 
 [data-theme="dark"] .low-value:hover {
-  background: #253242 !important;  /* 稍微变亮的深蓝灰色 */
+  background: #253242 !important;  /* 稍微變亮的深藍灰色 */
 }
 
 [data-theme="dark"] .very-low-value:hover {
-  background: #362147 !important;  /* 稍微变亮的深紫灰色 */
+  background: #362147 !important;  /* 稍微變亮的深紫灰色 */
 }
 
 /* 自定義工具提示容器 - 滑鼠懸停時顯示的浮動提示框 */
