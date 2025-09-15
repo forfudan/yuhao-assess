@@ -141,13 +141,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, Teleport } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, Teleport } from 'vue'
 import { calculateShortCodeEfficiency } from '../services/shortCodeEfficiencyService'
 import { useCollapse } from '../composables/useCollapse'
 import { loadCharFrequency, loadCharFrequencySC, loadCharFrequencyTC, loadCharFrequencyGuji } from '../services/dataService'
 import { createTooltipManager } from '../services/uiService'
 import { ExportService } from '../services/exportService'
-import { codeTableProcessingService } from '../services'
+import { CodeTableProcessingService } from '../services/codeTableProcessingService'
 import type { CodeTable, CharFrequency } from '../types'
 
 // Props
@@ -205,6 +205,66 @@ const tooltipCharsWithCodes = ref('')
 // 预处理的码表（包含简码加选重表）
 const processedCodeTable = ref<CodeTable>(new Map())
 const shortWithSelectionTable = ref<CodeTable>(new Map())
+
+// 碼表處理服務實例
+const processingService = CodeTableProcessingService.getInstance()
+
+// 檢查處理狀態
+const checkProcessingStatus = () => {
+  // 超時檢查（10秒）
+  const elapsed = Date.now() - statusCheckStartTime
+  if (elapsed > 10000) {
+    console.warn('[ShortCodeEfficiencyCard] 等待全局處理結果超時')
+    stopStatusCheck()
+    isLoading.value = false
+    error.value = '等待碼表處理結果超時，請嘗試重新上傳碼表'
+    return
+  }
+  
+  const processedTables = processingService.getProcessedTables()
+  
+  // 檢查是否有新的處理結果且當前沒有計算結果
+  if (processedTables && 
+      Object.keys(efficiencyData.value).length === 0 && 
+      props.codeTable && 
+      props.codeTable.size > 0) {
+    
+    console.log('[ShortCodeEfficiencyCard] 檢測到新的全局處理結果，開始計算效率...')
+    // 短暫延遲確保處理完成，但不需要設置isLoading，updateEfficiency會處理
+    setTimeout(() => {
+      updateEfficiency()
+    }, 50)
+  }
+}
+
+// 定期檢查處理狀態
+let statusCheckInterval: number | null = null
+let statusCheckStartTime: number = 0
+
+const startStatusCheck = () => {
+  if (statusCheckInterval) clearInterval(statusCheckInterval)
+  
+  // 記錄開始時間
+  statusCheckStartTime = Date.now()
+  
+  // 如果還沒有計算結果，顯示加載狀態
+  if (Object.keys(efficiencyData.value).length === 0) {
+    isLoading.value = true
+    error.value = ''
+  }
+  
+  // 立即檢查一次
+  checkProcessingStatus()
+  // 然後每200ms檢查一次，響應更快
+  statusCheckInterval = setInterval(checkProcessingStatus, 200)
+}
+
+const stopStatusCheck = () => {
+  if (statusCheckInterval) {
+    clearInterval(statusCheckInterval)
+    statusCheckInterval = null
+  }
+}
 
 // 字頻數據
 const charFrequencies = ref<{
@@ -368,15 +428,20 @@ const updateEfficiency = async () => {
   error.value = ''
 
   try {
-    // 預處理碼表以獲取簡碼加選重表
-    const processedTables = await codeTableProcessingService.processCodeTable(
-      props.codeTable,
-      {
-        isPrefix: props.globalPrefixKeys && props.globalPrefixKeys.length > 0,
-        maxLength: 4,
-        prefixKeys: props.globalPrefixKeys
-      }
-    )
+    // 使用全局已處理的碼表結果，避免重複計算
+    const processedTables = processingService.getProcessedTables()
+    
+    if (!processedTables) {
+      // 如果全局處理結果不存在，停止加載狀態並等待狀態檢查重試
+      console.warn('[ShortCodeEfficiencyCard] 全局碼表處理結果不存在，等待處理完成...')
+      isLoading.value = false
+      return
+    }
+    
+    console.log('[ShortCodeEfficiencyCard] 使用全局處理結果計算簡碼效率')
+    
+    // 處理成功，停止狀態檢查
+    stopStatusCheck()
     
     // 保存簡碼加選重表供tooltip使用
     shortWithSelectionTable.value = processedTables.shortWithSelection
@@ -590,7 +655,7 @@ const getCellClass = (value: number, rowValues: number[]): string => {
   }
 }
 
-// 復制字符到剪貼板
+// 複製字符到剪貼板
 const copyToClipboard = async (chars: string[], currentN: number, freqType: string) => {
   try {
     // 獲取要復制的字符（與懸停顯示邏輯一致）
@@ -634,14 +699,49 @@ const copyToClipboard = async (chars: string[], currentN: number, freqType: stri
 }
 
 // 監聽 props 變化
-watch(() => props.codeTable, updateEfficiency, { deep: true })
-watch(() => props.globalPrefixKeys, updateEfficiency, { deep: true })
+watch(() => props.codeTable, () => {
+  stopStatusCheck()
+  // 清空舊的計算結果
+  efficiencyData.value = {}
+  isLoading.value = false
+  error.value = ''
+  
+  if (props.codeTable && props.codeTable.size > 0) {
+    startStatusCheck()
+  }
+}, { deep: true })
+
+watch(() => props.globalPrefixKeys, () => {
+  // 清空舊的計算結果，因為前綴碼變化會影響計算
+  efficiencyData.value = {}
+  isLoading.value = false  
+  error.value = ''
+  
+  if (props.codeTable && props.codeTable.size > 0) {
+    startStatusCheck()
+  }
+}, { deep: true })
+
+// 監聽 analysisReady 變化
+watch(() => props.analysisReady, (newReady) => {
+  if (newReady && props.codeTable && props.codeTable.size > 0) {
+    // 清空舊結果並啟動狀態檢查
+    efficiencyData.value = {}
+    isLoading.value = false
+    error.value = ''
+    startStatusCheck()
+  }
+})
 
 onMounted(async () => {
   await loadCharFrequencyData()
-  if (props.analysisReady) {
-    await updateEfficiency()
+  if (props.analysisReady && props.codeTable && props.codeTable.size > 0) {
+    startStatusCheck()
   }
+})
+
+onUnmounted(() => {
+  stopStatusCheck()
 })
 </script>
 
