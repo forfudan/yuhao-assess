@@ -371,6 +371,76 @@ const hasOmittedRows = computed(() => {
   return nValues.length > tableData.value.length
 })
 
+// 使用加選重碼表計算簡碼效率的函數
+const calculateShortCodeEfficiencyWithMaps = (
+  charFrequency: CharFrequency, 
+  shortCodeMap: Map<string, string>, 
+  fullCodeMap: Map<string, string>
+): Array<{ N: number; efficiency: number; selectedChars: string[] }> => {
+  
+  // 預處理字符數據
+  const processedChars: Array<{
+    char: string
+    shortLen: number
+    fullLen: number
+    lenDiff: number
+    freq: number
+    freqLenDiff: number
+  }> = []
+
+  for (const [char, freq] of Object.entries(charFrequency)) {
+    if (freq <= 0) continue
+    
+    const shortCode = shortCodeMap.get(char)
+    const fullCode = fullCodeMap.get(char)
+    
+    if (!shortCode || !fullCode) continue
+    
+    const shortLen = shortCode.length
+    const fullLen = fullCode.length
+    const lenDiff = fullLen - shortLen
+    
+    processedChars.push({
+      char,
+      shortLen,
+      fullLen,
+      lenDiff,
+      freq,
+      freqLenDiff: freq * lenDiff
+    })
+  }
+
+  // 計算不同N值下的效率
+  const nValues = [0, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+  const results: Array<{ N: number; efficiency: number; selectedChars: string[] }> = []
+  
+  for (const N of nValues) {
+    // 只考慮簡碼長度小於全碼長度的漢字
+    const validShortCodeChars = processedChars.filter(char => char.shortLen < char.fullLen)
+    
+    // 按頻率差值排序，選擇前N個字符使用簡碼
+    const sortedByFreqDiff = [...validShortCodeChars].sort((a, b) => b.freqLenDiff - a.freqLenDiff)
+    const actualSelectedCount = Math.min(N, sortedByFreqDiff.length)
+    const selectedCharsList = sortedByFreqDiff.slice(0, actualSelectedCount).map(c => c.char)
+    const selectedChars = new Set(selectedCharsList)
+    
+    // 計算加權平均碼長：前N個字符使用簡碼，其餘使用全碼
+    let totalFreqLen = 0
+    let totalFreq = 0
+    
+    for (const char of processedChars) {
+      const finalLen = selectedChars.has(char.char) ? char.shortLen : char.fullLen
+      totalFreqLen += char.freq * finalLen
+      totalFreq += char.freq
+    }
+    
+    const efficiency = totalFreq > 0 ? totalFreqLen / totalFreq : 0
+    results.push({ N, efficiency, selectedChars: selectedCharsList })
+  }
+  
+  return results
+}
+
 // 載入字頻數據
 const loadCharFrequencyData = async () => {
   try {
@@ -447,7 +517,7 @@ const updateEfficiency = async () => {
     shortWithSelectionTable.value = processedTables.shortWithSelection
     processedCodeTable.value = processedTables.original
 
-    // 将原始码表转换为CodeTableRow[]格式
+    // 將加選重碼表轉換為CodeTableRow[]格式，用於簡碼效率計算
     const convertCodeTableToRows = (codeTable: CodeTable): { char: string; code: string }[] => {
       const rows: { char: string; code: string }[] = []
       for (const [char, codes] of codeTable) {
@@ -458,7 +528,41 @@ const updateEfficiency = async () => {
       return rows
     }
 
-    const codeTableRows = convertCodeTableToRows(processedTables.original)
+    // 合併簡碼加選重和全碼加選重表，用於正確的效率計算
+    const shortRows = convertCodeTableToRows(processedTables.shortWithSelection)
+    const fullRows = convertCodeTableToRows(processedTables.fullWithSelection)
+    
+    // 創建字符到編碼的映射
+    const shortCodeMap = new Map<string, string>()
+    const fullCodeMap = new Map<string, string>()
+    
+    shortRows.forEach(row => {
+      if (!shortCodeMap.has(row.char) || row.code.length < shortCodeMap.get(row.char)!.length) {
+        shortCodeMap.set(row.char, row.code)
+      }
+    })
+    
+    fullRows.forEach(row => {
+      if (!fullCodeMap.has(row.char) || row.code.length > fullCodeMap.get(row.char)!.length) {
+        fullCodeMap.set(row.char, row.code)
+      }
+    })
+    
+    // 合併為完整的碼表，包含簡碼和全碼
+    const combinedRows: { char: string; code: string; isShort: boolean }[] = []
+    const allChars = new Set([...shortCodeMap.keys(), ...fullCodeMap.keys()])
+    
+    for (const char of allChars) {
+      const shortCode = shortCodeMap.get(char)
+      const fullCode = fullCodeMap.get(char)
+      
+      if (shortCode) {
+        combinedRows.push({ char, code: shortCode, isShort: true })
+      }
+      if (fullCode && fullCode !== shortCode) {
+        combinedRows.push({ char, code: fullCode, isShort: false })
+      }
+    }
 
     const results: Record<string, Array<{ N: number; efficiency: number; selectedChars: string[] }>> = {}
 
@@ -467,11 +571,10 @@ const updateEfficiency = async () => {
     for (const freqKey of frequencies) {
       const charFrequency = charFrequencies.value[freqKey as keyof typeof charFrequencies.value]
       if (charFrequency && Object.keys(charFrequency).length > 0) {
-        const efficiencyResults = calculateShortCodeEfficiency(
-          codeTableRows,
+        const efficiencyResults = calculateShortCodeEfficiencyWithMaps(
           charFrequency,
-          4,  // maxLen
-          props.globalPrefixKeys && props.globalPrefixKeys.length > 0  // isPrefix
+          shortCodeMap,
+          fullCodeMap
         )
         results[freqKey] = efficiencyResults
       }
