@@ -125,6 +125,55 @@
                   </th>
                 </template>
                 
+                <!-- 原始動態選重 Tab 的列 -->
+                <template v-else-if="activeTab === 'dynamicOriginal'">
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRate')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>知乎字頻</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRate') }}</span>
+                      </div>
+                      <small>簡體字頻</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateSC')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>北語字頻</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateSC') }}</span>
+                      </div>
+                      <small>簡體字頻</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateTC')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>臺標字頻</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateTC') }}</span>
+                      </div>
+                      <small>繁體字頻</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateGuji')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>古籍字頻</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateGuji') }}</span>
+                      </div>
+                      <small>繁體字頻</small>
+                    </div>
+                  </th>
+                  <th class="metric-header sortable" @click="handleSort('dynamicDupRateUnified')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>繁簡聯合</span>
+                        <span class="sort-arrow">{{ getSortArrow('dynamicDupRateUnified') }}</span>
+                      </div>
+                      <small>繁簡聯合字頻</small>
+                    </div>
+                  </th>
+                </template>
+                
                 <!-- 靜態重碼 Tab 的列 -->
                 <template v-else-if="activeTab === 'static'">
                   <th class="metric-header sortable" @click="handleSort('gb2312DuplicateChars')">
@@ -338,6 +387,55 @@
                     </div>
                     <span v-else class="metric-value">
                       {{ formatRate(scheme.data?.dynamic?.dynamicDupRateUnified) }}
+                    </span>
+                  </td>
+                </template>
+                
+                <!-- 原始動態選重 Tab 的數據列 -->
+                <template v-else-if="activeTab === 'dynamicOriginal'">
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamicOriginal?.dynamicDupRate) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamicOriginal?.dynamicDupRateSC) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamicOriginal?.dynamicDupRateTC) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamicOriginal?.dynamicDupRateGuji) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatRate(scheme.data?.dynamicOriginal?.dynamicDupRateUnified) }}
                     </span>
                   </td>
                 </template>
@@ -803,6 +901,7 @@ interface MaxCandidatesData {
 
 interface SchemeData {
   dynamic?: DynamicData
+  dynamicOriginal?: DynamicData
   static?: StaticData
   maxCandidates?: MaxCandidatesData
   speedEquiv?: SpeedEquivData
@@ -869,9 +968,10 @@ const tooltip = ref({
 })
 
 // Tab 相關狀態
-const activeTab = ref<'dynamic' | 'static' | 'maxCandidates' | 'speedEquiv'>('dynamic')
+const activeTab = ref<'dynamic' | 'dynamicOriginal' | 'static' | 'maxCandidates' | 'speedEquiv'>('dynamic')
 const tabs = [
   { key: 'dynamic', label: '動態選重' },
+  { key: 'dynamicOriginal', label: '原始動態選重' },
   { key: 'static', label: '靜態重碼' },
   { key: 'maxCandidates', label: '最大候選' },
   { key: 'speedEquiv', label: '速度當量' }
@@ -1114,7 +1214,7 @@ const hiddenSchemesCount = computed(() => {
 const hasAnyScheme = computed(() => allSchemes.value.length > 0)
 
 // 智能計算隊列管理
-type TabType = 'dynamic' | 'static' | 'maxCandidates' | 'speedEquiv'
+type TabType = 'dynamic' | 'dynamicOriginal' | 'static' | 'maxCandidates' | 'speedEquiv'
 
 interface CalculationTask {
   id: string
@@ -1130,7 +1230,7 @@ const runningTasks = ref(new Set<string>())
 
 // 計算進度追蹤
 const backgroundProgress = computed(() => {
-  const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+  const allTabs: TabType[] = ['dynamic', 'dynamicOriginal', 'static', 'maxCandidates', 'speedEquiv']
   
   // 1. 當前表格中的方案數量（包括已完成和正在計算的）
   const currentSchemes = allSchemes.value.length
@@ -1293,6 +1393,7 @@ const scheduleCalculation = async (scheme: Scheme, tabType: TabType, priority: '
   // 檢查數據是否已存在
   const hasData = (
     (tabType === 'dynamic' && scheme.data?.dynamic) ||
+    (tabType === 'dynamicOriginal' && scheme.data?.dynamicOriginal) ||
     (tabType === 'static' && scheme.data?.static) ||
     (tabType === 'maxCandidates' && scheme.data?.maxCandidates) ||
     (tabType === 'speedEquiv' && scheme.data?.speedEquiv)
@@ -1350,6 +1451,8 @@ const scheduleCalculation = async (scheme: Scheme, tabType: TabType, priority: '
       // 執行具體計算
       if (tabType === 'dynamic') {
         scheme.data.dynamic = await calculateDynamicData(scheme)
+      } else if (tabType === 'dynamicOriginal') {
+        scheme.data.dynamicOriginal = await calculateDynamicOriginalData(scheme)
       } else if (tabType === 'static') {
         scheme.data.static = await calculateStaticData(scheme)
       } else if (tabType === 'maxCandidates') {
@@ -1409,7 +1512,7 @@ const ensureCurrentTabDataLoaded = async () => {
   console.log(`[智能計算] 當前Tab ${activeTab.value} 計算完成`)
   
   // 第二階段：後台預計算其他Tab的數據（低優先級）
-  const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+  const allTabs: TabType[] = ['dynamic', 'dynamicOriginal', 'static', 'maxCandidates', 'speedEquiv']
   const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
   
   for (const tab of otherTabs) {
@@ -1822,7 +1925,7 @@ const loadCurrentUserScheme = async () => {
     await scheduleCalculation(currentUserScheme.value, activeTab.value, 'high')
     
     // 低優先級：安排其他Tab的後台計算
-    const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+    const allTabs: TabType[] = ['dynamic', 'dynamicOriginal', 'static', 'maxCandidates', 'speedEquiv']
     const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
     for (const tab of otherTabs) {
       scheduleCalculation(currentUserScheme.value, tab, 'low')
@@ -1886,6 +1989,42 @@ async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
   const dynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
   
   console.timeEnd(`動態重碼計算-${scheme.name}`)
+  return {
+    dynamicDupRate,
+    dynamicDupRateSC,
+    dynamicDupRateTC,
+    dynamicDupRateGuji,
+    dynamicDupRateUnified
+  }
+}
+
+// 計算動態重碼數據 - 原始排序（使用預處理的數據）- 高性能版本
+async function calculateDynamicOriginalData(scheme: Scheme): Promise<DynamicData> {
+  console.time(`動態重碼計算-原始-${scheme.name}`)
+  
+  if (!scheme.processedData) {
+    throw new Error('方案缺少預處理數據')
+  }
+  
+  const { fullCodeTable } = scheme.processedData
+  
+  // 加載所有字頻數據
+  const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyGuji, charFrequencyUnified] = await Promise.all([
+    loadCharFrequency(),
+    loadCharFrequencySC(),
+    loadCharFrequencyTC(),
+    loadCharFrequencyGuji(),
+    loadCharFrequencyUnified()
+  ])
+  
+  // 計算各種動態選重率（只計算全碼，但不重新排序）
+  const dynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency, false)
+  const dynamicDupRateSC = getDynamicDupRate(fullCodeTable, charFrequencySC, false)
+  const dynamicDupRateTC = getDynamicDupRate(fullCodeTable, charFrequencyTC, false)
+  const dynamicDupRateGuji = getDynamicDupRate(fullCodeTable, charFrequencyGuji, false)
+  const dynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified, false)
+  
+  console.timeEnd(`動態重碼計算-原始-${scheme.name}`)
   return {
     dynamicDupRate,
     dynamicDupRateSC,
@@ -2137,7 +2276,7 @@ async function addBuiltinScheme() {
     await scheduleCalculation(newScheme, activeTab.value, 'high')
     
     // 低優先級：安排其他Tab的後台計算
-    const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+    const allTabs: TabType[] = ['dynamic', 'dynamicOriginal', 'static', 'maxCandidates', 'speedEquiv']
     const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
     for (const tab of otherTabs) {
       scheduleCalculation(newScheme, tab, 'low')
@@ -2220,7 +2359,7 @@ async function addAllBuiltinSchemes() {
         await scheduleCalculation(newScheme, activeTab.value, 'high')
         
         // 低優先級：安排其他Tab的後台計算
-        const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+        const allTabs: TabType[] = ['dynamic', 'dynamicOriginal', 'static', 'maxCandidates', 'speedEquiv']
         const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
         for (const tab of otherTabs) {
           scheduleCalculation(newScheme, tab, 'low')
@@ -2318,7 +2457,7 @@ async function addSelectedBuiltinSchemes() {
         await scheduleCalculation(newScheme, activeTab.value, 'high')
         
         // 低優先級：安排其他Tab的後台計算
-        const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+        const allTabs: TabType[] = ['dynamic', 'dynamicOriginal', 'static', 'maxCandidates', 'speedEquiv']
         const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
         for (const tab of otherTabs) {
           scheduleCalculation(newScheme, tab, 'low')
@@ -2399,7 +2538,7 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     await scheduleCalculation(newScheme, activeTab.value, 'high')
     
     // 低優先級：安排其他Tab的後台計算
-    const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+    const allTabs: TabType[] = ['dynamic', 'dynamicOriginal', 'static', 'maxCandidates', 'speedEquiv']
     const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
     for (const tab of otherTabs) {
       scheduleCalculation(newScheme, tab, 'low')
@@ -2476,7 +2615,7 @@ async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'co
         await scheduleCalculation(newScheme, activeTab.value, 'high')
         
         // 低優先級：安排其他Tab的後台計算
-        const allTabs: TabType[] = ['dynamic', 'static', 'maxCandidates', 'speedEquiv']
+        const allTabs: TabType[] = ['dynamic', 'dynamicOriginal', 'static', 'maxCandidates', 'speedEquiv']
         const otherTabs = allTabs.filter(tab => tab !== activeTab.value)
         for (const tab of otherTabs) {
           scheduleCalculation(newScheme, tab, 'low')
