@@ -4,7 +4,6 @@
  */
 
 import { generateCharset, type CharsetType, charsetInfo } from './charsetService'
-import { generateFullCodeTable } from './codeTableCleanService'
 import type { CodeTable, CharFrequency } from '../types/index'
 
 /**
@@ -60,17 +59,19 @@ export function getStaticDupRate(
  * 參考 Python: get_dynamic_dup_rate
  * 
  * 算法邏輯：
- * 1. 按編碼分組，每組内按字頻降序排列
- * 2. 對於每個編碼組，除了頻率最高的字符外，其他字符的頻率都需要選重
+ * 1. 按編碼分組，每組内按字頻降序排列（可選）
+ * 2. 對於每個編碼組，除了頻率最高的字符（或原始排序首位）外，其他字符的頻率都需要選重
  * 3. 動態重碼率 = 總選重頻率 / 總字頻
  * 
  * @param codeTable - 碼表 (每個字符對應唯一編碼)
  * @param charFrequency - 字頻數據
+ * @param sortByFrequency - 是否按字頻重新排序，false 表示保持原始碼表排序
  * @returns 動態重碼率 (0-1之間的小數)
  */
 export function getDynamicDupRate(
   codeTable: CodeTable,
-  charFrequency: CharFrequency
+  charFrequency: CharFrequency,
+  sortByFrequency: boolean = true
 ): number {
   // 按編碼分組，收集每個編碼對應的字符及其頻率
   const codeToCharFreqs = new Map<string, Array<{ char: string; freq: number }>>()
@@ -94,16 +95,20 @@ export function getDynamicDupRate(
   
   for (const charFreqs of codeToCharFreqs.values()) {
     if (charFreqs.length > 1) {
-      // 按頻率降序排序
-      charFreqs.sort((a, b) => b.freq - a.freq)
+      // 根據參數決定是否按頻率重新排序
+      if (sortByFrequency) {
+        // 按頻率降序排序
+        charFreqs.sort((a, b) => b.freq - a.freq)
+      }
+      // 如果不排序，保持原始碼表順序
       
       // 計算該編碼組的總頻率
       const groupTotalFreq = charFreqs.reduce((sum, item) => sum + item.freq, 0)
       
-      // 最高頻字符的頻率（不需要選重）
+      // 首位字符的頻率（不需要選重）- 按頻率排序時為最高頻，原始排序時為碼表首位
       const firstCharFreq = charFreqs[0].freq
       
-      // 需要選重的頻率 = 總頻率 - 最高頻字符頻率
+      // 需要選重的頻率 = 總頻率 - 首位字符頻率
       totalDupFreq += groupTotalFreq - firstCharFreq
     }
     // 注意：無重碼的編碼不會貢獻選重頻率，但會在總字頻中計算

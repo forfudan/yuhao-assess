@@ -94,7 +94,7 @@
             </tr>
             <tr>
               <td>
-                古籍動態選重率
+                古籍繁體動態選重率
                 <span 
                   class="info-icon" 
                   @mouseenter="showTooltip($event, '計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。')"
@@ -105,7 +105,7 @@
               </td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateGuji.full * 10000).toFixed(2) }}‱</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateGuji.short * 10000).toFixed(2) }}‱</td>
-              <td class="metric-desc">基於古籍字頻的加權選重率</td>
+              <td class="metric-desc">基於史書（史記、漢書、後漢書、三國志等）字頻的加權選重率</td>
             </tr>
             <tr>
               <td>
@@ -121,6 +121,81 @@
               <td class="metric-value">{{ (analysisResults.dynamicDupRateUnified.full * 10000).toFixed(2) }}‱</td>
               <td class="metric-value">{{ (analysisResults.dynamicDupRateUnified.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於繁簡聯合字頻表（北語字頻+臺標字頻）的加權選重率</td>
+            </tr>
+            <tr>
+              <td>
+                知乎簡體動態選重率 - 原始排序
+                <span 
+                  class="info-icon" 
+                  @mouseenter="showTooltip($event, '不對重碼字符按字頻重新排序，保持碼表原始順序進行選重率計算。反映碼表實際使用時的選重率。')"
+                  @mouseleave="hideTooltip()"
+                >
+                  ⓘ
+                </span>
+              </td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateOriginal.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateOriginal.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-desc">基於知乎字頻，保持碼表原始排序的加權選重率</td>
+            </tr>
+            <tr>
+              <td>
+                北語簡體動態選重率 - 原始排序
+                <span 
+                  class="info-icon" 
+                  @mouseenter="showTooltip($event, '不對重碼字符按字頻重新排序，保持碼表原始順序進行選重率計算。反映碼表實際使用時的選重率。')"
+                  @mouseleave="hideTooltip()"
+                >
+                  ⓘ
+                </span>
+              </td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateSCOriginal.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateSCOriginal.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-desc">基於北語字頻，保持碼表原始排序的加權選重率</td>
+            </tr>
+            <tr>
+              <td>
+                臺標繁體動態選重率 - 原始排序
+                <span 
+                  class="info-icon" 
+                  @mouseenter="showTooltip($event, '不對重碼字符按字頻重新排序，保持碼表原始順序進行選重率計算。反映碼表實際使用時的選重率。')"
+                  @mouseleave="hideTooltip()"
+                >
+                  ⓘ
+                </span>
+              </td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateTCOriginal.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateTCOriginal.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-desc">基於臺標字頻，保持碼表原始排序的加權選重率</td>
+            </tr>
+            <tr>
+              <td>
+                古籍繁體動態選重率 - 原始排序
+                <span 
+                  class="info-icon" 
+                  @mouseenter="showTooltip($event, '不對重碼字符按字頻重新排序，保持碼表原始順序進行選重率計算。反映碼表實際使用時的選重率。')"
+                  @mouseleave="hideTooltip()"
+                >
+                  ⓘ
+                </span>
+              </td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateGujiOriginal.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateGujiOriginal.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-desc">基於古籍字頻，保持碼表原始排序的加權選重率</td>
+            </tr>
+            <tr>
+              <td>
+                繁簡聯合動態選重率 - 原始排序
+                <span 
+                  class="info-icon" 
+                  @mouseenter="showTooltip($event, '不對重碼字符按字頻重新排序，保持碼表原始順序進行選重率計算。反映碼表實際使用時的選重率。')"
+                  @mouseleave="hideTooltip()"
+                >
+                  ⓘ
+                </span>
+              </td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateUnifiedOriginal.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value">{{ (analysisResults.dynamicDupRateUnifiedOriginal.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-desc">基於繁簡聯合字頻表（北語字頻+臺標字頻），保持碼表原始排序的加權選重率</td>
             </tr>
             <tr>
               <td>GB2312重碼組數</td>
@@ -312,6 +387,11 @@ interface AnalysisResults {
   dynamicDupRateTC: DualValue
   dynamicDupRateGuji: DualValue
   dynamicDupRateUnified: DualValue
+  dynamicDupRateOriginal: DualValue
+  dynamicDupRateSCOriginal: DualValue
+  dynamicDupRateTCOriginal: DualValue
+  dynamicDupRateGujiOriginal: DualValue
+  dynamicDupRateUnifiedOriginal: DualValue
   gb2312DuplicateChars: DualValue
   guoziDuplicateChars: DualValue
   guoziDuplicateGroups: DualValue
@@ -612,6 +692,22 @@ async function calculateAllMetrics() {
     const fullDynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
     const shortDynamicDupRateUnified = getDynamicDupRate(shortCodeTable, charFrequencyUnified)
     
+    // 計算各種動態選重率 - 原始排序
+    const fullDynamicDupRateOriginal = getDynamicDupRate(fullCodeTable, charFrequency, false)
+    const shortDynamicDupRateOriginal = getDynamicDupRate(shortCodeTable, charFrequency, false)
+    
+    const fullDynamicDupRateSCOriginal = getDynamicDupRate(fullCodeTable, charFrequencySC, false)
+    const shortDynamicDupRateSCOriginal = getDynamicDupRate(shortCodeTable, charFrequencySC, false)
+    
+    const fullDynamicDupRateTCOriginal = getDynamicDupRate(fullCodeTable, charFrequencyTC, false)
+    const shortDynamicDupRateTCOriginal = getDynamicDupRate(shortCodeTable, charFrequencyTC, false)
+    
+    const fullDynamicDupRateGujiOriginal = getDynamicDupRate(fullCodeTable, charFrequencyGuji, false)
+    const shortDynamicDupRateGujiOriginal = getDynamicDupRate(shortCodeTable, charFrequencyGuji, false)
+    
+    const fullDynamicDupRateUnifiedOriginal = getDynamicDupRate(fullCodeTable, charFrequencyUnified, false)
+    const shortDynamicDupRateUnifiedOriginal = getDynamicDupRate(shortCodeTable, charFrequencyUnified, false)
+    
     // 計算各字符集的重碼統計
     const gb2312Stats = await calculateCharsetDuplicates('gb2312', allChars, fullCodeTable, shortCodeTable)
     const guoziStats = await calculateCharsetDuplicates('guozi', allChars, fullCodeTable, shortCodeTable)
@@ -660,6 +756,11 @@ async function calculateAllMetrics() {
       dynamicDupRateTC: { full: fullDynamicDupRateTC, short: shortDynamicDupRateTC },
       dynamicDupRateGuji: { full: fullDynamicDupRateGuji, short: shortDynamicDupRateGuji },
       dynamicDupRateUnified: { full: fullDynamicDupRateUnified, short: shortDynamicDupRateUnified },
+      dynamicDupRateOriginal: { full: fullDynamicDupRateOriginal, short: shortDynamicDupRateOriginal },
+      dynamicDupRateSCOriginal: { full: fullDynamicDupRateSCOriginal, short: shortDynamicDupRateSCOriginal },
+      dynamicDupRateTCOriginal: { full: fullDynamicDupRateTCOriginal, short: shortDynamicDupRateTCOriginal },
+      dynamicDupRateGujiOriginal: { full: fullDynamicDupRateGujiOriginal, short: shortDynamicDupRateGujiOriginal },
+      dynamicDupRateUnifiedOriginal: { full: fullDynamicDupRateUnifiedOriginal, short: shortDynamicDupRateUnifiedOriginal },
       gb2312DuplicateChars: gb2312Stats.duplicateChars,
       guoziDuplicateChars: guoziStats.duplicateChars,
       guoziDuplicateGroups: guoziStats.duplicateGroups,
