@@ -130,7 +130,10 @@
         <div v-else-if="selectedFile" class="file-selected">
           <div class="file-icon">📄</div>
           <div class="file-info">
-            <p class="file-name">{{ selectedFile.name }}</p>
+            <p class="file-name">
+              {{ selectedFile.name }}
+              <span v-if="isRestoredFile" class="restored-indicator" title="此文件已从页面刷新前的状态恢复">🔄 已恢复</span>
+            </p>
             <p class="file-size">{{ formatFileSize(selectedFile.size) }}</p>
           </div>
           <button class="btn btn-secondary remove-file" @click.stop="removeFile">
@@ -290,7 +293,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 import { useCollapse } from '../composables/useCollapse'
 import type { CodeTable, RawCodeTable, CodeTableFormat, ParseResult, UploadStatus } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
@@ -309,14 +312,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 // 折叠功能
 const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
-
-// 暴露折叠方法给父组件
-defineExpose({
-  collapse,
-  expand,
-  toggle: toggleCollapsed,
-  getCollapsedState
-})
 
 // 定义 emits  
 const emit = defineEmits<{
@@ -338,6 +333,8 @@ const builtinTables = ref<Array<{key: string, name: string, description: string}
 
 // 主方案持久化存储键
 const MAIN_SCHEME_STORAGE_KEY = 'yuhao-assess-main-scheme'
+// 用户上传文件的持久化存储键
+const UPLOADED_FILE_STORAGE_KEY = 'yuhao-assess-uploaded-file'
 
 // 響應式數據
 const selectedFormat = ref<CodeTableFormat>('char_first')
@@ -348,6 +345,7 @@ const isPrefixCode = ref(false)
 const prefixKeysInput = ref('')
 const showPrefixHelp = ref(false)
 const fileInput = ref<HTMLInputElement>()
+const isRestoredFile = ref(false) // 标记是否为恢复的文件
 const previewData = ref<Array<{
   raw: string
   char: string
@@ -465,9 +463,11 @@ const handleFileSelection = (file: File) => {
   // 清除預設碼表選擇和保存的主方案
   selectedBuiltinTable.value = ''
   localStorage.removeItem(MAIN_SCHEME_STORAGE_KEY)
-  console.log('[主方案保存] 用户上传文件，清除主方案选择')
+  localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
+  console.log('[主方案保存] 用户上传新文件，清除之前的方案选择')
   
   selectedFile.value = file
+  isRestoredFile.value = false // 标记为新上传的文件
   generatePreview(file)
 }
 
@@ -702,11 +702,17 @@ const generateLongestCodesData = (processedTables: any) => {
 // 移除文件
 const removeFile = () => {
   selectedFile.value = null
+  isRestoredFile.value = false
   previewData.value = []
   encodingPreviewData.value = []
   longestCodesData.value = []
   globalMaxLengthDisplay.value = 4
   stopStatusCheck()
+  
+  // 清除保存的用户上传文件数据
+  localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
+  console.log('[文件持久化] 用户移除文件，清除保存的文件数据')
+  
   if (fileInput.value) {
     fileInput.value.value = ''
   }
@@ -786,6 +792,18 @@ const processFile = async () => {
       prefixKeys: prefixKeys
     })
 
+    // 保存用户上传的文件信息到localStorage
+    const uploadedFileData = {
+      fileName: selectedFile.value.name,
+      fileContent: await selectedFile.value.text(),
+      format: result.format,
+      isPrefix: isPrefixCode.value,
+      prefixKeys: prefixKeys,
+      uploadedAt: new Date().toISOString()
+    }
+    localStorage.setItem(UPLOADED_FILE_STORAGE_KEY, JSON.stringify(uploadedFileData))
+    console.log('[文件持久化] 保存用户上传文件:', selectedFile.value.name)
+
     // 啟動狀態檢查以生成編碼預覽
     startStatusCheck()
 
@@ -802,7 +820,46 @@ async function loadBuiltinConfig() {
     await builtinService.loadConfig()
     builtinTables.value = builtinService.getAvailableTables()
     
-    // 恢复保存的主方案选择
+    // 首先检查是否有保存的用户上传文件
+    const savedUploadedFile = localStorage.getItem(UPLOADED_FILE_STORAGE_KEY)
+    if (savedUploadedFile) {
+      try {
+        const uploadedFileData = JSON.parse(savedUploadedFile)
+        console.log('[文件恢复] 检测到保存的用户上传文件:', uploadedFileData.fileName)
+        
+        // 恢复文件配置
+        selectedFormat.value = uploadedFileData.format || 'char_first'
+        isPrefixCode.value = uploadedFileData.isPrefix || false
+        prefixKeysInput.value = uploadedFileData.prefixKeys ? uploadedFileData.prefixKeys.join('') : ''
+        
+        // 创建虚拟文件对象并恢复
+        const virtualFile = new File([uploadedFileData.fileContent], uploadedFileData.fileName, {
+          type: 'text/plain',
+          lastModified: new Date(uploadedFileData.uploadedAt).getTime()
+        })
+        selectedFile.value = virtualFile
+        isRestoredFile.value = true // 标记为恢复的文件
+        
+        // 生成预览
+        await generatePreview(virtualFile)
+        
+        // 确保组件完全挂载后再触发分析
+        await nextTick()
+        await new Promise(resolve => setTimeout(resolve, 200))
+        
+        // 重新处理文件并触发分析
+        console.log('[文件恢复] 开始重新分析恢复的文件:', uploadedFileData.fileName)
+        await processFile()
+        console.log('[文件恢复] 成功恢复并重新分析用户上传文件:', uploadedFileData.fileName)
+        return // 如果恢复了用户文件，就不再检查预设方案
+      } catch (error) {
+        console.error('[文件恢复] 恢复用户上传文件失败:', error)
+        // 清除损坏的数据
+        localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
+      }
+    }
+    
+    // 如果没有用户上传文件，则恢复保存的主方案选择
     const savedMainScheme = localStorage.getItem(MAIN_SCHEME_STORAGE_KEY)
     if (savedMainScheme && builtinTables.value.some(table => table.key === savedMainScheme)) {
       selectedBuiltinTable.value = savedMainScheme
@@ -821,6 +878,9 @@ async function handleBuiltinTableChange() {
   if (selectedBuiltinTable.value) {
     selectedFile.value = null
     previewData.value = []
+    
+    // 清除保存的用户上传文件
+    localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
     
     // 保存主方案选择到localStorage
     localStorage.setItem(MAIN_SCHEME_STORAGE_KEY, selectedBuiltinTable.value)
@@ -888,6 +948,22 @@ watch(() => props.processedTables, (newTables) => {
 // 組件清理
 onUnmounted(() => {
   stopStatusCheck()
+})
+
+// 清除所有持久化数据
+const clearAllPersistedData = () => {
+  localStorage.removeItem(MAIN_SCHEME_STORAGE_KEY)
+  localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
+  console.log('[数据清理] 清除所有持久化数据')
+}
+
+// 暴露所有方法给父组件
+defineExpose({
+  collapse,
+  expand,
+  toggle: toggleCollapsed,
+  getCollapsedState,
+  clearAllPersistedData
 })
 
 // 初始化
@@ -1345,6 +1421,28 @@ loadBuiltinConfig()
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: 4px; /* 从 var(--spacing-xs) 减少到固定4px */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.restored-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: #fef3cd;
+  color: #92400e;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid #fcd34d;
+}
+
+[data-theme="dark"] .restored-indicator {
+  background: #451a03;
+  color: #fcd34d;
+  border-color: #92400e;
 }
 
 .file-size {

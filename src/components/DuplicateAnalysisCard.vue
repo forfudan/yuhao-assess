@@ -124,7 +124,7 @@
             </tr>
             <tr>
               <td>
-                知乎簡體動態選重率 - 原始排序
+                知乎簡體動重 - 原始排序
                 <span 
                   class="info-icon" 
                   @mouseenter="showTooltip($event, '不對重碼字符按字頻重新排序，保持碼表原始順序進行選重率計算。反映碼表實際使用時的選重率。')"
