@@ -460,11 +460,7 @@ const handleFileSelection = (file: File) => {
     return
   }
 
-  // 清除預設碼表選擇和保存的主方案
-  selectedBuiltinTable.value = ''
-  localStorage.removeItem(MAIN_SCHEME_STORAGE_KEY)
-  localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
-  console.log('[主方案保存] 用户上传新文件，清除之前的方案选择')
+
   
   selectedFile.value = file
   isRestoredFile.value = false // 标记为新上传的文件
@@ -709,9 +705,7 @@ const removeFile = () => {
   globalMaxLengthDisplay.value = 4
   stopStatusCheck()
   
-  // 清除保存的用户上传文件数据
-  localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
-  console.log('[文件持久化] 用户移除文件，清除保存的文件数据')
+
   
   if (fileInput.value) {
     fileInput.value.value = ''
@@ -801,8 +795,7 @@ const processFile = async () => {
       prefixKeys: prefixKeys,
       uploadedAt: new Date().toISOString()
     }
-    localStorage.setItem(UPLOADED_FILE_STORAGE_KEY, JSON.stringify(uploadedFileData))
-    console.log('[文件持久化] 保存用户上传文件:', selectedFile.value.name)
+
 
     // 啟動狀態檢查以生成編碼預覽
     startStatusCheck()
@@ -825,7 +818,7 @@ async function loadBuiltinConfig() {
     if (savedUploadedFile) {
       try {
         const uploadedFileData = JSON.parse(savedUploadedFile)
-        console.log('[文件恢复] 检测到保存的用户上传文件:', uploadedFileData.fileName)
+
         
         // 恢复文件配置
         selectedFormat.value = uploadedFileData.format || 'char_first'
@@ -847,10 +840,7 @@ async function loadBuiltinConfig() {
         await nextTick()
         await new Promise(resolve => setTimeout(resolve, 200))
         
-        // 重新处理文件并触发分析
-        console.log('[文件恢复] 开始重新分析恢复的文件:', uploadedFileData.fileName)
-        await processFile()
-        console.log('[文件恢复] 成功恢复并重新分析用户上传文件:', uploadedFileData.fileName)
+
         return // 如果恢复了用户文件，就不再检查预设方案
       } catch (error) {
         console.error('[文件恢复] 恢复用户上传文件失败:', error)
@@ -863,8 +853,7 @@ async function loadBuiltinConfig() {
     const savedMainScheme = localStorage.getItem(MAIN_SCHEME_STORAGE_KEY)
     if (savedMainScheme && builtinTables.value.some(table => table.key === savedMainScheme)) {
       selectedBuiltinTable.value = savedMainScheme
-      console.log('[主方案恢复] 从localStorage恢复主方案:', savedMainScheme)
-      // 自动加载恢复的方案
+      // 自動載入恢復的方案
       await loadBuiltinTable()
     }
   } catch (error) {
@@ -882,16 +871,14 @@ async function handleBuiltinTableChange() {
     // 清除保存的用户上传文件
     localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
     
-    // 保存主方案选择到localStorage
+    // 保存主方案選擇到 localStorage
     localStorage.setItem(MAIN_SCHEME_STORAGE_KEY, selectedBuiltinTable.value)
-    console.log('[主方案保存] 保存主方案到localStorage:', selectedBuiltinTable.value)
     
     // 自動載入預設碼表
     await loadBuiltinTable()
   } else {
     // 清除保存的方案
     localStorage.removeItem(MAIN_SCHEME_STORAGE_KEY)
-    console.log('[主方案保存] 清除localStorage中的主方案')
   }
 }
 
@@ -954,7 +941,7 @@ onUnmounted(() => {
 const clearAllPersistedData = () => {
   localStorage.removeItem(MAIN_SCHEME_STORAGE_KEY)
   localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
-  console.log('[数据清理] 清除所有持久化数据')
+
 }
 
 // 暴露所有方法给父组件

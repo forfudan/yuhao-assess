@@ -8,16 +8,15 @@ interface CodeTableRow {
 interface EfficiencyResult {
   N: number
   efficiency: number
-  selectedChars: string[]  // 新增：被選中使用簡碼的字
+  selectedChars: string[]
 }
 
 /**
  * 計算簡碼效率
- * 
- * 算法説明：
- * 1. 對於每個簡碼數量N，選擇頻率加權碼長差值最大的前N個漢字使用簡碼
- * 2. 頻率差值 = 漢字頻率 * (全碼長度 - 簡碼長度)
- * 3. 計算使用N個簡碼後的平均碼長
+ * @param codeTable 碼表數據
+ * @param charFrequency 字頻數據
+ * @param maxLen 最大碼長
+ * @param isPrefix 是否為前綴碼方案
  */
 export function calculateShortCodeEfficiency(
   codeTable: CodeTableRow[],
@@ -25,10 +24,8 @@ export function calculateShortCodeEfficiency(
   maxLen: number = 4,
   isPrefix: boolean = false
 ): EfficiencyResult[] {
-  // 预处理码表数据
   const processedData = preprocessCodeTable(codeTable, charFrequency, maxLen, isPrefix)
   
-  // 計算不同N值下的效率
   const nValues = [0, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
   const results: EfficiencyResult[] = []
   

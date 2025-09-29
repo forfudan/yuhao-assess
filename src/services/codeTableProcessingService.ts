@@ -79,12 +79,7 @@ export class CodeTableProcessingService {
       shortWithSelection
     }
     
-    console.log('[processRawCodeTable] processedTables 已設置:', {
-      fullSize: this.processedTables.full.size,
-      shortSize: this.processedTables.short.size,
-      fullWithSelectionSize: this.processedTables.fullWithSelection.size,
-      shortWithSelectionSize: this.processedTables.shortWithSelection.size
-    })
+
     
     return this.processedTables
   }
@@ -153,7 +148,7 @@ export class CodeTableProcessingService {
       short.set(char, [selected.shortest.code])
     }
 
-    console.log(`[CodeTableProcessingService] 从 RawCodeTable 生成基础码表：${rawCodeTable.size} 行 -> 全码 ${full.size} 个字符，简码 ${short.size} 个字符，最大码长 ${maxLength}`)
+
     return { full, short, maxLength: maxLength || 4 }
   }
 
@@ -260,48 +255,19 @@ export class CodeTableProcessingService {
     if (frequencyChars) {
       const remainingChars = totalChars - filteredChars
       const reductionPercent = ((filteredChars / totalChars) * 100).toFixed(1)
-      console.log(`碼表字頻優化: 原始 ${totalChars} 字符，過濾 ${filteredChars} 字符，保留 ${remainingChars} 字符 (減少 ${reductionPercent}%)`)
+
     }
     
     return processedTable
   }
 
-  private debugUnderscoreInFullWithSelection(fullWithSelection: CodeTable) {
-    console.log('=== 全码加选重按键表调试 ===')
-    const underscoreCodes: string[] = []
-    const allCodes: string[] = []
-    
-    for (const [char, codes] of Object.entries(fullWithSelection)) {
-      for (const code of codes) {
-        allCodes.push(`${char}: ${code}`)
-        if (code.endsWith('_')) {
-          underscoreCodes.push(`${char}: ${code}`)
-          if (underscoreCodes.length >= 10) break
-        }
-      }
-      if (underscoreCodes.length >= 10 && allCodes.length >= 100) break
-    }
-    
-    // 输出前10个下划线编码
-    console.log('前10个末尾是下划线的编码:')
-    underscoreCodes.forEach((item, index) => {
-      console.log(`${index + 1}. ${item}`)
-    })
-    
-    // 输出前100个所有编码
-    console.log('前100个全码加选重编码:')
-    allCodes.slice(0, 100).forEach((item, index) => {
-      console.log(`${index + 1}. ${item}`)
-    })
-    
-    console.log('=== 全码加选重按键表调试结束 ===')
-  }
+
 
   /**
    * 獲取已處理的碼表
    */
   getProcessedTables(): ProcessedCodeTables | null {
-    console.log('[CodeTableProcessingService] getProcessedTables 被調用, processedTables:', this.processedTables)
+
     return this.processedTables
   }
 

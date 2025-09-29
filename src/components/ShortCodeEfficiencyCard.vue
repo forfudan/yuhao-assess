@@ -230,7 +230,6 @@ const checkProcessingStatus = () => {
       props.codeTable && 
       props.codeTable.size > 0) {
     
-    console.log('[ShortCodeEfficiencyCard] 檢測到新的全局處理結果，開始計算效率...')
     // 短暫延遲確保處理完成，但不需要設置isLoading，updateEfficiency會處理
     setTimeout(() => {
       updateEfficiency()
@@ -514,7 +513,7 @@ const updateEfficiency = async () => {
       return
     }
     
-    console.log('[ShortCodeEfficiencyCard] 使用全局處理結果計算簡碼效率')
+
     
     // 處理成功，停止狀態檢查
     stopStatusCheck()
@@ -780,7 +779,7 @@ const copyToClipboard = async (chars: string[], currentN: number, freqType: stri
       ? `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}新增的${count}個簡碼字到剪貼板`
       : `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}的${count}個簡碼字到剪貼板`
     
-    console.log(successMessage, textToCopy)
+
     // 可以在這裏添加 toast 提示
   } catch (err) {
     console.error('復制到剪貼板失敗:', err)

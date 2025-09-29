@@ -1133,7 +1133,7 @@ const loadComparisonData = async () => {
         )
         
         if (schemesNeedingCalculation.length > 0) {
-          console.log(`[智能計算] 載入後發現 ${schemesNeedingCalculation.length} 個方案需要補充計算`)
+
           ensureCurrentTabDataLoaded()
         }
       })
@@ -1720,9 +1720,8 @@ async function preprocessCodeTableDataComplete(rawCodeTable: RawCodeTable, isPre
 }> {
   const timerId = Math.random().toString(36).substr(2, 9)
   console.time(`完整碼表預處理-${timerId}`)
-  console.log(`[preprocessCodeTableDataComplete] 开始处理，RawCodeTable大小: ${rawCodeTable.size}, isPrefix: ${isPrefix}`)
   
-  // 使用 CodeTableProcessingService 的新流程，确保使用 generateBaseTablesFromRaw
+  // 使用 CodeTableProcessingService 的新流程，確保使用 generateBaseTablesFromRaw
   console.time(`生成所有輔助表-${timerId}`)
   const processedTables = await codeTableProcessingService.processRawCodeTable(
     rawCodeTable,
