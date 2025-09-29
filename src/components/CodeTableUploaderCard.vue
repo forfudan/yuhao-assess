@@ -336,6 +336,9 @@ const builtinService = new BuiltinCodeTableService()
 const selectedBuiltinTable = ref('')
 const builtinTables = ref<Array<{key: string, name: string, description: string}>>([])
 
+// 主方案持久化存储键
+const MAIN_SCHEME_STORAGE_KEY = 'yuhao-assess-main-scheme'
+
 // 響應式數據
 const selectedFormat = ref<CodeTableFormat>('char_first')
 const selectedFile = ref<File | null>(null)
@@ -459,8 +462,10 @@ const handleFileSelection = (file: File) => {
     return
   }
 
-  // 清除預設碼表選擇
+  // 清除預設碼表選擇和保存的主方案
   selectedBuiltinTable.value = ''
+  localStorage.removeItem(MAIN_SCHEME_STORAGE_KEY)
+  console.log('[主方案保存] 用户上传文件，清除主方案选择')
   
   selectedFile.value = file
   generatePreview(file)
@@ -796,6 +801,15 @@ async function loadBuiltinConfig() {
   try {
     await builtinService.loadConfig()
     builtinTables.value = builtinService.getAvailableTables()
+    
+    // 恢复保存的主方案选择
+    const savedMainScheme = localStorage.getItem(MAIN_SCHEME_STORAGE_KEY)
+    if (savedMainScheme && builtinTables.value.some(table => table.key === savedMainScheme)) {
+      selectedBuiltinTable.value = savedMainScheme
+      console.log('[主方案恢复] 从localStorage恢复主方案:', savedMainScheme)
+      // 自动加载恢复的方案
+      await loadBuiltinTable()
+    }
   } catch (error) {
     console.error('載入預設碼表配置失敗:', error)
   }
@@ -808,8 +822,16 @@ async function handleBuiltinTableChange() {
     selectedFile.value = null
     previewData.value = []
     
+    // 保存主方案选择到localStorage
+    localStorage.setItem(MAIN_SCHEME_STORAGE_KEY, selectedBuiltinTable.value)
+    console.log('[主方案保存] 保存主方案到localStorage:', selectedBuiltinTable.value)
+    
     // 自動載入預設碼表
     await loadBuiltinTable()
+  } else {
+    // 清除保存的方案
+    localStorage.removeItem(MAIN_SCHEME_STORAGE_KEY)
+    console.log('[主方案保存] 清除localStorage中的主方案')
   }
 }
 
