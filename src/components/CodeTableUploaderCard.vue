@@ -130,7 +130,10 @@
         <div v-else-if="selectedFile" class="file-selected">
           <div class="file-icon">📄</div>
           <div class="file-info">
-            <p class="file-name">{{ selectedFile.name }}</p>
+            <p class="file-name">
+              {{ selectedFile.name }}
+              <span v-if="isRestoredFile" class="restored-indicator" title="此文件已从页面刷新前的状态恢复">🔄 已恢复</span>
+            </p>
             <p class="file-size">{{ formatFileSize(selectedFile.size) }}</p>
           </div>
           <button class="btn btn-secondary remove-file" @click.stop="removeFile">
@@ -290,9 +293,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 import { useCollapse } from '../composables/useCollapse'
-import type { CodeTable, CodeTableFormat, ParseResult, UploadStatus } from '../types/index'
+import type { CodeTable, RawCodeTable, CodeTableFormat, ParseResult, UploadStatus } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { CodeTableProcessingService } from '../services/codeTableProcessingService'
 
@@ -310,17 +313,16 @@ const props = withDefaults(defineProps<Props>(), {
 // 折叠功能
 const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
 
-// 暴露折叠方法给父组件
-defineExpose({
-  collapse,
-  expand,
-  toggle: toggleCollapsed,
-  getCollapsedState
-})
-
-// 定义 emits
+// 定义 emits  
 const emit = defineEmits<{
-  uploadSuccess: [data: { codeTable: CodeTable; fileName: string; format: CodeTableFormat; tableKey?: string; isPrefix?: boolean; prefixKeys?: string[] }]
+  uploadSuccess: [data: { 
+    rawCodeTable: RawCodeTable;
+    fileName: string; 
+    format: CodeTableFormat; 
+    tableKey?: string; 
+    isPrefix?: boolean; 
+    prefixKeys?: string[];
+  }]
   uploadError: [error: string]
 }>()
 
@@ -328,6 +330,11 @@ const emit = defineEmits<{
 const builtinService = new BuiltinCodeTableService()
 const selectedBuiltinTable = ref('')
 const builtinTables = ref<Array<{key: string, name: string, description: string}>>([])
+
+// 主方案持久化存储键
+const MAIN_SCHEME_STORAGE_KEY = 'yuhao-assess-main-scheme'
+// 用户上传文件的持久化存储键
+const UPLOADED_FILE_STORAGE_KEY = 'yuhao-assess-uploaded-file'
 
 // 響應式數據
 const selectedFormat = ref<CodeTableFormat>('char_first')
@@ -338,6 +345,7 @@ const isPrefixCode = ref(false)
 const prefixKeysInput = ref('')
 const showPrefixHelp = ref(false)
 const fileInput = ref<HTMLInputElement>()
+const isRestoredFile = ref(false) // 标记是否为恢复的文件
 const previewData = ref<Array<{
   raw: string
   char: string
@@ -452,10 +460,13 @@ const handleFileSelection = (file: File) => {
     return
   }
 
-  // 清除預設碼表選擇
+  // 清除預設碼表選擇和保存的主方案
   selectedBuiltinTable.value = ''
+  localStorage.removeItem(MAIN_SCHEME_STORAGE_KEY)
+  localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
   
   selectedFile.value = file
+  isRestoredFile.value = false // 标记为新上传的文件
   generatePreview(file)
 }
 
@@ -561,7 +572,7 @@ const generateEncodingPreview = () => {
   }
   const processedTables = props.processedTables
 
-  const { original, full, short, fullWithSelection, shortWithSelection } = processedTables
+  const { full, short, fullWithSelection, shortWithSelection } = processedTables
   const previewItems: Array<{
     char: string
     fullCode: string
@@ -586,7 +597,7 @@ const generateEncodingPreview = () => {
   
   // 如果從預覽數據中獲取的單字不足100個，從原始碼表中補充
   if (orderedChars.length < 100) {
-    for (const char of original.keys()) {
+    for (const char of full.keys()) {
       if (orderedChars.length >= 100) break
       if (Array.from(char).length === 1 && !orderedChars.includes(char)) {
         orderedChars.push(char)
@@ -600,7 +611,7 @@ const generateEncodingPreview = () => {
     const char = orderedChars[i]
     
     // 檢查該字符是否在所有碼表中都存在
-    if (!original.has(char)) continue
+    if (!full.has(char)) continue
 
     const fullCodes = full.get(char) || []
     const shortCodes = short.get(char) || []
@@ -633,7 +644,7 @@ const generateEncodingPreview = () => {
 
 // 生成最長編碼檢視數據
 const generateLongestCodesData = (processedTables: any) => {
-  const { original, full, short, fullWithSelection, shortWithSelection } = processedTables
+  const { full, short, fullWithSelection, shortWithSelection } = processedTables
   
   // 找出全碼最長的10個字符
   const charsWithMaxLength: Array<{
@@ -649,14 +660,11 @@ const generateLongestCodesData = (processedTables: any) => {
   const processingOptions = CodeTableProcessingService.getInstance().getProcessingOptions()
   const calculatedGlobalMaxLength = processingOptions?.maxLength || 4
 
-  for (const [char, codes] of original.entries()) {
+  for (const [char, codes] of full.entries()) {
     if (Array.from(char).length !== 1) continue // 只處理單字
     
-    // 計算該字符的最大編碼長度
-    let maxLength = 0
-    for (const code of codes) {
-      maxLength = Math.max(maxLength, code.length)
-    }
+    // 從全碼表獲取該字符的編碼長度
+    const maxLength = codes[0]?.length || 0
     
     const fullCodes = full.get(char) || []
     const shortCodes = short.get(char) || []
@@ -693,11 +701,16 @@ const generateLongestCodesData = (processedTables: any) => {
 // 移除文件
 const removeFile = () => {
   selectedFile.value = null
+  isRestoredFile.value = false
   previewData.value = []
   encodingPreviewData.value = []
   longestCodesData.value = []
   globalMaxLengthDisplay.value = 4
   stopStatusCheck()
+  
+  // 清除保存的用戶上傳文件數據
+  localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
+  
   if (fileInput.value) {
     fileInput.value.value = ''
   }
@@ -713,74 +726,37 @@ const readFileAsText = (file: File): Promise<string> => {
   })
 }
 
-// 解析码表
-const parseCodeTable = (text: string, format: CodeTableFormat, fileName: string): ParseResult => {
-  const codeTable: CodeTable = new Map()
-  const lines = text.split('\n')
+// 简化的解析结果类型
+interface SimpleParseResult {
+  rawCodeTable: RawCodeTable;
+  totalChars: number;
+  totalCodes: number;
+  format: CodeTableFormat;
+}
+
+// 解析码表（直接返回 RawCodeTable）
+const parseCodeTable = (text: string, format: CodeTableFormat, fileName: string): SimpleParseResult => {
+  // 直接解析为 RawCodeTable
+  const { rawCodeTable } = builtinService.parseRawCodeTable(text, format)
+  
+  // 简单统计（不生成中间码表）
+  let totalChars = 0
   let totalCodes = 0
-  const isYaml = fileName.toLowerCase().endsWith('.yaml') || fileName.toLowerCase().endsWith('.yml')
-
-  for (const line of lines) {
-    let char: string, code: string
-    
-    if (isYaml) {
-      // YAML 格式解析
-      const result = parseYamlLine(line)
-      if (!result.valid) continue
-      char = result.char
-      code = result.code
-    } else {
-      // 原有的 TXT/CSV 解析邏輯
-      const trimmed = line.trim()
-      if (!trimmed) continue
-
-      // 更健壮的分割逻辑：使用制表符或多个空格作为分隔符
-      let parts = trimmed.split(/\t+|\s{2,}|\s+/)
-      // 如果只有一个空格分隔，确保只分割成2部分
-      if (parts.length < 2) {
-        // 尝试按第一个空格分割
-        const spaceIndex = trimmed.indexOf(' ')
-        if (spaceIndex > 0) {
-          const char_part = trimmed.substring(0, spaceIndex).trim()
-          const code_part = trimmed.substring(spaceIndex + 1).trim()
-          if (char_part && code_part) {
-            parts = [char_part, code_part]
-          }
-        }
-      }
-      
-      if (parts.length < 2) continue
-
-      if (format === 'char_first') {
-        char = parts[0].trim()
-        code = parts[1].trim()
-      } else {
-        code = parts[0].trim()
-        char = parts[1].trim()
-      }
-    }
-
-    // 檢查是否爲單個Unicode字符（包括代理對）
-    const isValidChar = (str: string): boolean => {
-      if (!str) return false
-      // 使用Array.from來正確處理Unicode字符
-      const chars = Array.from(str)
-      return Array.from(chars).length === 1
-    }
-
-    // 只处理单字
-    if (isValidChar(char) && code.length > 0) {
-      if (!codeTable.has(char)) {
-        codeTable.set(char, [])
-      }
-      codeTable.get(char)!.push(code)
+  const charSet = new Set<string>()
+  
+  for (const [lineIndex, [char, code]] of rawCodeTable) {
+    // 只统计单个 CJK 汉字
+    if (Array.from(char).length === 1 && char.match(/[\u4e00-\u9fff]/)) {
+      charSet.add(char)
       totalCodes++
     }
   }
+  
+  totalChars = charSet.size
 
   return {
-    codeTable,
-    totalChars: codeTable.size,
+    rawCodeTable,
+    totalChars,
     totalCodes,
     format
   }
@@ -807,12 +783,23 @@ const processFile = async () => {
       undefined
 
     emit('uploadSuccess', {
-      codeTable: result.codeTable,
+      rawCodeTable: result.rawCodeTable,
       fileName: selectedFile.value.name,
       format: result.format,
       isPrefix: isPrefixCode.value,
       prefixKeys: prefixKeys
     })
+
+    // 保存用户上传的文件信息到localStorage
+    const uploadedFileData = {
+      fileName: selectedFile.value.name,
+      fileContent: await selectedFile.value.text(),
+      format: result.format,
+      isPrefix: isPrefixCode.value,
+      prefixKeys: prefixKeys,
+      uploadedAt: new Date().toISOString()
+    }
+    localStorage.setItem(UPLOADED_FILE_STORAGE_KEY, JSON.stringify(uploadedFileData))
 
     // 啟動狀態檢查以生成編碼預覽
     startStatusCheck()
@@ -829,6 +816,52 @@ async function loadBuiltinConfig() {
   try {
     await builtinService.loadConfig()
     builtinTables.value = builtinService.getAvailableTables()
+    
+    // 首先检查是否有保存的用户上传文件
+    const savedUploadedFile = localStorage.getItem(UPLOADED_FILE_STORAGE_KEY)
+    if (savedUploadedFile) {
+      try {
+        const uploadedFileData = JSON.parse(savedUploadedFile)
+
+        
+        // 恢复文件配置
+        selectedFormat.value = uploadedFileData.format || 'char_first'
+        isPrefixCode.value = uploadedFileData.isPrefix || false
+        prefixKeysInput.value = uploadedFileData.prefixKeys ? uploadedFileData.prefixKeys.join('') : ''
+        
+        // 创建虚拟文件对象并恢复
+        const virtualFile = new File([uploadedFileData.fileContent], uploadedFileData.fileName, {
+          type: 'text/plain',
+          lastModified: new Date(uploadedFileData.uploadedAt).getTime()
+        })
+        selectedFile.value = virtualFile
+        isRestoredFile.value = true // 标记为恢复的文件
+        
+        // 生成预览
+        await generatePreview(virtualFile)
+        
+        // 确保组件完全挂载后再触发分析
+        await nextTick()
+        await new Promise(resolve => setTimeout(resolve, 200))
+        
+        // 重新处理文件并触发分析
+        await processFile()
+
+        return // 如果恢复了用户文件，就不再检查预设方案
+      } catch (error) {
+        console.error('[文件恢复] 恢复用户上传文件失败:', error)
+        // 清除损坏的数据
+        localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
+      }
+    }
+    
+    // 如果没有用户上传文件，则恢复保存的主方案选择
+    const savedMainScheme = localStorage.getItem(MAIN_SCHEME_STORAGE_KEY)
+    if (savedMainScheme && builtinTables.value.some(table => table.key === savedMainScheme)) {
+      selectedBuiltinTable.value = savedMainScheme
+      // 自動載入恢復的方案
+      await loadBuiltinTable()
+    }
   } catch (error) {
     console.error('載入預設碼表配置失敗:', error)
   }
@@ -841,8 +874,17 @@ async function handleBuiltinTableChange() {
     selectedFile.value = null
     previewData.value = []
     
+    // 清除保存的用户上传文件
+    localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
+    
+    // 保存主方案選擇到 localStorage
+    localStorage.setItem(MAIN_SCHEME_STORAGE_KEY, selectedBuiltinTable.value)
+    
     // 自動載入預設碼表
     await loadBuiltinTable()
+  } else {
+    // 清除保存的方案
+    localStorage.removeItem(MAIN_SCHEME_STORAGE_KEY)
   }
 }
 
@@ -853,7 +895,7 @@ async function loadBuiltinTable() {
   try {
     isUploading.value = true
     
-    const result = await builtinService.downloadCodeTable(selectedBuiltinTable.value)
+    const result = await builtinService.downloadRawCodeTable(selectedBuiltinTable.value)
     
     // 获取内置方案的前缀码配置
     const tableConfig = builtinService.getTableConfig(selectedBuiltinTable.value)
@@ -870,7 +912,7 @@ async function loadBuiltinTable() {
     }
     
     emit('uploadSuccess', {
-      codeTable: result.codeTable,
+      rawCodeTable: result.rawCodeTable,
       fileName: `預設方案：${builtinTables.value.find(t => t.key === selectedBuiltinTable.value)?.name || selectedBuiltinTable.value}`,
       format: result.format,
       tableKey: selectedBuiltinTable.value,  // 添加tableKey用于前缀码检测
@@ -899,6 +941,22 @@ watch(() => props.processedTables, (newTables) => {
 // 組件清理
 onUnmounted(() => {
   stopStatusCheck()
+})
+
+// 清除所有持久化数据
+const clearAllPersistedData = () => {
+  localStorage.removeItem(MAIN_SCHEME_STORAGE_KEY)
+  localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
+
+}
+
+// 暴露所有方法给父组件
+defineExpose({
+  collapse,
+  expand,
+  toggle: toggleCollapsed,
+  getCollapsedState,
+  clearAllPersistedData
 })
 
 // 初始化
@@ -1356,6 +1414,28 @@ loadBuiltinConfig()
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: 4px; /* 从 var(--spacing-xs) 减少到固定4px */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.restored-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: #fef3cd;
+  color: #92400e;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid #fcd34d;
+}
+
+[data-theme="dark"] .restored-indicator {
+  background: #451a03;
+  color: #fcd34d;
+  border-color: #92400e;
 }
 
 .file-size {

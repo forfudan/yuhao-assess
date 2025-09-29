@@ -93,7 +93,7 @@ async function loadFrequencyCharsUnion(): Promise<Set<string>> {
     }
     
     console.timeEnd('加載字頻表字符並集')
-    console.log(`字頻表字符並集包含 ${allChars.size} 個字符`)
+
     
     return allChars
   } catch (error) {

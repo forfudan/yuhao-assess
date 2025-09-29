@@ -150,7 +150,7 @@ export class ExportService {
             })
           ])
           
-          console.log('卡片生成的圖片已複製到剪貼板')
+
         } catch (clipboardError) {
           console.warn('複製到剪貼板失敗，將進行下載:', clipboardError)
         }
@@ -165,7 +165,7 @@ export class ExportService {
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-        console.log('圖片已下載:', filename)
+
       }
 
       return dataUrl
@@ -322,7 +322,7 @@ export class ExportService {
             ])
           ])
           
-          console.log('合併圖片已複製到剪貼板')
+
         } catch (clipboardError) {
           console.warn('複製到剪貼板失敗，將進行下載:', clipboardError)
         }
@@ -337,7 +337,7 @@ export class ExportService {
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-        console.log('合併圖片已下載:', filename)
+
       }
 
       return dataUrl

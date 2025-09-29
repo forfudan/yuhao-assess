@@ -8,16 +8,15 @@ interface CodeTableRow {
 interface EfficiencyResult {
   N: number
   efficiency: number
-  selectedChars: string[]  // 新增：被選中使用簡碼的字
+  selectedChars: string[]
 }
 
 /**
  * 計算簡碼效率
- * 
- * 算法説明：
- * 1. 對於每個簡碼數量N，選擇頻率加權碼長差值最大的前N個漢字使用簡碼
- * 2. 頻率差值 = 漢字頻率 * (全碼長度 - 簡碼長度)
- * 3. 計算使用N個簡碼後的平均碼長
+ * @param codeTable 碼表數據
+ * @param charFrequency 字頻數據
+ * @param maxLen 最大碼長
+ * @param isPrefix 是否為前綴碼方案
  */
 export function calculateShortCodeEfficiency(
   codeTable: CodeTableRow[],
@@ -25,15 +24,13 @@ export function calculateShortCodeEfficiency(
   maxLen: number = 4,
   isPrefix: boolean = false
 ): EfficiencyResult[] {
-  // 预处理码表数据
   const processedData = preprocessCodeTable(codeTable, charFrequency, maxLen, isPrefix)
   
-  // 計算不同N值下的效率
   const nValues = [0, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
   const results: EfficiencyResult[] = []
   
   for (const N of nValues) {
-    const result = calculateEfficiencyForN(processedData, N)
+    const result = calculateEfficiencyForN(processedData, N, maxLen)
     results.push({ N, efficiency: result.efficiency, selectedChars: result.selectedChars })
   }
   
@@ -149,9 +146,11 @@ function calculateActualLength(code: string, maxLen: number, isPrefix: boolean):
   return len
 }
 
-function calculateEfficiencyForN(processedChars: ProcessedChar[], N: number): { efficiency: number; selectedChars: string[] } {
-  // 只考慮簡碼長度小於全碼長度的漢字
-  const validShortCodeChars = processedChars.filter(char => char.lenShort < char.lenFull)
+function calculateEfficiencyForN(processedChars: ProcessedChar[], N: number, maxLen: number): { efficiency: number; selectedChars: string[] } {
+  // 只考慮簡碼長度小於全碼長度且小於最大碼長的漢字
+  const validShortCodeChars = processedChars.filter(char => 
+    char.lenShort < char.lenFull && char.lenShort < maxLen
+  )
   
   // 按頻率差值排序，選擇前N個字符使用簡碼（但實際數量可能小於N）
   const sortedByFreqDiff = [...validShortCodeChars].sort((a, b) => b.freqLenDiff - a.freqLenDiff)
@@ -183,7 +182,7 @@ export function calculateFullCodeAverageLength(
   isPrefix: boolean = false
 ): number {
   const processedData = preprocessCodeTable(codeTable, charFrequency, maxLen, isPrefix)
-  return calculateEfficiencyForN(processedData, 0).efficiency
+  return calculateEfficiencyForN(processedData, 0, maxLen).efficiency
 }
 
 /**

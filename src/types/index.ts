@@ -1,5 +1,16 @@
+// 原始碼表類型定義 - 保持行順序
+export type RawCodeTable = Map<number, [string, string]> // number: 行號, [汉字, 編碼]
+
 // 碼表類型定義
 export type CodeTable = Map<string, string[]>
+
+// 處理後的四個輔助碼表
+export interface ProcessedCodeTables {
+  full: CodeTable                    // 全碼表
+  short: CodeTable                   // 簡碼表  
+  fullWithSelection: CodeTable       // 全碼加選重表
+  shortWithSelection: CodeTable      // 簡碼加選重表
+}
 
 // 碼表格式類型
 export type CodeTableFormat = 'char_first' | 'code_first'

@@ -23,9 +23,6 @@ export { ExportService } from './exportService'
 // 導出碼表處理服務
 export {
   cleanCodeTable,
-  generateFullCodeTable,
-  generateShortCodeTable,
-  generateCompleteCharTable,
   validateCodeTable,
   getCodeTableStats
 } from './codeTableCleanService'

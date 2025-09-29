@@ -235,7 +235,7 @@ import SpeedEquivCard from './components/SpeedEquivCard.vue'
 import ShortCodeEfficiencyCard from './components/ShortCodeEfficiencyCard.vue'
 import { codeTableProcessingService } from './services/codeTableProcessingService'
 import { isInCJKToJ } from './services/charsetService' 
-import type { CodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
+import type { CodeTable, RawCodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
 
 // 響應式數據
 const codeTable = ref<CodeTable>(new Map())
@@ -409,11 +409,7 @@ const restoreCodeTableData = async () => {
       uploadPrefixKeys.value = data.uploadPrefixKeys || []
       globalMaxLength.value = data.globalMaxLength || 4
       
-      // 重新處理碼表以確保processing service有正確的數據（包含字頻優化）
-      await codeTableProcessingService.processCodeTable(codeTable.value, {
-        isPrefix: uploadPrefixFlag.value,
-        maxLength: globalMaxLength.value
-      })
+      console.warn('从本地存储恢复数据，需要重新生成辅助码表')
       
       analysisReady.value = true
     }
@@ -526,71 +522,88 @@ function calculateMaxCodeLength(codeTable: CodeTable): number {
 }
 
 // 處理碼表上傳成功
-const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean; prefixKeys?: string[] }) => {
-  console.log('[App] 開始處理碼表上傳:', data.fileName, data.codeTable.size)
-  
-  // 先計算最大碼長
-  const maxLength = calculateMaxCodeLength(data.codeTable)
-  
-  // 立即處理碼表，生成所有派生版本（包含字頻優化）
-  console.log('[App] 開始處理碼表...')
-  await codeTableProcessingService.processCodeTable(data.codeTable, {
-    isPrefix: data.isPrefix || false,
-    maxLength: maxLength,
-    prefixKeys: data.prefixKeys
-  })
-  console.log('[App] 碼表處理完成')
-  
-  // 確保處理完全完成後，再更新響應式數據
-  await nextTick()
-  
-  // 處理完成後，再更新響應式數據（這會觸發 ComparisonCard 的監聽器）
-  console.log('[App] 更新響應式數據...')
-  codeTable.value = data.codeTable
-  globalMaxLength.value = maxLength
-  uploadPrefixFlag.value = data.isPrefix || false
-  uploadPrefixKeys.value = data.prefixKeys || []
-  
-  // 獲取處理後的表格數據作為 golden source
-  processedTables.value = codeTableProcessingService.getProcessedTables()
-  
-  // 如果是預設方案，从fileName中提取名称（格式：預設方案：方案名）
-  if (data.tableKey && data.fileName.startsWith('預設方案：')) {
-    codeTableName.value = data.fileName.replace('預設方案：', '')
-  } else {
-    codeTableName.value = data.fileName.replace(/\.(txt|csv)$/, '')
-  }
-  
-  analysisReady.value = true
-  
-  // 生成分析數據
-  analysisData.value = generateAnalysis(data.codeTable)
-  
-  // 保存到本地存儲
-  saveCodeTableData()
-  
-  console.log('[App] 碼表上傳處理完成')
-  
-  // 碼表分析成功後，自動滚動到第一個分析卡片
-  setTimeout(() => {
-    const firstAnalysisCard = document.getElementById('card-duplicate')
-    if (firstAnalysisCard) {
-      firstAnalysisCard.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      })
+const handleCodeTableUpload = async (data: { 
+  rawCodeTable: RawCodeTable;
+  fileName: string; 
+  format: string; 
+  tableKey?: string; 
+  isPrefix?: boolean; 
+  prefixKeys?: string[];
+}) => {
+  try {
+    console.log('[App] 開始處理碼表上傳:', data.fileName, data.rawCodeTable.size)
+    
+    // 直接使用 RawCodeTable 处理码表，避免重复处理
+    console.log('[App] 開始處理碼表...')
+    const processedTablesResult = await codeTableProcessingService.processRawCodeTable(data.rawCodeTable, {
+      isPrefix: data.isPrefix || false,
+      prefixKeys: data.prefixKeys
+    })
+    console.log('[App] 碼表處理完成', processedTablesResult)
+    
+    // 从处理结果中获取信息
+    const maxLength = codeTableProcessingService.getProcessingOptions()?.maxLength || 4
+    console.log('[App] 最大碼長:', maxLength)
+    
+    // 確保處理完全完成後，再更新響應式數據
+    await nextTick()
+    
+    // 處理完成後，再更新響應式數據（這會觸發 ComparisonCard 的監聽器）
+    console.log('[App] 更新響應式數據...')
+    codeTable.value = processedTablesResult.full  // 使用处理后的全码表作为主要码表
+    globalMaxLength.value = maxLength
+    uploadPrefixFlag.value = data.isPrefix || false
+    uploadPrefixKeys.value = data.prefixKeys || []
+    
+    // 獲取處理後的表格數據作為 golden source
+    processedTables.value = processedTablesResult
+    console.log('[App] processedTables 更新完成:', processedTables.value)
+    
+    // 如果是預設方案，从fileName中提取名称（格式：預設方案：方案名）
+    if (data.tableKey && data.fileName.startsWith('預設方案：')) {
+      codeTableName.value = data.fileName.replace('預設方案：', '')
+    } else {
+      codeTableName.value = data.fileName.replace(/\.(txt|csv)$/, '')
     }
-  }, 500) // 延遲500ms，讓用户看到成功反饋
-  
-  uploadStatus.value = {
-    type: 'success',
-    message: `碼表 "${data.fileName}" 上傳成功！共 ${data.codeTable.size} 個字符`
-  }
+    
+    console.log('[App] 設置 analysisReady = true')
+    analysisReady.value = true
+    
+    // 生成分析數據（使用处理后的全码表）
+    console.log('[App] 生成分析數據...')
+    analysisData.value = generateAnalysis(processedTablesResult.full)
+    console.log('[App] 分析數據生成完成')
+    
+    // 保存到本地存儲
+    saveCodeTableData()
+    
+    console.log('[App] 碼表上傳處理完成')
+    
+    // 碼表分析成功後，自動滚動到第一個分析卡片
+    setTimeout(() => {
+      const firstAnalysisCard = document.getElementById('card-duplicate')
+      if (firstAnalysisCard) {
+        firstAnalysisCard.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        })
+      }
+    }, 500) // 延遲500ms，讓用户看到成功反饋
+    
+    uploadStatus.value = {
+      type: 'success',
+      message: `碼表 "${data.fileName}" 上傳成功！共 ${processedTablesResult.full.size} 個字符`
+    }
 
-  // 3秒後清除狀態
-  setTimeout(() => {
-    uploadStatus.value = null
-  }, 3000)
+    // 3秒後清除狀態
+    setTimeout(() => {
+      uploadStatus.value = null
+    }, 3000)
+  } catch (error) {
+    console.error('[App] 處理碼表上傳時發生錯誤:', error)
+    analysisReady.value = false
+    handleUploadError(`處理碼表時發生錯誤: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 // 處理上傳錯誤

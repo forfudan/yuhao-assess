@@ -109,7 +109,7 @@
           <ul>
             <li>本模塊使用前 N 個（最大爲 1000 個）最有效率的簡碼時的平均碼長</li>
             <li>簡碼字的效率取決於於漢字字頻 × 節約碼長</li>
-            <li>僅考慮簡碼長度小於全碼長度的漢字，實際簡碼數量可能小於 N</li>
+            <li>僅考慮簡碼長度小於全碼長度且小於最大碼長的漢字，實際簡碼數量可能小於 N</li>
             <li>鼠標懸停在數字上可查看當前區間對應的高效簡碼字</li>
             <li>點擊數字可將當前區間的高效簡碼字復制到剪貼板</li>
           </ul>
@@ -230,7 +230,6 @@ const checkProcessingStatus = () => {
       props.codeTable && 
       props.codeTable.size > 0) {
     
-    console.log('[ShortCodeEfficiencyCard] 檢測到新的全局處理結果，開始計算效率...')
     // 短暫延遲確保處理完成，但不需要設置isLoading，updateEfficiency會處理
     setTimeout(() => {
       updateEfficiency()
@@ -378,6 +377,9 @@ const calculateShortCodeEfficiencyWithMaps = (
   shortCodeMap: Map<string, string>, 
   fullCodeMap: Map<string, string>
 ): Array<{ N: number; efficiency: number; selectedChars: string[] }> => {
+  // 獲取最大碼長
+  const processingOptions = processingService.getProcessingOptions()
+  const maxCodeLength = processingOptions?.maxLength || 4
   
   // 預處理字符數據
   const processedChars: Array<{
@@ -416,8 +418,10 @@ const calculateShortCodeEfficiencyWithMaps = (
   const results: Array<{ N: number; efficiency: number; selectedChars: string[] }> = []
   
   for (const N of nValues) {
-    // 只考慮簡碼長度小於全碼長度的漢字
-    const validShortCodeChars = processedChars.filter(char => char.shortLen < char.fullLen)
+    // 只考慮簡碼長度小於全碼長度且小於最大碼長的漢字
+    const validShortCodeChars = processedChars.filter(char => 
+      char.shortLen < char.fullLen && char.shortLen < maxCodeLength
+    )
     
     // 按頻率差值排序，選擇前N個字符使用簡碼
     const sortedByFreqDiff = [...validShortCodeChars].sort((a, b) => b.freqLenDiff - a.freqLenDiff)
@@ -509,14 +513,14 @@ const updateEfficiency = async () => {
       return
     }
     
-    console.log('[ShortCodeEfficiencyCard] 使用全局處理結果計算簡碼效率')
+
     
     // 處理成功，停止狀態檢查
     stopStatusCheck()
     
     // 保存簡碼加選重表供tooltip使用
     shortWithSelectionTable.value = processedTables.shortWithSelection
-    processedCodeTable.value = processedTables.original
+    processedCodeTable.value = processedTables.full  // 使用全码表代替原始码表
 
     // 將加選重碼表轉換為CodeTableRow[]格式，用於簡碼效率計算
     const convertCodeTableToRows = (codeTable: CodeTable): { char: string; code: string }[] => {
@@ -775,7 +779,7 @@ const copyToClipboard = async (chars: string[], currentN: number, freqType: stri
       ? `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}新增的${count}個簡碼字到剪貼板`
       : `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}的${count}個簡碼字到剪貼板`
     
-    console.log(successMessage, textToCopy)
+
     // 可以在這裏添加 toast 提示
   } catch (err) {
     console.error('復制到剪貼板失敗:', err)

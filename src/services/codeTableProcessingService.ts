@@ -3,18 +3,16 @@
  * 負責預處理各種類型的碼表，避免在不同組件中重複計算
  */
 
-import { generateFullCodeTable, generateShortCodeTable } from './codeTableCleanService'
 import { getFrequencyCharsUnion } from './dataService'
 import { isInCJKToJ } from './charsetService'
-import type { CodeTable } from '../types'
+import type { CodeTable, RawCodeTable } from '../types'
 
 // 處理後的碼表結果接口
 export interface ProcessedCodeTables {
-  original: CodeTable
-  full: CodeTable                    // 全碼表（每個字符只保留最長編碼）
-  short: CodeTable                   // 簡碼表（每個字符只保留最短編碼）
-  fullWithSelection: CodeTable       // 全碼加選重按鍵表（用於當量計算等）
-  shortWithSelection: CodeTable      // 簡碼加選重按鍵表（補空格+選重鍵）
+  full: CodeTable                    // 全碼表（每個字符只保留最長編碼，保持原始順序）
+  short: CodeTable                   // 簡碼表（每個字符只保留最短編碼，保持原始順序）
+  fullWithSelection: CodeTable       // 全碼加選重按鍵表（用於當量計算等，保持原始順序）
+  shortWithSelection: CodeTable      // 簡碼加選重按鍵表（補空格+選重鍵，保持原始順序）
 }
 
 // 碼表處理服務類
@@ -32,146 +30,135 @@ export class CodeTableProcessingService {
     return CodeTableProcessingService.instance
   }
 
-  /**
-   * 過濾原始碼表，只保留 CJK 漢字（單字）
-   */
-  private filterOriginalCodeTable(originalCodeTable: CodeTable): CodeTable {
-    const filteredCodeTable: CodeTable = new Map()
-    
-    for (const [char, codes] of originalCodeTable.entries()) {
-      // 只保留單個 CJK 漢字
-      if (Array.from(char).length === 1 && isInCJKToJ(char)) {
-        filteredCodeTable.set(char, codes)
-      }
-    }
-    
-    console.log(`[CodeTableProcessingService] 原始碼表過濾：${originalCodeTable.size} -> ${filteredCodeTable.size} 個 CJK 漢字`)
-    return filteredCodeTable
-  }
+
 
   /**
-   * 處理原始碼表，生成所有需要的派生碼表
+   * 直接从 RawCodeTable 生成四个辅助码表，避免中间层
+   * 
+   * @param rawCodeTable 原始码表（行号 -> [字符, 编码]）
+   * @param options 处理选项
    */
-  async processCodeTable(originalCodeTable: CodeTable, options?: { isPrefix?: boolean, maxLength?: number, prefixKeys?: string[] }): Promise<ProcessedCodeTables> {
-    // 首先過濾原始碼表，只保留 CJK 漢字
-    const filteredOriginalCodeTable = this.filterOriginalCodeTable(originalCodeTable)
+  async processRawCodeTable(
+    rawCodeTable: RawCodeTable,
+    options?: {
+      isPrefix?: boolean
+      maxLength?: number
+      prefixKeys?: string[]
+    }
+  ): Promise<ProcessedCodeTables> {
     
-    // 生成全碼表和簡碼表（使用過濾後的碼表）
-    const fullResult = generateFullCodeTable(filteredOriginalCodeTable)
-    const shortResult = generateShortCodeTable(filteredOriginalCodeTable)
+    // 第一步：从 RawCodeTable 生成基础的 full 和 short 表
+    const { full, short, maxLength: calculatedMaxLength } = this.generateBaseTablesFromRaw(rawCodeTable)
     
-    // 計算最大碼長（使用過濾後的碼表）
-    const maxLength = options?.maxLength || this.calculateMaxCodeLength(filteredOriginalCodeTable)
+    // 使用传入的最大码长或计算的最大码长
+    const maxLength = options?.maxLength || calculatedMaxLength
     const isPrefix = options?.isPrefix || false
     const prefixKeys = options?.prefixKeys
     
-    // 保存處理選項
+    // 保存处理选项
     this.processingOptions = { isPrefix, maxLength }
     
-    // 並行獲取字頻字符並集和生成基礎碼表
-    const [frequencyChars] = await Promise.all([
-      getFrequencyCharsUnion().catch(() => {
-        console.warn('無法獲取字頻字符並集，將使用完整碼表（性能較低）')
-        return null
-      })
-    ])
+    // 第二步：并行获取字频字符集合用于优化
+    const frequencyChars = await getFrequencyCharsUnion().catch(() => {
+      console.warn('無法獲取字頻字符並集，將使用完整碼表（性能較低）')
+      return null
+    })
     
-    // 生成两种加选重按键的码表（使用字频优化）
-    const fullWithSelection = await this.generateCodeTableWithSelection(fullResult.codeTable, maxLength, isPrefix, frequencyChars, prefixKeys)
-    const shortWithSelection = await this.generateCodeTableWithSelection(shortResult.codeTable, maxLength, isPrefix, frequencyChars, prefixKeys)
+    // 第三步：生成加选重按键的码表（直接实现，保持原始顺序）
+    const fullWithSelection = await this.generateCodeTableWithSelectionFromRaw(
+      rawCodeTable, full, maxLength, isPrefix, frequencyChars, prefixKeys
+    )
+    const shortWithSelection = await this.generateCodeTableWithSelectionFromRaw(
+      rawCodeTable, short, maxLength, isPrefix, frequencyChars, prefixKeys
+    )
     
     this.processedTables = {
-      original: filteredOriginalCodeTable,  // 使用過濾後的碼表作為「原始」碼表
-      full: fullResult.codeTable,
-      short: shortResult.codeTable,
-      fullWithSelection: fullWithSelection,
-      shortWithSelection: shortWithSelection
+      full,
+      short,
+      fullWithSelection,
+      shortWithSelection
     }
+    
+
     
     return this.processedTables
   }
 
-  private debugUnderscoreInFullWithSelection(fullWithSelection: CodeTable) {
-    console.log('=== 全码加选重按键表调试 ===')
-    const underscoreCodes: string[] = []
-    const allCodes: string[] = []
-    
-    for (const [char, codes] of Object.entries(fullWithSelection)) {
-      for (const code of codes) {
-        allCodes.push(`${char}: ${code}`)
-        if (code.endsWith('_')) {
-          underscoreCodes.push(`${char}: ${code}`)
-          if (underscoreCodes.length >= 10) break
-        }
-      }
-      if (underscoreCodes.length >= 10 && allCodes.length >= 100) break
-    }
-    
-    // 输出前10个下划线编码
-    console.log('前10个末尾是下划线的编码:')
-    underscoreCodes.forEach((item, index) => {
-      console.log(`${index + 1}. ${item}`)
-    })
-    
-    // 输出前100个所有编码
-    console.log('前100个全码加选重编码:')
-    allCodes.slice(0, 100).forEach((item, index) => {
-      console.log(`${index + 1}. ${item}`)
-    })
-    
-    console.log('=== 全码加选重按键表调试结束 ===')
-  }
-
   /**
-   * 獲取已處理的碼表
+   * 从 RawCodeTable 生成基础的 full 和 short 码表
    */
-  getProcessedTables(): ProcessedCodeTables | null {
-    return this.processedTables
-  }
-
-  getProcessingOptions(): { isPrefix: boolean; maxLength: number } | null {
-    return this.processingOptions
-  }
-
-  /**
-   * 清除緩存的處理結果
-   */
-  clearCache(): void {
-    this.processedTables = null
-  }
-
-  /**
-   * 计算码表的最大码长
-   */
-  private calculateMaxCodeLength(codeTable: CodeTable): number {
+  private generateBaseTablesFromRaw(rawCodeTable: RawCodeTable): {
+    full: CodeTable
+    short: CodeTable
+    maxLength: number
+  } {
+    // 为每个字符选择最长和最短编码，记录对应的行号
+    const charToSelectedCodes = new Map<string, {
+      longest: { code: string, lineIndex: number },
+      shortest: { code: string, lineIndex: number }
+    }>()
+    
     let maxLength = 0
-    for (const codes of codeTable.values()) {
-      for (const code of codes) {
-        const codeLength = code.length
-        if (codeLength > maxLength) {
-          maxLength = Math.max(maxLength, codeLength)
+    
+    for (const [lineIndex, [char, code]] of rawCodeTable) {
+      // 只处理单个 CJK 汉字
+      if (Array.from(char).length !== 1 || !isInCJKToJ(char)) {
+        continue
+      }
+      
+      // 计算最大码长
+      maxLength = Math.max(maxLength, code.length)
+      
+      if (!charToSelectedCodes.has(char)) {
+        charToSelectedCodes.set(char, {
+          longest: { code, lineIndex },
+          shortest: { code, lineIndex }
+        })
+      } else {
+        const selected = charToSelectedCodes.get(char)!
+        
+        // 更新最长编码
+        if (code.length > selected.longest.code.length) {
+          selected.longest = { code, lineIndex }
+        }
+        
+        // 更新最短编码
+        if (code.length < selected.shortest.code.length) {
+          selected.shortest = { code, lineIndex }
         }
       }
     }
-    return maxLength || 4 // 默认4位
+
+    // 生成原始顺序码表（按汉字-编码对的行号顺序排序）
+    const full: CodeTable = new Map()
+    const short: CodeTable = new Map()
+    
+    // 按选中编码的行号排序
+    const fullEntries = Array.from(charToSelectedCodes.entries())
+      .sort((a, b) => a[1].longest.lineIndex - b[1].longest.lineIndex)
+    
+    const shortEntries = Array.from(charToSelectedCodes.entries())
+      .sort((a, b) => a[1].shortest.lineIndex - b[1].shortest.lineIndex)
+    
+    for (const [char, selected] of fullEntries) {
+      full.set(char, [selected.longest.code])
+    }
+    
+    for (const [char, selected] of shortEntries) {
+      short.set(char, [selected.shortest.code])
+    }
+
+
+    return { full, short, maxLength: maxLength || 4 }
   }
 
   /**
-   * 生成加选重按键的码表（优化版本，支持字频过滤）
-   * 对于不到最大码长的编码：
-   * - 如果不是前缀码且为首选：补充一个下划线（代表空格）用于选重
-   * - 如果是前缀码且为首选：不补充任何东西
-   * 对于重码，会添加选择键
-   * 
-   * @param codeTable 原始码表
-   * @param maxLength 最大码长
-   * @param isPrefix 是否为前缀码
-   * @param frequencyChars 字频表字符集合（用于过滤，null则不过滤）
-   * @param prefixKeys 前缀码上屏键列表（可选）
+   * 从 RawCodeTable 生成加选重按键的码表（保持原始输入顺序）
    */
-  async generateCodeTableWithSelection(
-    codeTable: CodeTable, 
-    maxLength: number, 
+  private async generateCodeTableWithSelectionFromRaw(
+    rawCodeTable: RawCodeTable,
+    baseTable: CodeTable,
+    maxLength: number,
     isPrefix: boolean,
     frequencyChars: Set<string> | null = null,
     prefixKeys?: string[]
@@ -182,11 +169,22 @@ export class CodeTableProcessingService {
     let totalChars = 0
     let filteredChars = 0
     
-    // 首先收集所有编码的字符，按频率排序以确定候选顺序
-    const codeToChars = new Map<string, string[]>()
+    // 第一步：从 RawCodeTable 按原始顺序收集 编码->字符 的映射
+    const codeToCharsInOrder = new Map<string, string[]>()
     
-    for (const [char, codes] of codeTable.entries()) {
-      if (codes.length === 0) continue
+    // 按行号顺序遍历，保持原始输入顺序
+    const sortedEntries = Array.from(rawCodeTable.entries()).sort((a, b) => a[0] - b[0])
+    
+    for (const [, [char, code]] of sortedEntries) {
+      // 只处理单字符且在 CJK 范围内的汉字
+      if (Array.from(char).length !== 1 || !isInCJKToJ(char)) {
+        continue
+      }
+      
+      // 只处理在基础表中的字符
+      if (!baseTable.has(char)) {
+        continue
+      }
       
       totalChars++
       
@@ -196,16 +194,18 @@ export class CodeTableProcessingService {
         continue
       }
       
-      for (const code of codes) {
-        if (!codeToChars.has(code)) {
-          codeToChars.set(code, [])
-        }
-        codeToChars.get(code)!.push(char)
+      // 按原始输入顺序添加字符到对应编码
+      if (!codeToCharsInOrder.has(code)) {
+        codeToCharsInOrder.set(code, [])
+      }
+      const charList = codeToCharsInOrder.get(code)!
+      if (!charList.includes(char)) {
+        charList.push(char)
       }
     }
     
-    // 为每个字符处理编码
-    for (const [char, codes] of codeTable.entries()) {
+    // 第二步：为基础表中的每个字符生成加选重的编码
+    for (const [char, codes] of baseTable.entries()) {
       if (codes.length === 0) continue
       
       // 字频过滤：只处理在字频表中的字符
@@ -216,16 +216,13 @@ export class CodeTableProcessingService {
       const processedCodes: string[] = []
       
       for (const code of codes) {
-        const charsWithThisCode = codeToChars.get(code) || []
+        const charsWithThisCode = codeToCharsInOrder.get(code) || []
         const charIndex = charsWithThisCode.indexOf(char)
         const isFirstCandidate = charIndex === 0
         
         let processedCode = code
         
-        // 前缀码的特殊处理逻辑：
-        // 当(1)编码没有达到最大码长时，且(2)编码的最后一个字符不是 prefixKeys 中的字符或下划线(表示空格)，
-        // 则在编码末尾增加一个下划线（表示空格）。这是因为如果不到最大码长，且不是以prefixKeys或下划线结尾，
-        // 则意味着无法形成唯一分割，需要加一个下划线来让编码上屏。
+        // 前缀码的特殊处理逻辑
         if (isPrefix && prefixKeys && code.length < maxLength) {
           const lastChar = code.slice(-1)
           const needsUnderscore = !prefixKeys.includes(lastChar) && lastChar !== '_'
@@ -233,7 +230,7 @@ export class CodeTableProcessingService {
             processedCode = code + '_'
           }
         } else if (!isPrefix && code.length < maxLength && isFirstCandidate) {
-          // 非前缀码的原有逻辑：首选且未达到最大码长时补充下划线
+          // 非前缀码：首选且未达到最大码长时补充下划线
           processedCode = code + '_'
         }
         
@@ -258,11 +255,34 @@ export class CodeTableProcessingService {
     if (frequencyChars) {
       const remainingChars = totalChars - filteredChars
       const reductionPercent = ((filteredChars / totalChars) * 100).toFixed(1)
-      console.log(`碼表字頻優化: 原始 ${totalChars} 字符，過濾 ${filteredChars} 字符，保留 ${remainingChars} 字符 (減少 ${reductionPercent}%)`)
+
     }
     
     return processedTable
   }
+
+
+
+  /**
+   * 獲取已處理的碼表
+   */
+  getProcessedTables(): ProcessedCodeTables | null {
+
+    return this.processedTables
+  }
+
+  getProcessingOptions(): { isPrefix: boolean; maxLength: number } | null {
+    return this.processingOptions
+  }
+
+  /**
+   * 清除緩存的處理結果
+   */
+  clearCache(): void {
+    this.processedTables = null
+  }
+
+
 
   /**
    * 检查是否有可用的处理结果
@@ -272,35 +292,9 @@ export class CodeTableProcessingService {
   }
 
   /**
-   * 静态方法：生成加选重按键的码表（供外部直接调用）
-   * @param codeTable 原始码表
-   * @param maxLength 最大码长
-   * @param isPrefix 是否为前缀码
-   * @param prefixKeys 前缀码上屏键列表（可选）
-   */
-  static async generateCodeTableWithSelection(
-    codeTable: CodeTable, 
-    maxLength: number, 
-    isPrefix: boolean,
-    prefixKeys?: string[]
-  ): Promise<CodeTable> {
-    const instance = CodeTableProcessingService.getInstance()
-    
-    // 获取字频字符集合（用于优化）
-    let frequencyChars: Set<string> | null = null
-    try {
-      frequencyChars = await getFrequencyCharsUnion()
-    } catch (error) {
-      console.warn('無法獲取字頻字符並集，將使用完整碼表（性能較低）')
-    }
-    
-    return instance.generateCodeTableWithSelection(codeTable, maxLength, isPrefix, frequencyChars, prefixKeys)
-  }
-
-  /**
    * 获取特定类型的码表
    */
-  getCodeTable(type: 'original' | 'full' | 'short' | 'fullWithSelection' | 'shortWithSelection'): CodeTable | null {
+  getCodeTable(type: 'full' | 'short' | 'fullWithSelection' | 'shortWithSelection'): CodeTable | null {
     if (!this.processedTables) {
       return null
     }

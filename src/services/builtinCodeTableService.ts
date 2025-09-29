@@ -1,4 +1,4 @@
-import type { CodeTableConfig, BuiltinCodeTable, CodeTable, CodeTableFormat, CharFrequency, EquivTable } from '../types/index'
+import type { CodeTableConfig, BuiltinCodeTable, CodeTable, RawCodeTable, CodeTableFormat, CharFrequency, EquivTable } from '../types/index'
 
 // CJK塊數據類型定義
 type CJKBlockData = {
@@ -332,6 +332,141 @@ export class BuiltinCodeTableService {
     }
 
     return { isRegular, isGBK, cjkBlock }
+  }
+
+  /**
+   * 解析文本为原始码表（保持行顺序）
+   */
+  parseRawCodeTable(text: string, format: CodeTableFormat): { rawCodeTable: RawCodeTable } {
+    const rawCodeTable: RawCodeTable = new Map()
+    const lines = text.split('\n')
+    let lineIndex = 0
+
+    for (const line of lines) {
+      const trimmedLine = line.trim()
+      if (!trimmedLine || trimmedLine.startsWith('#') || trimmedLine.startsWith('//')) {
+        continue
+      }
+
+      const parts = trimmedLine.split(/\s+/)
+      if (parts.length < 2) continue
+
+      let char: string
+      let code: string
+
+      if (format === 'char_first') {
+        char = parts[0]
+        code = parts[1]
+      } else {
+        code = parts[0]
+        char = parts[1]
+      }
+
+      if (!char || !code) continue
+
+      // 检查是否为单个字符
+      if (Array.from(char).length === 1) {
+        rawCodeTable.set(lineIndex++, [char, code])
+      }
+    }
+
+    return { rawCodeTable }
+  }
+
+  /**
+   * 从原始码表生成辅助码表（保持原始排序）
+   */
+  static generateAuxiliaryTables(rawCodeTable: RawCodeTable): {
+    full: CodeTable
+    short: CodeTable
+    fullWithSelection: CodeTable
+    shortWithSelection: CodeTable
+  } {
+    // 为每个字符选择最长和最短编码，记录对应的行号
+    const charToSelectedCodes = new Map<string, {
+      longest: { code: string, lineIndex: number },
+      shortest: { code: string, lineIndex: number }
+    }>()
+    
+    for (const [lineIndex, [char, code]] of rawCodeTable) {
+      if (!charToSelectedCodes.has(char)) {
+        charToSelectedCodes.set(char, {
+          longest: { code, lineIndex },
+          shortest: { code, lineIndex }
+        })
+      } else {
+        const selected = charToSelectedCodes.get(char)!
+        
+        // 更新最长编码
+        if (code.length > selected.longest.code.length) {
+          selected.longest = { code, lineIndex }
+        }
+        
+        // 更新最短编码
+        if (code.length < selected.shortest.code.length) {
+          selected.shortest = { code, lineIndex }
+        }
+      }
+    }
+
+    // 生成原始顺序码表（按汉字-编码对的行号顺序排序）
+    const full: CodeTable = new Map()
+    const short: CodeTable = new Map()
+    
+    // 按选中编码的行号排序
+    const fullEntries = Array.from(charToSelectedCodes.entries())
+      .sort((a, b) => a[1].longest.lineIndex - b[1].longest.lineIndex)
+    
+    const shortEntries = Array.from(charToSelectedCodes.entries())
+      .sort((a, b) => a[1].shortest.lineIndex - b[1].shortest.lineIndex)
+    
+    for (const [char, selected] of fullEntries) {
+      full.set(char, [selected.longest.code])
+    }
+    
+    for (const [char, selected] of shortEntries) {
+      short.set(char, [selected.shortest.code])
+    }
+
+    // fullWithSelection 和 shortWithSelection 暂时与 full 和 short 相同
+    // 加选重按键的处理逻辑将在 codeTableProcessingService 中进行
+    const fullWithSelection = new Map(full)
+    const shortWithSelection = new Map(short)
+
+    return { full, short, fullWithSelection, shortWithSelection }
+  }
+
+  /**
+   * 下载并解析预设码表，返回 RawCodeTable
+   */
+  async downloadRawCodeTable(key: string): Promise<{ 
+    rawCodeTable: RawCodeTable; 
+    fileName: string; 
+    format: CodeTableFormat 
+  }> {
+    const table = await this.getBuiltinCodeTable(key)
+    if (!table) {
+      throw new Error(`Unknown code table: ${key}`)
+    }
+    
+    try {
+      const response = await fetch(table.url)
+      if (!response.ok) {
+        throw new Error(`Failed to download code table: ${response.statusText}`)
+      }
+      
+      const text = await response.text()
+      const { rawCodeTable } = this.parseRawCodeTable(text, table.format)
+      
+      return {
+        rawCodeTable,
+        fileName: table.name,
+        format: table.format
+      }
+    } catch (error) {
+      console.error('Error downloading code table:', error)
+      throw error
+    }
   }
 }
 

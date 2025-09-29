@@ -56,7 +56,7 @@
       "key": "sky",
       "name": "天碼輸入法",
       "url": "https://raw.githubusercontent.com/forfudan/tianma-sky/main/mabiao-sky.txt",
-      "format": "code_first",
+      "format": "char_first",
       "description": "宋天製作·表形碼·四碼定長",
       "website": "http://soongsky.com/sky/",
       "category": "形碼",
