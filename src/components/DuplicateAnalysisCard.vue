@@ -124,7 +124,7 @@
             </tr>
             <tr>
               <td>
-                知乎簡體動重 - 原始排序
+                知乎簡體動重·原序
                 <span 
                   class="info-icon" 
                   @mouseenter="showTooltip($event, '不對重碼字符按字頻重新排序，保持碼表原始順序進行選重率計算。反映碼表實際使用時的選重率。')"
@@ -139,7 +139,7 @@
             </tr>
             <tr>
               <td>
-                北語簡體動態選重率 - 原始排序
+                北語簡體動重·原序
                 <span 
                   class="info-icon" 
                   @mouseenter="showTooltip($event, '不對重碼字符按字頻重新排序，保持碼表原始順序進行選重率計算。反映碼表實際使用時的選重率。')"
@@ -154,7 +154,7 @@
             </tr>
             <tr>
               <td>
-                臺標繁體動態選重率 - 原始排序
+                臺標繁體動重·原序
                 <span 
                   class="info-icon" 
                   @mouseenter="showTooltip($event, '不對重碼字符按字頻重新排序，保持碼表原始順序進行選重率計算。反映碼表實際使用時的選重率。')"
@@ -169,7 +169,7 @@
             </tr>
             <tr>
               <td>
-                古籍繁體動態選重率 - 原始排序
+                古籍繁體動重·原序
                 <span 
                   class="info-icon" 
                   @mouseenter="showTooltip($event, '不對重碼字符按字頻重新排序，保持碼表原始順序進行選重率計算。反映碼表實際使用時的選重率。')"
@@ -184,7 +184,7 @@
             </tr>
             <tr>
               <td>
-                繁簡聯合動態選重率 - 原始排序
+                繁簡聯合動重·原序
                 <span 
                   class="info-icon" 
                   @mouseenter="showTooltip($event, '不對重碼字符按字頻重新排序，保持碼表原始順序進行選重率計算。反映碼表實際使用時的選重率。')"
