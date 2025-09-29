@@ -437,16 +437,10 @@ export class BuiltinCodeTableService {
   }
 
   /**
-   * 下载并解析预设码表
+   * 下载并解析预设码表，返回 RawCodeTable
    */
   async downloadRawCodeTable(key: string): Promise<{ 
     rawCodeTable: RawCodeTable; 
-    auxiliaryTables: {
-      full: CodeTable;
-      short: CodeTable;
-      fullWithSelection: CodeTable;
-      shortWithSelection: CodeTable;
-    };
     fileName: string; 
     format: CodeTableFormat 
   }> {
@@ -463,11 +457,9 @@ export class BuiltinCodeTableService {
       
       const text = await response.text()
       const { rawCodeTable } = this.parseRawCodeTable(text, table.format)
-      const auxiliaryTables = BuiltinCodeTableService.generateAuxiliaryTables(rawCodeTable)
       
       return {
         rawCodeTable,
-        auxiliaryTables,
         fileName: table.name,
         format: table.format
       }

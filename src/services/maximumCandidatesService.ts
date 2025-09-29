@@ -1,5 +1,5 @@
 import { generateCharset, type CharsetType } from './charsetService'
-import { generateFullCodeTable } from './codeTableCleanService'
+import { codeTableProcessingService } from './codeTableProcessingService'
 import type { CodeTable } from '../types/index'
 
 // 定義返回數據的接口
@@ -26,9 +26,13 @@ export async function getMaximumCandidates(
     }
   }
 
-  // 生成全碼表
-  const fullCodeResult = generateFullCodeTable(codeTable)
-  const fullCodeTable = fullCodeResult.codeTable
+  // 使用全局缓存的正确处理结果，而不是重新处理
+  const processedTables = codeTableProcessingService.getProcessedTables()
+  if (!processedTables) {
+    throw new Error('全局码表处理结果不可用，请先处理主码表')
+  }
+  
+  const fullCodeTable = processedTables.full
   
   // 生成指定字符集
   const charset = await generateCharset(charsetType, allUniqueChars)

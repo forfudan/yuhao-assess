@@ -3,7 +3,7 @@
  * 提供碼表分析的核心計算功能
  */
 
-import type { CodeTable, CharFrequency } from '../types/index'
+import type { CodeTable, CharFrequency, RawCodeTable } from '../types/index'
 import type { CharsetType } from './charsetService'
 
 // CJK塊數據類型定義
@@ -307,6 +307,33 @@ export async function calculateCharCount(codeTable: CodeTable): Promise<number> 
   for (const char of codeTable.keys()) {
     // 正確處理Unicode字符，使用Array.from來處理可能的代理對
     const chars = Array.from(char)
+    for (const c of chars) {
+      uniqueChars.add(c)
+    }
+  }
+  
+  // 計算在CJK-J範圍内的字符數量
+  let cjkCount = 0
+  for (const char of uniqueChars) {
+    const codePoint = char.codePointAt(0)
+    if (codePoint && isInCJKToJ(codePoint)) {
+      cjkCount++
+    }
+  }
+  
+  return cjkCount
+}
+
+export async function calculateCharCountFromRaw(rawCodeTable: RawCodeTable): Promise<number> {
+  // 確保數據已加載
+  await initializeCalculationService()
+  
+  const uniqueChars = new Set<string>()
+  
+  // 收集所有唯一字符
+  for (const [, [char, ]] of rawCodeTable) {
+    // 正確處理Unicode字符，使用Array.from來處理可能的代理對
+    const chars = Array.from(char as string)
     for (const c of chars) {
       uniqueChars.add(c)
     }

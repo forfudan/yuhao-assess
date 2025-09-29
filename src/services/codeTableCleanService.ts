@@ -143,51 +143,6 @@ export function cleanCodeTable(
 }
 
 /**
- * 生成單字全碼表
- * 只保留單字，對每個字提取編碼長度最長的那個code
- * 
- * @param rawCodeTable - 原始碼表
- * @returns 單字全碼表
- */
-export function generateFullCodeTable(rawCodeTable: CodeTable): CleanResult {
-  return cleanCodeTable(rawCodeTable, {
-    singleCharOnly: true,
-    codeStrategy: 'longest',
-    removeEmptyCodes: true
-  })
-}
-
-/**
- * 生成單字簡碼表
- * 只保留單字，對每個字提取編碼長度最短的那個code
- * 
- * @param rawCodeTable - 原始碼表
- * @returns 單字簡碼表
- */
-export function generateShortCodeTable(rawCodeTable: CodeTable): CleanResult {
-  return cleanCodeTable(rawCodeTable, {
-    singleCharOnly: true,
-    codeStrategy: 'shortest',
-    removeEmptyCodes: true
-  })
-}
-
-/**
- * 生成單字完整碼表（保留所有編碼）
- * 只保留單字，保留每個字的所有有效編碼
- * 
- * @param rawCodeTable - 原始碼表
- * @returns 單字完整碼表
- */
-export function generateCompleteCharTable(rawCodeTable: CodeTable): CleanResult {
-  return cleanCodeTable(rawCodeTable, {
-    singleCharOnly: true,
-    codeStrategy: 'all',
-    removeEmptyCodes: true
-  })
-}
-
-/**
  * 驗證碼表格式
  * 
  * @param codeTable - 要驗證的碼表

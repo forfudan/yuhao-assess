@@ -516,7 +516,7 @@ const updateEfficiency = async () => {
     
     // 保存簡碼加選重表供tooltip使用
     shortWithSelectionTable.value = processedTables.shortWithSelection
-    processedCodeTable.value = processedTables.original
+    processedCodeTable.value = processedTables.full  // 使用全码表代替原始码表
 
     // 將加選重碼表轉換為CodeTableRow[]格式，用於簡碼效率計算
     const convertCodeTableToRows = (codeTable: CodeTable): { char: string; code: string }[] => {

@@ -292,7 +292,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { useCollapse } from '../composables/useCollapse'
-import type { CodeTable, CodeTableFormat, ParseResult, UploadStatus } from '../types/index'
+import type { CodeTable, RawCodeTable, CodeTableFormat, ParseResult, UploadStatus } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { CodeTableProcessingService } from '../services/codeTableProcessingService'
 
@@ -321,18 +321,12 @@ defineExpose({
 // 定义 emits  
 const emit = defineEmits<{
   uploadSuccess: [data: { 
-    codeTable: CodeTable; 
+    rawCodeTable: RawCodeTable;
     fileName: string; 
     format: CodeTableFormat; 
     tableKey?: string; 
     isPrefix?: boolean; 
     prefixKeys?: string[];
-    auxiliaryTables?: {
-      full: CodeTable;
-      short: CodeTable;
-      fullWithSelection: CodeTable;
-      shortWithSelection: CodeTable;
-    }
   }]
   uploadError: [error: string]
 }>()
@@ -574,7 +568,7 @@ const generateEncodingPreview = () => {
   }
   const processedTables = props.processedTables
 
-  const { original, full, short, fullWithSelection, shortWithSelection } = processedTables
+  const { full, short, fullWithSelection, shortWithSelection } = processedTables
   const previewItems: Array<{
     char: string
     fullCode: string
@@ -599,7 +593,7 @@ const generateEncodingPreview = () => {
   
   // 如果從預覽數據中獲取的單字不足100個，從原始碼表中補充
   if (orderedChars.length < 100) {
-    for (const char of original.keys()) {
+    for (const char of full.keys()) {
       if (orderedChars.length >= 100) break
       if (Array.from(char).length === 1 && !orderedChars.includes(char)) {
         orderedChars.push(char)
@@ -613,7 +607,7 @@ const generateEncodingPreview = () => {
     const char = orderedChars[i]
     
     // 檢查該字符是否在所有碼表中都存在
-    if (!original.has(char)) continue
+    if (!full.has(char)) continue
 
     const fullCodes = full.get(char) || []
     const shortCodes = short.get(char) || []
@@ -646,7 +640,7 @@ const generateEncodingPreview = () => {
 
 // 生成最長編碼檢視數據
 const generateLongestCodesData = (processedTables: any) => {
-  const { original, full, short, fullWithSelection, shortWithSelection } = processedTables
+  const { full, short, fullWithSelection, shortWithSelection } = processedTables
   
   // 找出全碼最長的10個字符
   const charsWithMaxLength: Array<{
@@ -662,14 +656,11 @@ const generateLongestCodesData = (processedTables: any) => {
   const processingOptions = CodeTableProcessingService.getInstance().getProcessingOptions()
   const calculatedGlobalMaxLength = processingOptions?.maxLength || 4
 
-  for (const [char, codes] of original.entries()) {
+  for (const [char, codes] of full.entries()) {
     if (Array.from(char).length !== 1) continue // 只處理單字
     
-    // 計算該字符的最大編碼長度
-    let maxLength = 0
-    for (const code of codes) {
-      maxLength = Math.max(maxLength, code.length)
-    }
+    // 從全碼表獲取該字符的編碼長度
+    const maxLength = codes[0]?.length || 0
     
     const fullCodes = full.get(char) || []
     const shortCodes = short.get(char) || []
@@ -726,38 +717,39 @@ const readFileAsText = (file: File): Promise<string> => {
   })
 }
 
-// 扩展的解析结果类型（内部使用）
-interface ExtendedParseResult extends ParseResult {
-  auxiliaryTables: {
-    full: CodeTable;
-    short: CodeTable;
-    fullWithSelection: CodeTable;
-    shortWithSelection: CodeTable;
-  }
+// 简化的解析结果类型
+interface SimpleParseResult {
+  rawCodeTable: RawCodeTable;
+  totalChars: number;
+  totalCodes: number;
+  format: CodeTableFormat;
 }
 
-// 解析码表（保持向后兼容的接口，内部使用新方法）
-const parseCodeTable = (text: string, format: CodeTableFormat, fileName: string): ExtendedParseResult => {
-  // 使用新的原始码表解析方法
+// 解析码表（直接返回 RawCodeTable）
+const parseCodeTable = (text: string, format: CodeTableFormat, fileName: string): SimpleParseResult => {
+  // 直接解析为 RawCodeTable
   const { rawCodeTable } = builtinService.parseRawCodeTable(text, format)
   
-  // 生成辅助码表
-  const auxiliaryTables = BuiltinCodeTableService.generateAuxiliaryTables(rawCodeTable)
-  
-  // 为了向后兼容，返回传统的全码表作为主要码表
-  const codeTable = auxiliaryTables.full
-  
+  // 简单统计（不生成中间码表）
+  let totalChars = 0
   let totalCodes = 0
-  for (const codes of codeTable.values()) {
-    totalCodes += codes.length
+  const charSet = new Set<string>()
+  
+  for (const [lineIndex, [char, code]] of rawCodeTable) {
+    // 只统计单个 CJK 汉字
+    if (Array.from(char).length === 1 && char.match(/[\u4e00-\u9fff]/)) {
+      charSet.add(char)
+      totalCodes++
+    }
   }
+  
+  totalChars = charSet.size
 
   return {
-    codeTable,
-    totalChars: codeTable.size,
+    rawCodeTable,
+    totalChars,
     totalCodes,
-    format,
-    auxiliaryTables
+    format
   }
 }
 
@@ -782,12 +774,11 @@ const processFile = async () => {
       undefined
 
     emit('uploadSuccess', {
-      codeTable: result.codeTable,
+      rawCodeTable: result.rawCodeTable,
       fileName: selectedFile.value.name,
       format: result.format,
       isPrefix: isPrefixCode.value,
-      prefixKeys: prefixKeys,
-      auxiliaryTables: result.auxiliaryTables
+      prefixKeys: prefixKeys
     })
 
     // 啟動狀態檢查以生成編碼預覽
@@ -846,13 +837,12 @@ async function loadBuiltinTable() {
     }
     
     emit('uploadSuccess', {
-      codeTable: result.auxiliaryTables.full, // 使用生成的传统全码表
+      rawCodeTable: result.rawCodeTable,
       fileName: `預設方案：${builtinTables.value.find(t => t.key === selectedBuiltinTable.value)?.name || selectedBuiltinTable.value}`,
       format: result.format,
       tableKey: selectedBuiltinTable.value,  // 添加tableKey用于前缀码检测
       isPrefix: isBuiltinPrefix,  // 使用配置中的前缀码属性
-      prefixKeys: builtinPrefixKeys,
-      auxiliaryTables: result.auxiliaryTables
+      prefixKeys: builtinPrefixKeys
     })
 
     // 啟動狀態檢查以生成編碼預覽
