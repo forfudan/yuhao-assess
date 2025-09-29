@@ -526,7 +526,20 @@ function calculateMaxCodeLength(codeTable: CodeTable): number {
 }
 
 // 處理碼表上傳成功
-const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: string; format: string; tableKey?: string; isPrefix?: boolean; prefixKeys?: string[] }) => {
+const handleCodeTableUpload = async (data: { 
+  codeTable: CodeTable; 
+  fileName: string; 
+  format: string; 
+  tableKey?: string; 
+  isPrefix?: boolean; 
+  prefixKeys?: string[];
+  auxiliaryTables?: {
+    full: CodeTable;
+    short: CodeTable;
+    fullWithSelection: CodeTable;
+    shortWithSelection: CodeTable;
+  }
+}) => {
   console.log('[App] 開始處理碼表上傳:', data.fileName, data.codeTable.size)
   
   // 先計算最大碼長
@@ -537,7 +550,8 @@ const handleCodeTableUpload = async (data: { codeTable: CodeTable; fileName: str
   await codeTableProcessingService.processCodeTable(data.codeTable, {
     isPrefix: data.isPrefix || false,
     maxLength: maxLength,
-    prefixKeys: data.prefixKeys
+    prefixKeys: data.prefixKeys,
+    auxiliaryTables: data.auxiliaryTables
   })
   console.log('[App] 碼表處理完成')
   

@@ -318,9 +318,22 @@ defineExpose({
   getCollapsedState
 })
 
-// 定义 emits
+// 定义 emits  
 const emit = defineEmits<{
-  uploadSuccess: [data: { codeTable: CodeTable; fileName: string; format: CodeTableFormat; tableKey?: string; isPrefix?: boolean; prefixKeys?: string[] }]
+  uploadSuccess: [data: { 
+    codeTable: CodeTable; 
+    fileName: string; 
+    format: CodeTableFormat; 
+    tableKey?: string; 
+    isPrefix?: boolean; 
+    prefixKeys?: string[];
+    auxiliaryTables?: {
+      full: CodeTable;
+      short: CodeTable;
+      fullWithSelection: CodeTable;
+      shortWithSelection: CodeTable;
+    }
+  }]
   uploadError: [error: string]
 }>()
 
@@ -713,76 +726,38 @@ const readFileAsText = (file: File): Promise<string> => {
   })
 }
 
-// 解析码表
-const parseCodeTable = (text: string, format: CodeTableFormat, fileName: string): ParseResult => {
-  const codeTable: CodeTable = new Map()
-  const lines = text.split('\n')
+// 扩展的解析结果类型（内部使用）
+interface ExtendedParseResult extends ParseResult {
+  auxiliaryTables: {
+    full: CodeTable;
+    short: CodeTable;
+    fullWithSelection: CodeTable;
+    shortWithSelection: CodeTable;
+  }
+}
+
+// 解析码表（保持向后兼容的接口，内部使用新方法）
+const parseCodeTable = (text: string, format: CodeTableFormat, fileName: string): ExtendedParseResult => {
+  // 使用新的原始码表解析方法
+  const { rawCodeTable } = builtinService.parseRawCodeTable(text, format)
+  
+  // 生成辅助码表
+  const auxiliaryTables = BuiltinCodeTableService.generateAuxiliaryTables(rawCodeTable)
+  
+  // 为了向后兼容，返回传统的全码表作为主要码表
+  const codeTable = auxiliaryTables.full
+  
   let totalCodes = 0
-  const isYaml = fileName.toLowerCase().endsWith('.yaml') || fileName.toLowerCase().endsWith('.yml')
-
-  for (const line of lines) {
-    let char: string, code: string
-    
-    if (isYaml) {
-      // YAML 格式解析
-      const result = parseYamlLine(line)
-      if (!result.valid) continue
-      char = result.char
-      code = result.code
-    } else {
-      // 原有的 TXT/CSV 解析邏輯
-      const trimmed = line.trim()
-      if (!trimmed) continue
-
-      // 更健壮的分割逻辑：使用制表符或多个空格作为分隔符
-      let parts = trimmed.split(/\t+|\s{2,}|\s+/)
-      // 如果只有一个空格分隔，确保只分割成2部分
-      if (parts.length < 2) {
-        // 尝试按第一个空格分割
-        const spaceIndex = trimmed.indexOf(' ')
-        if (spaceIndex > 0) {
-          const char_part = trimmed.substring(0, spaceIndex).trim()
-          const code_part = trimmed.substring(spaceIndex + 1).trim()
-          if (char_part && code_part) {
-            parts = [char_part, code_part]
-          }
-        }
-      }
-      
-      if (parts.length < 2) continue
-
-      if (format === 'char_first') {
-        char = parts[0].trim()
-        code = parts[1].trim()
-      } else {
-        code = parts[0].trim()
-        char = parts[1].trim()
-      }
-    }
-
-    // 檢查是否爲單個Unicode字符（包括代理對）
-    const isValidChar = (str: string): boolean => {
-      if (!str) return false
-      // 使用Array.from來正確處理Unicode字符
-      const chars = Array.from(str)
-      return Array.from(chars).length === 1
-    }
-
-    // 只处理单字
-    if (isValidChar(char) && code.length > 0) {
-      if (!codeTable.has(char)) {
-        codeTable.set(char, [])
-      }
-      codeTable.get(char)!.push(code)
-      totalCodes++
-    }
+  for (const codes of codeTable.values()) {
+    totalCodes += codes.length
   }
 
   return {
     codeTable,
     totalChars: codeTable.size,
     totalCodes,
-    format
+    format,
+    auxiliaryTables
   }
 }
 
@@ -811,7 +786,8 @@ const processFile = async () => {
       fileName: selectedFile.value.name,
       format: result.format,
       isPrefix: isPrefixCode.value,
-      prefixKeys: prefixKeys
+      prefixKeys: prefixKeys,
+      auxiliaryTables: result.auxiliaryTables
     })
 
     // 啟動狀態檢查以生成編碼預覽
@@ -853,7 +829,7 @@ async function loadBuiltinTable() {
   try {
     isUploading.value = true
     
-    const result = await builtinService.downloadCodeTable(selectedBuiltinTable.value)
+    const result = await builtinService.downloadRawCodeTable(selectedBuiltinTable.value)
     
     // 获取内置方案的前缀码配置
     const tableConfig = builtinService.getTableConfig(selectedBuiltinTable.value)
@@ -870,12 +846,13 @@ async function loadBuiltinTable() {
     }
     
     emit('uploadSuccess', {
-      codeTable: result.codeTable,
+      codeTable: result.auxiliaryTables.full, // 使用生成的传统全码表
       fileName: `預設方案：${builtinTables.value.find(t => t.key === selectedBuiltinTable.value)?.name || selectedBuiltinTable.value}`,
       format: result.format,
       tableKey: selectedBuiltinTable.value,  // 添加tableKey用于前缀码检测
       isPrefix: isBuiltinPrefix,  // 使用配置中的前缀码属性
-      prefixKeys: builtinPrefixKeys
+      prefixKeys: builtinPrefixKeys,
+      auxiliaryTables: result.auxiliaryTables
     })
 
     // 啟動狀態檢查以生成編碼預覽
