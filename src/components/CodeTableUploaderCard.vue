@@ -460,7 +460,10 @@ const handleFileSelection = (file: File) => {
     return
   }
 
-
+  // 清除預設碼表選擇和保存的主方案
+  selectedBuiltinTable.value = ''
+  localStorage.removeItem(MAIN_SCHEME_STORAGE_KEY)
+  localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
   
   selectedFile.value = file
   isRestoredFile.value = false // 标记为新上传的文件
@@ -705,7 +708,8 @@ const removeFile = () => {
   globalMaxLengthDisplay.value = 4
   stopStatusCheck()
   
-
+  // 清除保存的用戶上傳文件數據
+  localStorage.removeItem(UPLOADED_FILE_STORAGE_KEY)
   
   if (fileInput.value) {
     fileInput.value.value = ''
@@ -795,7 +799,7 @@ const processFile = async () => {
       prefixKeys: prefixKeys,
       uploadedAt: new Date().toISOString()
     }
-
+    localStorage.setItem(UPLOADED_FILE_STORAGE_KEY, JSON.stringify(uploadedFileData))
 
     // 啟動狀態檢查以生成編碼預覽
     startStatusCheck()
@@ -840,6 +844,8 @@ async function loadBuiltinConfig() {
         await nextTick()
         await new Promise(resolve => setTimeout(resolve, 200))
         
+        // 重新处理文件并触发分析
+        await processFile()
 
         return // 如果恢复了用户文件，就不再检查预设方案
       } catch (error) {
