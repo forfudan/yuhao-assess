@@ -109,7 +109,7 @@
           <ul>
             <li>本模塊使用前 N 個（最大爲 1000 個）最有效率的簡碼時的平均碼長</li>
             <li>簡碼字的效率取決於於漢字字頻 × 節約碼長</li>
-            <li>僅考慮簡碼長度小於全碼長度的漢字，實際簡碼數量可能小於 N</li>
+            <li>僅考慮簡碼長度小於全碼長度且小於最大碼長的漢字，實際簡碼數量可能小於 N</li>
             <li>鼠標懸停在數字上可查看當前區間對應的高效簡碼字</li>
             <li>點擊數字可將當前區間的高效簡碼字復制到剪貼板</li>
           </ul>
@@ -378,6 +378,9 @@ const calculateShortCodeEfficiencyWithMaps = (
   shortCodeMap: Map<string, string>, 
   fullCodeMap: Map<string, string>
 ): Array<{ N: number; efficiency: number; selectedChars: string[] }> => {
+  // 獲取最大碼長
+  const processingOptions = processingService.getProcessingOptions()
+  const maxCodeLength = processingOptions?.maxLength || 4
   
   // 預處理字符數據
   const processedChars: Array<{
@@ -416,8 +419,10 @@ const calculateShortCodeEfficiencyWithMaps = (
   const results: Array<{ N: number; efficiency: number; selectedChars: string[] }> = []
   
   for (const N of nValues) {
-    // 只考慮簡碼長度小於全碼長度的漢字
-    const validShortCodeChars = processedChars.filter(char => char.shortLen < char.fullLen)
+    // 只考慮簡碼長度小於全碼長度且小於最大碼長的漢字
+    const validShortCodeChars = processedChars.filter(char => 
+      char.shortLen < char.fullLen && char.shortLen < maxCodeLength
+    )
     
     // 按頻率差值排序，選擇前N個字符使用簡碼
     const sortedByFreqDiff = [...validShortCodeChars].sort((a, b) => b.freqLenDiff - a.freqLenDiff)

@@ -33,7 +33,7 @@ export function calculateShortCodeEfficiency(
   const results: EfficiencyResult[] = []
   
   for (const N of nValues) {
-    const result = calculateEfficiencyForN(processedData, N)
+    const result = calculateEfficiencyForN(processedData, N, maxLen)
     results.push({ N, efficiency: result.efficiency, selectedChars: result.selectedChars })
   }
   
@@ -149,9 +149,11 @@ function calculateActualLength(code: string, maxLen: number, isPrefix: boolean):
   return len
 }
 
-function calculateEfficiencyForN(processedChars: ProcessedChar[], N: number): { efficiency: number; selectedChars: string[] } {
-  // 只考慮簡碼長度小於全碼長度的漢字
-  const validShortCodeChars = processedChars.filter(char => char.lenShort < char.lenFull)
+function calculateEfficiencyForN(processedChars: ProcessedChar[], N: number, maxLen: number): { efficiency: number; selectedChars: string[] } {
+  // 只考慮簡碼長度小於全碼長度且小於最大碼長的漢字
+  const validShortCodeChars = processedChars.filter(char => 
+    char.lenShort < char.lenFull && char.lenShort < maxLen
+  )
   
   // 按頻率差值排序，選擇前N個字符使用簡碼（但實際數量可能小於N）
   const sortedByFreqDiff = [...validShortCodeChars].sort((a, b) => b.freqLenDiff - a.freqLenDiff)
@@ -183,7 +185,7 @@ export function calculateFullCodeAverageLength(
   isPrefix: boolean = false
 ): number {
   const processedData = preprocessCodeTable(codeTable, charFrequency, maxLen, isPrefix)
-  return calculateEfficiencyForN(processedData, 0).efficiency
+  return calculateEfficiencyForN(processedData, 0, maxLen).efficiency
 }
 
 /**
