@@ -409,14 +409,7 @@ const restoreCodeTableData = async () => {
       uploadPrefixKeys.value = data.uploadPrefixKeys || []
       globalMaxLength.value = data.globalMaxLength || 4
       
-      // 重新處理碼表以確保processing service有正確的數據（包含字頻優化）
-      // 注意：从本地存储恢复可能没有 RawCodeTable，需要特殊处理
       console.warn('从本地存储恢复数据，需要重新生成辅助码表')
-      // TODO: 考虑移除本地存储功能或修改为存储 RawCodeTable
-      // await codeTableProcessingService.processCodeTableLegacy(codeTable.value, {
-      //   isPrefix: uploadPrefixFlag.value,
-      //   maxLength: globalMaxLength.value
-      // })
       
       analysisReady.value = true
     }
