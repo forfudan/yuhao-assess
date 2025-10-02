@@ -6,6 +6,7 @@
 export {
   getStaticDupRate,
   getDynamicDupRate,
+  getDynamicDupRateFromOriginalOrder,
   calculateCharsetDuplicates,
   type DuplicateStats
 } from './duplicateAnalysisService'

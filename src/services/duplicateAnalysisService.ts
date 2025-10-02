@@ -90,6 +90,39 @@ export function getDynamicDupRate(
   return totalFreq > 0 ? totalDupFreq / totalFreq : 0
 }
 
+/**
+ * 從原始順序的碼表（帶選重鍵）計算動態選重率
+ * 適用於 fullWithSelection 和 shortWithSelection 碼表
+ * @param codeTableWithSelection 帶選重鍵的碼表（編碼末尾包含選重數字 2-9）
+ * @param charFrequency 字頻數據
+ * @returns 動態重碼率（0-1之間的小數）
+ */
+export function getDynamicDupRateFromOriginalOrder(
+  codeTableWithSelection: CodeTable,
+  charFrequency: CharFrequency
+): number {
+  let totalDupFreq = 0
+  let totalFreq = 0
+  
+  for (const [char, codes] of codeTableWithSelection.entries()) {
+    const code = codes[0]
+    if (!code) continue
+    
+    const freq = charFrequency[char] || 0
+    totalFreq += freq
+    
+    // 檢查編碼最後一位是否為數字 0-9（表示需要選重）
+    const lastChar = code.slice(-1)
+    const isSelection = /[0-9]/.test(lastChar)
+    
+    if (isSelection) {
+      totalDupFreq += freq
+    }
+  }
+  
+  return totalFreq > 0 ? totalDupFreq / totalFreq : 0
+}
+
 export interface DuplicateStats {
   charset: CharsetType
   charsetName: string

@@ -315,7 +315,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
-import { getDynamicDupRate } from '../services/duplicateAnalysisService'
+import { getDynamicDupRate, getDynamicDupRateFromOriginalOrder } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
 import { 
@@ -666,6 +666,8 @@ async function calculateAllMetrics() {
     
     const fullCodeTable = processedTables.full
     const shortCodeTable = processedTables.short
+    const fullWithSelectionTable = processedTables.fullWithSelection
+    const shortWithSelectionTable = processedTables.shortWithSelection
     
     // 加載所有字頻數據
     const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyGuji, charFrequencyUnified] = await Promise.all([
@@ -676,7 +678,7 @@ async function calculateAllMetrics() {
       loadCharFrequencyUnified()
     ])
     
-    // 計算各種動態選重率
+    // 計算各種動態選重率（按字頻重新排序）
     const fullDynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency)
     const shortDynamicDupRate = getDynamicDupRate(shortCodeTable, charFrequency)
     
@@ -692,21 +694,21 @@ async function calculateAllMetrics() {
     const fullDynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
     const shortDynamicDupRateUnified = getDynamicDupRate(shortCodeTable, charFrequencyUnified)
     
-    // 計算各種動態選重率 - 原始排序
-    const fullDynamicDupRateOriginal = getDynamicDupRate(fullCodeTable, charFrequency, false)
-    const shortDynamicDupRateOriginal = getDynamicDupRate(shortCodeTable, charFrequency, false)
+    // 計算各種動態選重率 - 原始排序（使用帶選重鍵的碼表）
+    const fullDynamicDupRateOriginal = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequency)
+    const shortDynamicDupRateOriginal = getDynamicDupRateFromOriginalOrder(shortWithSelectionTable, charFrequency)
     
-    const fullDynamicDupRateSCOriginal = getDynamicDupRate(fullCodeTable, charFrequencySC, false)
-    const shortDynamicDupRateSCOriginal = getDynamicDupRate(shortCodeTable, charFrequencySC, false)
+    const fullDynamicDupRateSCOriginal = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencySC)
+    const shortDynamicDupRateSCOriginal = getDynamicDupRateFromOriginalOrder(shortWithSelectionTable, charFrequencySC)
     
-    const fullDynamicDupRateTCOriginal = getDynamicDupRate(fullCodeTable, charFrequencyTC, false)
-    const shortDynamicDupRateTCOriginal = getDynamicDupRate(shortCodeTable, charFrequencyTC, false)
+    const fullDynamicDupRateTCOriginal = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyTC)
+    const shortDynamicDupRateTCOriginal = getDynamicDupRateFromOriginalOrder(shortWithSelectionTable, charFrequencyTC)
     
-    const fullDynamicDupRateGujiOriginal = getDynamicDupRate(fullCodeTable, charFrequencyGuji, false)
-    const shortDynamicDupRateGujiOriginal = getDynamicDupRate(shortCodeTable, charFrequencyGuji, false)
+    const fullDynamicDupRateGujiOriginal = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyGuji)
+    const shortDynamicDupRateGujiOriginal = getDynamicDupRateFromOriginalOrder(shortWithSelectionTable, charFrequencyGuji)
     
-    const fullDynamicDupRateUnifiedOriginal = getDynamicDupRate(fullCodeTable, charFrequencyUnified, false)
-    const shortDynamicDupRateUnifiedOriginal = getDynamicDupRate(shortCodeTable, charFrequencyUnified, false)
+    const fullDynamicDupRateUnifiedOriginal = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyUnified)
+    const shortDynamicDupRateUnifiedOriginal = getDynamicDupRateFromOriginalOrder(shortWithSelectionTable, charFrequencyUnified)
     
     // 計算各字符集的重碼統計
     const gb2312Stats = await calculateCharsetDuplicates('gb2312', allChars, fullCodeTable, shortCodeTable)

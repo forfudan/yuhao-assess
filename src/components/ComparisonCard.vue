@@ -807,7 +807,7 @@ defineOptions({
 import { ref, computed, onMounted, onUnmounted, watch, nextTick, Teleport } from 'vue'
 import { ExportService } from '../services/exportService'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
-import { getDynamicDupRate } from '../services/duplicateAnalysisService'
+import { getDynamicDupRate, getDynamicDupRateFromOriginalOrder } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
 import { 
@@ -2062,7 +2062,7 @@ async function calculateDynamicOriginalData(scheme: Scheme): Promise<DynamicData
     throw new Error('方案缺少預處理數據')
   }
   
-  const fullCodeTable = scheme.processedTables.full
+  const fullWithSelectionTable = scheme.processedTables.fullWithSelection
   
   // 加載所有字頻數據
   const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyGuji, charFrequencyUnified] = await Promise.all([
@@ -2073,12 +2073,12 @@ async function calculateDynamicOriginalData(scheme: Scheme): Promise<DynamicData
     loadCharFrequencyUnified()
   ])
   
-  // 計算各種動態選重率（只計算全碼，但不重新排序）
-  const dynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency, false)
-  const dynamicDupRateSC = getDynamicDupRate(fullCodeTable, charFrequencySC, false)
-  const dynamicDupRateTC = getDynamicDupRate(fullCodeTable, charFrequencyTC, false)
-  const dynamicDupRateGuji = getDynamicDupRate(fullCodeTable, charFrequencyGuji, false)
-  const dynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified, false)
+  // 使用新函數計算各種動態選重率（從原始順序的帶選重鍵碼表）
+  const dynamicDupRate = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequency)
+  const dynamicDupRateSC = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencySC)
+  const dynamicDupRateTC = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyTC)
+  const dynamicDupRateGuji = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyGuji)
+  const dynamicDupRateUnified = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyUnified)
   
   console.timeEnd(`動態重碼計算-原始-${scheme.name}`)
   return {
