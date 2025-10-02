@@ -374,33 +374,30 @@ watch(
 // 鍵盤佈局定義
 const numberRowKeys: KeyInfo[] = [
   { key: '1' }, { key: '2' }, { key: '3' }, { key: '4' }, { key: '5' },
-  { key: '6' }, { key: '7' }, { key: '8' }, { key: '9' }, { key: '0' },
-  { key: 'hidden-number', hidden: true }
+  { key: '6' }, { key: '7' }, { key: '8' }, { key: '9' }, { key: '0' }
 ]
 
 const firstRowKeys: KeyInfo[] = [
   { key: 'q' }, { key: 'w' }, { key: 'e' }, { key: 'r' }, { key: 't' },
-  { key: 'y' }, { key: 'u' }, { key: 'i' }, { key: 'o' }, { key: 'p' },
-  { key: 'hidden-bracket', hidden: true }
+  { key: 'y' }, { key: 'u' }, { key: 'i' }, { key: 'o' }, { key: 'p' }
 ]
 
 const secondRowKeys: KeyInfo[] = [
   { key: 'a' }, { key: 's' }, { key: 'd' }, { key: 'f' }, { key: 'g' },
-  { key: 'h' }, { key: 'j' }, { key: 'k' }, { key: 'l' }, { key: ';' }, { key: '\'' }
+  { key: 'h' }, { key: 'j' }, { key: 'k' }, { key: 'l' }, { key: ';' }
 ]
 
 const thirdRowKeys: KeyInfo[] = [
   { key: 'z' }, { key: 'x' }, { key: 'c' }, { key: 'v' }, { key: 'b' },
-  { key: 'n' }, { key: 'm' }, { key: ',' }, { key: '.' }, { key: '/' },
-  { key: 'hidden-4', hidden: true }
+  { key: 'n' }, { key: 'm' }, { key: ',' }, { key: '.' }, { key: '/' }
 ]
 
 const spaceRowKeys: KeyInfo[] = [
   { key: 'hidden-7', hidden: true }, // 左侧隐藏按键 1
   { key: 'hidden-8', hidden: true }, // 左侧隐藏按键 2
   { key: 'space', label: 'Space', width: 'extra-wide' }, // 空格键占6格
-  { key: 'hidden-9', hidden: true },  // 右侧隐藏按键 1
-  { key: 'hidden-10', hidden: true }  // 右侧隐藏按键 2
+  { key: 'hidden-9', hidden: true },  // / 下方的隐藏按键
+  { key: '\'' }  // 單引號鍵，在 / 下方
 ]
 
 // 手指映射
@@ -418,9 +415,9 @@ const fingerMapping: Record<string, string> = {
 
 // 按排映射 - 五排分布
 const rowMapping: Record<string, string> = {
-  // 数字排
-  '1': '数字排', '2': '数字排', '3': '数字排', '4': '数字排', '5': '数字排',
-  '6': '数字排', '7': '数字排', '8': '数字排', '9': '数字排', '0': '数字排', '-': '数字排', '=': '数字排',
+  // 數字排
+  '1': '數字排', '2': '數字排', '3': '數字排', '4': '數字排', '5': '數字排',
+  '6': '數字排', '7': '數字排', '8': '數字排', '9': '數字排', '0': '數字排', '-': '數字排', '=': '數字排',
   // 上排（第一字母排）
   'q': '上排', 'w': '上排', 'e': '上排', 'r': '上排', 't': '上排',
   'y': '上排', 'u': '上排', 'i': '上排', 'o': '上排', 'p': '上排', '[': '上排', ']': '上排',
@@ -909,7 +906,7 @@ defineExpose({
 
 .keyboard-row {
   display: grid;
-  grid-template-columns: repeat(11, 1fr); /* 11列，每列等寬 */
+  grid-template-columns: repeat(10, 1fr); /* 10列，每列等宽 */
   gap: 4px;
   width: 100%;
   height: 100%;
