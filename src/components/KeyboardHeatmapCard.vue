@@ -1,5 +1,5 @@
 <template>
-  <div ref="cardRef" class="keyboard-heatmap">
+  <div ref="cardRef" class="keyboard-heatmap" :id="props.id">
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
@@ -232,6 +232,7 @@ interface Props {
   codeTable: CodeTable
   analysisReady: boolean
   codeTableName?: string
+  id?: string
 }
 
 const props = defineProps<Props>()

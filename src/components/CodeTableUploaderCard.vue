@@ -1,5 +1,5 @@
 <template>
-  <div class="code-table-uploader upload-card">
+  <div class="code-table-uploader upload-card" :id="props.id">
     <div class="card-header">
       <div class="header-content">
         <div class="header-text">
@@ -303,6 +303,7 @@ import { CodeTableProcessingService } from '../services/codeTableProcessingServi
 interface Props {
   uploadStatus?: UploadStatus | null
   processedTables?: any | null  // 處理後的碼表數據
+  id?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
