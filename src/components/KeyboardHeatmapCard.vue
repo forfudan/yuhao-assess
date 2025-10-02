@@ -43,6 +43,28 @@
             {{ tab.label }}
           </button>
         </div>
+        
+        <!-- 模擬標點使用頻率選項 -->
+        <div class="punctuation-wrapper">
+          <div class="punctuation-option">
+            <label class="option-label">
+              <input 
+                type="checkbox" 
+                v-model="simulatePunctuation"
+                class="option-checkbox"
+              />
+              <span class="option-text">模擬標點使用頻率</span>
+            </label>
+          </div>
+          <button 
+            @click="showPunctuationHelp = true"
+            class="help-button"
+            title="點擊查看說明"
+            type="button"
+          >
+            ?
+          </button>
+        </div>
       </div>
 
       <!-- 鍵盤熱力圖 -->
@@ -120,11 +142,11 @@
           <div class="stats-grid">
             <div class="stat-item">
               <span class="stat-label">左手</span>
-              <span class="stat-value">{{ stats.handBalance.left.toFixed(1) }}%</span>
+              <span class="stat-value">{{ handBalance.left.toFixed(1) }}%</span>
             </div>
             <div class="stat-item">
               <span class="stat-label">右手</span>
-              <span class="stat-value">{{ stats.handBalance.right.toFixed(1) }}%</span>
+              <span class="stat-value">{{ handBalance.right.toFixed(1) }}%</span>
             </div>
           </div>
         </div>
@@ -166,7 +188,36 @@
       </div>
     </div>
     </div>
+    
   </div>
+
+  <!-- 標點模擬幫助信息框 - 使用 Teleport 傳送到 body -->
+  <Teleport to="body">
+    <div v-if="showPunctuationHelp" class="help-modal-overlay" @click="showPunctuationHelp = false">
+      <div class="help-modal" @click.stop>
+        <div class="help-header">
+          <h4>模擬標點使用頻率說明</h4>
+          <button @click="showPunctuationHelp = false" class="help-close-btn">×</button>
+        </div>
+        <div class="help-content">
+          <p>根據現代漢語文本中標點符號約占 <strong>13%</strong> 的占比，結合碼長計算實際按鍵使用頻率。</p>
+          <p><strong>分佈規則：</strong></p>
+          <ul>
+            <li><code>;</code> 鍵 → 分號、冒號（<strong>10%</strong>）</li>
+            <li><code>,</code> 鍵 → 逗號、左書名號（<strong>40%</strong>）</li>
+            <li><code>.</code> 鍵 → 句號、右書名號（<strong>40%</strong>）</li>
+            <li><code>/</code> 鍵 → 問號（<strong>5%</strong>）</li>
+            <li><code>'</code> 鍵 → 單引號、雙引號（<strong>5%</strong>）</li>
+          </ul>
+          <p><strong>說明：</strong></p>
+          <p>啟用此選項後，將根據上述分佈規則模擬標點符號按鍵的實際使用頻率，並疊加到現有的按鍵使用統計中，使熱力圖更貼近實際打字情況。</p>
+        </div>
+        <div class="help-footer">
+          <button @click="showPunctuationHelp = false" class="btn btn-primary">我知道了</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -187,6 +238,9 @@ const props = defineProps<Props>()
 
 // 折疊功能
 const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
+
+// 幫助模態框狀態
+const showPunctuationHelp = ref(false)
 
 // 卡片引用
 const cardRef = ref<HTMLElement>()
@@ -246,6 +300,24 @@ const tabs = [
   { key: 'full', label: '全碼數據' },
   { key: 'short', label: '出簡數據' }
 ] as const
+
+// 模擬標點使用頻率選項（默認勾選）
+const simulatePunctuation = ref(true)
+
+
+
+// 標點符號按鍵映射（宇浩輸入法）
+// 根據現代漢語標點使用統計
+const punctuationKeys: Record<string, number> = {
+  ';': 0.10,    // 分號、冒號：10%
+  ',': 0.40,    // 逗號、左書名號：40%
+  '.': 0.40,    // 句號、右書名號：40%
+  '/': 0.05,    // 問號：5%
+  '\'': 0.05   // 單引號、雙引號：5%
+}
+
+// 標點符號在文本中的占比（現代漢語統計數據）
+const PUNCTUATION_CHAR_RATIO = 0.13 // 13%
 
 // 根據當前tab計算displayMode
 const displayMode = computed(() => {
@@ -518,14 +590,94 @@ const maxKeyValue = computed(() => {
   return 1 // 占位符，不再實際使用
 })
 
+// 左右手平衡 - 考虑模擬標點
+const handBalance = computed(() => {
+  let leftHandCount = 0
+  let rightHandCount = 0
+
+  // 先計算原始的左右手負擔
+  for (const [finger, count] of stats.value.fingerLoad.entries()) {
+    if (finger.startsWith('左')) {
+      leftHandCount += count
+    } else if (finger.startsWith('右')) {
+      rightHandCount += count
+    }
+  }
+
+  // 如果模擬標點，需要加入標點按鍵的負擔
+  if (simulatePunctuation.value && stats.value.avgCodeLength > 0) {
+    const avgCodeLen = stats.value.avgCodeLength
+    const punctuationRatio = PUNCTUATION_CHAR_RATIO
+    const hanziRatio = 1 - punctuationRatio
+    const punctuationKeyRatio = punctuationRatio / (punctuationRatio + hanziRatio * avgCodeLen)
+    
+    const totalLoad = leftHandCount + rightHandCount
+    const punctuationLoad = totalLoad * punctuationKeyRatio / (1 - punctuationKeyRatio)
+    
+    // 為每個標點按鍵分配負擔
+    for (const [key, ratio] of Object.entries(punctuationKeys)) {
+      const keyLoad = punctuationLoad * ratio
+      const finger = fingerMapping[key]
+      if (finger) {
+        if (finger.startsWith('左')) {
+          leftHandCount += keyLoad
+        } else if (finger.startsWith('右')) {
+          rightHandCount += keyLoad
+        }
+      }
+    }
+  }
+
+  const totalHandCount = leftHandCount + rightHandCount
+  const leftPercentage = totalHandCount > 0 ? (leftHandCount / totalHandCount) * 100 : 0
+  const rightPercentage = totalHandCount > 0 ? (rightHandCount / totalHandCount) * 100 : 0
+
+  return {
+    left: leftPercentage,
+    right: rightPercentage
+  }
+})
+
 // 手指負擔百分比 - 按照指定順序排列
 const fingerLoadPercentages = computed(() => {
   const percentages: Record<string, number> = {}
-  const totalLoad = Array.from(stats.value.fingerLoad.values()).reduce((sum, load) => sum + load, 0)
+  let totalLoad = Array.from(stats.value.fingerLoad.values()).reduce((sum, load) => sum + load, 0)
   
-  if (totalLoad > 0) {
+  // 如果模擬標點，需要加入標點按鍵的負擔
+  if (simulatePunctuation.value && stats.value.avgCodeLength > 0) {
+    const avgCodeLen = stats.value.avgCodeLength
+    const punctuationRatio = PUNCTUATION_CHAR_RATIO
+    const hanziRatio = 1 - punctuationRatio
+    const punctuationKeyRatio = punctuationRatio / (punctuationRatio + hanziRatio * avgCodeLen)
+    
+    // 計算標點按鍵的總負擔（使用相同的單位）
+    const punctuationLoad = totalLoad * punctuationKeyRatio / (1 - punctuationKeyRatio)
+    
+    // 為每個標點按鍵分配負擔
+    for (const [key, ratio] of Object.entries(punctuationKeys)) {
+      const keyLoad = punctuationLoad * ratio
+      const finger = fingerMapping[key]
+      if (finger) {
+        const currentLoad = stats.value.fingerLoad.get(finger) || 0
+        percentages[finger] = ((currentLoad + keyLoad) / (totalLoad + punctuationLoad)) * 100
+      }
+    }
+    
+    // 更新總負擔
+    totalLoad += punctuationLoad
+    
+    // 計算其他手指的百分比
     for (const [finger, load] of stats.value.fingerLoad.entries()) {
-      percentages[finger] = (load / totalLoad) * 100
+      if (!percentages[finger]) {
+        percentages[finger] = (load / totalLoad) * 100
+      }
+    }
+  } else {
+    // 不模擬標點，使用原始計算
+    if (totalLoad > 0) {
+      for (const [finger, load] of stats.value.fingerLoad.entries()) {
+        percentages[finger] = (load / totalLoad) * 100
+      }
     }
   }
   
@@ -549,26 +701,92 @@ const fingerLoadPercentages = computed(() => {
 // 按排分布百分比
 const rowDistributionPercentages = computed(() => {
   const percentages: Record<string, number> = {}
-  const totalKeys = Array.from(stats.value.rowDistribution.values()).reduce((sum, count) => sum + count, 0)
+  let totalKeys = Array.from(stats.value.rowDistribution.values()).reduce((sum, count) => sum + count, 0)
   
-  if (totalKeys > 0) {
+  // 如果模擬標點，需要加入標點按鍵的分布
+  if (simulatePunctuation.value && stats.value.avgCodeLength > 0) {
+    const avgCodeLen = stats.value.avgCodeLength
+    const punctuationRatio = PUNCTUATION_CHAR_RATIO
+    const hanziRatio = 1 - punctuationRatio
+    const punctuationKeyRatio = punctuationRatio / (punctuationRatio + hanziRatio * avgCodeLen)
+    
+    // 計算標點按鍵的總數量
+    const punctuationKeyCount = totalKeys * punctuationKeyRatio / (1 - punctuationKeyRatio)
+    
+    // 為每個標點按鍵分配到對應的排
+    for (const [key, ratio] of Object.entries(punctuationKeys)) {
+      const keyCount = punctuationKeyCount * ratio
+      const row = rowMapping[key]
+      if (row) {
+        const currentCount = stats.value.rowDistribution.get(row) || 0
+        percentages[row] = ((currentCount + keyCount) / (totalKeys + punctuationKeyCount)) * 100
+      }
+    }
+    
+    // 更新總數量
+    totalKeys += punctuationKeyCount
+    
+    // 計算其他排的百分比
     for (const [row, count] of stats.value.rowDistribution.entries()) {
-      percentages[row] = (count / totalKeys) * 100
+      if (!percentages[row]) {
+        percentages[row] = (count / totalKeys) * 100
+      }
+    }
+  } else {
+    // 不模擬標點，使用原始計算
+    if (totalKeys > 0) {
+      for (const [row, count] of stats.value.rowDistribution.entries()) {
+        percentages[row] = (count / totalKeys) * 100
+      }
     }
   }
   
   return percentages
 })
 
+// Tooltip 功能
 // 獲取鍵位數據
 const getKeyData = (key: string): KeyData => {
-  const count = stats.value.keyDistribution.get(key.toLowerCase()) || 0
-  // 計算總的加權按鍵使用量
-  const totalWeightedKeyUsage = Array.from(stats.value.keyDistribution.values()).reduce((sum, val) => sum + val, 0)
-  const frequency = totalWeightedKeyUsage > 0 ? count / totalWeightedKeyUsage : 0
+  const keyLower = key.toLowerCase()
+  let count = stats.value.keyDistribution.get(keyLower) || 0
+  let frequency = 0
+  
+  if (simulatePunctuation.value && stats.value.avgCodeLength > 0) {
+    // 模擬標點使用頻率
+    // 計算標點符號的實際按鍵占比
+    // 公式：標點比例 = 標點數量 / (標點數量 + 漢字數量 × 平均碼長)
+    const avgCodeLen = stats.value.avgCodeLength
+    const punctuationRatio = PUNCTUATION_CHAR_RATIO
+    const hanziRatio = 1 - punctuationRatio
+    const punctuationKeyRatio = punctuationRatio / (punctuationRatio + hanziRatio * avgCodeLen)
+    
+    // 獲取當前按鍵的原始頻率（來自碼表）
+    const totalWeightedKeyUsage = Array.from(stats.value.keyDistribution.values()).reduce((sum, val) => sum + val, 0)
+    const rawFrequency = totalWeightedKeyUsage > 0 ? count / totalWeightedKeyUsage : 0
+    
+    // 計算壓縮後的原始頻率（為標點騰出空間）
+    const remainingRatio = 1 - punctuationKeyRatio
+    const compressedRawFrequency = rawFrequency * remainingRatio
+    
+    // 如果是標點按鍵，疊加標點頻率到原有頻率上
+    if (punctuationKeys[keyLower]) {
+      const punctuationFrequency = punctuationKeyRatio * punctuationKeys[keyLower]
+      // 最終頻率 = 壓縮後的原始頻率 + 標點頻率（疊加而非覆蓋）
+      frequency = compressedRawFrequency + punctuationFrequency
+      // 更新 count 以反映疊加後的頻率
+      count = Math.round(totalWeightedKeyUsage * frequency / remainingRatio)
+    } else {
+      // 其他按鍵使用壓縮後的頻率
+      frequency = compressedRawFrequency
+    }
+  } else {
+    // 不模擬標點，使用原始計算方式
+    const totalWeightedKeyUsage = Array.from(stats.value.keyDistribution.values()).reduce((sum, val) => sum + val, 0)
+    frequency = totalWeightedKeyUsage > 0 ? count / totalWeightedKeyUsage : 0
+  }
   
   return {
-    key: key.toLowerCase(),
+    key: keyLower,
     count,
     frequency,
     position: { x: 0, y: 0 } // 簡化版本，不需要精確位置
@@ -588,6 +806,215 @@ defineExpose({
 </script>
 
 <style scoped>
+/* 標點符號選項樣式 */
+.punctuation-wrapper {
+  margin-top: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.punctuation-option {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-secondary);
+  width: fit-content;
+}
+
+.option-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  user-select: none;
+}
+
+.option-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.option-text {
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.help-button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 50%;
+  background: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.help-button:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: scale(1.05);
+}
+
+/* 幫助信息框樣式 */
+.help-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.help-modal {
+  background: var(--color-bg-primary);
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--color-border-primary);
+}
+
+.help-header h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.help-close-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.help-close-btn:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.help-content {
+  padding: 20px 24px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  overflow-y: auto;
+  max-height: 50vh;
+}
+
+.help-content p {
+  margin: 0 0 12px 0;
+  color: var(--color-text-primary);
+}
+
+.help-content ul {
+  margin: 8px 0 16px 20px;
+  padding: 0;
+}
+
+.help-content li {
+  margin-bottom: 8px;
+  color: var(--color-text-primary);
+}
+
+.help-content strong {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.help-content code {
+  background: var(--color-bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9em;
+  color: var(--color-primary);
+}
+
+.help-footer {
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--color-border-primary);
+  display: flex;
+  justify-content: flex-end;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Custom Tooltip Styles */
+.custom-tooltip {
+  position: fixed;
+  z-index: 10000;
+  padding: 12px 16px;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  max-width: 350px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  white-space: pre-line;
+  word-wrap: break-word;
+}
+
+.custom-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 20px;
+  border: 6px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+}
+
 /* 卡片頭部佈局 */
 .header-content {
   display: flex;
