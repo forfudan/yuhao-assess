@@ -201,7 +201,7 @@ export class BuiltinCodeTableService {
 
       if (!char || !code) continue
 
-      // 只处理单个 CJK 汉字
+      // 只處理單個 CJK 漢字
       if (Array.from(char).length === 1 && isInCJKToJ(char)) {
         tempEntries.push({ lineIndex: lineIndex++, char, code })
       }
@@ -235,7 +235,7 @@ export class BuiltinCodeTableService {
   }
 
   /**
-   * 下载并解析预设码表，返回 RawCodeTable
+   * 下載並解析預設碼表，返回 RawCodeTable
    */
   async downloadRawCodeTable(key: string): Promise<{ 
     rawCodeTable: RawCodeTable; 

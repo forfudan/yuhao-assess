@@ -110,7 +110,7 @@
         </div>
       </div>
 
-      <!-- 统计分析 -->
+      <!-- 統計分析 -->
       <div class="stats-container">
         <h4 class="stats-title">統計分析</h4>
         
@@ -351,7 +351,7 @@ const debugUnderscoreEndings = (codeTable: CodeTable) => {
     }
   }
   
-  // 删除調試輸出，只保留isPrefix相關的追蹤
+  // 刪除調試輸出，只保留isPrefix相關的追蹤
 }
 
 // 監聽碼表變化，確保切換方案時熱力圖會刷新
@@ -433,7 +433,7 @@ const rowMapping: Record<string, string> = {
   'space': '空格排'
 }
 
-// 计算统计数据
+// 計算統計数据
 const stats = computed<AnalysisStats>(() => {
   if (!props.analysisReady || processedCodeTable.value.size === 0) {
     return {
@@ -453,7 +453,7 @@ const stats = computed<AnalysisStats>(() => {
   let totalCodes = 0
   let totalCodeLength = 0
 
-  // 分析码表 - 使用字频权重
+  // 分析碼表 - 使用字频权重
   for (const [char, codes] of processedCodeTable.value.entries()) {
     // 获取字符频率权重，默认为1
     const charWeight = charFrequency.value[char] || 1
@@ -462,20 +462,20 @@ const stats = computed<AnalysisStats>(() => {
       totalCodes++
       totalCodeLength += code.length
 
-      // 统计每个按键的使用次数（应用字频权重）
-      // 注意：这里需要特殊处理下划线，将其视为空格键
+      // 統計每个按键的使用次数（应用字频权重）
+      // 注意：这里需要特殊處理下划线，将其视为空格键
       for (const key of code.toLowerCase()) {
         const actualKey = key === '_' ? 'space' : key
         
         keyDistribution.set(actualKey, (keyDistribution.get(actualKey) || 0) + charWeight)
         
-        // 统计手指负担
+        // 統計手指负担
         const finger = fingerMapping[actualKey]
         if (finger) {
           fingerLoad.set(finger, (fingerLoad.get(finger) || 0) + charWeight)
         }
         
-        // 统计按排分布
+        // 統計按排分布
         const row = rowMapping[actualKey]
         if (row) {
           rowDistribution.set(row, (rowDistribution.get(row) || 0) + charWeight)
@@ -484,7 +484,7 @@ const stats = computed<AnalysisStats>(() => {
     }
   }
 
-  // 计算左右手比例
+  // 計算左右手比例
   let leftHandCount = 0
   let rightHandCount = 0
 

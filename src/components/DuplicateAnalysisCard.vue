@@ -515,8 +515,8 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
   return { 
     duplicateChars: { full: fullDuplicateChars, short: shortDuplicateChars },
     duplicateGroups: { full: fullDuplicateGroups, short: shortDuplicateGroups },
-    theoreticalSize: theoreticalSize, // 理论字符集大小
-    encodedSize: actualCharset.size // 实际有编码的字符数
+    theoreticalSize: theoreticalSize, // 理論字符集大小
+    encodedSize: actualCharset.size // 實際有編碼的字符數
   }
 }
 
@@ -645,7 +645,7 @@ async function calculateAllMetrics() {
   isCalculating.value = true
   
   try {
-    // 从码表键中提取所有单个字符（修复：处理多字词条问题）
+    // 从碼表键中提取所有单个字符（修复：處理多字词条问题）
     const allUniqueChars = new Set<string>()
     for (const key of props.codeTable.keys()) {
       // 将每个词条分解为单个字符
@@ -654,13 +654,13 @@ async function calculateAllMetrics() {
       }
     }
     
-    // 使用提取的唯一字符代替原来的码表键
+    // 使用提取的唯一字符代替原来的碼表键
     const allChars = allUniqueChars
     
-    // 使用缓存的处理结果，由App.vue统一处理
+    // 使用緩存的處理结果，由App.vue统一處理
     const processedTables = codeTableProcessingService.getProcessedTables()
     if (!processedTables) {
-      console.error('缓存的码表处理结果不可用，请先在App.vue中处理码表')
+      console.error('緩存的碼表處理结果不可用，请先在App.vue中處理碼表')
       return
     }
     
@@ -794,7 +794,7 @@ async function calculateAllMetrics() {
   }
 }
 
-// 监听码表变化
+// 监听碼表变化
 watch(() => props.codeTable, (newCodeTable) => {
   if (newCodeTable && newCodeTable.size > 0) {
     calculateAllMetrics()

@@ -447,14 +447,14 @@ const handleFileSelect = (event: Event) => {
 
 // 文件選擇處理
 const handleFileSelection = (file: File) => {
-  // 检查文件类型
+  // 檢查文件类型
   const fileName = file.name.toLowerCase()
   if (!fileName.endsWith('.txt') && !fileName.endsWith('.csv') && !fileName.endsWith('.yaml') && !fileName.endsWith('.yml')) {
     emit('uploadError', '请选择 .txt、.csv、.yaml 或 .yml 格式的文件')
     return
   }
 
-  // 检查文件大小（10MB限制）
+  // 檢查文件大小（10MB限制）
   if (file.size > 10 * 1024 * 1024) {
     emit('uploadError', '文件大小不能超过 10MB')
     return
@@ -734,18 +734,18 @@ interface SimpleParseResult {
   format: CodeTableFormat;
 }
 
-// 解析码表（直接返回 RawCodeTable）
+// 解析碼表（直接返回 RawCodeTable）
 const parseCodeTable = (text: string, format: CodeTableFormat, fileName: string): SimpleParseResult => {
   // 直接解析为 RawCodeTable
   const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, format)
   
-  // 简单统计（不生成中间码表）
+  // 简单統計（不生成中间碼表）
   let totalChars = 0
   let totalCodes = 0
   const charSet = new Set<string>()
   
   for (const [lineIndex, [char, code, ]] of rawCodeTable) {
-    // 只统计单个 CJK 汉字
+    // 只統計单个 CJK 汉字
     if (Array.from(char).length === 1 && char.match(/[\u4e00-\u9fff]/)) {
       charSet.add(char)
       totalCodes++
@@ -762,7 +762,7 @@ const parseCodeTable = (text: string, format: CodeTableFormat, fileName: string)
   }
 }
 
-// 处理文件
+// 處理文件
 const processFile = async () => {
   if (!selectedFile.value) return
 
@@ -773,7 +773,7 @@ const processFile = async () => {
     const result = parseCodeTable(text, selectedFormat.value, selectedFile.value.name)
 
     if (result.totalChars === 0) {
-      emit('uploadError', '未找到有效的字符编码对，请检查文件格式')
+      emit('uploadError', '未找到有效的字符編碼对，请檢查文件格式')
       return
     }
 
@@ -805,7 +805,7 @@ const processFile = async () => {
     startStatusCheck()
 
   } catch (error) {
-    emit('uploadError', `文件处理失败: ${error instanceof Error ? error.message : '未知错误'}`)
+    emit('uploadError', `文件處理失败: ${error instanceof Error ? error.message : '未知错误'}`)
   } finally {
     isUploading.value = false
   }
@@ -817,7 +817,7 @@ async function loadBuiltinConfig() {
     await builtinService.loadConfig()
     builtinTables.value = builtinService.getAvailableTables()
     
-    // 首先检查是否有保存的用户上传文件
+    // 首先檢查是否有保存的用户上传文件
     const savedUploadedFile = localStorage.getItem(UPLOADED_FILE_STORAGE_KEY)
     if (savedUploadedFile) {
       try {
@@ -844,10 +844,10 @@ async function loadBuiltinConfig() {
         await nextTick()
         await new Promise(resolve => setTimeout(resolve, 200))
         
-        // 重新处理文件并触发分析
+        // 重新處理文件并触发分析
         await processFile()
 
-        return // 如果恢复了用户文件，就不再检查预设方案
+        return // 如果恢复了用户文件，就不再檢查预设方案
       } catch (error) {
         console.error('[文件恢复] 恢复用户上传文件失败:', error)
         // 清除损坏的数据

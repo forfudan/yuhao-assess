@@ -26,10 +26,10 @@ export async function getMaximumCandidates(
     }
   }
 
-  // 使用全局缓存的正确处理结果，而不是重新处理
+  // 使用全局緩存的正确處理结果，而不是重新處理
   const processedTables = codeTableProcessingService.getProcessedTables()
   if (!processedTables) {
-    throw new Error('全局码表处理结果不可用，请先处理主码表')
+    throw new Error('全局碼表處理结果不可用，请先處理主碼表')
   }
   
   const fullCodeTable = processedTables.full

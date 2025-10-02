@@ -33,10 +33,10 @@ export class CodeTableProcessingService {
 
 
   /**
-   * 直接从 RawCodeTable 生成四个辅助码表，单次遍历完成
+   * 直接從 RawCodeTable 生成四个辅助碼表，单次遍歷完成
    * 
-   * @param rawCodeTable 原始码表（行号 -> [字符, 编码, N选]）
-   * @param options 处理选项
+   * @param rawCodeTable 原始碼表（行号 -> [字符, 編碼, N选]）
+   * @param options 處理選項
    */
   async processRawCodeTable(
     rawCodeTable: RawCodeTable,
@@ -50,31 +50,31 @@ export class CodeTableProcessingService {
     const isPrefix = options?.isPrefix || false
     const prefixKeys = options?.prefixKeys
     
-    // 初始化四个辅助码表
+    // 初始化四個輔助碼表
     const full: CodeTable = new Map()
     const short: CodeTable = new Map()
     const fullWithSelection: CodeTable = new Map()
     const shortWithSelection: CodeTable = new Map()
     
-    // 追踪每个字符的最大和最小编码长度
+    // 追蹤每個字符的最大和最小編碼長度
     const maxCodeLengthMap = new Map<string, number>()
     const minCodeLengthMap = new Map<string, number>()
     
-    // 计算全局最大码长
+    // 計算全局最大碼長
     let globalMaxLength = 0
     for (const [, [, code]] of rawCodeTable) {
       globalMaxLength = Math.max(globalMaxLength, code.length)
     }
     const maxLength = options?.maxLength || globalMaxLength || 4
     
-    // 保存处理选项
+    // 保存處理選項
     this.processingOptions = { isPrefix, maxLength }
     
-    // 按行号顺序遍历 rawCodeTable
+    // 按行號順序遍歷 rawCodeTable
     const sortedEntries = Array.from(rawCodeTable.entries()).sort((a, b) => a[0] - b[0])
     
     for (const [, [char, code, position]] of sortedEntries) {
-      // 只处理单个 CJK 汉字
+      // 只處理單個 CJK 漢字
       if (Array.from(char).length !== 1 || !isInCJKToJ(char)) {
         continue
       }
@@ -83,12 +83,12 @@ export class CodeTableProcessingService {
       const currentMaxLength = maxCodeLengthMap.get(char)
       const currentMinLength = minCodeLengthMap.get(char)
       
-      // 生成带选重的编码
+      // 生成帶選重的編碼
       const codeWithSelection = this.generateCodeWithSelection(
         code, position, codeLength, maxLength, isPrefix, prefixKeys
       )
       
-      // 首次遇到该字符
+      // 首次遇到該字符
       if (currentMaxLength === undefined) {
         full.set(char, [code])
         short.set(char, [code])
@@ -99,9 +99,9 @@ export class CodeTableProcessingService {
         continue
       }
       
-      // 如果新编码长度严格大于当前最大编码长度
+      // 如果新編碼長度嚴格大於當前最大編碼長度
       if (codeLength > currentMaxLength) {
-        // 先删除，再添加（保持顺序）
+        // 先刪除，再添加（保持順序）
         full.delete(char)
         fullWithSelection.delete(char)
         full.set(char, [code])
@@ -109,9 +109,9 @@ export class CodeTableProcessingService {
         maxCodeLengthMap.set(char, codeLength)
       }
       
-      // 如果新编码长度严格小于当前最小编码长度
+      // 如果新編碼長度嚴格小於當前最小編碼長度
       if (codeLength < currentMinLength!) {
-        // 先删除，再添加（保持顺序）
+        // 先刪除，再添加（保持順序）
         short.delete(char)
         shortWithSelection.delete(char)
         short.set(char, [code])
@@ -131,7 +131,7 @@ export class CodeTableProcessingService {
   }
   
   /**
-   * 生成带选重按键的编码
+   * 生成带選重按键的編碼
    */
   private generateCodeWithSelection(
     code: string,
@@ -143,9 +143,9 @@ export class CodeTableProcessingService {
   ): string {
     let processedCode = code
     
-    // N选为1的特殊处理
+    // N選為1的特殊處理
     if (position === 1) {
-      // 前缀码的特殊处理逻辑
+      // 前綴碼的特殊處理邏輯
       if (isPrefix && prefixKeys && codeLength < maxLength) {
         const lastChar = code.slice(-1)
         const needsUnderscore = !prefixKeys.includes(lastChar) && lastChar !== '_'
@@ -153,14 +153,14 @@ export class CodeTableProcessingService {
           processedCode = code + '_'
         }
       } else if (!isPrefix && codeLength < maxLength) {
-        // 非前缀码：首选且未达到最大码长时补充下划线
+        // 非前綴碼：首選且未達到最大碼長時補充下划線
         processedCode = code + '_'
       }
     }
     
-    // 如果不是首选（position > 1），添加选择键
+    // 如果不是首選（position > 1），添加選擇鍵
     if (position > 1) {
-      // 使用数字 2, 3, 4, 5, 6, 7, 8, 9...
+      // 使用數字 2, 3, 4, 5, 6, 7, 8, 9...
       processedCode += position.toString()
     }
     
@@ -193,14 +193,14 @@ export class CodeTableProcessingService {
 
 
   /**
-   * 检查是否有可用的处理结果
+   * 檢查是否有可用的處理结果
    */
   hasProcessedTables(): boolean {
     return this.processedTables !== null
   }
 
   /**
-   * 获取特定类型的码表
+   * 獲取特定類型的碼表
    */
   getCodeTable(type: 'full' | 'short' | 'fullWithSelection' | 'shortWithSelection'): CodeTable | null {
     if (!this.processedTables) {
@@ -210,5 +210,5 @@ export class CodeTableProcessingService {
   }
 }
 
-// 导出单例实例
+// 導出單例實例
 export const codeTableProcessingService = CodeTableProcessingService.getInstance()

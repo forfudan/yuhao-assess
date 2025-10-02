@@ -81,7 +81,7 @@ function preprocessCodeTable(
       actualLen: calculateActualLength(row.code, maxLen, isPrefix)
     }))
     
-    // 处理选重（同码长的非首选字符+1）
+    // 處理選重（同码长的非首选字符+1）
     const codeGroups = new Map<string, typeof codesWithLen>()
     for (const code of codesWithLen) {
       if (!codeGroups.has(code.code)) {
@@ -90,7 +90,7 @@ function preprocessCodeTable(
       codeGroups.get(code.code)!.push(code)
     }
     
-    // 为非首选字符增加选重码长
+    // 为非首选字符增加選重码长
     for (const group of codeGroups.values()) {
       for (let i = 1; i < group.length; i++) {
         group[i].actualLen += 1
