@@ -73,37 +73,46 @@ const keyStyle = computed(() => {
 
 // 熱力圖樣式
 const heatmapStyle = computed(() => {
-  if (props.keyData.count === 0 || props.maxValue === 0) {
+  if (props.keyData.count === 0) {
     return {
       '--intensity': 0,
       opacity: 0
     }
   }
 
-  // 計算強度（0-1）
-  const intensity = props.keyData.count / props.maxValue
-  const normalizedIntensity = Math.min(Math.max(intensity, 0), 1)
-
+  // 使用頻率百分比的絕對映射，而非相對歸一化
+  // 這樣高頻鍵會變得非常深，而不會壓縮其他鍵的顏色空間
+  const frequencyPercent = props.keyData.frequency * 100 // 轉換為百分比
+  
+  // 映射函數：使用平方根函數來映射頻率到強度
+  // sqrt(x/10) 在 x=1% 時約 0.316，x=5% 時約 0.707，x=10% 時為 1.0
+  // 這樣可以讓低頻鍵有足夠的顏色深度，同時高頻鍵會變得很深
+  let intensity = Math.sqrt(frequencyPercent / 10)
+  
+  // 允許強度超過 1.0，最高到 1.5，讓極高頻的鍵可以更深
+  intensity = Math.min(intensity, 1.5)
+  
   // 使用 CSS 變量
   return {
-    '--intensity': normalizedIntensity,
+    '--intensity': intensity,
     opacity: 1
   }
 })
 
 // 動態文字顔色
 const textColor = computed(() => {
-  if (props.keyData.count === 0 || props.maxValue === 0) {
+  if (props.keyData.count === 0) {
     return {
       '--key-text-color': 'var(--color-text-secondary)'
     }
   }
 
-  const intensity = props.keyData.count / props.maxValue
-  const normalizedIntensity = Math.min(Math.max(intensity, 0), 1)
+  // 使用頻率百分比來決定文字顏色
+  const frequencyPercent = props.keyData.frequency * 100
   
-  // 當熱力圖強度超過0.4時，使用白色文字以提高可見性
-  const textColor = normalizedIntensity > 0.4 ? '#ffffff' : 'var(--color-text-secondary)'
+  // 當頻率超過 3% 時切換到白色文字以提高可見性
+  // 因為 3% 的頻率已經會產生較深的背景色
+  const textColor = frequencyPercent > 3 ? '#ffffff' : 'var(--color-text-secondary)'
   
   return {
     '--key-text-color': textColor

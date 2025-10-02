@@ -514,10 +514,10 @@ const stats = computed<AnalysisStats>(() => {
   }
 })
 
-// 計算最大鍵值（用于歸一化）
+// 不再需要計算最大鍵值，因為使用絕對頻率映射
+// 保留這個計算屬性只是為了兼容 KeyButton 組件的 props
 const maxKeyValue = computed(() => {
-  if (stats.value.keyDistribution.size === 0) return 1
-  return Math.max(...Array.from(stats.value.keyDistribution.values()))
+  return 1 // 占位符，不再實際使用
 })
 
 // 手指負擔百分比 - 按照指定順序排列
