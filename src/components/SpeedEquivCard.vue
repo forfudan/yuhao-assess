@@ -399,7 +399,7 @@ async function calculateSpeedEquivAnalysis() {
   }
 }
 
-// 监听码表变化
+// 监听碼表变化
 watch(() => props.codeTable, async (newCodeTable) => {
   if (newCodeTable && newCodeTable.size > 0) {
     // 延迟一点确保其他watch已执行

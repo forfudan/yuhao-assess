@@ -315,7 +315,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
-import { getDynamicDupRate } from '../services/duplicateAnalysisService'
+import { getDynamicDupRate, getDynamicDupRateFromOriginalOrder } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
 import { 
@@ -515,8 +515,8 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
   return { 
     duplicateChars: { full: fullDuplicateChars, short: shortDuplicateChars },
     duplicateGroups: { full: fullDuplicateGroups, short: shortDuplicateGroups },
-    theoreticalSize: theoreticalSize, // 理论字符集大小
-    encodedSize: actualCharset.size // 实际有编码的字符数
+    theoreticalSize: theoreticalSize, // 理論字符集大小
+    encodedSize: actualCharset.size // 實際有編碼的字符數
   }
 }
 
@@ -645,7 +645,7 @@ async function calculateAllMetrics() {
   isCalculating.value = true
   
   try {
-    // 从码表键中提取所有单个字符（修复：处理多字词条问题）
+    // 从碼表键中提取所有单个字符（修复：處理多字词条问题）
     const allUniqueChars = new Set<string>()
     for (const key of props.codeTable.keys()) {
       // 将每个词条分解为单个字符
@@ -654,18 +654,20 @@ async function calculateAllMetrics() {
       }
     }
     
-    // 使用提取的唯一字符代替原来的码表键
+    // 使用提取的唯一字符代替原来的碼表键
     const allChars = allUniqueChars
     
-    // 使用缓存的处理结果，由App.vue统一处理
+    // 使用緩存的處理结果，由App.vue统一處理
     const processedTables = codeTableProcessingService.getProcessedTables()
     if (!processedTables) {
-      console.error('缓存的码表处理结果不可用，请先在App.vue中处理码表')
+      console.error('緩存的碼表處理结果不可用，请先在App.vue中處理碼表')
       return
     }
     
     const fullCodeTable = processedTables.full
     const shortCodeTable = processedTables.short
+    const fullWithSelectionTable = processedTables.fullWithSelection
+    const shortWithSelectionTable = processedTables.shortWithSelection
     
     // 加載所有字頻數據
     const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyGuji, charFrequencyUnified] = await Promise.all([
@@ -676,7 +678,7 @@ async function calculateAllMetrics() {
       loadCharFrequencyUnified()
     ])
     
-    // 計算各種動態選重率
+    // 計算各種動態選重率（按字頻重新排序）
     const fullDynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency)
     const shortDynamicDupRate = getDynamicDupRate(shortCodeTable, charFrequency)
     
@@ -692,21 +694,21 @@ async function calculateAllMetrics() {
     const fullDynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
     const shortDynamicDupRateUnified = getDynamicDupRate(shortCodeTable, charFrequencyUnified)
     
-    // 計算各種動態選重率 - 原始排序
-    const fullDynamicDupRateOriginal = getDynamicDupRate(fullCodeTable, charFrequency, false)
-    const shortDynamicDupRateOriginal = getDynamicDupRate(shortCodeTable, charFrequency, false)
+    // 計算各種動態選重率 - 原始排序（使用帶選重鍵的碼表）
+    const fullDynamicDupRateOriginal = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequency)
+    const shortDynamicDupRateOriginal = getDynamicDupRateFromOriginalOrder(shortWithSelectionTable, charFrequency)
     
-    const fullDynamicDupRateSCOriginal = getDynamicDupRate(fullCodeTable, charFrequencySC, false)
-    const shortDynamicDupRateSCOriginal = getDynamicDupRate(shortCodeTable, charFrequencySC, false)
+    const fullDynamicDupRateSCOriginal = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencySC)
+    const shortDynamicDupRateSCOriginal = getDynamicDupRateFromOriginalOrder(shortWithSelectionTable, charFrequencySC)
     
-    const fullDynamicDupRateTCOriginal = getDynamicDupRate(fullCodeTable, charFrequencyTC, false)
-    const shortDynamicDupRateTCOriginal = getDynamicDupRate(shortCodeTable, charFrequencyTC, false)
+    const fullDynamicDupRateTCOriginal = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyTC)
+    const shortDynamicDupRateTCOriginal = getDynamicDupRateFromOriginalOrder(shortWithSelectionTable, charFrequencyTC)
     
-    const fullDynamicDupRateGujiOriginal = getDynamicDupRate(fullCodeTable, charFrequencyGuji, false)
-    const shortDynamicDupRateGujiOriginal = getDynamicDupRate(shortCodeTable, charFrequencyGuji, false)
+    const fullDynamicDupRateGujiOriginal = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyGuji)
+    const shortDynamicDupRateGujiOriginal = getDynamicDupRateFromOriginalOrder(shortWithSelectionTable, charFrequencyGuji)
     
-    const fullDynamicDupRateUnifiedOriginal = getDynamicDupRate(fullCodeTable, charFrequencyUnified, false)
-    const shortDynamicDupRateUnifiedOriginal = getDynamicDupRate(shortCodeTable, charFrequencyUnified, false)
+    const fullDynamicDupRateUnifiedOriginal = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyUnified)
+    const shortDynamicDupRateUnifiedOriginal = getDynamicDupRateFromOriginalOrder(shortWithSelectionTable, charFrequencyUnified)
     
     // 計算各字符集的重碼統計
     const gb2312Stats = await calculateCharsetDuplicates('gb2312', allChars, fullCodeTable, shortCodeTable)
@@ -792,7 +794,7 @@ async function calculateAllMetrics() {
   }
 }
 
-// 监听码表变化
+// 监听碼表变化
 watch(() => props.codeTable, (newCodeTable) => {
   if (newCodeTable && newCodeTable.size > 0) {
     calculateAllMetrics()

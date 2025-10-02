@@ -1,50 +1,10 @@
 import type { CodeTableConfig, BuiltinCodeTable, CodeTable, RawCodeTable, CodeTableFormat, CharFrequency, EquivTable } from '../types/index'
-
-// CJK塊數據類型定義
-type CJKBlockData = {
-  version: string
-  description: string
-  lastUpdated: string
-  blocks: Record<string, {
-    name: string
-    description: string
-    start: string
-    end: string
-    comment: string
-    note?: string
-  }>
-}
+import { isInCJKToJ } from './charsetService'
 
 export class BuiltinCodeTableService {
   private config: CodeTableConfig | null = null
   private charFrequency: CharFrequency | null = null
   private equivTable: EquivTable | null = null
-  private cjkBlockData: CJKBlockData | null = null
-
-  // 加載CJK區塊數據
-  async loadCJKBlockData(): Promise<void> {
-    if (this.cjkBlockData) return
-    
-    try {
-      const response = await fetch('/data/cjkBlocks.json')
-      this.cjkBlockData = await response.json() as CJKBlockData
-    } catch (error) {
-      console.error('Failed to load CJK block data:', error)
-      // 使用空數據作爲後備
-      this.cjkBlockData = { version: '', description: '', lastUpdated: '', blocks: {} }
-    }
-  }
-
-  // 獲取塊的起始和結束範圍
-  private getBlockRange(blockName: string): { start: number, end: number } | null {
-    if (!this.cjkBlockData) return null
-    const block = this.cjkBlockData.blocks[blockName]
-    if (!block) return null
-    return {
-      start: parseInt(block.start, 16),
-      end: parseInt(block.end, 16)
-    }
-  }
 
   // 加載預設碼表配置
   async loadConfig(): Promise<CodeTableConfig> {
@@ -208,140 +168,17 @@ export class BuiltinCodeTableService {
     return tables.find(table => table.key === key) || null
   }
 
-  // 下載並解析預設碼表
-  async downloadCodeTable(key: string): Promise<{ codeTable: CodeTable; fileName: string; format: CodeTableFormat }> {
-    const table = await this.getBuiltinCodeTable(key)
-    if (!table) {
-      throw new Error(`Unknown code table: ${key}`)
-    }
-    
-    try {
-      const response = await fetch(table.url)
-      if (!response.ok) {
-        throw new Error(`Failed to download code table: ${response.statusText}`)
-      }
-      
-      const text = await response.text()
-      const codeTable = this.parseCodeTable(text, table.format)
-      
-      return {
-        codeTable,
-        fileName: table.name,
-        format: table.format
-      }
-    } catch (error) {
-      console.error('Error downloading code table:', error)
-      throw error
-    }
-  }
-
-  // 解析碼表文本
-  private parseCodeTable(text: string, format: CodeTableFormat): CodeTable {
-    const codeTable = new Map<string, string[]>()
-    const lines = text.split('\n')
-
-    for (const line of lines) {
-      const trimmedLine = line.trim()
-      if (!trimmedLine || trimmedLine.startsWith('#') || trimmedLine.startsWith('//')) {
-        continue
-      }
-
-      const parts = trimmedLine.split(/\s+/)
-      if (parts.length < 2) continue
-
-      let char: string
-      let code: string
-
-      if (format === 'char_first') {
-        char = parts[0]
-        code = parts[1]
-      } else {
-        code = parts[0]
-        char = parts[1]
-      }
-
-      if (!char || !code) continue
-
-      if (!codeTable.has(char)) {
-        codeTable.set(char, [])
-      }
-      
-      const codes = codeTable.get(char)!
-      if (codes.indexOf(code) === -1) {
-        codes.push(code)
-      }
-    }
-
-    return codeTable
-  }
-
-  // 分析字符類型
-  // 字符分類函數
-  async classifyChar(char: string): Promise<{
-    isRegular: boolean
-    isGBK: boolean
-    cjkBlock: string | null
-  }> {
-    await this.loadCJKBlockData()
-    
-    const codePoint = char.codePointAt(0)
-    if (!codePoint) {
-      return { isRegular: false, isGBK: false, cjkBlock: null }
-    }
-
-    // 獲取CJK基本區範圍
-    const basicRange = this.getBlockRange('cjk_basic')
-    
-    // 通規漢字 (常用漢字)
-    const isRegular = basicRange ? (codePoint >= basicRange.start && codePoint <= basicRange.end) : false
-
-    // GBK漢字範圍 (簡化判斷) - 這裏保持原有邏輯，使用0x9FBF作爲結束點
-    const isGBK = basicRange ? (codePoint >= basicRange.start && codePoint <= 0x9FBF) : false
-
-    // CJK區塊判斷
-    let cjkBlock: string | null = null
-    
-    const basicRangeCheck = this.getBlockRange('cjk_basic')
-    const aRangeCheck = this.getBlockRange('cjk_a')
-    const bRangeCheck = this.getBlockRange('cjk_b')
-    const cRangeCheck = this.getBlockRange('cjk_c')
-    const dRangeCheck = this.getBlockRange('cjk_d')
-    const eRangeCheck = this.getBlockRange('cjk_e')
-    const fRangeCheck = this.getBlockRange('cjk_f')
-    const gRangeCheck = this.getBlockRange('cjk_g')
-    const hRangeCheck = this.getBlockRange('cjk_h')
-    
-    if (basicRangeCheck && codePoint >= basicRangeCheck.start && codePoint <= basicRangeCheck.end) {
-      cjkBlock = 'A' // CJK基本漢字
-    } else if (aRangeCheck && codePoint >= aRangeCheck.start && codePoint <= aRangeCheck.end) {
-      cjkBlock = 'B' // CJK擴展A
-    } else if (bRangeCheck && codePoint >= bRangeCheck.start && codePoint <= bRangeCheck.end) {
-      cjkBlock = 'C' // CJK擴展B
-    } else if (cRangeCheck && codePoint >= cRangeCheck.start && codePoint <= cRangeCheck.end) {
-      cjkBlock = 'D' // CJK擴展C
-    } else if (dRangeCheck && codePoint >= dRangeCheck.start && codePoint <= dRangeCheck.end) {
-      cjkBlock = 'E' // CJK擴展D
-    } else if (eRangeCheck && codePoint >= eRangeCheck.start && codePoint <= eRangeCheck.end) {
-      cjkBlock = 'F' // CJK擴展E
-    } else if (fRangeCheck && codePoint >= fRangeCheck.start && codePoint <= fRangeCheck.end) {
-      cjkBlock = 'G' // CJK擴展F
-    } else if (gRangeCheck && codePoint >= gRangeCheck.start && codePoint <= gRangeCheck.end) {
-      cjkBlock = 'H' // CJK擴展G
-    } else if (hRangeCheck && codePoint >= hRangeCheck.start && codePoint <= hRangeCheck.end) {
-      cjkBlock = 'I' // CJK擴展H
-    }
-
-    return { isRegular, isGBK, cjkBlock }
-  }
-
   /**
-   * 解析文本为原始码表（保持行顺序）
+   * 解析碼表文本為原始碼表（保持行順序）
    */
-  parseRawCodeTable(text: string, format: CodeTableFormat): { rawCodeTable: RawCodeTable } {
+  public static parseRawCodeTable(text: string, format: CodeTableFormat): { rawCodeTable: RawCodeTable } {
     const rawCodeTable: RawCodeTable = new Map()
     const lines = text.split('\n')
     let lineIndex = 0
-
+    
+    // 第一遍：收集所有字符-編碼對
+    const tempEntries: Array<{ lineIndex: number, char: string, code: string }> = []
+    
     for (const line of lines) {
       const trimmedLine = line.trim()
       if (!trimmedLine || trimmedLine.startsWith('#') || trimmedLine.startsWith('//')) {
@@ -364,80 +201,41 @@ export class BuiltinCodeTableService {
 
       if (!char || !code) continue
 
-      // 检查是否为单个字符
-      if (Array.from(char).length === 1) {
-        rawCodeTable.set(lineIndex++, [char, code])
+      // 只處理單個 CJK 漢字
+      if (Array.from(char).length === 1 && isInCJKToJ(char)) {
+        tempEntries.push({ lineIndex: lineIndex++, char, code })
       }
+    }
+    
+    // 第二遍：計算每個編碼下的 N 選位置
+    const codePositionMap = new Map<string, Map<string, number>>() // code -> char -> position
+    
+    for (const entry of tempEntries) {
+      const { code, char } = entry
+      
+      if (!codePositionMap.has(code)) {
+        codePositionMap.set(code, new Map())
+      }
+      
+      const charMap = codePositionMap.get(code)!
+      if (!charMap.has(char)) {
+        // 當前編碼下已有的字符數量 + 1 就是這個字符的位置
+        charMap.set(char, charMap.size + 1)
+      }
+    }
+    
+    // 第三遍：構建最終的 RawCodeTable，包含 N 選信息
+    for (const entry of tempEntries) {
+      const { lineIndex, char, code } = entry
+      const position = codePositionMap.get(code)!.get(char)!
+      rawCodeTable.set(lineIndex, [char, code, position])
     }
 
     return { rawCodeTable }
   }
 
   /**
-   * 从原始码表生成辅助码表（保持原始排序）
-   */
-  static generateAuxiliaryTables(rawCodeTable: RawCodeTable): {
-    full: CodeTable
-    short: CodeTable
-    fullWithSelection: CodeTable
-    shortWithSelection: CodeTable
-  } {
-    // 为每个字符选择最长和最短编码，记录对应的行号
-    const charToSelectedCodes = new Map<string, {
-      longest: { code: string, lineIndex: number },
-      shortest: { code: string, lineIndex: number }
-    }>()
-    
-    for (const [lineIndex, [char, code]] of rawCodeTable) {
-      if (!charToSelectedCodes.has(char)) {
-        charToSelectedCodes.set(char, {
-          longest: { code, lineIndex },
-          shortest: { code, lineIndex }
-        })
-      } else {
-        const selected = charToSelectedCodes.get(char)!
-        
-        // 更新最长编码
-        if (code.length > selected.longest.code.length) {
-          selected.longest = { code, lineIndex }
-        }
-        
-        // 更新最短编码
-        if (code.length < selected.shortest.code.length) {
-          selected.shortest = { code, lineIndex }
-        }
-      }
-    }
-
-    // 生成原始顺序码表（按汉字-编码对的行号顺序排序）
-    const full: CodeTable = new Map()
-    const short: CodeTable = new Map()
-    
-    // 按选中编码的行号排序
-    const fullEntries = Array.from(charToSelectedCodes.entries())
-      .sort((a, b) => a[1].longest.lineIndex - b[1].longest.lineIndex)
-    
-    const shortEntries = Array.from(charToSelectedCodes.entries())
-      .sort((a, b) => a[1].shortest.lineIndex - b[1].shortest.lineIndex)
-    
-    for (const [char, selected] of fullEntries) {
-      full.set(char, [selected.longest.code])
-    }
-    
-    for (const [char, selected] of shortEntries) {
-      short.set(char, [selected.shortest.code])
-    }
-
-    // fullWithSelection 和 shortWithSelection 暂时与 full 和 short 相同
-    // 加选重按键的处理逻辑将在 codeTableProcessingService 中进行
-    const fullWithSelection = new Map(full)
-    const shortWithSelection = new Map(short)
-
-    return { full, short, fullWithSelection, shortWithSelection }
-  }
-
-  /**
-   * 下载并解析预设码表，返回 RawCodeTable
+   * 下載並解析預設碼表，返回 RawCodeTable
    */
   async downloadRawCodeTable(key: string): Promise<{ 
     rawCodeTable: RawCodeTable; 
@@ -456,7 +254,7 @@ export class BuiltinCodeTableService {
       }
       
       const text = await response.text()
-      const { rawCodeTable } = this.parseRawCodeTable(text, table.format)
+      const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, table.format)
       
       return {
         rawCodeTable,

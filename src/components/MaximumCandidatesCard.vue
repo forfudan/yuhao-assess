@@ -179,10 +179,10 @@ const error = ref<string | null>(null)
 const analysisResults = ref<Record<string, MaximumCandidatesResult> | null>(null)
 const charCount = ref<number>(0)
 
-// 编码展开状态管理
+// 編碼展开状态管理
 const expandedCodes = ref<Set<string>>(new Set())
 
-// 切换编码展开状态
+// 切换編碼展开状态
 const toggleCodeExpansion = (charset: string) => {
   if (expandedCodes.value.has(charset)) {
     expandedCodes.value.delete(charset)

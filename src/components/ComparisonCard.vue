@@ -807,7 +807,7 @@ defineOptions({
 import { ref, computed, onMounted, onUnmounted, watch, nextTick, Teleport } from 'vue'
 import { ExportService } from '../services/exportService'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
-import { getDynamicDupRate } from '../services/duplicateAnalysisService'
+import { getDynamicDupRate, getDynamicDupRateFromOriginalOrder } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
 import { 
@@ -852,29 +852,43 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// 转换 CodeTable 到 RawCodeTable
-// 为了保持与 generateBaseTablesFromRaw 的兼容性，这里使用基于字符Unicode值的稳定排序
+// 轉換 CodeTable 到 RawCodeTable
+// 為了保持與 generateBaseTablesFromRaw 的兼容性，這裡使用基於字符Unicode值的穩定排序
 function convertCodeTableToRaw(codeTable: CodeTable): RawCodeTable {
-  const rawCodeTable = new Map<number, [string, string]>()
+  const rawCodeTable = new Map<number, [string, string, number]>()
   
-  // 创建字符-编码对的数组，并按字符的Unicode值进行稳定排序
+  // 創建字符-編碼對的數組，並按字符的Unicode值進行穩定排序
   const charCodePairs: Array<[string, string]> = []
   for (const [char, codes] of codeTable) {
+    // CodeTable is Map<string, string[]>, so iterate over codes array
     for (const code of codes) {
       charCodePairs.push([char, code])
     }
   }
   
-  // 按字符Unicode值排序，确保相同输入总是产生相同顺序
+  // 按字符Unicode值排序，確保相同輸入總是產生相同順序
   charCodePairs.sort((a, b) => {
     const charCompare = a[0].localeCompare(b[0])
     if (charCompare !== 0) return charCompare
-    return a[1].localeCompare(b[1]) // 同一字符的不同编码按编码排序
+    return a[1].localeCompare(b[1]) // 同一字符的不同編碼按編碼排序
   })
   
-  // 分配行号
+  // 計算每個編碼下的 N 選位置
+  const codePositionMap = new Map<string, Map<string, number>>()
+  for (const [char, code] of charCodePairs) {
+    if (!codePositionMap.has(code)) {
+      codePositionMap.set(code, new Map())
+    }
+    const charMap = codePositionMap.get(code)!
+    if (!charMap.has(char)) {
+      charMap.set(char, charMap.size + 1)
+    }
+  }
+  
+  // 分配行號和 position
   charCodePairs.forEach(([char, code], index) => {
-    rawCodeTable.set(index, [char, code])
+    const position = codePositionMap.get(code)!.get(char)!
+    rawCodeTable.set(index, [char, code, position])
   })
   
   return rawCodeTable
@@ -944,7 +958,7 @@ interface Scheme {
   isBuiltin: boolean
   isCalculating: boolean
   isPrefix: boolean
-  prefixKeys?: string[]  // 前缀码上屏键
+  prefixKeys?: string[]  // 前綴碼上屏鍵
   data?: SchemeData
   // 元數據字段
   source?: string // 來源（文件名或預設方案ID）
@@ -979,7 +993,7 @@ const uploadProgress = ref({ current: 0, total: 0 }) // 上傳進度
 const availableBuiltinSchemes = ref<BuiltinScheme[]>([])
 const fileInputCharCode = ref<HTMLInputElement>()
 const fileInputCodeChar = ref<HTMLInputElement>()
-const uploadPrefixFlag = ref(false) // 用户上传文件时的前缀码标志
+const uploadPrefixFlag = ref(false) // 用戶上傳文件時的前綴碼標誌
 
 // Tooltip 狀態管理
 const tooltip = ref({
@@ -1059,13 +1073,13 @@ const loadComparisonData = async () => {
     if (data.additionalSchemes && Array.isArray(data.additionalSchemes)) {
       for (const savedScheme of data.additionalSchemes) {
         try {
-          let codeTable: CodeTable | undefined
+          let rawCodeTable: RawCodeTable | undefined
           let correctIsPrefix = savedScheme.isPrefix || false // 默認從保存的數據中獲取
           
           if (savedScheme.isBuiltin && savedScheme.builtinKey) {
             // 重新載入預設方案
-            const result = await builtinService.downloadCodeTable(savedScheme.builtinKey)
-            codeTable = result.codeTable
+            const result = await builtinService.downloadRawCodeTable(savedScheme.builtinKey)
+            rawCodeTable = result.rawCodeTable
             
             // 重新獲取預設方案的正確前綴碼設置
             const schemeConfig = await builtinService.getBuiltinCodeTable(savedScheme.builtinKey)
@@ -1077,8 +1091,8 @@ const loadComparisonData = async () => {
               finalIsPrefix: correctIsPrefix
             })
           } else if (savedScheme.isUploadedScheme) {
-            // 上傳方案：codeTable 没有被保存，需要重新上傳
-            codeTable = undefined
+            // 上傳方案：rawCodeTable 没有被保存，需要重新上傳
+            rawCodeTable = undefined
             console.log(`恢復上傳方案 ${savedScheme.name}: 需要重新上傳碼表文件`, {
               savedIsPrefix: savedScheme.isPrefix,
               finalIsPrefix: correctIsPrefix
@@ -1100,13 +1114,13 @@ const loadComparisonData = async () => {
             prefixKeys: savedScheme.prefixKeys, // 恢復前綴碼上屏键
             data: savedScheme.data,
             charCount: savedScheme.charCount, // 恢復收字數
-            rawCodeTable: codeTable ? convertCodeTableToRaw(codeTable) : new Map(),
+            rawCodeTable: rawCodeTable || new Map(),
             source: savedScheme.source,
             uploadedAt: savedScheme.uploadedAt ? new Date(savedScheme.uploadedAt) : undefined
           }
           
-          // 如果没有保存的charCount或codeTable，異步計算
-          if ((!savedScheme.charCount || !codeTable) && savedScheme.isBuiltin && savedScheme.builtinKey) {
+          // 如果沒有保存的charCount或rawCodeTable，異步計算
+          if ((!savedScheme.charCount || !rawCodeTable) && savedScheme.isBuiltin && savedScheme.builtinKey) {
             // 對於預設方案，如果缺少charCount，後續重新計算
             setTimeout(async () => {
               if (restoredScheme.rawCodeTable && !restoredScheme.charCount) {
@@ -1126,7 +1140,7 @@ const loadComparisonData = async () => {
         }
       }
       
-      // 數據加載完成後，爲缺少數據的方案啟動智能計算
+      // 數據加載完成後，為缺少數據的方案啟動智能計算
       nextTick(() => {
         const schemesNeedingCalculation = additionalSchemes.value.filter(scheme => 
           scheme.rawCodeTable && !scheme.isCalculating && (!scheme.data || Object.keys(scheme.data).length < 4)
@@ -1574,7 +1588,7 @@ const calculateMissingData = async (scheme: Scheme) => {
       scheme.charCount = await calculateCharCountFromRaw(scheme.rawCodeTable!)
     }
     
-    // 檢查是否爲主方案（不可删除的方案）
+    // 檢查是否爲主方案（不可刪除的方案）
     const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
     
     if (activeTab.value === 'dynamic' && !scheme.data.dynamic) {
@@ -1652,7 +1666,7 @@ const recalculateScheme = async (scheme: Scheme) => {
     } else if (activeTab.value === 'maxCandidates') {
       scheme.data.maxCandidates = await calculateMaxCandidatesData(scheme)
     } else if (activeTab.value === 'speedEquiv') {
-      // 檢查是否爲主方案（不可删除的方案）
+      // 檢查是否爲主方案（不可刪除的方案）
       const isMainScheme = currentUserScheme.value && scheme.id === currentUserScheme.value.id
       if (isMainScheme) {
         // 主方案使用全局已處理的碼表
@@ -1732,7 +1746,7 @@ async function preprocessCodeTableDataComplete(rawCodeTable: RawCodeTable, isPre
   )
   console.timeEnd(`生成所有輔助表-${timerId}`)
   
-  console.log(`[preprocessCodeTableDataComplete] 处理完成，生成的辅助表大小:`, {
+  console.log(`[preprocessCodeTableDataComplete] 處理完成，生成的辅助表大小:`, {
     fullSize: processedTables.full.size,
     shortSize: processedTables.short.size,
     fullWithSelectionSize: processedTables.fullWithSelection.size,
@@ -1836,7 +1850,7 @@ onMounted(async () => {
   }
 })
 
-// 組件卸載時清理缓存
+// 組件卸載時清理緩存
 onUnmounted(() => {
   // 取消所有運行中的計算任務
   for (const task of calculationQueue.value) {
@@ -1888,7 +1902,7 @@ const loadCurrentUserScheme = async () => {
       data: undefined
     }
     
-    // 检查全局缓存，如果不存在则重新生成
+    // 檢查全局緩存，如果不存在则重新生成
     let globalProcessedTables = codeTableProcessingService.getProcessedTables()
     
     if (!globalProcessedTables) {
@@ -1906,7 +1920,7 @@ const loadCurrentUserScheme = async () => {
     if (globalProcessedTables) {
       currentUserScheme.value.processedTables = globalProcessedTables
       
-      // 从全局处理结果中提取必要数据
+      // 从全局處理结果中提取必要数据
       const allUniqueChars = new Set<string>()
       for (const key of globalProcessedTables.full.keys()) {
         for (const char of key) {
@@ -1933,7 +1947,7 @@ const loadCurrentUserScheme = async () => {
       })
       currentUserScheme.value.charsetMap = charsetMap
       
-      // 计算最大码长
+      // 計算最大码长
       let maxLength = 0
       for (const [, codes] of globalProcessedTables.full.entries()) {
         for (const code of codes) {
@@ -1963,12 +1977,12 @@ const loadCurrentUserScheme = async () => {
   }
 }
 
-// 辅助函数：从方案获取预处理表
+// 辅助函数：从方案获取预處理表
 function getProcessedTablesFromScheme(scheme: Scheme) {
   return scheme.processedTables
 }
 
-// 辅助函数：从方案获取完整码表
+// 辅助函数：从方案获取完整碼表
 function getFullCodeTableFromScheme(scheme: Scheme) {
   return scheme.processedTables?.full
 }
@@ -2048,7 +2062,7 @@ async function calculateDynamicOriginalData(scheme: Scheme): Promise<DynamicData
     throw new Error('方案缺少預處理數據')
   }
   
-  const fullCodeTable = scheme.processedTables.full
+  const fullWithSelectionTable = scheme.processedTables.fullWithSelection
   
   // 加載所有字頻數據
   const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyGuji, charFrequencyUnified] = await Promise.all([
@@ -2059,12 +2073,12 @@ async function calculateDynamicOriginalData(scheme: Scheme): Promise<DynamicData
     loadCharFrequencyUnified()
   ])
   
-  // 計算各種動態選重率（只計算全碼，但不重新排序）
-  const dynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency, false)
-  const dynamicDupRateSC = getDynamicDupRate(fullCodeTable, charFrequencySC, false)
-  const dynamicDupRateTC = getDynamicDupRate(fullCodeTable, charFrequencyTC, false)
-  const dynamicDupRateGuji = getDynamicDupRate(fullCodeTable, charFrequencyGuji, false)
-  const dynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified, false)
+  // 使用新函數計算各種動態選重率（從原始順序的帶選重鍵碼表）
+  const dynamicDupRate = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequency)
+  const dynamicDupRateSC = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencySC)
+  const dynamicDupRateTC = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyTC)
+  const dynamicDupRateGuji = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyGuji)
+  const dynamicDupRateUnified = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyUnified)
   
   console.timeEnd(`動態重碼計算-原始-${scheme.name}`)
   return {
@@ -2200,11 +2214,11 @@ async function exportSchemeDebugData(scheme: Scheme, schemeName: string, rawCode
     
     // 1. 导出 RawCodeTable
     const rawData: Array<{lineIndex: number, char: string, code: string}> = []
-    for (const [lineIndex, [char, code]] of rawCodeTable) {
+    for (const [lineIndex, [char, code, ]] of rawCodeTable) {
       rawData.push({ lineIndex, char, code })
     }
     
-    // 2. 导出 Full 全码码表
+    // 2. 导出 Full 全码碼表
     const fullData: Array<{char: string, codes: string[]}> = []
     if (scheme.processedTables?.full) {
       for (const [char, codes] of scheme.processedTables.full) {
@@ -2263,7 +2277,7 @@ async function exportComparisonCSV(rawData: Array<{lineIndex: number, char: stri
     })
     
     // 创建CSV内容
-    const csvLines = ['字符,原始编码,行号,全码表编码,是否匹配']
+    const csvLines = ['字符,原始編碼,行号,全碼表編碼,是否匹配']
     
     for (const rawItem of rawData.slice(0, 1000)) { // 限制前1000行避免文件过大
       const fullCodes = charToFullCode.get(rawItem.char) || []
@@ -2357,16 +2371,16 @@ async function addBuiltinScheme() {
     showAddForm.value = false
     
     // 載入碼表並預處理數據
-    const result = await builtinService.downloadCodeTable(selectedBuiltinScheme.value)
-    newScheme.rawCodeTable = convertCodeTableToRaw(result.codeTable)
+    const result = await builtinService.downloadRawCodeTable(selectedBuiltinScheme.value)
+    newScheme.rawCodeTable = result.rawCodeTable
     
     // 預處理碼表數據（内置方案使用完整預處理以支持所有計算）
-    const processedResult = await preprocessCodeTableDataComplete(convertCodeTableToRaw(result.codeTable), newScheme.isPrefix, props.globalPrefixKeys)
+    const processedResult = await preprocessCodeTableDataComplete(result.rawCodeTable, newScheme.isPrefix, props.globalPrefixKeys)
     newScheme.processedTables = processedResult.processedTables
     newScheme.allUniqueChars = processedResult.allUniqueChars
     newScheme.charsetMap = processedResult.charsetMap
     newScheme.maxLength = processedResult.maxLength
-    newScheme.charCount = await calculateCharCountFromRaw(convertCodeTableToRaw(result.codeTable))
+    newScheme.charCount = await calculateCharCountFromRaw(result.rawCodeTable)
     
     // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
     newScheme.data = {}
@@ -2444,16 +2458,16 @@ async function addAllBuiltinSchemes() {
         additionalSchemes.value.push(newScheme)
         
         // 載入碼表並預處理數據
-        const result = await builtinService.downloadCodeTable(builtinScheme.id)
-        newScheme.rawCodeTable = convertCodeTableToRaw(result.codeTable)
+        const result = await builtinService.downloadRawCodeTable(builtinScheme.id)
+        newScheme.rawCodeTable = result.rawCodeTable
         
         // 預處理碼表數據（只做一次）
-        const processedResultX = await preprocessCodeTableDataComplete(convertCodeTableToRaw(result.codeTable), newScheme.isPrefix, props.globalPrefixKeys)
+        const processedResultX = await preprocessCodeTableDataComplete(result.rawCodeTable, newScheme.isPrefix, props.globalPrefixKeys)
         newScheme.processedTables = processedResultX.processedTables
         newScheme.allUniqueChars = processedResultX.allUniqueChars
         newScheme.charsetMap = processedResultX.charsetMap
         newScheme.maxLength = processedResultX.maxLength
-        newScheme.charCount = await calculateCharCountFromRaw(convertCodeTableToRaw(result.codeTable))
+        newScheme.charCount = await calculateCharCountFromRaw(result.rawCodeTable)
         
         // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
         newScheme.data = {}
@@ -2556,17 +2570,17 @@ async function addSelectedBuiltinSchemes() {
         
         additionalSchemes.value.push(newScheme)
         
-        // 下载并解析码表
+        // 下载并解析碼表
         const response = await fetch(schemeConfig!.url)
         if (!response.ok) {
           throw new Error(`Failed to download code table: ${response.statusText}`)
         }
         const text = await response.text()
         
-        const { rawCodeTable } = builtinService.parseRawCodeTable(text, schemeConfig!.format)
+        const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, schemeConfig!.format)
         newScheme.rawCodeTable = rawCodeTable
         
-        // 处理码表数据
+        // 處理碼表数据
         const processedResult = await preprocessCodeTableDataComplete(
           rawCodeTable, 
           newScheme.isPrefix, 
@@ -2651,8 +2665,7 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     
     // 解析碼表文件，生成 RawCodeTable
     const text = await file.text()
-    const builtinService = new BuiltinCodeTableService()
-    const { rawCodeTable } = builtinService.parseRawCodeTable(text, format === 'char_first' ? 'char_first' : 'code_first')
+    const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, format === 'char_first' ? 'char_first' : 'code_first')
     
     newScheme.rawCodeTable = rawCodeTable
     
@@ -2734,7 +2747,7 @@ async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'co
         // 解析碼表文件 - 使用和主方案相同的解析函数
         const text = await file.text()
         const builtinService = new BuiltinCodeTableService()
-        const { rawCodeTable } = builtinService.parseRawCodeTable(text, format === 'char_first' ? 'char_first' : 'code_first')
+        const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, format === 'char_first' ? 'char_first' : 'code_first')
         
         newScheme.rawCodeTable = rawCodeTable
         
@@ -2793,15 +2806,41 @@ async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'co
 
 // 輔助函数：將 CodeTable 轉換為 RawCodeTable（用於內建方案）
 function codeTableToRawCodeTable(codeTable: CodeTable): RawCodeTable {
-  const rawCodeTable = new Map<number, [string, string]>()
-  let lineIndex = 0
+  const rawCodeTable = new Map<number, [string, string, number]>()
   
+  // 创建字符-編碼对的数组
+  const charCodePairs: Array<[string, string]> = []
   for (const [char, codes] of codeTable.entries()) {
+    // CodeTable is Map<string, string[]>, so iterate over codes array
     for (const code of codes) {
-      rawCodeTable.set(lineIndex, [char, code])
-      lineIndex++
+      charCodePairs.push([char, code])
     }
   }
+  
+  // 排序以确保稳定性
+  charCodePairs.sort((a, b) => {
+    const charCompare = a[0].localeCompare(b[0])
+    if (charCompare !== 0) return charCompare
+    return a[1].localeCompare(b[1])
+  })
+  
+  // 計算每個編碼下的 N 選位置
+  const codePositionMap = new Map<string, Map<string, number>>()
+  for (const [char, code] of charCodePairs) {
+    if (!codePositionMap.has(code)) {
+      codePositionMap.set(code, new Map())
+    }
+    const charMap = codePositionMap.get(code)!
+    if (!charMap.has(char)) {
+      charMap.set(char, charMap.size + 1)
+    }
+  }
+  
+  // 分配行號和 position
+  charCodePairs.forEach(([char, code], index) => {
+    const position = codePositionMap.get(code)!.get(char)!
+    rawCodeTable.set(index, [char, code, position])
+  })
   
   return rawCodeTable
 }
@@ -2885,7 +2924,7 @@ function reuploadScheme(scheme: Scheme) {
       const text = await file.text()
       // 默認使用 char_first 格式，與原上傳邏輯保持一致
       const builtinService = new BuiltinCodeTableService()
-      const { rawCodeTable } = builtinService.parseRawCodeTable(text, 'char_first')
+      const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, 'char_first')
       
       // 更新方案的 rawCodeTable
       scheme.rawCodeTable = rawCodeTable

@@ -6,7 +6,7 @@
 
 import type { CodeTable } from '../types/index'
 
-// 简单的单字符检查函数
+// 簡單的單字符檢查函数
 function isSingleChar(char: string): boolean {
   return Array.from(char).length === 1
 }

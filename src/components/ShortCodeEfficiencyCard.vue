@@ -203,7 +203,7 @@ const { tooltipVisible, tooltipText, tooltipStyle, showTooltip: showTooltipBase,
 const tooltipChars = ref('')
 const tooltipCharsWithCodes = ref('')
 
-// 预处理的码表（包含简码加选重表）
+// 预處理的碼表（包含简码加選重表）
 const processedCodeTable = ref<CodeTable>(new Map())
 const shortWithSelectionTable = ref<CodeTable>(new Map())
 
@@ -520,7 +520,7 @@ const updateEfficiency = async () => {
     
     // 保存簡碼加選重表供tooltip使用
     shortWithSelectionTable.value = processedTables.shortWithSelection
-    processedCodeTable.value = processedTables.full  // 使用全码表代替原始码表
+    processedCodeTable.value = processedTables.full  // 使用全碼表代替原始碼表
 
     // 將加選重碼表轉換為CodeTableRow[]格式，用於簡碼效率計算
     const convertCodeTableToRows = (codeTable: CodeTable): { char: string; code: string }[] => {
