@@ -374,69 +374,6 @@ export class BuiltinCodeTableService {
   }
 
   /**
-   * 从原始码表生成辅助码表（保持原始排序）
-   */
-  static generateAuxiliaryTables(rawCodeTable: RawCodeTable): {
-    full: CodeTable
-    short: CodeTable
-    fullWithSelection: CodeTable
-    shortWithSelection: CodeTable
-  } {
-    // 为每个字符选择最长和最短编码，记录对应的行号
-    const charToSelectedCodes = new Map<string, {
-      longest: { code: string, lineIndex: number },
-      shortest: { code: string, lineIndex: number }
-    }>()
-    
-    for (const [lineIndex, [char, code]] of rawCodeTable) {
-      if (!charToSelectedCodes.has(char)) {
-        charToSelectedCodes.set(char, {
-          longest: { code, lineIndex },
-          shortest: { code, lineIndex }
-        })
-      } else {
-        const selected = charToSelectedCodes.get(char)!
-        
-        // 更新最长编码
-        if (code.length > selected.longest.code.length) {
-          selected.longest = { code, lineIndex }
-        }
-        
-        // 更新最短编码
-        if (code.length < selected.shortest.code.length) {
-          selected.shortest = { code, lineIndex }
-        }
-      }
-    }
-
-    // 生成原始顺序码表（按汉字-编码对的行号顺序排序）
-    const full: CodeTable = new Map()
-    const short: CodeTable = new Map()
-    
-    // 按选中编码的行号排序
-    const fullEntries = Array.from(charToSelectedCodes.entries())
-      .sort((a, b) => a[1].longest.lineIndex - b[1].longest.lineIndex)
-    
-    const shortEntries = Array.from(charToSelectedCodes.entries())
-      .sort((a, b) => a[1].shortest.lineIndex - b[1].shortest.lineIndex)
-    
-    for (const [char, selected] of fullEntries) {
-      full.set(char, [selected.longest.code])
-    }
-    
-    for (const [char, selected] of shortEntries) {
-      short.set(char, [selected.shortest.code])
-    }
-
-    // fullWithSelection 和 shortWithSelection 暂时与 full 和 short 相同
-    // 加选重按键的处理逻辑将在 codeTableProcessingService 中进行
-    const fullWithSelection = new Map(full)
-    const shortWithSelection = new Map(short)
-
-    return { full, short, fullWithSelection, shortWithSelection }
-  }
-
-  /**
    * 下载并解析预设码表，返回 RawCodeTable
    */
   async downloadRawCodeTable(key: string): Promise<{ 
