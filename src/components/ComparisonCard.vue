@@ -1073,13 +1073,13 @@ const loadComparisonData = async () => {
     if (data.additionalSchemes && Array.isArray(data.additionalSchemes)) {
       for (const savedScheme of data.additionalSchemes) {
         try {
-          let codeTable: CodeTable | undefined
+          let rawCodeTable: RawCodeTable | undefined
           let correctIsPrefix = savedScheme.isPrefix || false // 默認從保存的數據中獲取
           
           if (savedScheme.isBuiltin && savedScheme.builtinKey) {
             // 重新載入預設方案
-            const result = await builtinService.downloadCodeTable(savedScheme.builtinKey)
-            codeTable = result.codeTable
+            const result = await builtinService.downloadRawCodeTable(savedScheme.builtinKey)
+            rawCodeTable = result.rawCodeTable
             
             // 重新獲取預設方案的正確前綴碼設置
             const schemeConfig = await builtinService.getBuiltinCodeTable(savedScheme.builtinKey)
@@ -1091,8 +1091,8 @@ const loadComparisonData = async () => {
               finalIsPrefix: correctIsPrefix
             })
           } else if (savedScheme.isUploadedScheme) {
-            // 上傳方案：codeTable 没有被保存，需要重新上傳
-            codeTable = undefined
+            // 上傳方案：rawCodeTable 没有被保存，需要重新上傳
+            rawCodeTable = undefined
             console.log(`恢復上傳方案 ${savedScheme.name}: 需要重新上傳碼表文件`, {
               savedIsPrefix: savedScheme.isPrefix,
               finalIsPrefix: correctIsPrefix
@@ -1114,13 +1114,13 @@ const loadComparisonData = async () => {
             prefixKeys: savedScheme.prefixKeys, // 恢復前綴碼上屏键
             data: savedScheme.data,
             charCount: savedScheme.charCount, // 恢復收字數
-            rawCodeTable: codeTable ? convertCodeTableToRaw(codeTable) : new Map(),
+            rawCodeTable: rawCodeTable || new Map(),
             source: savedScheme.source,
             uploadedAt: savedScheme.uploadedAt ? new Date(savedScheme.uploadedAt) : undefined
           }
           
-          // 如果没有保存的charCount或codeTable，異步計算
-          if ((!savedScheme.charCount || !codeTable) && savedScheme.isBuiltin && savedScheme.builtinKey) {
+          // 如果没有保存的charCount或rawCodeTable，異步計算
+          if ((!savedScheme.charCount || !rawCodeTable) && savedScheme.isBuiltin && savedScheme.builtinKey) {
             // 對於預設方案，如果缺少charCount，後續重新計算
             setTimeout(async () => {
               if (restoredScheme.rawCodeTable && !restoredScheme.charCount) {
@@ -2371,16 +2371,16 @@ async function addBuiltinScheme() {
     showAddForm.value = false
     
     // 載入碼表並預處理數據
-    const result = await builtinService.downloadCodeTable(selectedBuiltinScheme.value)
-    newScheme.rawCodeTable = convertCodeTableToRaw(result.codeTable)
+    const result = await builtinService.downloadRawCodeTable(selectedBuiltinScheme.value)
+    newScheme.rawCodeTable = result.rawCodeTable
     
     // 預處理碼表數據（内置方案使用完整預處理以支持所有計算）
-    const processedResult = await preprocessCodeTableDataComplete(convertCodeTableToRaw(result.codeTable), newScheme.isPrefix, props.globalPrefixKeys)
+    const processedResult = await preprocessCodeTableDataComplete(result.rawCodeTable, newScheme.isPrefix, props.globalPrefixKeys)
     newScheme.processedTables = processedResult.processedTables
     newScheme.allUniqueChars = processedResult.allUniqueChars
     newScheme.charsetMap = processedResult.charsetMap
     newScheme.maxLength = processedResult.maxLength
-    newScheme.charCount = await calculateCharCountFromRaw(convertCodeTableToRaw(result.codeTable))
+    newScheme.charCount = await calculateCharCountFromRaw(result.rawCodeTable)
     
     // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
     newScheme.data = {}
@@ -2458,16 +2458,16 @@ async function addAllBuiltinSchemes() {
         additionalSchemes.value.push(newScheme)
         
         // 載入碼表並預處理數據
-        const result = await builtinService.downloadCodeTable(builtinScheme.id)
-        newScheme.rawCodeTable = convertCodeTableToRaw(result.codeTable)
+        const result = await builtinService.downloadRawCodeTable(builtinScheme.id)
+        newScheme.rawCodeTable = result.rawCodeTable
         
         // 預處理碼表數據（只做一次）
-        const processedResultX = await preprocessCodeTableDataComplete(convertCodeTableToRaw(result.codeTable), newScheme.isPrefix, props.globalPrefixKeys)
+        const processedResultX = await preprocessCodeTableDataComplete(result.rawCodeTable, newScheme.isPrefix, props.globalPrefixKeys)
         newScheme.processedTables = processedResultX.processedTables
         newScheme.allUniqueChars = processedResultX.allUniqueChars
         newScheme.charsetMap = processedResultX.charsetMap
         newScheme.maxLength = processedResultX.maxLength
-        newScheme.charCount = await calculateCharCountFromRaw(convertCodeTableToRaw(result.codeTable))
+        newScheme.charCount = await calculateCharCountFromRaw(result.rawCodeTable)
         
         // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
         newScheme.data = {}
