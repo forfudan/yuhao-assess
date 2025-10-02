@@ -331,7 +331,7 @@ export async function calculateCharCountFromRaw(rawCodeTable: RawCodeTable): Pro
   const uniqueChars = new Set<string>()
   
   // 收集所有唯一字符
-  for (const [, [char, ]] of rawCodeTable) {
+  for (const [, [char, , ]] of rawCodeTable) {
     // 正確處理Unicode字符，使用Array.from來處理可能的代理對
     const chars = Array.from(char as string)
     for (const c of chars) {

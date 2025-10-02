@@ -100,7 +100,7 @@ export class CodeTableProcessingService {
     
     let maxLength = 0
     
-    for (const [lineIndex, [char, code]] of rawCodeTable) {
+    for (const [lineIndex, [char, code, ]] of rawCodeTable) {
       // 只处理单个 CJK 汉字
       if (Array.from(char).length !== 1 || !isInCJKToJ(char)) {
         continue

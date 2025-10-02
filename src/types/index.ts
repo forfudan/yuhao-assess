@@ -1,5 +1,5 @@
 // 原始碼表類型定義 - 保持行順序
-export type RawCodeTable = Map<number, [string, string]> // number: 行號, [汉字, 編碼]
+export type RawCodeTable = Map<number, [string, string, number]> // number: 行號, [汉字, 編碼, N選]
 
 // 碼表類型定義
 export type CodeTable = Map<string, string[]>

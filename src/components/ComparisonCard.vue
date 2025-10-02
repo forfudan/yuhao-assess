@@ -855,11 +855,12 @@ const props = defineProps<Props>()
 // 转换 CodeTable 到 RawCodeTable
 // 为了保持与 generateBaseTablesFromRaw 的兼容性，这里使用基于字符Unicode值的稳定排序
 function convertCodeTableToRaw(codeTable: CodeTable): RawCodeTable {
-  const rawCodeTable = new Map<number, [string, string]>()
+  const rawCodeTable = new Map<number, [string, string, number]>()
   
   // 创建字符-编码对的数组，并按字符的Unicode值进行稳定排序
   const charCodePairs: Array<[string, string]> = []
   for (const [char, codes] of codeTable) {
+    // CodeTable is Map<string, string[]>, so iterate over codes array
     for (const code of codes) {
       charCodePairs.push([char, code])
     }
@@ -872,9 +873,22 @@ function convertCodeTableToRaw(codeTable: CodeTable): RawCodeTable {
     return a[1].localeCompare(b[1]) // 同一字符的不同编码按编码排序
   })
   
-  // 分配行号
+  // 計算每個編碼下的 N 選位置
+  const codePositionMap = new Map<string, Map<string, number>>()
+  for (const [char, code] of charCodePairs) {
+    if (!codePositionMap.has(code)) {
+      codePositionMap.set(code, new Map())
+    }
+    const charMap = codePositionMap.get(code)!
+    if (!charMap.has(char)) {
+      charMap.set(char, charMap.size + 1)
+    }
+  }
+  
+  // 分配行号和 position
   charCodePairs.forEach(([char, code], index) => {
-    rawCodeTable.set(index, [char, code])
+    const position = codePositionMap.get(code)!.get(char)!
+    rawCodeTable.set(index, [char, code, position])
   })
   
   return rawCodeTable
@@ -2200,7 +2214,7 @@ async function exportSchemeDebugData(scheme: Scheme, schemeName: string, rawCode
     
     // 1. 导出 RawCodeTable
     const rawData: Array<{lineIndex: number, char: string, code: string}> = []
-    for (const [lineIndex, [char, code]] of rawCodeTable) {
+    for (const [lineIndex, [char, code, ]] of rawCodeTable) {
       rawData.push({ lineIndex, char, code })
     }
     
@@ -2563,7 +2577,7 @@ async function addSelectedBuiltinSchemes() {
         }
         const text = await response.text()
         
-        const { rawCodeTable } = builtinService.parseRawCodeTable(text, schemeConfig!.format)
+        const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, schemeConfig!.format)
         newScheme.rawCodeTable = rawCodeTable
         
         // 处理码表数据
@@ -2651,8 +2665,7 @@ async function handleFileUpload(event: Event, format: 'char_first' | 'code_first
     
     // 解析碼表文件，生成 RawCodeTable
     const text = await file.text()
-    const builtinService = new BuiltinCodeTableService()
-    const { rawCodeTable } = builtinService.parseRawCodeTable(text, format === 'char_first' ? 'char_first' : 'code_first')
+    const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, format === 'char_first' ? 'char_first' : 'code_first')
     
     newScheme.rawCodeTable = rawCodeTable
     
@@ -2734,7 +2747,7 @@ async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'co
         // 解析碼表文件 - 使用和主方案相同的解析函数
         const text = await file.text()
         const builtinService = new BuiltinCodeTableService()
-        const { rawCodeTable } = builtinService.parseRawCodeTable(text, format === 'char_first' ? 'char_first' : 'code_first')
+        const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, format === 'char_first' ? 'char_first' : 'code_first')
         
         newScheme.rawCodeTable = rawCodeTable
         
@@ -2793,15 +2806,41 @@ async function handleMultipleFileUpload(event: Event, format: 'char_first' | 'co
 
 // 輔助函数：將 CodeTable 轉換為 RawCodeTable（用於內建方案）
 function codeTableToRawCodeTable(codeTable: CodeTable): RawCodeTable {
-  const rawCodeTable = new Map<number, [string, string]>()
-  let lineIndex = 0
+  const rawCodeTable = new Map<number, [string, string, number]>()
   
+  // 创建字符-编码对的数组
+  const charCodePairs: Array<[string, string]> = []
   for (const [char, codes] of codeTable.entries()) {
+    // CodeTable is Map<string, string[]>, so iterate over codes array
     for (const code of codes) {
-      rawCodeTable.set(lineIndex, [char, code])
-      lineIndex++
+      charCodePairs.push([char, code])
     }
   }
+  
+  // 排序以确保稳定性
+  charCodePairs.sort((a, b) => {
+    const charCompare = a[0].localeCompare(b[0])
+    if (charCompare !== 0) return charCompare
+    return a[1].localeCompare(b[1])
+  })
+  
+  // 計算每個編碼下的 N 選位置
+  const codePositionMap = new Map<string, Map<string, number>>()
+  for (const [char, code] of charCodePairs) {
+    if (!codePositionMap.has(code)) {
+      codePositionMap.set(code, new Map())
+    }
+    const charMap = codePositionMap.get(code)!
+    if (!charMap.has(char)) {
+      charMap.set(char, charMap.size + 1)
+    }
+  }
+  
+  // 分配行号和 position
+  charCodePairs.forEach(([char, code], index) => {
+    const position = codePositionMap.get(code)!.get(char)!
+    rawCodeTable.set(index, [char, code, position])
+  })
   
   return rawCodeTable
 }
@@ -2885,7 +2924,7 @@ function reuploadScheme(scheme: Scheme) {
       const text = await file.text()
       // 默認使用 char_first 格式，與原上傳邏輯保持一致
       const builtinService = new BuiltinCodeTableService()
-      const { rawCodeTable } = builtinService.parseRawCodeTable(text, 'char_first')
+      const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, 'char_first')
       
       // 更新方案的 rawCodeTable
       scheme.rawCodeTable = rawCodeTable

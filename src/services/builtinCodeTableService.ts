@@ -335,13 +335,16 @@ export class BuiltinCodeTableService {
   }
 
   /**
-   * 解析文本为原始码表（保持行顺序）
+   * 解析碼表文本為原始碼表（保持行順序）
    */
-  parseRawCodeTable(text: string, format: CodeTableFormat): { rawCodeTable: RawCodeTable } {
+  public static parseRawCodeTable(text: string, format: CodeTableFormat): { rawCodeTable: RawCodeTable } {
     const rawCodeTable: RawCodeTable = new Map()
     const lines = text.split('\n')
     let lineIndex = 0
-
+    
+    // 第一遍：收集所有字符-編碼對
+    const tempEntries: Array<{ lineIndex: number, char: string, code: string }> = []
+    
     for (const line of lines) {
       const trimmedLine = line.trim()
       if (!trimmedLine || trimmedLine.startsWith('#') || trimmedLine.startsWith('//')) {
@@ -366,8 +369,32 @@ export class BuiltinCodeTableService {
 
       // 检查是否为单个字符
       if (Array.from(char).length === 1) {
-        rawCodeTable.set(lineIndex++, [char, code])
+        tempEntries.push({ lineIndex: lineIndex++, char, code })
       }
+    }
+    
+    // 第二遍：計算每個編碼下的 N 選位置
+    const codePositionMap = new Map<string, Map<string, number>>() // code -> char -> position
+    
+    for (const entry of tempEntries) {
+      const { code, char } = entry
+      
+      if (!codePositionMap.has(code)) {
+        codePositionMap.set(code, new Map())
+      }
+      
+      const charMap = codePositionMap.get(code)!
+      if (!charMap.has(char)) {
+        // 當前編碼下已有的字符數量 + 1 就是這個字符的位置
+        charMap.set(char, charMap.size + 1)
+      }
+    }
+    
+    // 第三遍：構建最終的 RawCodeTable，包含 N 選信息
+    for (const entry of tempEntries) {
+      const { lineIndex, char, code } = entry
+      const position = codePositionMap.get(code)!.get(char)!
+      rawCodeTable.set(lineIndex, [char, code, position])
     }
 
     return { rawCodeTable }
@@ -393,7 +420,7 @@ export class BuiltinCodeTableService {
       }
       
       const text = await response.text()
-      const { rawCodeTable } = this.parseRawCodeTable(text, table.format)
+      const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, table.format)
       
       return {
         rawCodeTable,

@@ -737,14 +737,14 @@ interface SimpleParseResult {
 // 解析码表（直接返回 RawCodeTable）
 const parseCodeTable = (text: string, format: CodeTableFormat, fileName: string): SimpleParseResult => {
   // 直接解析为 RawCodeTable
-  const { rawCodeTable } = builtinService.parseRawCodeTable(text, format)
+  const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, format)
   
   // 简单统计（不生成中间码表）
   let totalChars = 0
   let totalCodes = 0
   const charSet = new Set<string>()
   
-  for (const [lineIndex, [char, code]] of rawCodeTable) {
+  for (const [lineIndex, [char, code, ]] of rawCodeTable) {
     // 只统计单个 CJK 汉字
     if (Array.from(char).length === 1 && char.match(/[\u4e00-\u9fff]/)) {
       charSet.add(char)
