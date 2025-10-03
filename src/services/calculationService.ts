@@ -245,7 +245,7 @@ export function calculateStaticDuplicates(
   }
   
   // 爲每個字符集計算重碼
-  const charsetTypes: CharsetType[] = ['gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j']
+  const charsetTypes: CharsetType[] = ['gb2312', 'tonggui', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j']
   
   for (const charsetType of charsetTypes) {
     const charset = charsetMap.get(charsetType)

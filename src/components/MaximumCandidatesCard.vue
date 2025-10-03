@@ -200,6 +200,9 @@ const charsetInfo = {
   gb2312: {
     name: 'GB2312'
   },
+  tonggui: {
+    name: '通用規範漢字表'
+  },
   guozi: {
     name: '國字常用'
   },

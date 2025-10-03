@@ -201,13 +201,19 @@
               <td>GB2312重碼組數</td>
               <td class="metric-value">{{ analysisResults.gb2312DuplicateGroups.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.gb2312DuplicateGroups.short.toLocaleString() }}</td>
-              <td class="metric-desc">GB2312字符集中的重碼組數量</td>
+              <td class="metric-desc">GB2312字符集中的重碼組數</td>
+            </tr>
+            <tr>
+              <td>通規重碼組數</td>
+              <td class="metric-value">{{ analysisResults.tongguiDuplicateGroups.full.toLocaleString() }}</td>
+              <td class="metric-value">{{ analysisResults.tongguiDuplicateGroups.short.toLocaleString() }}</td>
+              <td class="metric-desc">通用規範漢字表字符集中的重碼組數</td>
             </tr>
             <tr>
               <td>國字重碼組數</td>
               <td class="metric-value">{{ analysisResults.guoziDuplicateGroups.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.guoziDuplicateGroups.short.toLocaleString() }}</td>
-              <td class="metric-desc">國字字符集中的重碼組數量</td>
+              <td class="metric-desc">常用國字標準字體表字符集中的重碼組數</td>
             </tr>
             <tr>
               <td>GB2312重碼字數</td>
@@ -216,10 +222,16 @@
               <td class="metric-desc">{{ analysisResults.charsetSizes.gb2312.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.gb2312?.toLocaleString() || '未知' }} 有編碼 </td>
             </tr>
             <tr>
+              <td>通規重碼字數</td>
+              <td class="metric-value">{{ analysisResults.tongguiDuplicateChars.full.toLocaleString() }}</td>
+              <td class="metric-value">{{ analysisResults.tongguiDuplicateChars.short.toLocaleString() }}</td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.tonggui.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.tonggui?.toLocaleString() || '未知' }} 有編碼 </td>
+            </tr>
+            <tr>
               <td>國字重碼字數</td>
               <td class="metric-value">{{ analysisResults.guoziDuplicateChars.full.toLocaleString() }}</td>
               <td class="metric-value">{{ analysisResults.guoziDuplicateChars.short.toLocaleString() }}</td>
-              <td class="metric-desc">國字標準字體表 {{ analysisResults.charsetSizes.guozi.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.guozi?.toLocaleString() || '未知' }} 有編碼 </td>
+              <td class="metric-desc">{{ analysisResults.charsetSizes.guozi.toLocaleString() }} 之 {{ analysisResults.charsetEncodedSizes?.guozi?.toLocaleString() || '未知' }} 有編碼 </td>
             </tr>
             <tr>
               <td>CJK基本區重碼字數</td>
@@ -393,9 +405,11 @@ interface AnalysisResults {
   dynamicDupRateGujiOriginal: DualValue
   dynamicDupRateUnifiedOriginal: DualValue
   gb2312DuplicateChars: DualValue
+  tongguiDuplicateChars: DualValue
   guoziDuplicateChars: DualValue
   guoziDuplicateGroups: DualValue
   gb2312DuplicateGroups: DualValue
+  tongguiDuplicateGroups: DualValue
   cjkBasicDuplicateChars: DualValue
   cjkToADuplicateChars: DualValue
   cjkToBDuplicateChars: DualValue
@@ -409,6 +423,7 @@ interface AnalysisResults {
   cjkToJDuplicateChars: DualValue
   charsetSizes: {
     gb2312: number
+    tonggui: number
     guozi: number
     cjkBasic: number
     cjkToA: number
@@ -424,6 +439,7 @@ interface AnalysisResults {
   }
   charsetEncodedSizes: {
     gb2312: number
+    tonggui: number
     guozi: number
     cjkBasic: number
     cjkToA: number
@@ -454,8 +470,8 @@ async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Se
   
   // 獲取理論字符集大小
   let theoreticalSize = 0
-  if (charsetType === 'gb2312' || charsetType === 'guozi') {
-    // 對於GB2312和國字，從JSON文件獲取理論大小
+  if (charsetType === 'gb2312' || charsetType === 'tonggui' || charsetType === 'guozi') {
+    // 對於GB2312、通規和國字，從JSON文件獲取理論大小
     theoreticalSize = await getTheoreticalCharsetSize(charsetType)
   } else {
     // 對於CJK區域，生成完整的理論字符集
@@ -712,6 +728,7 @@ async function calculateAllMetrics() {
     
     // 計算各字符集的重碼統計
     const gb2312Stats = await calculateCharsetDuplicates('gb2312', allChars, fullCodeTable, shortCodeTable)
+    const tongguiStats = await calculateCharsetDuplicates('tonggui', allChars, fullCodeTable, shortCodeTable)
     const guoziStats = await calculateCharsetDuplicates('guozi', allChars, fullCodeTable, shortCodeTable)
     const cjkBasicStats = await calculateCharsetDuplicates('cjk_basic', allChars, fullCodeTable, shortCodeTable)
     
@@ -764,13 +781,16 @@ async function calculateAllMetrics() {
       dynamicDupRateGujiOriginal: { full: fullDynamicDupRateGujiOriginal, short: shortDynamicDupRateGujiOriginal },
       dynamicDupRateUnifiedOriginal: { full: fullDynamicDupRateUnifiedOriginal, short: shortDynamicDupRateUnifiedOriginal },
       gb2312DuplicateChars: gb2312Stats.duplicateChars,
+      tongguiDuplicateChars: tongguiStats.duplicateChars,
       guoziDuplicateChars: guoziStats.duplicateChars,
       guoziDuplicateGroups: guoziStats.duplicateGroups,
       gb2312DuplicateGroups: gb2312Stats.duplicateGroups,
+      tongguiDuplicateGroups: tongguiStats.duplicateGroups,
       cjkBasicDuplicateChars: cjkBasicStats.duplicateChars,
       ...cjkDuplicateChars,
       charsetSizes: {
         gb2312: gb2312Stats.theoreticalSize,
+        tonggui: tongguiStats.theoreticalSize,
         guozi: guoziStats.theoreticalSize,
         cjkBasic: cjkBasicStats.theoreticalSize,
         ...cjkCharsetSizes
@@ -778,6 +798,7 @@ async function calculateAllMetrics() {
       charsetEncodedSizes: (() => {
         const result: any = {}
         result.gb2312 = gb2312Stats.encodedSize
+        result.tonggui = tongguiStats.encodedSize
         result.guozi = guoziStats.encodedSize
         result.cjkBasic = cjkBasicStats.encodedSize
         cjkExtNames.forEach(name => {
