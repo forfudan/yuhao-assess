@@ -894,6 +894,11 @@ onMounted(() => {
   letter-spacing: 0.05em;
 }
 
+.metrics-table th:first-child,
+.metrics-table td:first-child {
+  min-width: 140px;
+}
+
 .metrics-table tbody tr:hover {
   background: #f9fafb;
 }
