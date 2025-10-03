@@ -185,6 +185,15 @@
                       <small>重碼字數</small>
                     </div>
                   </th>
+                  <th class="metric-header sortable" @click="handleSort('tongguiDuplicateChars')">
+                    <div class="metric-header-content">
+                      <div class="header-title">
+                        <span>通規</span>
+                        <span class="sort-arrow">{{ getSortArrow('tongguiDuplicateChars') }}</span>
+                      </div>
+                      <small>重碼字數</small>
+                    </div>
+                  </th>
                   <th class="metric-header sortable" @click="handleSort('guoziDuplicateChars')">
                     <div class="metric-header-content">
                       <div class="header-title">
@@ -449,6 +458,15 @@
                     </div>
                     <span v-else class="metric-value">
                       {{ formatNumber(scheme.data?.static?.gb2312DuplicateChars) }}
+                    </span>
+                  </td>
+                  <td class="metric-cell">
+                    <div v-if="scheme.isCalculating" class="calculating">
+                      <div class="mini-spinner"></div>
+                      <span>計算中</span>
+                    </div>
+                    <span v-else class="metric-value">
+                      {{ formatNumber(scheme.data?.static?.tongguiDuplicateChars) }}
                     </span>
                   </td>
                   <td class="metric-cell">
@@ -916,6 +934,7 @@ interface DynamicData {
 
 interface StaticData {
   gb2312DuplicateChars: number
+  tongguiDuplicateChars: number
   guoziDuplicateChars: number
   cjkBasicDuplicateChars: number
   cjkToADuplicateChars: number
@@ -1016,7 +1035,7 @@ const tabs = [
 // 排序相關狀態
 type SortDirection = 'desc' | 'asc' | 'none'
 type DataSortColumn = 'dynamicDupRate' | 'dynamicDupRateSC' | 'dynamicDupRateTC' | 'dynamicDupRateGuji' | 'dynamicDupRateUnified' | 
-                      'gb2312DuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
+                      'gb2312DuplicateChars' | 'tongguiDuplicateChars' | 'guoziDuplicateChars' | 'cjkBasicDuplicateChars' | 
                       'cjkToBDuplicateChars' | 'cjkToJDuplicateChars' |
                       'gb2312MaxCount' | 'guoziMaxCount' | 'cjkBasicMaxCount' | 
                       'cjkToBMaxCount' | 'cjkToJMaxCount' |
@@ -1774,7 +1793,7 @@ async function preprocessCodeTableDataComplete(rawCodeTable: RawCodeTable, isPre
   // 並行生成字符集
   console.time(`生成字符集-${timerId}`)
   const charsetTypes: CharsetType[] = [
-    'gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j'
+    'gb2312', 'tonggui', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j'
   ]
   
   const charsetPromises = charsetTypes.map(async (type) => {
@@ -1931,7 +1950,7 @@ const loadCurrentUserScheme = async () => {
       
       // 生成字符集映射
       const charsetTypes: CharsetType[] = [
-        'gb2312', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j'
+        'gb2312', 'tonggui', 'guozi', 'cjk_basic', 'cjk_to_a', 'cjk_to_b', 'cjk_to_f', 'cjk_to_j'
       ]
       
       const charsetResults = await Promise.all(
@@ -2009,6 +2028,7 @@ async function calculateStaticData(scheme: Scheme): Promise<StaticData> {
   console.timeEnd(`靜態重碼計算-${scheme.name}`)
   return {
     gb2312DuplicateChars: results.gb2312DuplicateChars || 0,
+    tongguiDuplicateChars: results.tongguiDuplicateChars || 0,
     guoziDuplicateChars: results.guoziDuplicateChars || 0,
     cjkBasicDuplicateChars: results.cjk_basicDuplicateChars || 0,
     cjkToADuplicateChars: results.cjk_to_aDuplicateChars || 0,

@@ -2,6 +2,7 @@
 type CharsetRecord = {
   is_gb2312: boolean
   is_guozi: boolean
+  is_tonggui: boolean
 }
 
 type CharsetData = Record<string, CharsetRecord>
@@ -61,6 +62,11 @@ export async function isInGB2312(char: string): Promise<boolean> {
 export async function isInGuozi(char: string): Promise<boolean> {
   await loadCharsetData()
   return charsetData?.[char]?.is_guozi ?? false
+}
+
+export async function isInTonggui(char: string): Promise<boolean> {
+  await loadCharsetData()
+  return charsetData?.[char]?.is_tonggui ?? false
 }
 
 // CJK Unicode範圍檢查函數 - 單個區域
@@ -233,6 +239,7 @@ export function isInCJKToJ(char: string): boolean {
 // 字符集檢查器映射
 export const charsetCheckers = {
   'gb2312': isInGB2312,
+  'tonggui': isInTonggui,
   'guozi': isInGuozi,
   'cjk_basic': isInCJKBasic,
   'cjk_a': isInCJKA,
@@ -263,6 +270,7 @@ export type CharsetType = keyof typeof charsetCheckers
 // 字符集信息
 export const charsetInfo: Record<CharsetType, { name: string; description: string }> = {
   'gb2312': { name: 'GB2312', description: 'GB2312 簡體中文字符集' },
+  'tonggui': { name: '通用規範漢字表', description: '通用規範漢字表' },
   'guozi': { name: '常用國字', description: '常用國字標準字體表' },
   'cjk_basic': { name: 'CJK基本區', description: 'CJK統一漢字基本區 (U+4E00-U+9FFF)' },
   'cjk_a': { name: 'CJK擴展A區', description: 'CJK統一漢字擴展A區 (U+3400-U+4DBF)' },
@@ -299,6 +307,9 @@ export async function getCharsetSize(charsetType: CharsetType): Promise<number> 
       case 'gb2312':
         if (record.is_gb2312) count++
         break
+      case 'tonggui':
+        if (record.is_tonggui) count++
+        break
       case 'guozi':
         if (record.is_guozi) count++
         break
@@ -315,8 +326,9 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
   
   switch (charsetType) {
     case 'gb2312':
+    case 'tonggui':
     case 'guozi':
-      // 對於GB2312和國字，從JSON文件獲取總字符數
+      // 對於GB2312、通規和國字，從JSON文件獲取總字符數
       return await getCharsetSize(charsetType)
     
     case 'cjk_basic':
@@ -425,8 +437,8 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
 export async function generateCharset(charsetType: CharsetType, allChars: Set<string>): Promise<Set<string>> {
   const charset = new Set<string>()
   
-  // 對於 gb2312 和 guozi，直接從字符集數據中過濾
-  if (charsetType === 'gb2312' || charsetType === 'guozi') {
+  // 對於 gb2312、tonggui 和 guozi，直接從字符集數據中過濾
+  if (charsetType === 'gb2312' || charsetType === 'tonggui' || charsetType === 'guozi') {
     await loadCharsetData()
     if (!charsetData) return charset
     
@@ -434,6 +446,8 @@ export async function generateCharset(charsetType: CharsetType, allChars: Set<st
       const record = charsetData[char]
       if (record) {
         if (charsetType === 'gb2312' && record.is_gb2312) {
+          charset.add(char)
+        } else if (charsetType === 'tonggui' && record.is_tonggui) {
           charset.add(char)
         } else if (charsetType === 'guozi' && record.is_guozi) {
           charset.add(char)

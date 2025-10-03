@@ -79,6 +79,7 @@ export async function getMaximumCandidates(
 export async function getAllMaximumCandidates(codeTable: CodeTable) {
   const charsetTypes: CharsetType[] = [
     'gb2312',
+    'tonggui',
     'guozi',
     'cjk_basic',
     'cjk_to_a',
