@@ -63,6 +63,19 @@
       "tags": ["形碼", "表形碼", "定長", "四碼"],
       "isPrefix": false,
       "enabled": true
+    },
+    {
+      "key": "snow",
+      "name": "清韻輸入法",
+      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-snow.txt",
+      "format": "char_first",
+      "description": "譚淞宸製作·冰雪系列·三十鍵純形前綴碼",
+      "website": "https://ding.tansongchen.com/",
+      "category": "形碼",
+      "tags": ["形碼", "前綴碼", "四碼"],
+      "isPrefix": true,
+      "prefixKeys": ["a", "o", "e", "i", "u", "_", ";", ",", ".", "/"],
+      "enabled": true
     }
   ],
   "settings": {
