@@ -11,9 +11,20 @@
       "description": "宇浩拆分·世上首款純形前綴碼",
       "website": "https://shurufa.app/",
       "category": "形碼",
-      "tags": ["形碼", "前綴碼", "五碼"],
+      "tags": [
+        "形碼",
+        "前綴碼",
+        "五碼"
+      ],
       "isPrefix": true,
-      "prefixKeys": ["a", "o", "e", "i", "u"],
+      "prefixKeys": [
+        "a",
+        "o",
+        "e",
+        "i",
+        "u",
+        "_"
+      ],
       "enabled": true
     },
     {
@@ -24,7 +35,11 @@
       "description": "宇浩拆分·四碼定長",
       "website": "https://shurufa.app/",
       "category": "形碼",
-      "tags": ["形碼", "定長", "四碼"],
+      "tags": [
+        "形碼",
+        "定長",
+        "四碼"
+      ],
       "isPrefix": false,
       "enabled": true
     },
@@ -36,7 +51,11 @@
       "description": "宇浩拆分·四碼定長",
       "website": "https://shurufa.app/",
       "category": "形碼",
-      "tags": ["形碼", "定長", "四碼"],
+      "tags": [
+        "形碼",
+        "定長",
+        "四碼"
+      ],
       "isPrefix": false,
       "enabled": true
     },
@@ -48,8 +67,36 @@
       "description": "宇浩拆分·四碼定長",
       "website": "https://shurufa.app/",
       "category": "形碼",
-      "tags": ["形碼", "定長", "四碼"],
+      "tags": [
+        "形碼",
+        "定長",
+        "四碼"
+      ],
       "isPrefix": false,
+      "enabled": true
+    },
+    {
+      "key": "yuhao-ling",
+      "name": "靈明輸入法",
+      "url": "https://raw.githubusercontent.com/forfudan/yu/ling/src/public/mabiao-ling.txt",
+      "format": "code_first",
+      "description": "",
+      "website": "",
+      "category": "形碼",
+      "tags": [
+        "形碼",
+        "前綴碼",
+        "四碼"
+      ],
+      "isPrefix": true,
+      "prefixKeys": [
+        "a",
+        "o",
+        "e",
+        "i",
+        "u",
+        "_"
+      ],
       "enabled": true
     },
     {
@@ -60,7 +107,12 @@
       "description": "宋天製作·表形碼·四碼定長",
       "website": "http://soongsky.com/sky/",
       "category": "形碼",
-      "tags": ["形碼", "表形碼", "定長", "四碼"],
+      "tags": [
+        "形碼",
+        "表形碼",
+        "定長",
+        "四碼"
+      ],
       "isPrefix": false,
       "enabled": true
     },
@@ -72,9 +124,40 @@
       "description": "譚淞宸製作·冰雪系列·三十鍵純形前綴碼",
       "website": "https://ding.tansongchen.com/",
       "category": "形碼",
-      "tags": ["形碼", "前綴碼", "四碼"],
+      "tags": [
+        "形碼",
+        "前綴碼",
+        "四碼"
+      ],
       "isPrefix": true,
-      "prefixKeys": ["a", "o", "e", "i", "u", "_", ";", ",", ".", "/"],
+      "prefixKeys": [
+        "a",
+        "o",
+        "e",
+        "i",
+        "u",
+        "_",
+        ";",
+        ",",
+        ".",
+        "/"
+      ],
+      "enabled": true
+    },
+    {
+      "key": "xuma",
+      "name": "徐碼輸入法",
+      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-xuma.txt",
+      "format": "char_first",
+      "description": "徐國銀製作·四碼定長",
+      "website": "http://xumax.cn/",
+      "category": "形碼",
+      "tags": [
+        "形碼",
+        "定長",
+        "四碼"
+      ],
+      "isPrefix": false,
       "enabled": true
     }
   ],
