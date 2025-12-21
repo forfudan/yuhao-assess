@@ -48,42 +48,42 @@
           <tbody>
             <tr>
               <td>知乎簡體字頻</td>
-              <td class="metric-value">{{ analysisResults.zhihuEquiv.toFixed(4) }}</td>
-              <td class="metric-value first-short-equiv">{{ analysisResults.zhihuFirstShortEquiv.toFixed(4) }}</td>
-              <td class="metric-value second-short-equiv">{{ analysisResults.zhihuSecondShortEquiv.toFixed(4) }}</td>
-              <td class="metric-value short-equiv">{{ analysisResults.zhihuShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value clickable" @click="() => showEquivDetails('zhihu', 'full')">{{ analysisResults.zhihuEquiv.toFixed(4) }}</td>
+              <td class="metric-value first-short-equiv clickable" @click="() => showEquivDetails('zhihu', 'firstShort')">{{ analysisResults.zhihuFirstShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value second-short-equiv clickable" @click="() => showEquivDetails('zhihu', 'secondShort')">{{ analysisResults.zhihuSecondShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value short-equiv clickable" @click="() => showEquivDetails('zhihu', 'short')">{{ analysisResults.zhihuShortEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於<a href="https://github.com/forfudan/chinese-characters-frequency" target="_blank" rel="noopener">知乎字頻表</a>的加權速度當量</td>
             </tr>
             <tr>
               <td>北語簡體字頻</td>
-              <td class="metric-value">{{ analysisResults.scEquiv.toFixed(4) }}</td>
-              <td class="metric-value first-short-equiv">{{ analysisResults.scFirstShortEquiv.toFixed(4) }}</td>
-              <td class="metric-value second-short-equiv">{{ analysisResults.scSecondShortEquiv.toFixed(4) }}</td>
-              <td class="metric-value short-equiv">{{ analysisResults.scShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value clickable" @click="() => showEquivDetails('sc', 'full')">{{ analysisResults.scEquiv.toFixed(4) }}</td>
+              <td class="metric-value first-short-equiv clickable" @click="() => showEquivDetails('sc', 'firstShort')">{{ analysisResults.scFirstShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value second-short-equiv clickable" @click="() => showEquivDetails('sc', 'secondShort')">{{ analysisResults.scSecondShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value short-equiv clickable" @click="() => showEquivDetails('sc', 'short')">{{ analysisResults.scShortEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於<a href="https://faculty.blcu.edu.cn/xinghb/zh_CN/article/167473/content/1437.htm" target="_blank" rel="noopener">簡體字頻表</a>的加權速度當量</td>
             </tr>
             <tr>
               <td>臺標繁體字頻</td>
-              <td class="metric-value">{{ analysisResults.tcEquiv.toFixed(4) }}</td>
-              <td class="metric-value first-short-equiv">{{ analysisResults.tcFirstShortEquiv.toFixed(4) }}</td>
-              <td class="metric-value second-short-equiv">{{ analysisResults.tcSecondShortEquiv.toFixed(4) }}</td>
-              <td class="metric-value short-equiv">{{ analysisResults.tcShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value clickable" @click="() => showEquivDetails('tc', 'full')">{{ analysisResults.tcEquiv.toFixed(4) }}</td>
+              <td class="metric-value first-short-equiv clickable" @click="() => showEquivDetails('tc', 'firstShort')">{{ analysisResults.tcFirstShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value second-short-equiv clickable" @click="() => showEquivDetails('tc', 'secondShort')">{{ analysisResults.tcSecondShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value short-equiv clickable" @click="() => showEquivDetails('tc', 'short')">{{ analysisResults.tcShortEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於<a href="https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PIN/biau1.htm" target="_blank" rel="noopener">臺標繁體字頻表</a>的加權速度當量</td>
             </tr>
             <tr>
               <td>古籍繁體字頻</td>
-              <td class="metric-value">{{ analysisResults.gujiEquiv.toFixed(4) }}</td>
-              <td class="metric-value first-short-equiv">{{ analysisResults.gujiFirstShortEquiv.toFixed(4) }}</td>
-              <td class="metric-value second-short-equiv">{{ analysisResults.gujiSecondShortEquiv.toFixed(4) }}</td>
-              <td class="metric-value short-equiv">{{ analysisResults.gujiShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value clickable" @click="() => showEquivDetails('guji', 'full')">{{ analysisResults.gujiEquiv.toFixed(4) }}</td>
+              <td class="metric-value first-short-equiv clickable" @click="() => showEquivDetails('guji', 'firstShort')">{{ analysisResults.gujiFirstShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value second-short-equiv clickable" @click="() => showEquivDetails('guji', 'secondShort')">{{ analysisResults.gujiSecondShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value short-equiv clickable" @click="() => showEquivDetails('guji', 'short')">{{ analysisResults.gujiShortEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於古籍字頻的加權速度當量</td>
             </tr>
             <tr>
               <td>繁簡聯合字頻</td>
-              <td class="metric-value">{{ analysisResults.unifiedEquiv.toFixed(4) }}</td>
-              <td class="metric-value first-short-equiv">{{ analysisResults.unifiedFirstShortEquiv.toFixed(4) }}</td>
-              <td class="metric-value second-short-equiv">{{ analysisResults.unifiedSecondShortEquiv.toFixed(4) }}</td>
-              <td class="metric-value short-equiv">{{ analysisResults.unifiedShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value clickable" @click="() => showEquivDetails('unified', 'full')">{{ analysisResults.unifiedEquiv.toFixed(4) }}</td>
+              <td class="metric-value first-short-equiv clickable" @click="() => showEquivDetails('unified', 'firstShort')">{{ analysisResults.unifiedFirstShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value second-short-equiv clickable" @click="() => showEquivDetails('unified', 'secondShort')">{{ analysisResults.unifiedSecondShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value short-equiv clickable" @click="() => showEquivDetails('unified', 'short')">{{ analysisResults.unifiedShortEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於繁簡聯合字頻表的加權速度當量</td>
             </tr>
           </tbody>
@@ -108,6 +108,8 @@
             <li v-else>前綴碼特性，未達到最大碼長時且末碼爲上屏碼時不補充下劃線（空格）</li>
             <li>多候選字的選擇鍵處理（第2候選加分號，第3候選加單引號）</li>
           </ul>
+          <br></br>
+          <p>💡點擊表格中的當量數值，可查看具體按鍵組合的頻率分布。</p>
         </div>
         
         <!-- 方案名稱標註 -->
@@ -117,6 +119,49 @@
       </div>
     </div>
   </div>
+  
+  <!-- 當量詳情模態框 - 使用 Teleport 傳送到 body -->
+  <Teleport to="body">
+    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ modalTitle }}</h3>
+          <button class="modal-close" @click="closeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="isCalculatingDetails" class="modal-loading">
+            <div class="spinner"></div>
+            <p>正在計算當量分布...</p>
+          </div>
+          <div v-else-if="equivDetails.length > 0" class="details-table-wrapper">
+            <table class="details-table">
+              <thead>
+                <tr>
+                  <th>當量值</th>
+                  <th>按鍵組合</th>
+                  <th>説明</th>
+                  <th>頻率</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in equivDetails" :key="item.equivValue">
+                  <td class="equiv-value">{{ item.equivValue.toFixed(1) }}</td>
+                  <td class="key-pairs">
+                    <span v-for="(pair, idx) in item.keyPairs" :key="idx" class="key-pair">{{ pair }}</span>
+                  </td>
+                  <td class="description">{{ item.description }}</td>
+                  <td class="frequency">{{ formatFrequency(item.frequencyRatio) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="no-data">
+            <p>無數據</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -129,7 +174,9 @@ import { codeTableProcessingService } from '../services/codeTableProcessingServi
 import { loadAllCharFrequencies } from '../services/dataService'
 import {
   calculateSpeedEquiv,
-  calculateCodePairFrequencies 
+  calculateCodePairFrequencies,
+  calculateEquivDistribution,
+  type EquivDistributionItem
 } from '../services/speedAnalysisService'
 
 // Props
@@ -213,6 +260,102 @@ const maxCodeLength = ref<number>(0)
 const detectedIsPrefix = ref(false)
 const builtinService = new BuiltinCodeTableService()
 
+// 模態框相關
+const showModal = ref(false)
+const modalTitle = ref('')
+const isCalculatingDetails = ref(false)
+const equivDetails = ref<EquivDistributionItem[]>([])
+
+// 存儲計算過程中的數據，用於詳情彈窗
+let cachedPairFrequencies: Record<string, Record<string, number>> = {}
+let cachedEquivTable: Record<string, number> = {}
+
+// 格式化頻率顯示（百分比）
+function formatFrequency(ratio: number): string {
+  return (ratio * 100).toFixed(2) + '%'
+}
+
+// 顯示當量詳情
+async function showEquivDetails(freqType: string, codeType: string) {
+  if (!props.processedTables) return
+  
+  showModal.value = true
+  isCalculatingDetails.value = true
+  
+  // 設置標題
+  const freqNames: Record<string, string> = {
+    zhihu: '知乎簡體字頻',
+    sc: '北語簡體字頻',
+    tc: '臺標繁體字頻',
+    guji: '古籍繁體字頻',
+    unified: '繁簡聯合字頻'
+  }
+  
+  const codeNames: Record<string, string> = {
+    full: '全碼',
+    firstShort: '一簡',
+    secondShort: '二簡',
+    short: '全簡'
+  }
+  
+  modalTitle.value = `${freqNames[freqType]} - ${codeNames[codeType]}當量分布`
+  
+  try {
+    // 獲取對應的碼表
+    let codeTable: CodeTable
+    if (codeType === 'full') {
+      codeTable = props.processedTables.fullWithSelection
+    } else if (codeType === 'short') {
+      codeTable = props.processedTables.shortWithSelection
+    } else if (codeType === 'firstShort') {
+      codeTable = generateFirstShortCodeTable(
+        props.processedTables.shortWithSelection,
+        props.processedTables.fullWithSelection,
+        props.globalPrefixKeys
+      )
+    } else { // secondShort
+      codeTable = generateSecondShortCodeTable(
+        props.processedTables.shortWithSelection,
+        props.processedTables.fullWithSelection,
+        props.globalPrefixKeys
+      )
+    }
+    
+    // 加載字頻和當量表
+    const { zhihuFreq, scFreq, tcFreq, gujiFreq, unifiedFreq } = await loadAllCharFrequencies()
+    const freqMap: Record<string, Record<string, number>> = {
+      zhihu: zhihuFreq,
+      sc: scFreq,
+      tc: tcFreq,
+      guji: gujiFreq,
+      unified: unifiedFreq
+    }
+    
+    const charFrequency = freqMap[freqType]
+    const equivTable = cachedEquivTable && Object.keys(cachedEquivTable).length > 0 
+      ? cachedEquivTable 
+      : await loadEquivTable()
+    
+    // 計算碼對頻率
+    const pairFrequencies = calculateCodePairFrequencies(codeTable, charFrequency)
+    
+    // 計算分檔詳情
+    equivDetails.value = calculateEquivDistribution(pairFrequencies, equivTable)
+    
+  } catch (err) {
+    console.error('計算當量詳情失敗:', err)
+    equivDetails.value = []
+  } finally {
+    isCalculatingDetails.value = false
+  }
+}
+
+// 關閉模態框
+function closeModal() {
+  showModal.value = false
+  equivDetails.value = []
+}
+
 // 加載當量表
 async function loadEquivTable(): Promise<Record<string, number>> {
   try {
@@ -221,7 +364,8 @@ async function loadEquivTable(): Promise<Record<string, number>> {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     const data = await response.json()
-    return data.data || {}
+    cachedEquivTable = data.data || {}
+    return cachedEquivTable
   } catch (error) {
     console.error('加載當量表失敗:', error)
     throw new Error('加載當量表失敗')
@@ -582,6 +726,19 @@ onMounted(async () => {
   font-feature-settings: "tnum" 0; /* 禁用表格數字，使用比例數字 */
 }
 
+.metric-value.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin: -4px -8px;
+}
+
+.metric-value.clickable:hover {
+  background: rgba(5, 150, 105, 0.1);
+  transform: scale(1.05);
+}
+
 .metric-value.first-short-equiv {
   color: #7c3aed; /* 一級簡碼速度當量使用紫色 */
 }
@@ -680,6 +837,250 @@ onMounted(async () => {
 }
 
 [data-theme="dark"] .scheme-name span {
+  color: var(--color-text-secondary);
+}
+
+/* 模態框樣式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999; /* 極高的z-index值確保在最上層 */
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #9ca3af;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.details-table-wrapper {
+  overflow-x: auto;
+}
+
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.details-table th {
+  background: #f8fafc;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+}
+
+.details-table td {
+  padding: 12px 16px;
+  vertical-align: middle;
+}
+
+.details-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.details-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.details-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.equiv-value {
+  font-weight: 600;
+  color: #059669;
+  font-family: var(--font-numeric);
+  white-space: nowrap;
+}
+
+.key-pairs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.key-pair {
+  display: inline-block;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: #374151;
+}
+
+.more-pairs {
+  color: #6b7280;
+  font-style: italic;
+  font-size: 0.85rem;
+  align-self: center;
+}
+
+.frequency {
+  font-weight: 600;
+  color: #3b82f6;
+  font-family: var(--font-numeric);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.description {
+  color: #6b7280;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  min-width: 150px;
+  white-space: normal;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+}
+
+/* 暗黑模式的模態框樣式 */
+[data-theme="dark"] .modal-content {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+}
+
+[data-theme="dark"] .modal-header {
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .modal-header h3 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .modal-close {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .modal-close:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .modal-loading {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .details-table th {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .details-table td {
+  border-bottom-color: var(--color-border-secondary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .details-table tbody tr:hover {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .key-pair {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .no-data {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .description {
   color: var(--color-text-secondary);
 }
 </style>
