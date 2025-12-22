@@ -155,7 +155,7 @@ function generateEquivDescription(equivValue: number, keyPairs: string[]): strin
   } else if (equivValue >= 2.0) {
     return '多為單手相連二指大跨排'
   } else if (equivValue >= 1.9) {
-    return '多為單手小跨排、或含小指組合'
+    return '多為單手大小跨排、或同手含小指組合'
   } else if (equivValue >= 1.8) {
     return '多為食指跨排、或單手相鄰跨排'
   } else if (equivValue >= 1.7) {
