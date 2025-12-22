@@ -1216,8 +1216,14 @@ const allSchemes = computed(() => {
       
       // 根據列名判斷是動態還是靜態數據
       if (['dynamicDupRate', 'dynamicDupRateSC', 'dynamicDupRateTC', 'dynamicDupRateGuji', 'dynamicDupRateUnified'].includes(column)) {
-        aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
-        bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
+        // 根據當前 Tab 選擇正確的數據源
+        if (activeTab.value === 'dynamicOriginal') {
+          aValue = a.data?.dynamicOriginal?.[column as keyof DynamicData] ?? 0
+          bValue = b.data?.dynamicOriginal?.[column as keyof DynamicData] ?? 0
+        } else {
+          aValue = a.data?.dynamic?.[column as keyof DynamicData] ?? 0
+          bValue = b.data?.dynamic?.[column as keyof DynamicData] ?? 0
+        }
       } else if (['gb2312MaxCount', 'guoziMaxCount', 'cjkBasicMaxCount', 'cjkToBMaxCount', 'cjkToJMaxCount'].includes(column)) {
         aValue = a.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
         bValue = b.data?.maxCandidates?.[column as keyof MaxCandidatesData] ?? 0
