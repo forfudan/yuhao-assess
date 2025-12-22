@@ -352,7 +352,8 @@
             <table class="details-table">
               <thead>
                 <tr>
-                  <th class="col-rank">排序</th>
+                  <th class="col-index">#</th>
+                  <th class="col-rank">字頻序數</th>
                   <th class="col-char">重碼字</th>
                   <th class="col-code">編碼</th>
                   <th class="col-freq">字頻</th>
@@ -361,6 +362,7 @@
               </thead>
               <tbody>
                 <tr v-for="(item, idx) in duplicateDetails" :key="idx">
+                  <td class="index-display">{{ idx + 1 }}</td>
                   <td class="rank-display">{{ item.rank }}</td>
                   <td class="duplicate-char">{{ item.char }}</td>
                   <td class="code-display">{{ item.code }}</td>
@@ -593,10 +595,11 @@ function exportToCSV() {
   if (duplicateDetails.value.length === 0) return
   
   // CSV 標題行
-  const headers = ['排序', '重碼字', '編碼', '字頻', '該編碼上的字符（字頻降序）']
+  const headers = ['#', '字頻序數', '重碼字', '編碼', '字頻', '該編碼上的字符（字頻降序）']
   
   // CSV 數據行
-  const rows = duplicateDetails.value.map(item => [
+  const rows = duplicateDetails.value.map((item, idx) => [
+    (idx + 1).toString(),
     item.rank.toString(),
     item.char,
     item.code,
@@ -1410,6 +1413,10 @@ onMounted(() => {
 }
 
 /* 列宽控制 */
+.col-index {
+  width: 50px;
+}
+
 .col-rank {
   width: 60px;
 }
@@ -1437,6 +1444,15 @@ onMounted(() => {
 
 .details-table tbody tr:hover {
   background: #f9fafb;
+}
+
+.index-display {
+  font-family: var(--font-numeric);
+  font-weight: 500;
+  color: #9ca3af;
+  text-align: left;
+  white-space: nowrap;
+  font-size: 0.85rem;
 }
 
 .rank-display {
@@ -1547,6 +1563,10 @@ onMounted(() => {
 
 [data-theme="dark"] .details-table tbody tr:hover {
   background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .index-display {
+  color: var(--color-text-tertiary);
 }
 
 [data-theme="dark"] .rank-display {
