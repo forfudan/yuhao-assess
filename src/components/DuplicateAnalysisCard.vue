@@ -58,8 +58,8 @@
                   ⓘ
                 </span>
               </td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRate.full * 10000).toFixed(2) }}‱</td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRate.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('zhihu', 'full')">{{ (analysisResults.dynamicDupRate.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('zhihu', 'short')">{{ (analysisResults.dynamicDupRate.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於<a href="https://github.com/forfudan/chinese-characters-frequency" target="_blank" rel="noopener">知乎字頻表</a>的加權選重率，‱ 爲萬分符</td>
             </tr>
             <tr>
@@ -73,8 +73,8 @@
                   ⓘ
                 </span>
               </td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateSC.full * 10000).toFixed(2) }}‱</td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateSC.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('sc', 'full')">{{ (analysisResults.dynamicDupRateSC.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('sc', 'short')">{{ (analysisResults.dynamicDupRateSC.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於北京語言大學邢紅兵<a href="https://faculty.blcu.edu.cn/xinghb/zh_CN/article/167473/content/1437.htm" target="_blank" rel="noopener">簡體字頻表</a>的加權選重率</td>
             </tr>
             <tr>
@@ -88,8 +88,8 @@
                   ⓘ
                 </span>
               </td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateTC.full * 10000).toFixed(2) }}‱</td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateTC.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('tc', 'full')">{{ (analysisResults.dynamicDupRateTC.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('tc', 'short')">{{ (analysisResults.dynamicDupRateTC.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於<a href="https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PIN/biau1.htm" target="_blank" rel="noopener">臺灣繁體字頻表</a>的加權選重率</td>
             </tr>
             <tr>
@@ -103,8 +103,8 @@
                   ⓘ
                 </span>
               </td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateGuji.full * 10000).toFixed(2) }}‱</td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateGuji.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('guji', 'full')">{{ (analysisResults.dynamicDupRateGuji.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('guji', 'short')">{{ (analysisResults.dynamicDupRateGuji.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於史書（史記、漢書、後漢書、三國志等）字頻的加權選重率</td>
             </tr>
             <tr>
@@ -118,8 +118,8 @@
                   ⓘ
                 </span>
               </td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateUnified.full * 10000).toFixed(2) }}‱</td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateUnified.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('unified', 'full')">{{ (analysisResults.dynamicDupRateUnified.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('unified', 'short')">{{ (analysisResults.dynamicDupRateUnified.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於繁簡聯合字頻表（北語字頻+臺標字頻）的加權選重率</td>
             </tr>
             <tr>
@@ -133,8 +133,8 @@
                   ⓘ
                 </span>
               </td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateOriginal.full * 10000).toFixed(2) }}‱</td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateOriginal.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('zhihu', 'full', false)">{{ (analysisResults.dynamicDupRateOriginal.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('zhihu', 'short', false)">{{ (analysisResults.dynamicDupRateOriginal.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於知乎字頻，保持碼表原始排序的加權選重率</td>
             </tr>
             <tr>
@@ -148,8 +148,8 @@
                   ⓘ
                 </span>
               </td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateSCOriginal.full * 10000).toFixed(2) }}‱</td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateSCOriginal.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('sc', 'full', false)">{{ (analysisResults.dynamicDupRateSCOriginal.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('sc', 'short', false)">{{ (analysisResults.dynamicDupRateSCOriginal.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於北語字頻，保持碼表原始排序的加權選重率</td>
             </tr>
             <tr>
@@ -163,8 +163,8 @@
                   ⓘ
                 </span>
               </td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateTCOriginal.full * 10000).toFixed(2) }}‱</td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateTCOriginal.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('tc', 'full', false)">{{ (analysisResults.dynamicDupRateTCOriginal.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('tc', 'short', false)">{{ (analysisResults.dynamicDupRateTCOriginal.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於臺標字頻，保持碼表原始排序的加權選重率</td>
             </tr>
             <tr>
@@ -178,8 +178,8 @@
                   ⓘ
                 </span>
               </td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateGujiOriginal.full * 10000).toFixed(2) }}‱</td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateGujiOriginal.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('guji', 'full', false)">{{ (analysisResults.dynamicDupRateGujiOriginal.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('guji', 'short', false)">{{ (analysisResults.dynamicDupRateGujiOriginal.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於古籍字頻，保持碼表原始排序的加權選重率</td>
             </tr>
             <tr>
@@ -193,8 +193,8 @@
                   ⓘ
                 </span>
               </td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateUnifiedOriginal.full * 10000).toFixed(2) }}‱</td>
-              <td class="metric-value">{{ (analysisResults.dynamicDupRateUnifiedOriginal.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('unified', 'full', false)">{{ (analysisResults.dynamicDupRateUnifiedOriginal.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('unified', 'short', false)">{{ (analysisResults.dynamicDupRateUnifiedOriginal.short * 10000).toFixed(2) }}‱</td>
               <td class="metric-desc">基於繁簡聯合字頻表（北語字頻+臺標字頻），保持碼表原始排序的加權選重率</td>
             </tr>
             <tr>
@@ -301,6 +301,10 @@
             </tr>
           </tbody>
         </table>
+        
+        <div class="info-section">
+          <p>💡<strong>提示：</strong>點擊動態選重率的數值，可查看具體需要選重的字符及其編碼詳情。</p>
+        </div>
       </div>
 
       <div v-else class="empty-state">
@@ -322,12 +326,70 @@
       </div>
     </div>
   </Teleport>
+
+  <!-- 重碼詳情模態框 - 使用 Teleport 傳送到 body -->
+  <Teleport to="body">
+    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ modalTitle }}</h3>
+          <div class="modal-header-actions">
+            <button @click="exportToCSV" class="export-csv-btn" :disabled="duplicateDetails.length === 0" title="導出CVS">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+              </svg>
+              導出CVS
+            </button>
+            <button class="modal-close" @click="closeModal">&times;</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div v-if="isCalculatingDetails" class="modal-loading">
+            <div class="spinner"></div>
+            <p>正在計算重碼詳情...</p>
+          </div>
+          <div v-else-if="duplicateDetails.length > 0" class="details-table-wrapper">
+            <table class="details-table">
+              <thead>
+                <tr>
+                  <th class="col-rank">排序</th>
+                  <th class="col-char">重碼字</th>
+                  <th class="col-code">編碼</th>
+                  <th class="col-freq">字頻</th>
+                  <th class="col-chars">該編碼上的字符（字頻降序）</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, idx) in duplicateDetails" :key="idx">
+                  <td class="rank-display">{{ item.rank }}</td>
+                  <td class="duplicate-char">{{ item.char }}</td>
+                  <td class="code-display">{{ item.code }}</td>
+                  <td class="frequency">{{ (item.frequency / 1_000_000_000 * 10_000).toFixed(4) }}‱</td>
+                  <td class="chars-on-code">
+                    <span v-for="(char, i) in item.allCharsOnCode" :key="i" class="char-badge">{{ char }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="no-data">
+            <p>無重碼數據</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch, Teleport } from 'vue'
 import { generateCharset, type CharsetType, getTheoreticalCharsetSize } from '../services/charsetService'
-import { getDynamicDupRate, getDynamicDupRateFromOriginalOrder } from '../services/duplicateAnalysisService'
+import { 
+  getDynamicDupRate, 
+  getDynamicDupRateFromOriginalOrder,
+  getNonFirstDuplicateDetails,
+  type NonFirstDuplicateDetail
+} from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
 import { 
@@ -462,6 +524,105 @@ const builtinService = new BuiltinCodeTableService()
 
 // 工具提示管理器
 const { tooltipVisible, tooltipText, tooltipStyle, showTooltip, hideTooltip } = createTooltipManager()
+
+// 模態框相關
+const showModal = ref(false)
+const modalTitle = ref('')
+const isCalculatingDetails = ref(false)
+const duplicateDetails = ref<NonFirstDuplicateDetail[]>([])
+
+// 顯示重碼詳情
+async function showDuplicateDetails(freqType: string, codeType: 'full' | 'short', sortByFrequency: boolean = true) {
+  const processedTables = codeTableProcessingService.getProcessedTables()
+  if (!processedTables) return
+  
+  showModal.value = true
+  isCalculatingDetails.value = true
+  
+  // 設置標題
+  const freqNames: Record<string, string> = {
+    zhihu: '知乎簡體字頻',
+    sc: '北語簡體字頻',
+    tc: '臺標繁體字頻',
+    guji: '古籍繁體字頻',
+    unified: '繁簡聯合字頻'
+  }
+  
+  const codeNames: Record<string, string> = {
+    full: '全碼',
+    short: '出簡'
+  }
+  
+  const sortInfo = sortByFrequency ? '按字頻排序' : '保持原序'
+  modalTitle.value = `${freqNames[freqType]}·${codeNames[codeType]}·${sortInfo}`
+  
+  try {
+    // 獲取對應的碼表
+    const codeTable = codeType === 'full' ? processedTables.full : processedTables.short
+    
+    // 加載字頻
+    const freqMap: Record<string, () => Promise<CharFrequency>> = {
+      zhihu: loadCharFrequency,
+      sc: loadCharFrequencySC,
+      tc: loadCharFrequencyTC,
+      guji: loadCharFrequencyGuji,
+      unified: loadCharFrequencyUnified
+    }
+    
+    const charFrequency = await freqMap[freqType]()
+    
+    // 計算重碼詳情
+    duplicateDetails.value = getNonFirstDuplicateDetails(codeTable, charFrequency, sortByFrequency)
+    
+  } catch (err) {
+    console.error('計算重碼詳情失敗:', err)
+    duplicateDetails.value = []
+  } finally {
+    isCalculatingDetails.value = false
+  }
+}
+
+// 關閉模態框
+function closeModal() {
+  showModal.value = false
+  duplicateDetails.value = []
+}
+
+// 導出CSV
+function exportToCSV() {
+  if (duplicateDetails.value.length === 0) return
+  
+  // CSV 標題行
+  const headers = ['排序', '重碼字', '編碼', '字頻', '該編碼上的字符（字頻降序）']
+  
+  // CSV 數據行
+  const rows = duplicateDetails.value.map(item => [
+    item.rank.toString(),
+    item.char,
+    item.code,
+    `${(item.frequency / 1_000_000_000 * 10_000).toFixed(2)}‱`,
+    item.allCharsOnCode.join(' ')
+  ])
+  
+  // 組合成 CSV 格式
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+  ].join('\n')
+  
+  // 創建 Blob 並下載
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  
+  link.setAttribute('href', url)
+  link.setAttribute('download', `${props.codeTableName || '未命名方案'}_重碼詳情_${modalTitle.value}.csv`)
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
 
 // 計算字符集的重碼字符數和重碼組數（支持雙碼表）
 async function calculateCharsetDuplicates(charsetType: CharsetType, allChars: Set<string>, fullCodeTable: CodeTable, shortCodeTable: CodeTable) {
@@ -945,6 +1106,36 @@ onMounted(() => {
   font-size: 1.1rem;
 }
 
+.info-section {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  line-height: 1.6;
+}
+
+.info-section p {
+  margin: 8px 0;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.info-section ul {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.info-section li {
+  margin: 4px 0;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.info-section strong {
+  font-weight: 600;
+  color: #1f2937;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .controls {
@@ -1041,12 +1232,337 @@ onMounted(() => {
   color: var(--color-text-secondary);
 }
 
+[data-theme="dark"] .info-section {
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-primary);
+}
+
+[data-theme="dark"] .info-section p {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .info-section li {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .info-section strong {
+  color: var(--color-text-primary);
+}
+
 [data-theme="dark"] .scheme-name {
   background: var(--color-bg-tertiary);
   border: 1px solid var(--color-border-primary);
 }
 
 [data-theme="dark"] .scheme-name span {
+  color: var(--color-text-secondary);
+}
+
+/* 可點擊的數值樣式 */
+.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable:hover {
+  background: rgba(102, 126, 234, 0.1);
+  transform: scale(1.05);
+}
+
+/* 模態框樣式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 900px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.export-csv-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.export-csv-btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.export-csv-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.export-csv-btn svg {
+  flex-shrink: 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #9ca3af;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.details-table-wrapper {
+  overflow-x: auto;
+}
+
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.details-table th {
+  background: #f8fafc;
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.details-table td {
+  padding: 6px 10px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.875rem;
+}
+
+/* 列宽控制 */
+.col-rank {
+  width: 60px;
+}
+
+.col-char {
+  width: 70px;
+}
+
+.col-code {
+  width: 100px;
+}
+
+.col-freq {
+  width: 90px;
+}
+
+.col-chars {
+  width: auto;
+  min-width: 200px;
+}
+
+.details-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.details-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.rank-display {
+  font-family: var(--font-numeric);
+  font-weight: 600;
+  color: #6b7280;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.details-table .duplicate-char {
+  font-size: 1.5rem !important;
+  font-weight: 600;
+  color: #1f2937;
+  text-align: left;
+  line-height: 1.2;
+}
+
+.code-display {
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #059669;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.frequency {
+  font-weight: 600;
+  color: #3b82f6;
+  font-family: var(--font-numeric);
+  white-space: nowrap;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.chars-on-code {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.char-badge {
+  display: inline-block;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 1rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+}
+
+/* 暗黑模式的模態框樣式 */
+[data-theme="dark"] .modal-content {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+}
+
+[data-theme="dark"] .modal-header {
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .modal-header h3 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .modal-close {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .modal-close:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .export-csv-btn {
+  background: #3b82f6;
+}
+
+[data-theme="dark"] .export-csv-btn:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+[data-theme="dark"] .export-csv-btn:disabled {
+  background: #4b5563;
+}
+
+[data-theme="dark"] .modal-loading {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .details-table th {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .details-table td {
+  border-bottom-color: var(--color-border-secondary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .details-table tbody tr:hover {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .rank-display {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .details-table .duplicate-char {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .char-badge {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .no-data {
   color: var(--color-text-secondary);
 }
 </style>

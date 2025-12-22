@@ -135,6 +135,86 @@ export interface DuplicateStats {
 }
 
 /**
+ * 非一選重碼字的詳細信息
+ */
+export interface NonFirstDuplicateDetail {
+  char: string              // 非一選的重碼字
+  code: string              // 對應的編碼
+  frequency: number         // 該字的字頻
+  rank: number              // 該字在字頻表中的排名（字頻降序）
+  allCharsOnCode: string[]  // 該編碼上的所有字符（按字頻降序）
+}
+
+/**
+ * 獲取非一選重碼字的詳細信息
+ * @param codeTable 碼表（每個字符對應唯一編碼）
+ * @param charFrequency 字頻數據
+ * @param sortByFrequency 是否按字頻重新排序（true表示按字頻排序，false表示保持碼表原始順序）
+ * @returns 非一選重碼字的詳細信息列表，按字頻降序排列
+ */
+export function getNonFirstDuplicateDetails(
+  codeTable: CodeTable,
+  charFrequency: CharFrequency,
+  sortByFrequency: boolean = true
+): NonFirstDuplicateDetail[] {
+  const codeToCharFreqs = new Map<string, Array<{ char: string; freq: number }>>()
+  
+  // 按編碼分組字符，只保留在字頻表中存在的字符
+  for (const [char, codes] of codeTable.entries()) {
+    const code = codes[0]
+    if (code) {
+      const freq = charFrequency[char]
+      // 只保留字頻表中存在的字符
+      if (freq !== undefined && freq > 0) {
+        if (!codeToCharFreqs.has(code)) {
+          codeToCharFreqs.set(code, [])
+        }
+        codeToCharFreqs.get(code)!.push({ char, freq })
+      }
+    }
+  }
+  
+  // 創建字頻排名映射
+  const allCharsWithFreq = Object.entries(charFrequency)
+    .filter(([_, freq]) => freq > 0)
+    .sort(([_, freqA], [__, freqB]) => freqB - freqA)
+  const charRankMap = new Map<string, number>()
+  allCharsWithFreq.forEach(([char, _], index) => {
+    charRankMap.set(char, index + 1)
+  })
+  
+  const results: NonFirstDuplicateDetail[] = []
+  
+  for (const [code, charFreqs] of codeToCharFreqs.entries()) {
+    if (charFreqs.length > 1) {
+      // 排序：按字頻降序
+      if (sortByFrequency) {
+        charFreqs.sort((a, b) => b.freq - a.freq)
+      }
+      
+      // 獲取該編碼上所有字符
+      const allCharsOnCode = charFreqs.map(item => item.char)
+      
+      // 添加非一選的字符（跳過第一個）
+      for (let i = 1; i < charFreqs.length; i++) {
+        results.push({
+          char: charFreqs[i].char,
+          code: code,
+          frequency: charFreqs[i].freq,
+          rank: charRankMap.get(charFreqs[i].char) || 0,
+          allCharsOnCode: allCharsOnCode
+        })
+      }
+    }
+  }
+  
+  // 結果按字頻降序排列
+  results.sort((a, b) => b.frequency - a.frequency)
+  
+  return results
+}
+
+/**
  * 計算指定字符集的重碼統計
  * @param fullCodeTable 單字全碼表
  * @param charsetType 字符集類型
