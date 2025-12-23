@@ -78,10 +78,10 @@
     {
       "key": "yuhao-ling",
       "name": "靈明輸入法",
-      "url": "https://raw.githubusercontent.com/forfudan/yu/ling/src/public/mabiao-ling.txt",
+      "url": "https://raw.githubusercontent.com/forfudan/yu/beta/src/public/mabiao-ling.txt",
       "format": "code_first",
-      "description": "",
-      "website": "",
+      "description": "宇浩拆分·四碼前綴",
+      "website": "https://shurufa.app/",
       "category": "形碼",
       "tags": [
         "形碼",
@@ -97,6 +97,22 @@
         "u",
         "_"
       ],
+      "enabled": true
+    },
+    {
+      "key": "cangjie5",
+      "name": "倉頡五代",
+      "url": "https://raw.githubusercontent.com/Jackchows/Cangjie5/master/Cangjie5.txt",
+      "format": "char_first",
+      "description": "朱邦復製作·倉頡五代補完計劃",
+      "website": "https://github.com/Jackchows/Cangjie5",
+      "category": "形碼",
+      "tags": [
+        "形碼",
+        "定長",
+        "五碼"
+      ],
+      "isPrefix": false,
       "enabled": true
     },
     {
