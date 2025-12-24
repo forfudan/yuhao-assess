@@ -254,10 +254,10 @@ async function exportCard() {
   }
 
   try {
-    await ExportService.exportDualModeCard(cardRef.value, '鍵位熱力', props.codeTableName || '未命名方案', {
+    await ExportService.exportQuadModeCard(cardRef.value, '鍵位熱力', props.codeTableName || '未命名方案', {
       copyToClipboard: ExportService.isClipboardSupported(),
       download: true,
-      switchTabCallback: (mode: 'full' | 'short') => {
+      switchTabCallback: (mode: 'full' | 'short' | 'fullTC' | 'shortTC') => {
         // 切換標籤頁的回調函數
         activeTab.value = mode
         // 等待DOM更新
@@ -276,6 +276,7 @@ async function exportCard() {
 
 // 字符頻率數據
 const charFrequency = ref<Record<string, number>>({})
+const charFrequencyTC = ref<Record<string, number>>({})
 
 // 載入字符頻率數據
 const loadCharFrequency = async () => {
@@ -291,23 +292,37 @@ const loadCharFrequency = async () => {
   }
 }
 
+// 載入台標繁體字符頻率數據
+const loadCharFrequencyTC = async () => {
+  try {
+    const response = await fetch('/data/charFrequencyTC.json')
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    charFrequencyTC.value = data
+  } catch (error) {
+    console.error('載入台標繁體字符頻率數據失敗:', error)
+  }
+}
+
 // 響應式數據
 const keyboardScale = ref(1.0)
 const refreshTrigger = ref(0) // 用於強制刷新的觸發器
 
 // Tab 切換相關
-const activeTab = ref<'full' | 'short'>('full')
+const activeTab = ref<'full' | 'short' | 'fullTC' | 'shortTC'>('full')
 const tabs = [
-  { key: 'full', label: '全碼數據' },
-  { key: 'short', label: '出簡數據' }
+  { key: 'full', label: '全碼·簡頻' },
+  { key: 'short', label: '出簡·簡頻' },
+  { key: 'fullTC', label: '全碼·繁頻' },
+  { key: 'shortTC', label: '出簡·繁頻' }
 ] as const
 
 // 模擬標點使用頻率選項（默認勾選）
 const simulatePunctuation = ref(true)
 
-
-
-// 標點符號按鍵映射（宇浩輸入法）
+// 標點符號按鍵映射
 // 根據現代漢語標點使用統計
 const punctuationKeys: Record<string, number> = {
   ';': 0.10,    // 分號、冒號：10%
@@ -322,7 +337,14 @@ const PUNCTUATION_CHAR_RATIO = 0.13 // 13%
 
 // 根據當前tab計算displayMode
 const displayMode = computed(() => {
-  return activeTab.value === 'full' ? 'frequency' : 'load'
+  return (activeTab.value === 'full' || activeTab.value === 'fullTC') ? 'frequency' : 'load'
+})
+
+// 根據當前 tab 選擇字頻數據
+const currentCharFrequency = computed(() => {
+  return (activeTab.value === 'fullTC' || activeTab.value === 'shortTC') 
+    ? charFrequencyTC.value 
+    : charFrequency.value
 })
 
 // 自適應縮放相關
@@ -365,6 +387,7 @@ const handleResize = () => {
 // 生命週期鈎子
 onMounted(() => {
   loadCharFrequency()
+  loadCharFrequencyTC()
   
   // 延遲計算縮放，確保DOM已渲染
   setTimeout(() => {
@@ -401,7 +424,7 @@ const processedCodeTable = computed(() => {
   if (!processedTables) return new Map()
   
   // 根據activeTab選擇不同的碼表
-  const selectedTable = activeTab.value === 'full' 
+  const selectedTable = (activeTab.value === 'full' || activeTab.value === 'fullTC')
     ? processedTables.fullWithSelection 
     : processedTables.shortWithSelection
   
@@ -527,7 +550,7 @@ const stats = computed<AnalysisStats>(() => {
   // 分析碼表 - 使用字频权重
   for (const [char, codes] of processedCodeTable.value.entries()) {
     // 获取字符频率权重，默认为1
-    const charWeight = charFrequency.value[char] || 1
+    const charWeight = currentCharFrequency.value[char] || 1
     
     for (const code of codes) {
       totalCodes++
