@@ -54,7 +54,7 @@
                   class="metric-value hoverable clickable"
                   @mouseenter="showTooltip($event, row.zhihuChars, row.N, 'zhihu')"
                   @mouseleave="hideTooltip()"
-                  @click="copyToClipboard(row.zhihuChars, row.N, 'zhihu')"
+                  @click="showDetailsModal(row.zhihuChars, row.N, 'zhihu')"
                   :class="getCellClass(row.zhihu, [row.zhihu, row.SC, row.TC, row.combined])"
                 >
                   {{ formatValue(row.zhihu) }}
@@ -63,7 +63,7 @@
                   class="metric-value hoverable clickable"
                   @mouseenter="showTooltip($event, row.SCChars, row.N, 'SC')"
                   @mouseleave="hideTooltip()"
-                  @click="copyToClipboard(row.SCChars, row.N, 'SC')"
+                  @click="showDetailsModal(row.SCChars, row.N, 'SC')"
                   :class="getCellClass(row.SC, [row.zhihu, row.SC, row.TC, row.combined])"
                 >
                   {{ formatValue(row.SC) }}
@@ -72,7 +72,7 @@
                   class="metric-value hoverable clickable"
                   @mouseenter="showTooltip($event, row.TCChars, row.N, 'TC')"
                   @mouseleave="hideTooltip()"
-                  @click="copyToClipboard(row.TCChars, row.N, 'TC')"
+                  @click="showDetailsModal(row.TCChars, row.N, 'TC')"
                   :class="getCellClass(row.TC, [row.zhihu, row.SC, row.TC, row.guji, row.combined])"
                 >
                   {{ formatValue(row.TC) }}
@@ -81,7 +81,7 @@
                   class="metric-value hoverable clickable"
                   @mouseenter="showTooltip($event, row.gujiChars, row.N, 'guji')"
                   @mouseleave="hideTooltip()"
-                  @click="copyToClipboard(row.gujiChars, row.N, 'guji')"
+                  @click="showDetailsModal(row.gujiChars, row.N, 'guji')"
                   :class="getCellClass(row.guji, [row.zhihu, row.SC, row.TC, row.guji, row.combined])"
                 >
                   {{ formatValue(row.guji) }}
@@ -90,7 +90,7 @@
                   class="metric-value hoverable clickable"
                   @mouseenter="showTooltip($event, row.combinedChars, row.N, 'combined')"
                   @mouseleave="hideTooltip()"
-                  @click="copyToClipboard(row.combinedChars, row.N, 'combined')"
+                  @click="showDetailsModal(row.combinedChars, row.N, 'combined')"
                   :class="getCellClass(row.combined, [row.zhihu, row.SC, row.TC, row.guji, row.combined])"
                 >
                   {{ formatValue(row.combined) }}
@@ -111,7 +111,7 @@
             <li>簡碼字的效率取決於於漢字字頻 × 節約碼長</li>
             <li>僅考慮簡碼長度小於全碼長度且小於最大碼長的漢字，實際簡碼數量可能小於 N</li>
             <li>鼠標懸停在數字上可查看當前區間對應的高效簡碼字</li>
-            <li>點擊數字可將當前區間的高效簡碼字復制到剪貼板</li>
+            <li>點擊數字可查看該區間所有高效簡碼字的詳細列表</li>
           </ul>
         </div>
         
@@ -133,8 +133,40 @@
   <Teleport to="body">
     <div v-if="tooltipVisible" class="custom-tooltip" :style="tooltipStyle">
       <div class="tooltip-content">
-        <div class="tooltip-header">本區間效率最高簡碼字（點擊數字複製漢字）：</div>
+        <div class="tooltip-header">本區間效率最高簡碼字（點擊數字查看詳情）：</div>
         <div class="tooltip-chars-grid" v-html="tooltipCharsWithCodes"></div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- 詳情模態框 - 使用 Teleport 傳送到 body -->
+  <Teleport to="body">
+    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ modalTitle }}</h3>
+          <button class="modal-close" @click="closeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="modalChars.length > 0" class="modal-chars-section">
+            <div class="modal-chars-grid">
+              <div v-for="char in modalChars" :key="char" class="modal-char-item">
+                <div class="modal-char">{{ char }}</div>
+                <div class="modal-codes">
+                  <div class="modal-code-row">
+                    <span class="modal-char-code">{{ getFullShortCodeWithSelection(char) }}</span>
+                  </div>
+                  <div class="modal-code-row">
+                    <span class="modal-char-code full-code">{{ getFullCodeWithSelection(char) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="no-data">
+            <p>無數據</p>
+          </div>
+        </div>
       </div>
     </div>
   </Teleport>
@@ -202,6 +234,11 @@ const efficiencyData = ref<Record<string, Array<{ N: number; efficiency: number;
 const { tooltipVisible, tooltipText, tooltipStyle, showTooltip: showTooltipBase, hideTooltip } = createTooltipManager()
 const tooltipChars = ref('')
 const tooltipCharsWithCodes = ref('')
+
+// 模態框相關
+const showModal = ref(false)
+const modalTitle = ref('')
+const modalChars = ref<string[]>([])
 
 // 预處理的碼表（包含简码加選重表）
 const processedCodeTable = ref<CodeTable>(new Map())
@@ -332,7 +369,8 @@ const tableData = computed<TableRow[]>(() => {
   let prevGujiCount = 0
   let prevCombinedCount = 0
 
-  for (const row of allRows) {
+  for (let i = 0; i < allRows.length; i++) {
+    const row = allRows[i]
     const currentZhihuCount = row.zhihuChars.length
     const currentSCCount = row.SCChars.length
     const currentTCCount = row.TCChars.length
@@ -347,7 +385,25 @@ const tableData = computed<TableRow[]>(() => {
     const hasNewCombined = currentCombinedCount > prevCombinedCount
 
     // N=0是基準行，永遠顯示；其他行只有在有新增簡碼字時才顯示
-    if (row.N === 0 || hasNewZhihu || hasNewSC || hasNewTC || hasNewGuji || hasNewCombined) {
+    let shouldShow = row.N === 0 || hasNewZhihu || hasNewSC || hasNewTC || hasNewGuji || hasNewCombined
+    
+    // 額外檢查：如果該行所有列的值（保留3位小數）都與上一行相同，則不顯示
+    if (shouldShow && i > 0) {
+      const prevRow = allRows[i - 1]
+      const allColumnsSame = 
+        row.zhihu.toFixed(3) === prevRow.zhihu.toFixed(3) &&
+        row.SC.toFixed(3) === prevRow.SC.toFixed(3) &&
+        row.TC.toFixed(3) === prevRow.TC.toFixed(3) &&
+        row.guji.toFixed(3) === prevRow.guji.toFixed(3) &&
+        row.combined.toFixed(3) === prevRow.combined.toFixed(3)
+      
+      if (allColumnsSame) {
+        console.log(`[過濾行] N=${row.N} 所有列的值都與上一行相同，不顯示此行`)
+        shouldShow = false
+      }
+    }
+    
+    if (shouldShow) {
       filteredRows.push(row)
     }
 
@@ -360,6 +416,20 @@ const tableData = computed<TableRow[]>(() => {
   }
 
   return filteredRows
+})
+
+// 檢測隱藏的列（基於實際顯示的tableData）
+const isColumnHidden = computed(() => {
+  const hidden = {
+    zhihu: false,
+    SC: false,
+    TC: false,
+    guji: false,
+    combined: false
+  }
+  
+  // 這個功能暫時不需要了，因為我們是過濾行而不是隱藏列
+  return hidden
 })
 
 // 檢查是否有被省略的行
@@ -674,6 +744,20 @@ const generateCharacterGrid = (chars: string[]): string => {
   return `<table class="char-table">${rows.join('')}</table>`
 }
 
+// 獲取全碼（使用預生成的全碼加選重表）
+const getFullCodeWithSelection = (char: string): string => {
+  const processedTables = CodeTableProcessingService.getInstance().getProcessedTables()
+  if (!processedTables) return ''
+  
+  const fullCodes = processedTables.fullWithSelection.get(char)
+  if (fullCodes && fullCodes.length > 0) {
+    // 返回最長的全碼（通常是完整編碼）
+    return fullCodes.reduce((a, b) => a.length >= b.length ? a : b)
+  }
+  
+  return ''
+}
+
 // 獲取完整的簡碼（使用預生成的簡碼加選重表）
 const getFullShortCodeWithSelection = (char: string): string => {
   // 優先使用預生成的簡碼加選重表
@@ -744,47 +828,25 @@ const getCellClass = (value: number, rowValues: number[]): string => {
   }
 }
 
-// 複製字符到剪貼板
-const copyToClipboard = async (chars: string[], currentN: number, freqType: string) => {
-  try {
-    // 獲取要復制的字符（與懸停顯示邏輯一致）
-    let displayChars: string[] = []
-    const prevN = getPreviousN(currentN)
-    
-    if (chars.length === 0) {
-      displayChars = []
-    } else if (prevN > 0) {
-      // 獲取差值字符
-      const prevChars = getPreviousChars(prevN, freqType)
-      displayChars = chars.filter(char => !prevChars.includes(char))
-    } else {
-      // 第一行顯示所有字符
-      displayChars = chars
-    }
-    
-    const textToCopy = displayChars.join('')
-    await navigator.clipboard.writeText(textToCopy)
-    
-    // 顯示復制成功提示
-    const freqNames = {
-      'zhihu': '知乎簡體字頻',
-      'SC': '北語簡體字頻', 
-      'TC': '臺標繁體字頻',
-      'guji': '古籍繁體字頻',
-      'combined': '繁簡聯合字頻'
-    }
-    
-    const count = displayChars.length
-    const successMessage = prevN > 0 
-      ? `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}新增的${count}個簡碼字到剪貼板`
-      : `已復制${freqNames[freqType as keyof typeof freqNames]}N=${currentN}的${count}個簡碼字到剪貼板`
-    
-
-    // 可以在這裏添加 toast 提示
-  } catch (err) {
-    console.error('復制到剪貼板失敗:', err)
-    // 可以在這裏添加錯誤提示
+// 顯示詳情模態框
+const showDetailsModal = (chars: string[], currentN: number, freqType: string) => {
+  const freqNames = {
+    'zhihu': '知乎簡體字頻',
+    'SC': '北語簡體字頻',
+    'TC': '臺標繁體字頻',
+    'guji': '古籍繁體字頻',
+    'combined': '繁簡聯合字頻'
   }
+  
+  modalTitle.value = `${freqNames[freqType as keyof typeof freqNames]} · 效率最高簡碼字 · 至第 ${currentN} 位`
+  modalChars.value = chars
+  showModal.value = true
+}
+
+// 關閉模態框
+const closeModal = () => {
+  showModal.value = false
+  modalChars.value = []
 }
 
 // 監聽 props 變化
@@ -1486,6 +1548,221 @@ onUnmounted(() => {
   background: var(--color-warning-light);
   border-color: var(--color-warning);
   color: var(--color-warning-dark);
+}
+
+/* 模態框樣式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 900px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #9ca3af;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-chars-section {
+  width: 100%;
+}
+
+.modal-chars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.modal-char-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.modal-char-item:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.modal-char {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.modal-codes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.modal-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.code-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.modal-char-code {
+  font-size: 0.85rem;
+  color: #059669;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  background: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #dcfce7;
+  font-weight: 600;
+}
+
+.modal-char-code.full-code {
+  color: #3b82f6;
+  border-color: #dbeafe;
+}
+
+/* 暗黑模式的模態框樣式 */
+[data-theme="dark"] .modal-content {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+}
+
+[data-theme="dark"] .modal-header {
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .modal-header h3 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .modal-close {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .modal-close:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .modal-char-item {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .modal-char-item:hover {
+  background: var(--color-bg-primary);
+  border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .modal-char {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .code-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .modal-char-code {
+  background: var(--color-bg-primary);
+  color: var(--color-success);
+  border-color: var(--color-border-secondary);
+}
+
+[data-theme="dark"] .modal-char-code.full-code {
+  color: var(--color-primary);
+  border-color: var(--color-border-primary);
 }
 </style>
 
