@@ -145,7 +145,14 @@
       <div class="modal-content" @click.stop>
         <div class="modal-header">
           <h3>{{ modalTitle }}</h3>
-          <button class="modal-close" @click="closeModal">&times;</button>
+          <div class="modal-header-buttons">
+            <button class="copy-button" @click="copyCharsToClipboard" title="複製到剪切板">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+              </svg>
+            </button>
+            <button class="modal-close" @click="closeModal">&times;</button>
+          </div>
         </div>
         <div class="modal-body">
           <div v-if="modalChars.length > 0" class="modal-chars-section">
@@ -841,6 +848,21 @@ const showDetailsModal = (chars: string[], currentN: number, freqType: string) =
   modalTitle.value = `${freqNames[freqType as keyof typeof freqNames]} · 效率最高簡碼字 · 至第 ${currentN} 位`
   modalChars.value = chars
   showModal.value = true
+}
+
+// 複製字符到剪切板
+const copyCharsToClipboard = async () => {
+  if (modalChars.value.length === 0) return
+  
+  try {
+    const text = modalChars.value.join('')
+    await navigator.clipboard.writeText(text)
+    // 可選：添加成功提示
+    alert('已複製到剪切板')
+  } catch (err) {
+    console.error('複製到剪切板失敗:', err)
+    alert('複製失敗，請重試')
+  }
 }
 
 // 關閉模態框
@@ -1606,6 +1628,35 @@ onUnmounted(() => {
   border-bottom: 1px solid #e5e7eb;
 }
 
+.modal-header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copy-button {
+  background: #3b82f6;
+  border: none;
+  color: white;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.copy-button:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.copy-button:active {
+  transform: scale(0.95);
+}
+
 .modal-header h3 {
   margin: 0;
   font-size: 1.25rem;
@@ -1651,15 +1702,24 @@ onUnmounted(() => {
   padding: 12px 0;
 }
 
+/* 大屏幕时每行固定显示10个字符 */
+@media (min-width: 900px) {
+  .modal-chars-grid {
+    grid-template-columns: repeat(10, 1fr);
+    gap: 4px;
+    padding: 8px 0;
+  }
+}
+
 .modal-char-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  padding: 8px;
   background: #f8fafc;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 6px;
   transition: all 0.2s ease;
 }
 
@@ -1668,6 +1728,13 @@ onUnmounted(() => {
   border-color: #3b82f6;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* 大屏幕下减小字符单元格的内边距 */
+@media (min-width: 900px) {
+  .modal-char-item {
+    padding: 6px 4px;
+  }
 }
 
 .modal-char {
@@ -1734,6 +1801,14 @@ onUnmounted(() => {
 [data-theme="dark"] .modal-close:hover {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .copy-button {
+  background: var(--color-primary);
+}
+
+[data-theme="dark"] .copy-button:hover {
+  background: var(--color-primary-dark);
 }
 
 [data-theme="dark"] .modal-char-item {
