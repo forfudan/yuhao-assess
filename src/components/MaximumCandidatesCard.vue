@@ -7,6 +7,11 @@
           <p class="card-description">分析不同字符集下方案的最大候選項個數，借以反映方案的檢字效率。</p>
         </div>
         <div class="header-buttons">
+          <button @click="refreshData" class="refresh-btn" :disabled="loading" title="刷新計算">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" :class="{ 'spinning': loading }">
+              <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+            </svg>
+          </button>
           <button @click="exportCard" class="export-btn" :disabled="loading || !!error || !analysisResults" title="導出圖片">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
@@ -65,9 +70,10 @@
                       class="code-item"
                     >
                       <span 
-                        class="code-text hoverable"
+                        class="code-text hoverable clickable"
                         @mouseenter="showTooltip($event, codeInfo.chars)"
                         @mouseleave="hideTooltip()"
+                        @click="showCodeDetails(codeInfo.code, codeInfo.chars)"
                       >
                         {{ codeInfo.code }}
                       </span>
@@ -100,7 +106,7 @@
             <li>單字全碼和指定字符集，統計每個編碼對應的漢字數量</li>
             <li>取所有編碼中候選項個數的最大值</li>
             <li>顔色標示：<span style="color: #059669; font-weight: 600;">≤2</span>、<span style="color: #d97706; font-weight: 600;">3-5</span>、<span style="color: #dc2626; font-weight: 600;">>5</span></li>
-            <li>鼠標懸停在編碼上可查看該編碼對應的所有漢字</li>
+            <li>鼠標懸停在編碼上或點擊編碼，可以查看該編碼對應的所有漢字</li>
           </ul>
         </div>
         
@@ -118,6 +124,27 @@
       <div class="tooltip-content">
         <div class="tooltip-header">該編碼對應的漢字：</div>
         <div class="tooltip-chars">{{ tooltipChars }}</div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- 編碼詳情模態框 - 使用 Teleport 傳送到 body -->
+  <Teleport to="body">
+    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ modalTitle }}</h3>
+          <button class="modal-close" @click="closeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="char-grid">
+            <span v-for="char in modalChars" :key="char" class="char-item">{{ char }}</span>
+          </div>
+          <div class="modal-info">
+            <p>編碼：<code>{{ modalCode }}</code></p>
+            <p>候選項個數：{{ modalChars.length }}</p>
+          </div>
+        </div>
       </div>
     </div>
   </Teleport>
@@ -194,6 +221,28 @@ const toggleCodeExpansion = (charset: string) => {
 // 工具提示管理器
 const { tooltipVisible, tooltipText, tooltipStyle, showTooltip: showTooltipBase, hideTooltip } = createTooltipManager()
 const tooltipChars = ref('')
+
+// 模態框相關
+const showModal = ref(false)
+const modalTitle = ref('')
+const modalCode = ref('')
+const modalChars = ref<string[]>([])
+
+// 顯示編碼詳情
+function showCodeDetails(code: string, chars: string[]) {
+  modalCode.value = code
+  modalChars.value = chars
+  modalTitle.value = `編碼 ${code} 的候選項`
+  showModal.value = true
+}
+
+// 關閉模態框
+function closeModal() {
+  showModal.value = false
+  modalCode.value = ''
+  modalChars.value = []
+  modalTitle.value = ''
+}
 
 // 字符集信息映射
 const charsetInfo = {
@@ -273,6 +322,12 @@ const calculateData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// 刷新數據
+const refreshData = async () => {
+  console.log('手動刷新候選個數數據...')
+  await calculateData()
 }
 
 // 監聽碼表變化
@@ -503,6 +558,15 @@ onMounted(() => {
   background: #e5e7eb;
   color: #1f2937;
   text-decoration-color: #3b82f6;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  background: #dbeafe !important;
+  color: #1e40af !important;
 }
 
 .code-separator {
@@ -742,5 +806,187 @@ onMounted(() => {
 
 [data-theme="dark"] .scheme-name span {
   color: var(--color-text-secondary);
+}
+
+/* 模態框樣式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #9ca3af;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.char-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.char-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #1f2937;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.char-item:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  transform: scale(1.05);
+}
+
+.modal-info {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
+  color: #6b7280;
+}
+
+.modal-info p {
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+
+.modal-info code {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+/* 暗黑模式的模態框樣式 */
+[data-theme="dark"] .modal-content {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+}
+
+[data-theme="dark"] .modal-header {
+  border-bottom-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .modal-header h3 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .modal-close {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .modal-close:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .char-item {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-secondary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .char-item:hover {
+  background: var(--color-bg-primary);
+  border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .modal-info {
+  border-top-color: var(--color-border-primary);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .modal-info code {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
 }
 </style>
