@@ -119,6 +119,163 @@ src/
 - `loadEquivTable()`: 載入當量表
 - `exportCard()`: 導出速度分析
 
+## 碼表處理流程
+
+### 概述
+
+當用戶上傳碼表文件後，系統會進行一系列自動化的預處理操作，生成多個輔助碼表供不同的分析組件使用。這個統一的處理流程確保了各個組件使用的數據一致性，並避免了重複計算。
+
+### 處理流程
+
+#### 1. 原始碼表解析
+
+**入口**: `CodeTableUploaderCard.vue`
+
+用戶上傳的碼表文件首先被解析為 `RawCodeTable` 格式：
+
+```typescript
+RawCodeTable = Map<number, [string, string, number]>
+// 行號 -> [字符, 編碼, N選位置]
+```
+
+- 支持兩種格式：字符-編碼（如 `的 de`）和編碼-字符（如 `de 的`）
+- 自動檢測多字同編情況，標記 N 選位置（1, 2, 3...）
+- 保持原始行號順序，便於追溯
+
+#### 2. 碼表預處理
+
+**核心服務**: `codeTableProcessingService.ts`
+
+系統調用 `processRawCodeTable()` 方法，一次遍歷生成四個輔助碼表：
+
+##### a) **全碼表 (full)**
+
+- 每個字符只保留**最長的編碼**
+- 保持原始行號順序
+- 用途：分析全碼性能、計算平均碼長
+
+##### b) **簡碼表 (short)**
+
+- 每個字符只保留**最短的編碼**
+- 保持原始行號順序
+- 用途：分析簡碼性能、優化建議
+
+##### c) **全碼加選重按鍵表 (fullWithSelection)**
+
+- 基於全碼表，添加選重處理
+- 未達最大碼長時：
+  - 前綴碼：根據上屏鍵決定是否補空格
+  - 非前綴碼：補充下劃線（代表空格）
+- 非首選（N選 > 1）：添加數字選重鍵（2, 3, 4...）
+- 用途：速度當量計算、按鍵分布分析
+
+##### d) **簡碼加選重按鍵表 (shortWithSelection)**
+
+- 基於簡碼表，添加選重處理
+- 處理邏輯同 fullWithSelection
+- 用途：簡碼速度當量、簡碼效率評估
+
+#### 3. 處理選項
+
+預處理過程會考慮以下選項：
+
+- **isPrefix**: 是否為前綴碼/頂功方案
+- **prefixKeys**: 上屏鍵列表（如 `['a', 'o', 'e', 'i', 'u', '_']`）
+- **maxLength**: 最大碼長（自動檢測）
+
+這些選項影響：
+
+- 是否需要補充空格（下劃線）
+- 如何處理選重按鍵
+- 碼長規範化策略
+
+#### 4. 字符過濾
+
+在預處理過程中，系統會自動過濾：
+
+- **非單字符條目**：只保留單個漢字，詞組被排除
+- **非 CJK 字符**：只保留 CJK 基本區到擴展 J 區的漢字（共 101,984 個）
+- **重複編碼**：同一字符的相同編碼只保留首次出現
+
+#### 5. 字頻數據融合
+
+**相關服務**: `dataService.ts`
+
+預處理完成後，某些分析還會結合字頻數據：
+
+- **知乎簡體字頻** (`charFrequencyZhihu.json`)
+- **北語簡體字頻** (`charFrequencySC.json`)
+- **臺標繁體字頻** (`charFrequencyTC.json`)
+- **古籍繁體字頻** (`charFrequencyGuji.json`)
+
+字頻融合用於：
+
+- 簡碼效率分析：只處理在字頻表中的字符
+- 速度當量計算：加權計算按鍵組合頻率
+- 動態重碼率：基於實際使用頻率的重碼統計
+
+### 組件調用關係
+
+```txt
+用戶上傳碼表
+    ↓
+CodeTableUploaderCard.vue (解析為 RawCodeTable)
+    ↓
+ComparisonCard.vue (調用預處理)
+    ↓
+codeTableProcessingService.processRawCodeTable()
+    ↓
+生成四個輔助碼表
+    ↓
+分發給各個分析組件：
+    ├─ CodeTableAnalysisCard.vue → 使用 full, short
+    ├─ KeyboardHeatmapCard.vue → 使用 fullWithSelection
+    ├─ DuplicateAnalysisCard.vue → 使用 full, short
+    ├─ MaximumCandidatesCard.vue → 使用 full
+    ├─ ShortCodeEfficiencyCard.vue → 使用 short + 字頻過濾
+    └─ SpeedEquivCard.vue → 使用 fullWithSelection, shortWithSelection
+```
+
+### 緩存機制
+
+為了提高性能，處理結果會被緩存：
+
+- **服務級緩存**: `codeTableProcessingService` 緩存已處理的四個碼表
+- **組件級緩存**: 各分析組件緩存自己的計算結果
+- **清除時機**: 上傳新碼表或切換方案時自動清除
+
+### 數據流示例
+
+以"的"字為例，假設有以下碼表行：
+
+```txt
+的 d 1    # 一簡，首選
+的 de 1   # 二簡，首選
+的 dexe 1 # 全碼，首選
+```
+
+經過預處理後：
+
+- **full**: `的 → ["dexe"]`（最長編碼）
+- **short**: `的 → ["d"]`（最短編碼）
+- **fullWithSelection**: `的 → ["dexe_"]`（全碼+空格）
+- **shortWithSelection**: `的 → ["d_"]`（簡碼+空格）
+
+如果"的"是二選（position = 2）：
+
+- **fullWithSelection**: `的 → ["dexe2"]`（全碼+選重鍵2）
+- **shortWithSelection**: `的 → ["d2"]`（簡碼+選重鍵2）
+
+### 最佳實踐建議
+
+為貢獻者開發新功能時的建議：
+
+1. **復用預處理結果**: 優先使用已生成的四個輔助碼表，避免重複處理
+2. **明確碼表類型**: 根據分析需求選擇合適的碼表類型
+3. **考慮字頻過濾**: 如需字頻加權，使用 `dataService` 載入字頻數據
+4. **處理選重邏輯**: 使用 `*WithSelection` 表進行真實按鍵分析
+5. **緩存計算結果**: 對於耗時計算，在組件內實現結果緩存
+
 ## 服務架構 (Services)
 
 ### builtinCodeTableService.ts
