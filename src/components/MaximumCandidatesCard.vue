@@ -346,6 +346,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
+@import '../styles/card-common.css';
+@import '../styles/modal-common.css';
+
 /* 載入和錯誤狀態 */
 .loading-state,
 .error-state {

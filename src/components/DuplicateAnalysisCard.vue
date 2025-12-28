@@ -1006,6 +1006,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
+@import '../styles/card-common.css';
+@import '../styles/modal-common.css';
+
 /* 原有样式 */
 .card-description a {
   color: rgba(255, 255, 255, 0.9);

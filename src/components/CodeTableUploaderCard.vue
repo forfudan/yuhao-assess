@@ -965,6 +965,8 @@ loadBuiltinConfig()
 </script>
 
 <style scoped>
+@import '../styles/card-common.css';
+
 /* 卡片头部布局 */
 .header-content {
   display: flex;

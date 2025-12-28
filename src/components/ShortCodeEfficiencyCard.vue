@@ -930,6 +930,9 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+@import '../styles/card-common.css';
+@import '../styles/modal-common.css';
+
 .short-code-efficiency-card {
   background: white;
   border-radius: 12px;

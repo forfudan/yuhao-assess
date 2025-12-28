@@ -847,6 +847,8 @@ defineExpose({
 </script>
 
 <style scoped>
+@import '../styles/card-common.css';
+
 /* 標點符號選項樣式 */
 .punctuation-wrapper {
   margin-top: var(--spacing-sm);

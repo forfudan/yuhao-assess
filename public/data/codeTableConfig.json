@@ -28,6 +28,30 @@
       "enabled": true
     },
     {
+      "key": "yuhao-ling",
+      "name": "靈明輸入法",
+      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-ling.txt",
+      "format": "code_first",
+      "description": "宇浩拆分·四碼前綴·二十五鍵",
+      "website": "https://shurufa.app/",
+      "category": "形碼",
+      "tags": [
+        "形碼",
+        "前綴碼",
+        "四碼"
+      ],
+      "isPrefix": true,
+      "prefixKeys": [
+        "a",
+        "o",
+        "e",
+        "i",
+        "u",
+        "_"
+      ],
+      "enabled": true
+    },
+    {
       "key": "yuhao-joy",
       "name": "卿雲輸入法",
       "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-joy.txt",
@@ -73,30 +97,6 @@
         "四碼"
       ],
       "isPrefix": false,
-      "enabled": true
-    },
-    {
-      "key": "yuhao-ling",
-      "name": "靈明輸入法",
-      "url": "https://raw.githubusercontent.com/forfudan/yu/beta/src/public/mabiao-ling.txt",
-      "format": "code_first",
-      "description": "宇浩拆分·四碼前綴·二十五鍵",
-      "website": "https://shurufa.app/",
-      "category": "形碼",
-      "tags": [
-        "形碼",
-        "前綴碼",
-        "四碼"
-      ],
-      "isPrefix": true,
-      "prefixKeys": [
-        "a",
-        "o",
-        "e",
-        "i",
-        "u",
-        "_"
-      ],
       "enabled": true
     },
     {

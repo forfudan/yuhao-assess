@@ -2998,6 +2998,9 @@ function clearAllSchemes() {
 </script>
 
 <style scoped>
+@import '../styles/card-common.css';
+@import '../styles/tabs-common.css';
+
 /* 卡片根元素样式 */
 .comparison-card {
   background: white;
