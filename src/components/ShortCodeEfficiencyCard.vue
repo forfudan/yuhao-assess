@@ -496,7 +496,7 @@ const calculateShortCodeEfficiencyWithMaps = (
   }
 
   // 計算不同N值下的效率
-  const nValues = [0, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+  const nValues = [0, 5, 10, 25, 50, 75, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000]
   const results: Array<{ N: number; efficiency: number; selectedChars: string[] }> = []
   
   for (const N of nValues) {
