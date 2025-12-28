@@ -3313,6 +3313,10 @@ function clearAllSchemes() {
 .actions-cell {
   text-align: center;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .calculating {
