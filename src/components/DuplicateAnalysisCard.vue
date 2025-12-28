@@ -1006,6 +1006,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
+@import '../styles/card-common.css';
+@import '../styles/modal-common.css';
+
 /* 原有样式 */
 .card-description a {
   color: rgba(255, 255, 255, 0.9);
@@ -1014,29 +1017,6 @@ onMounted(() => {
 
 .card-description a:hover {
   color: white;
-}
-
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 20px;
-  color: #666;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #667eea;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 .analysis-results {
@@ -1298,22 +1278,16 @@ onMounted(() => {
   padding: 20px;
 }
 
+/* 使用 modal-common.css 中的 .modal-content 和 .modal-header 基本樣式 */
+/* 這裡只覆蓋特定尺寸 */
 .modal-content {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   max-width: 900px;
   width: 100%;
   max-height: 85vh;
-  display: flex;
-  flex-direction: column;
 }
 
 .modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
+  /* 添加額外的 justify-content 覆蓋 */
   justify-content: space-between;
 }
 
@@ -1351,33 +1325,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: #9ca3af;
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  line-height: 1;
-}
-
-.modal-close:hover {
-  background: #f3f4f6;
-  color: #4b5563;
-}
+/* 使用 modal-common.css 中的 .modal-header h3 和 .modal-close 樣式 */
 
 .modal-body {
   padding: 20px 24px;

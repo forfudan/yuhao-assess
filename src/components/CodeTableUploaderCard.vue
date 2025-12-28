@@ -965,46 +965,7 @@ loadBuiltinConfig()
 </script>
 
 <style scoped>
-/* 卡片头部布局 */
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  width: 100%;
-}
-
-.header-text {
-  flex: 1;
-}
-
-/* 折叠按钮样式 */
-.collapse-button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: var(--spacing-md); /* 保持原有间距，因为这个是必要的分离 */
-  backdrop-filter: blur(10px);
-}
-
-.collapse-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-.collapse-button svg {
-  transition: transform 0.3s ease;
-}
-
-.collapse-button svg.rotated {
-  transform: rotate(180deg);
-}
+@import '../styles/card-common.css';
 
 /* 原有样式 */
 .code-table-uploader {

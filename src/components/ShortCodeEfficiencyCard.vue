@@ -138,8 +138,8 @@
   <Teleport to="body">
     <div v-if="tooltipVisible" class="custom-tooltip" :style="tooltipStyle">
       <div class="tooltip-content">
-        <div class="tooltip-header">本區間效率最高簡碼字（點擊數字查看詳情）：</div>
-        <div class="tooltip-chars-grid" v-html="tooltipCharsWithCodes"></div>
+        <div class="tooltip-header">{{ tooltipHeader }}</div>
+        <div class="tooltip-chars">{{ tooltipChars }}</div>
       </div>
     </div>
   </Teleport>
@@ -244,8 +244,8 @@ const efficiencyData = ref<Record<string, Array<{ N: number; efficiency: number;
 
 // 工具提示管理器
 const { tooltipVisible, tooltipText, tooltipStyle, showTooltip: showTooltipBase, hideTooltip } = createTooltipManager()
+const tooltipHeader = ref('')
 const tooltipChars = ref('')
-const tooltipCharsWithCodes = ref('')
 
 // 模態框相關
 const showModal = ref(false)
@@ -692,39 +692,40 @@ const showTooltip = (event: MouseEvent, chars: string[], currentN: number, freqT
   const prevN = getPreviousN(currentN)
   
   if (chars.length === 0) {
-    tooltipChars.value = '無簡碼字'
-    tooltipCharsWithCodes.value = '<div>無簡碼字</div>'
-  } else {
-    // 根據不同的N值顯示差值字符
-    if (prevN > 0) {
-      // 獲取前一個N值的字符
-      const prevChars = getPreviousChars(prevN, freqType)
-      // 計算差值：當前N的字符減去前一個N的字符
-      displayChars = chars.filter(char => !prevChars.includes(char))
-      tooltipChars.value = displayChars.join('')
-      
-      if (displayChars.length === 0) {
-        tooltipChars.value = '無新增漢字'
-        tooltipCharsWithCodes.value = '<div>無新增漢字</div>'
-      }
-    } else {
-      // 第一行顯示所有字符
-      displayChars = chars
-      tooltipChars.value = chars.join('')
-    }
-    
-    // 生成網格佈局的HTML，每行10個字符，帶有ruby文本顯示編碼
-    if (displayChars.length > 0) {
-      const gridHTML = generateCharacterGrid(displayChars)
-      tooltipCharsWithCodes.value = gridHTML
-    }
+    tooltipHeader.value = '無簡碼字'
+    tooltipChars.value = ''
+    showTooltipBase(event, '無簡碼字')
+    return
   }
   
+  // 根據不同的N值顯示差值字符
+  if (prevN > 0) {
+    // 獲取前一個N值的字符
+    const prevChars = getPreviousChars(prevN, freqType)
+    // 計算差值：當前N的字符減去前一個N的字符
+    displayChars = chars.filter(char => !prevChars.includes(char))
+    
+    if (displayChars.length === 0) {
+      tooltipHeader.value = '無新增漢字'
+      tooltipChars.value = ''
+      showTooltipBase(event, '無新增漢字')
+      return
+    }
+  } else {
+    // 第一行顯示所有字符
+    displayChars = chars
+  }
+  
+  // 設置 header 和 chars
+  const charsText = displayChars.join('')
   const actualCount = displayChars.length
-  const tooltipText = prevN > 0 
-    ? `N=${currentN}新增的${actualCount}個簡碼字：${tooltipChars.value}`
-    : `N=${currentN}的${actualCount}個效率最高的簡碼字符：${tooltipChars.value}`
-  showTooltipBase(event, tooltipText)
+  tooltipHeader.value = prevN > 0 
+    ? `N=${currentN}新增的${actualCount}個簡碼字：`
+    : `N=${currentN}的${actualCount}個效率最高的簡碼字符：`
+  tooltipChars.value = charsText
+  
+  // 仍然需要调用 showTooltipBase 来定位 tooltip
+  showTooltipBase(event, tooltipHeader.value + charsText)
 }
 
 // 生成字符表格HTML - 每個單元格包含漢字和上方的ruby簡碼
@@ -930,6 +931,9 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+@import '../styles/card-common.css';
+@import '../styles/modal-common.css';
+
 .short-code-efficiency-card {
   background: white;
   border-radius: 12px;
@@ -937,81 +941,11 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.header-text {
-  flex: 1;
-}
-
-/* 頭部按鈕容器 */
-.header-buttons {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  margin-left: var(--spacing-lg);
-}
-
-/* 導出按鈕樣式 */
-.export-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-}
-
-.export-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-.export-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .card-description {
   margin: 0;
   opacity: 0.9;
   line-height: 1.5;
   font-size: 0.95rem;
-}
-
-.collapse-button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-}
-
-.collapse-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-.collapse-button svg {
-  transition: transform 0.3s ease;
-}
-
-.collapse-button svg.rotated {
-  transform: rotate(180deg);
 }
 
 .card-content {
@@ -1668,39 +1602,7 @@ onUnmounted(() => {
   transform: scale(0.95);
 }
 
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: #9ca3af;
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  line-height: 1;
-}
-
-.modal-close:hover {
-  background: #f3f4f6;
-  color: #4b5563;
-}
-
-.modal-body {
-  padding: 20px 24px;
-  overflow-y: auto;
-  flex: 1;
-}
+/* 使用 modal-common.css 中的 .modal-header h3, .modal-close 和 .modal-body 樣式 */
 
 .modal-chars-section {
   width: 100%;

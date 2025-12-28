@@ -47,6 +47,185 @@ src/
 └── ...
 ```
 
+## 樣式架構 (Styles)
+
+### 共享樣式文件
+
+為了減少代碼重複和提升維護性，項目使用了以下共享樣式文件：
+
+#### card-common.css
+
+**位置**: `src/styles/card-common.css`
+
+**功能**: 卡片組件通用樣式
+
+**包含樣式**:
+
+- `.header-content`: 卡片頭部佈局
+- `.header-text`: 頭部文本區域
+- `.header-buttons`: 頭部按鈕容器
+- `.export-btn`: 導出按鈕樣式
+- `.refresh-btn`: 刷新按鈕樣式
+- `.collapse-button`: 摺疊按鈕樣式
+- `.scheme-name-annotation`: 方案名稱標註
+- `.loading`: 加載狀態容器
+- `.spinner`: 旋轉加載動畫
+- `.metrics-table`: 數據表格樣式
+- `.info-section`: 信息說明區域
+
+**使用方式**:
+
+```vue
+<style scoped>
+@import '../styles/card-common.css';
+/* 組件特定樣式 */
+</style>
+```
+
+#### modal-common.css
+
+**位置**: `src/styles/modal-common.css`
+
+**功能**: 模態框和工具提示通用樣式
+
+**包含樣式**:
+
+- `.modal-overlay`: 模態框遮罩層
+- `.modal-content`: 模態框內容容器
+- `.modal-header`: 模態框頭部
+- `.modal-close`: 關閉按鈕
+- `.modal-body`: 模態框主體
+- `.modal-loading`: 模態框加載狀態
+- `.custom-tooltip`: 自定義工具提示
+- `.tooltip-content`: 工具提示內容
+- `.tooltip-header`: 工具提示標題
+
+**使用方式**:
+
+```vue
+<style scoped>
+@import '../styles/modal-common.css';
+/* 組件特定樣式 */
+</style>
+```
+
+**特性**:
+
+- 支持黑暗模式（通過 `[data-theme="dark"]`）
+- 響應式設計（移動端適配）
+- 流暢的進入/退出動畫
+- 高 z-index（999999）確保在最上層
+
+#### tabs-common.css
+
+**位置**: `src/styles/tabs-common.css`
+
+**功能**: 標籤頁（Tab）切換通用樣式
+
+**包含樣式**:
+
+- `.tabs-container`: 標籤頁容器
+- `.tab-list`: 標籤頁列表
+- `.tab-button`: 標籤頁按鈕
+- `.tab-button.active`: 激活狀態
+- KeyboardHeatmapCard 的緊湊間距專用樣式
+
+**使用方式**:
+
+```vue
+<style scoped>
+@import '../styles/tabs-common.css';
+/* 組件特定樣式 */
+</style>
+```
+
+### 樣式最佳實踐
+
+#### 1. 優先使用共享樣式
+
+新增組件時，優先檢查是否可以使用共享樣式文件中的類：
+
+```vue
+<!-- ✅ 推薦：使用共享樣式 -->
+<div class="header-content">
+  <div class="header-text">
+    <h3 class="card-title">標題</h3>
+  </div>
+  <div class="header-buttons">
+    <button class="export-btn">導出</button>
+    <button class="collapse-button">摺疊</button>
+  </div>
+</div>
+
+<!-- ❌ 避免：重複定義相同樣式 -->
+<style scoped>
+.my-header { /* 與 .header-content 功能重複 */ }
+</style>
+```
+
+#### 2. 導入順序
+
+在組件的 `<style scoped>` 標籤中，按以下順序導入樣式：
+
+```vue
+<style scoped>
+/* 1. 共享卡片樣式 */
+@import '../styles/card-common.css';
+
+/* 2. 模態框樣式（如需要） */
+@import '../styles/modal-common.css';
+
+/* 3. 標籤頁樣式（如需要） */
+@import '../styles/tabs-common.css';
+
+/* 4. 組件特定樣式 */
+.my-component-specific-class {
+  /* ... */
+}
+</style>
+```
+
+#### 3. 擴展而非覆蓋
+
+如需自定義共享樣式，使用擴展類而非覆蓋：
+
+```vue
+<!-- ✅ 推薦：擴展共享樣式 -->
+<button class="export-btn my-custom-export-btn">導出</button>
+
+<style scoped>
+@import '../styles/card-common.css';
+
+.my-custom-export-btn {
+  /* 只添加額外樣式，不覆蓋基礎樣式 */
+  font-size: 1.1rem;
+}
+</style>
+
+<!-- ❌ 避免：覆蓋共享樣式 -->
+<style scoped>
+.export-btn {
+  /* 完全重新定義，失去共享樣式的好處 */
+  background: blue;
+}
+</style>
+```
+
+#### 4. 黑暗模式支持
+
+共享樣式文件已內置黑暗模式支持，使用 CSS 變量確保一致性：
+
+```css
+/* 使用 CSS 變量 */
+.my-element {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-primary);
+}
+
+/* 系統會自動處理黑暗模式切換 */
+```
+
 ## 組件架構 (Components)
 
 ### CodeTableAnalysisCard.vue
@@ -494,6 +673,84 @@ si 是
 - 遵循 Vue 3 Composition API 最佳實踐
 - TypeScript 嚴格模式
 - 函數和組件命名採用駝峰式
+- 優先使用共享樣式文件，避免重複定義
+
+### 樣式開發規範
+
+#### 共享樣式使用
+
+新增或修改組件時，遵循以下樣式開發流程：
+
+1. **檢查共享樣式**: 在 `src/styles/` 目錄查看是否有可用的共享樣式
+2. **導入共享樣式**: 在組件 `<style scoped>` 標籤開頭導入所需的共享樣式文件
+3. **定義特定樣式**: 僅為組件特有功能編寫樣式
+
+```vue
+<template>
+  <div class="my-card">
+    <!-- 使用共享樣式類 -->
+    <div class="header-content">
+      <div class="header-text">
+        <h3 class="card-title">標題</h3>
+      </div>
+      <button class="export-btn">導出</button>
+    </div>
+    <!-- 使用組件特定樣式 -->
+    <div class="my-special-content">
+      特殊內容
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* 導入共享樣式 */
+@import '../styles/card-common.css';
+
+/* 僅定義組件特定樣式 */
+.my-card {
+  /* 組件特定佈局 */
+}
+
+.my-special-content {
+  /* 特殊內容樣式 */
+}
+</style>
+```
+
+#### 何時新增共享樣式
+
+當發現以下情況時，考慮將樣式添加到共享文件：
+
+- ✅ 樣式在 3 個或更多組件中重複出現
+- ✅ 樣式是通用 UI 模式（按鈕、模態框、表格等）
+- ✅ 樣式需要在多處保持一致性
+- ❌ 樣式僅用於單一組件的特定場景
+- ❌ 樣式高度定制化，不具通用性
+
+#### Composable 使用規範
+
+所有卡片組件應使用 `useCollapse` composable 實現摺疊功能：
+
+```vue
+<script setup lang="ts">
+import { useCollapse } from '../composables/useCollapse'
+
+// ✅ 正確：使用 composable
+const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
+
+// 暴露方法給父組件
+defineExpose({
+  collapse,
+  expand,
+  toggle: toggleCollapsed,
+  getCollapsedState
+})
+
+// ❌ 錯誤：手動實現摺疊邏輯
+// const isCollapsed = ref(false)
+// const toggleCollapsed = () => { isCollapsed.value = !isCollapsed.value }
+</script>
+```
 
 ### 新增功能指南
 

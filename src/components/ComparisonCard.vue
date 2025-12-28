@@ -2998,6 +2998,9 @@ function clearAllSchemes() {
 </script>
 
 <style scoped>
+@import '../styles/card-common.css';
+@import '../styles/tabs-common.css';
+
 /* 卡片根元素样式 */
 .comparison-card {
   background: white;
@@ -3327,11 +3330,6 @@ function clearAllSchemes() {
   border-top: 2px solid #10b981;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 .metric-value {

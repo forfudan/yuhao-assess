@@ -847,6 +847,8 @@ defineExpose({
 </script>
 
 <style scoped>
+@import '../styles/card-common.css';
+
 /* 標點符號選項樣式 */
 .punctuation-wrapper {
   margin-top: var(--spacing-sm);
@@ -1054,79 +1056,6 @@ defineExpose({
   left: 20px;
   border: 6px solid transparent;
   border-top-color: rgba(0, 0, 0, 0.9);
-}
-
-/* 卡片頭部佈局 */
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  width: 100%;
-}
-
-.header-text {
-  flex: 1;
-}
-
-/* 頭部按鈕容器 */
-.header-buttons {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  margin-left: var(--spacing-lg);
-}
-
-/* 導出按鈕樣式 */
-.export-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-}
-
-.export-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-.export-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* 折疊按鈕樣式 */
-.collapse-button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-}
-
-.collapse-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-.collapse-button svg {
-  transition: transform 0.3s ease;
-}
-
-.collapse-button svg.rotated {
-  transform: rotate(180deg);
 }
 
 /* 分析占位符 */

@@ -75,6 +75,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { ExportService } from '../services/exportService'
+import { useCollapse } from '../composables/useCollapse'
 import type { CodeTableAnalysis } from '@/types/index'
 
 interface Props {
@@ -86,11 +87,7 @@ interface Props {
 const props = defineProps<Props>()
 
 const cardRef = ref<HTMLElement>()
-const isCollapsed = ref(false)
-
-const toggleCollapsed = () => {
-  isCollapsed.value = !isCollapsed.value
-}
+const { isCollapsed, toggleCollapsed, collapse, expand, getCollapsedState } = useCollapse()
 
 const exportCard = async () => {
   if (cardRef.value && props.analysis) {
@@ -99,78 +96,18 @@ const exportCard = async () => {
     })
   }
 }
+
+// 暴露方法給父組件
+defineExpose({
+  collapse,
+  expand,
+  toggle: toggleCollapsed,
+  getCollapsedState
+})
 </script>
 
 <style scoped>
-/* 卡片头部布局 */
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  width: 100%;
-}
-
-.header-text {
-  flex: 1;
-}
-
-.header-buttons {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.export-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-}
-
-.export-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-.export-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* 摺疊按鈕樣式 */
-.collapse-button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-}
-
-.collapse-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-.collapse-button svg {
-  transition: transform 0.3s ease;
-}
-
-.collapse-button svg.rotated {
-  transform: rotate(180deg);
-}
+@import '../styles/card-common.css';
 
 /* 原有样式 */
 .viewer-title {
@@ -281,20 +218,5 @@ const exportCard = async () => {
   .entry-char {
     min-width: auto;
   }
-}
-
-/* 方案名稱標註樣式 */
-.scheme-name {
-  margin-top: 16px;
-  padding: 8px 12px;
-  background: #f8fafc;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.scheme-name span {
-  font-size: 0.85rem;
-  color: #4a5568;
-  font-weight: 500;
 }
 </style>
