@@ -136,6 +136,7 @@
             ref="duplicateAnalysisCardRef"
             :code-table="codeTable" 
             :code-table-name="codeTableName"
+            :processed-tables="processedTables"
             :global-char-frequencies="globalCharFrequencies"
           />
 
@@ -404,12 +405,13 @@ onMounted(async () => {
   const savedTheme = localStorage.getItem('theme')
   isDarkMode.value = savedTheme === 'dark'
   updateTheme()
+
+  // 恢復碼表數據
+  await restoreCodeTableData()
   
   // 加載全局字頻數據
   await loadGlobalCharFrequencies()
   
-  // 恢復碼表數據
-  await restoreCodeTableData()
 })
 
 // 切換主題

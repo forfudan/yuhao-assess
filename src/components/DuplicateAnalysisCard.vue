@@ -404,17 +404,26 @@ import { useCollapse } from '../composables/useCollapse'
 import { ExportService } from '../services/exportService'
 import type { CodeTable, CharFrequency } from '../types'
 
+// 處理後的碼表結構
+interface ProcessedTables {
+  full: CodeTable                 // 全碼表：每個字符只保留最長的編碼，用於計算全碼重碼率
+  short: CodeTable                // 簡碼表：每個字符只保留最短的編碼，用於計算簡碼重碼率
+  fullWithSelection: CodeTable    // 全碼表帶選重鍵：保持碼表原始排序，用於計算實際選重率
+  shortWithSelection: CodeTable   // 簡碼表帶選重鍵：保持碼表原始排序，用於計算實際選重率
+}
+
 // Props
 interface Props {
-  codeTable?: CodeTable
-  codeTableName?: string
-  id?: string
-  globalCharFrequencies?: {
-    zhihu: CharFrequency
-    sc: CharFrequency
-    tc: CharFrequency
-    guji: CharFrequency
-    combined: CharFrequency
+  codeTable?: CodeTable  // 原始碼表，Map<字符, 編碼數組>，用於提取所有字符和監聽變化
+  codeTableName?: string  // 碼表名稱，用於顯示在界面上
+  id?: string  // 組件的 DOM id，用於錨點定位
+  processedTables?: ProcessedTables | null  // 處理後的碼表數據，包含四個輔助表用於不同類型的重碼計算
+  globalCharFrequencies?: {  // 全局字頻數據，由 App.vue 統一加載後傳入，避免重複加載
+    zhihu: CharFrequency      // 知乎簡體字頻
+    sc: CharFrequency         // 北語簡體字頻
+    tc: CharFrequency         // 臺標繁體字頻
+    guji: CharFrequency       // 古籍繁體字頻
+    combined: CharFrequency   // 繁簡聯合字頻
   } | null
 }
 
@@ -540,7 +549,7 @@ const duplicateDetails = ref<NonFirstDuplicateDetail[]>([])
 
 // 顯示重碼詳情
 async function showDuplicateDetails(freqType: string, codeType: 'full' | 'short', sortByFrequency: boolean = true) {
-  const processedTables = codeTableProcessingService.getProcessedTables()
+  const processedTables = props.processedTables
   if (!processedTables) return
   
   showModal.value = true
@@ -567,13 +576,18 @@ async function showDuplicateDetails(freqType: string, codeType: 'full' | 'short'
     // 獲取對應的碼表
     const codeTable = codeType === 'full' ? processedTables.full : processedTables.short
     
+    // 檢查全局字頻是否已加載
+    if (!props.globalCharFrequencies) {
+      throw new Error('全局字頻數據尚未加載')
+    }
+    
     // 使用全局字頻
     const freqMap: Record<string, CharFrequency> = {
-      zhihu: props.globalCharFrequencies?.zhihu || {},
-      sc: props.globalCharFrequencies?.sc || {},
-      tc: props.globalCharFrequencies?.tc || {},
-      guji: props.globalCharFrequencies?.guji || {},
-      unified: props.globalCharFrequencies?.combined || {}
+      zhihu: props.globalCharFrequencies.zhihu,
+      sc: props.globalCharFrequencies.sc,
+      tc: props.globalCharFrequencies.tc,
+      guji: props.globalCharFrequencies.guji,
+      unified: props.globalCharFrequencies.combined
     }
     
     const charFrequency = freqMap[freqType]
@@ -848,10 +862,16 @@ async function calculateAllMetrics() {
     // 使用提取的唯一字符代替原来的碼表键
     const allChars = allUniqueChars
     
-    // 使用緩存的處理结果，由App.vue统一處理
-    const processedTables = codeTableProcessingService.getProcessedTables()
+    // 使用 props 傳入的處理結果
+    const processedTables = props.processedTables
     if (!processedTables) {
-      console.error('緩存的碼表處理结果不可用，请先在App.vue中處理碼表')
+      console.warn('碼表處理結果尚未準備好，等待處理完成...')
+      return
+    }
+    
+    // 檢查全局字頻是否已加載
+    if (!props.globalCharFrequencies) {
+      console.warn('全局字頻數據尚未加載，等待加載完成...')
       return
     }
     
@@ -861,11 +881,11 @@ async function calculateAllMetrics() {
     const shortWithSelectionTable = processedTables.shortWithSelection
     
     // 使用全局字頻數據
-    const charFrequency = props.globalCharFrequencies?.zhihu || {}
-    const charFrequencySC = props.globalCharFrequencies?.sc || {}
-    const charFrequencyTC = props.globalCharFrequencies?.tc || {}
-    const charFrequencyGuji = props.globalCharFrequencies?.guji || {}
-    const charFrequencyUnified = props.globalCharFrequencies?.combined || {}
+    const charFrequency = props.globalCharFrequencies.zhihu
+    const charFrequencySC = props.globalCharFrequencies.sc
+    const charFrequencyTC = props.globalCharFrequencies.tc
+    const charFrequencyGuji = props.globalCharFrequencies.guji
+    const charFrequencyUnified = props.globalCharFrequencies.combined
     
     // 計算各種動態選重率（按字頻重新排序）
     const fullDynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency)
@@ -988,16 +1008,20 @@ async function calculateAllMetrics() {
   }
 }
 
-// 监听碼表变化
-watch(() => props.codeTable, (newCodeTable) => {
-  if (newCodeTable && newCodeTable.size > 0) {
-    calculateAllMetrics()
-  }
-}, { immediate: true })
+// 监听碼表、處理結果和字頻变化
+watch(
+  [() => props.codeTable, () => props.processedTables, () => props.globalCharFrequencies], 
+  ([newCodeTable, newProcessedTables, newFrequencies]) => {
+    if (newCodeTable && newCodeTable.size > 0 && newProcessedTables && newFrequencies) {
+      calculateAllMetrics()
+    }
+  }, 
+  { immediate: true }
+)
 
 // 組件掛載時自動計算一次
 onMounted(() => {
-  if (props.codeTable && props.codeTable.size > 0) {
+  if (props.codeTable && props.codeTable.size > 0 && props.processedTables && props.globalCharFrequencies) {
     calculateAllMetrics()
   }
 })
