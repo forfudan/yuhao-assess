@@ -148,7 +148,6 @@
             :code-table="codeTable" 
             :code-table-name="codeTableName"
             :processed-tables="processedTables"
-            :global-char-frequencies="globalCharFrequencies"
           />
 
           <!-- 速度當量卡片 -->
@@ -161,7 +160,6 @@
             :initial-prefix="uploadPrefixFlag"
             :global-prefix-keys="uploadPrefixKeys"
             :processed-tables="processedTables"
-            :global-char-frequencies="globalCharFrequencies"
           />
 
           <!-- 簡碼效率卡片 -->

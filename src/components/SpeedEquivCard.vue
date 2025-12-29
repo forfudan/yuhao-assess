@@ -188,6 +188,7 @@ import {
 interface Props {
   codeTable?: CodeTable
   codeTableName?: string
+  id?: string  // 組件的 DOM id，用於錨點定位
   initialPrefix?: boolean
   globalPrefixKeys?: string[]
   processedTables?: any | null  // 處理後的碼表數據
