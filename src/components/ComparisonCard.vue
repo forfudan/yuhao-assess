@@ -841,12 +841,7 @@ import {
   formatNumber, 
   formatEquiv
 } from '../services/uiService'
-import { 
-  loadCharFrequency,
-  loadCharFrequencySC,
-  loadCharFrequencyTC,
-  loadCharFrequencyGuji,
-  loadCharFrequencyUnified,
+import {
   loadAllCharFrequencies,
   getFrequencyCharsUnion
 } from '../services/dataService'
@@ -866,6 +861,13 @@ interface Props {
   currentCodeTable?: CodeTable | null
   currentCodeTableName?: string
   globalPrefixKeys?: string[]
+  globalCharFrequencies?: {
+    zhihu: CharFrequency
+    sc: CharFrequency
+    tc: CharFrequency
+    guji: CharFrequency
+    combined: CharFrequency
+  } | null
 }
 
 const props = defineProps<Props>()
@@ -2052,16 +2054,18 @@ async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
     throw new Error('方案缺少預處理數據')
   }
   
+  if (!props.globalCharFrequencies) {
+    throw new Error('全局字頻數據未加載')
+  }
+  
   const fullCodeTable = scheme.processedTables.full
   
-  // 加載所有字頻數據
-  const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyGuji, charFrequencyUnified] = await Promise.all([
-    loadCharFrequency(),
-    loadCharFrequencySC(),
-    loadCharFrequencyTC(),
-    loadCharFrequencyGuji(),
-    loadCharFrequencyUnified()
-  ])
+  // 使用全局字頻數據
+  const charFrequency = props.globalCharFrequencies.zhihu
+  const charFrequencySC = props.globalCharFrequencies.sc
+  const charFrequencyTC = props.globalCharFrequencies.tc
+  const charFrequencyGuji = props.globalCharFrequencies.guji
+  const charFrequencyUnified = props.globalCharFrequencies.combined
   
   // 計算各種動態選重率（只計算全碼）
   const dynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency)
@@ -2088,16 +2092,18 @@ async function calculateDynamicOriginalData(scheme: Scheme): Promise<DynamicData
     throw new Error('方案缺少預處理數據')
   }
   
+  if (!props.globalCharFrequencies) {
+    throw new Error('全局字頻數據未加載')
+  }
+  
   const fullWithSelectionTable = scheme.processedTables.fullWithSelection
   
-  // 加載所有字頻數據
-  const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyGuji, charFrequencyUnified] = await Promise.all([
-    loadCharFrequency(),
-    loadCharFrequencySC(),
-    loadCharFrequencyTC(),
-    loadCharFrequencyGuji(),
-    loadCharFrequencyUnified()
-  ])
+  // 使用全局字頻數據
+  const charFrequency = props.globalCharFrequencies.zhihu
+  const charFrequencySC = props.globalCharFrequencies.sc
+  const charFrequencyTC = props.globalCharFrequencies.tc
+  const charFrequencyGuji = props.globalCharFrequencies.guji
+  const charFrequencyUnified = props.globalCharFrequencies.combined
   
   // 使用新函數計算各種動態選重率（從原始順序的帶選重鍵碼表）
   const dynamicDupRate = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequency)
@@ -2147,6 +2153,10 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
       throw new Error(`方案 ${scheme.name} 缺少預處理的選重表數據`)
     }
     
+    if (!props.globalCharFrequencies) {
+      throw new Error('全局字頻數據未加載')
+    }
+    
     // 加載當量表
     const response = await fetch('/data/equivTable.json')
     if (!response.ok) {
@@ -2155,15 +2165,12 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     const equivTableData = await response.json()
     const equivTable = equivTableData.data || {}
     
-    // 加載各種字頻表
-    const builtinService = new BuiltinCodeTableService()
-    const [zhihuFreq, scFreq, tcFreq, gujiFreq, unifiedFreq] = await Promise.all([
-      builtinService.loadCharFrequency(),
-      builtinService.loadCharFrequencySC(),
-      builtinService.loadCharFrequencyTC(),
-      builtinService.loadCharFrequencyGuji(),
-      builtinService.loadCharFrequencyUnified()
-    ])
+    // 使用全局字頻數據
+    const zhihuFreq = props.globalCharFrequencies.zhihu
+    const scFreq = props.globalCharFrequencies.sc
+    const tcFreq = props.globalCharFrequencies.tc
+    const gujiFreq = props.globalCharFrequencies.guji
+    const unifiedFreq = props.globalCharFrequencies.combined
     
     // 計算各種字頻下的速度當量
     const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)

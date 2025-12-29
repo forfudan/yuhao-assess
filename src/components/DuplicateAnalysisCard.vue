@@ -399,13 +399,6 @@ import {
 } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
-import { 
-  loadCharFrequency,
-  loadCharFrequencySC,
-  loadCharFrequencyTC,
-  loadCharFrequencyGuji,
-  loadCharFrequencyUnified
-} from '../services/dataService'
 import { createTooltipManager } from '../services/uiService'
 import { useCollapse } from '../composables/useCollapse'
 import { ExportService } from '../services/exportService'
@@ -416,6 +409,13 @@ interface Props {
   codeTable?: CodeTable
   codeTableName?: string
   id?: string
+  globalCharFrequencies?: {
+    zhihu: CharFrequency
+    sc: CharFrequency
+    tc: CharFrequency
+    guji: CharFrequency
+    combined: CharFrequency
+  } | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -567,16 +567,16 @@ async function showDuplicateDetails(freqType: string, codeType: 'full' | 'short'
     // 獲取對應的碼表
     const codeTable = codeType === 'full' ? processedTables.full : processedTables.short
     
-    // 加載字頻
-    const freqMap: Record<string, () => Promise<CharFrequency>> = {
-      zhihu: loadCharFrequency,
-      sc: loadCharFrequencySC,
-      tc: loadCharFrequencyTC,
-      guji: loadCharFrequencyGuji,
-      unified: loadCharFrequencyUnified
+    // 使用全局字頻
+    const freqMap: Record<string, CharFrequency> = {
+      zhihu: props.globalCharFrequencies?.zhihu || {},
+      sc: props.globalCharFrequencies?.sc || {},
+      tc: props.globalCharFrequencies?.tc || {},
+      guji: props.globalCharFrequencies?.guji || {},
+      unified: props.globalCharFrequencies?.combined || {}
     }
     
-    const charFrequency = await freqMap[freqType]()
+    const charFrequency = freqMap[freqType]
     
     // 計算重碼詳情
     duplicateDetails.value = getNonFirstDuplicateDetails(codeTable, charFrequency, sortByFrequency)
@@ -860,14 +860,12 @@ async function calculateAllMetrics() {
     const fullWithSelectionTable = processedTables.fullWithSelection
     const shortWithSelectionTable = processedTables.shortWithSelection
     
-    // 加載所有字頻數據
-    const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyGuji, charFrequencyUnified] = await Promise.all([
-      loadCharFrequency(),
-      loadCharFrequencySC(),
-      loadCharFrequencyTC(),
-      loadCharFrequencyGuji(),
-      loadCharFrequencyUnified()
-    ])
+    // 使用全局字頻數據
+    const charFrequency = props.globalCharFrequencies?.zhihu || {}
+    const charFrequencySC = props.globalCharFrequencies?.sc || {}
+    const charFrequencyTC = props.globalCharFrequencies?.tc || {}
+    const charFrequencyGuji = props.globalCharFrequencies?.guji || {}
+    const charFrequencyUnified = props.globalCharFrequencies?.combined || {}
     
     // 計算各種動態選重率（按字頻重新排序）
     const fullDynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency)
