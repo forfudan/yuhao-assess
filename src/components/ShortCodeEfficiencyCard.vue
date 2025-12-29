@@ -861,7 +861,7 @@ const getCellClass = (value: number, rowValues: number[]): string => {
   }
 }
 
-// 顯示詳情模態框
+// 顯示詳情模態框 - 只顯示當前區間新增的字符
 const showDetailsModal = (chars: string[], currentN: number, freqType: string) => {
   const freqNames = {
     'zhihu': '知乎簡體字頻',
@@ -871,8 +871,39 @@ const showDetailsModal = (chars: string[], currentN: number, freqType: string) =
     'combined': '繁簡聯合字頻'
   }
   
-  modalTitle.value = `${freqNames[freqType as keyof typeof freqNames]} · 效率最高簡碼字 · 至第 ${currentN} 位`
-  modalChars.value = chars
+  let displayChars: string[] = []
+  const prevN = getPreviousN(currentN)
+  
+  if (chars.length === 0) {
+    modalTitle.value = `${freqNames[freqType as keyof typeof freqNames]} · 無簡碼字`
+    modalChars.value = []
+    showModal.value = true
+    return
+  }
+  
+  // 根據不同的N值顯示差值字符
+  if (prevN > 0) {
+    // 獲取前一個N值的字符
+    const prevChars = getPreviousChars(prevN, freqType)
+    // 計算差值：當前N的字符減去前一個N的字符
+    displayChars = chars.filter(char => !prevChars.includes(char))
+    
+    // 排名範圍：從 prevN+1 到 currentN
+    const rankStart = prevN + 1
+    const rankEnd = currentN
+    modalTitle.value = `${freqNames[freqType as keyof typeof freqNames]} · 效率排名 ${rankStart} 到 ${rankEnd} 的簡碼字`
+  } else {
+    // 第一行顯示所有字符
+    displayChars = chars
+    const rankEnd = currentN
+    if (rankEnd === 0) {
+      modalTitle.value = `${freqNames[freqType as keyof typeof freqNames]} · 無簡碼字`
+    } else {
+      modalTitle.value = `${freqNames[freqType as keyof typeof freqNames]} · 簡碼效率排名 1 到 ${rankEnd} 的簡碼字`
+    }
+  }
+  
+  modalChars.value = displayChars
   showModal.value = true
 }
 
