@@ -56,49 +56,49 @@
               <tr v-for="(row, index) in tableData" :key="row.N">
                 <td class="n-value">{{ row.N }}</td>
                 <td 
-                  class="metric-value hoverable clickable"
-                  @mouseenter="showTooltip($event, row.zhihuChars, row.N, 'zhihu')"
-                  @mouseleave="hideTooltip()"
-                  @click="showDetailsModal(row.zhihuChars, row.N, 'zhihu')"
-                  :class="getCellClass(row.zhihu, [row.zhihu, row.SC, row.TC, row.combined])"
+                  :class="['metric-value', 
+                    shouldHideCell(index, 'zhihu') ? 'hidden-cell' : ['hoverable', 'clickable', getCellClass(row.zhihu, [row.zhihu, row.SC, row.TC, row.combined])]]"
+                  @mouseenter="!shouldHideCell(index, 'zhihu') && showTooltip($event, row.zhihuChars, row.N, 'zhihu')"
+                  @mouseleave="!shouldHideCell(index, 'zhihu') && hideTooltip()"
+                  @click="!shouldHideCell(index, 'zhihu') && showDetailsModal(row.zhihuChars, row.N, 'zhihu')"
                 >
-                  {{ formatValue(row.zhihu) }}
+                  {{ shouldHideCell(index, 'zhihu') ? '' : formatValue(row.zhihu) }}
                 </td>
                 <td 
-                  class="metric-value hoverable clickable"
-                  @mouseenter="showTooltip($event, row.SCChars, row.N, 'SC')"
-                  @mouseleave="hideTooltip()"
-                  @click="showDetailsModal(row.SCChars, row.N, 'SC')"
-                  :class="getCellClass(row.SC, [row.zhihu, row.SC, row.TC, row.combined])"
+                  :class="['metric-value', 
+                    shouldHideCell(index, 'SC') ? 'hidden-cell' : ['hoverable', 'clickable', getCellClass(row.SC, [row.zhihu, row.SC, row.TC, row.combined])]]"
+                  @mouseenter="!shouldHideCell(index, 'SC') && showTooltip($event, row.SCChars, row.N, 'SC')"
+                  @mouseleave="!shouldHideCell(index, 'SC') && hideTooltip()"
+                  @click="!shouldHideCell(index, 'SC') && showDetailsModal(row.SCChars, row.N, 'SC')"
                 >
-                  {{ formatValue(row.SC) }}
+                  {{ shouldHideCell(index, 'SC') ? '' : formatValue(row.SC) }}
                 </td>
                 <td 
-                  class="metric-value hoverable clickable"
-                  @mouseenter="showTooltip($event, row.TCChars, row.N, 'TC')"
-                  @mouseleave="hideTooltip()"
-                  @click="showDetailsModal(row.TCChars, row.N, 'TC')"
-                  :class="getCellClass(row.TC, [row.zhihu, row.SC, row.TC, row.guji, row.combined])"
+                  :class="['metric-value', 
+                    shouldHideCell(index, 'TC') ? 'hidden-cell' : ['hoverable', 'clickable', getCellClass(row.TC, [row.zhihu, row.SC, row.TC, row.guji, row.combined])]]"
+                  @mouseenter="!shouldHideCell(index, 'TC') && showTooltip($event, row.TCChars, row.N, 'TC')"
+                  @mouseleave="!shouldHideCell(index, 'TC') && hideTooltip()"
+                  @click="!shouldHideCell(index, 'TC') && showDetailsModal(row.TCChars, row.N, 'TC')"
                 >
-                  {{ formatValue(row.TC) }}
+                  {{ shouldHideCell(index, 'TC') ? '' : formatValue(row.TC) }}
                 </td>
                 <td 
-                  class="metric-value hoverable clickable"
-                  @mouseenter="showTooltip($event, row.gujiChars, row.N, 'guji')"
-                  @mouseleave="hideTooltip()"
-                  @click="showDetailsModal(row.gujiChars, row.N, 'guji')"
-                  :class="getCellClass(row.guji, [row.zhihu, row.SC, row.TC, row.guji, row.combined])"
+                  :class="['metric-value', 
+                    shouldHideCell(index, 'guji') ? 'hidden-cell' : ['hoverable', 'clickable', getCellClass(row.guji, [row.zhihu, row.SC, row.TC, row.guji, row.combined])]]"
+                  @mouseenter="!shouldHideCell(index, 'guji') && showTooltip($event, row.gujiChars, row.N, 'guji')"
+                  @mouseleave="!shouldHideCell(index, 'guji') && hideTooltip()"
+                  @click="!shouldHideCell(index, 'guji') && showDetailsModal(row.gujiChars, row.N, 'guji')"
                 >
-                  {{ formatValue(row.guji) }}
+                  {{ shouldHideCell(index, 'guji') ? '' : formatValue(row.guji) }}
                 </td>
                 <td 
-                  class="metric-value hoverable clickable"
-                  @mouseenter="showTooltip($event, row.combinedChars, row.N, 'combined')"
-                  @mouseleave="hideTooltip()"
-                  @click="showDetailsModal(row.combinedChars, row.N, 'combined')"
-                  :class="getCellClass(row.combined, [row.zhihu, row.SC, row.TC, row.guji, row.combined])"
+                  :class="['metric-value', 
+                    shouldHideCell(index, 'combined') ? 'hidden-cell' : ['hoverable', 'clickable', getCellClass(row.combined, [row.zhihu, row.SC, row.TC, row.guji, row.combined])]]"
+                  @mouseenter="!shouldHideCell(index, 'combined') && showTooltip($event, row.combinedChars, row.N, 'combined')"
+                  @mouseleave="!shouldHideCell(index, 'combined') && hideTooltip()"
+                  @click="!shouldHideCell(index, 'combined') && showDetailsModal(row.combinedChars, row.N, 'combined')"
                 >
-                  {{ formatValue(row.combined) }}
+                  {{ shouldHideCell(index, 'combined') ? '' : formatValue(row.combined) }}
                 </td>
               </tr>
             </tbody>
@@ -830,6 +830,20 @@ const getPreviousChars = (prevN: number, freqType: string): string[] => {
   }
 }
 
+// 判斷某個單元格是否應該隱藏（當前行的值和上一行相同時隱藏）
+const shouldHideCell = (rowIndex: number, column: 'zhihu' | 'SC' | 'TC' | 'guji' | 'combined'): boolean => {
+  if (rowIndex === 0) return false // 第一行永遠不隱藏
+  
+  const currentRow = tableData.value[rowIndex]
+  const prevRow = tableData.value[rowIndex - 1]
+  
+  // 比較當前行和上一行的值（保留3位小數）
+  const currentValue = currentRow[column].toFixed(3)
+  const prevValue = prevRow[column].toFixed(3)
+  
+  return currentValue === prevValue
+}
+
 const getCellClass = (value: number, rowValues: number[]): string => {
   // 基於絶對值的五檔分級
   if (value <= 0) return ''
@@ -847,7 +861,7 @@ const getCellClass = (value: number, rowValues: number[]): string => {
   }
 }
 
-// 顯示詳情模態框
+// 顯示詳情模態框 - 只顯示當前區間新增的字符
 const showDetailsModal = (chars: string[], currentN: number, freqType: string) => {
   const freqNames = {
     'zhihu': '知乎簡體字頻',
@@ -857,8 +871,39 @@ const showDetailsModal = (chars: string[], currentN: number, freqType: string) =
     'combined': '繁簡聯合字頻'
   }
   
-  modalTitle.value = `${freqNames[freqType as keyof typeof freqNames]} · 效率最高簡碼字 · 至第 ${currentN} 位`
-  modalChars.value = chars
+  let displayChars: string[] = []
+  const prevN = getPreviousN(currentN)
+  
+  if (chars.length === 0) {
+    modalTitle.value = `${freqNames[freqType as keyof typeof freqNames]} · 無簡碼字`
+    modalChars.value = []
+    showModal.value = true
+    return
+  }
+  
+  // 根據不同的N值顯示差值字符
+  if (prevN > 0) {
+    // 獲取前一個N值的字符
+    const prevChars = getPreviousChars(prevN, freqType)
+    // 計算差值：當前N的字符減去前一個N的字符
+    displayChars = chars.filter(char => !prevChars.includes(char))
+    
+    // 排名範圍：從 prevN+1 到 currentN
+    const rankStart = prevN + 1
+    const rankEnd = currentN
+    modalTitle.value = `${freqNames[freqType as keyof typeof freqNames]} · 效率排名 ${rankStart} 到 ${rankEnd} 的簡碼字`
+  } else {
+    // 第一行顯示所有字符
+    displayChars = chars
+    const rankEnd = currentN
+    if (rankEnd === 0) {
+      modalTitle.value = `${freqNames[freqType as keyof typeof freqNames]} · 無簡碼字`
+    } else {
+      modalTitle.value = `${freqNames[freqType as keyof typeof freqNames]} · 簡碼效率排名 1 到 ${rankEnd} 的簡碼字`
+    }
+  }
+  
+  modalChars.value = displayChars
   showModal.value = true
 }
 
@@ -1054,6 +1099,19 @@ onUnmounted(() => {
 .hoverable:hover {
   background: #e5e7eb;
   color: #1f2937;
+}
+
+/* 隱藏的單元格樣式 - 不顯示數字，背景透明，無交互 */
+.hidden-cell {
+  background: transparent !important;
+  color: transparent !important;
+  font-weight: normal !important;
+  cursor: default !important; /* 移除點擊指針 */
+  pointer-events: none; /* 禁用所有鼠標事件 */
+}
+
+.hidden-cell:hover {
+  background: transparent !important; /* 懸停時保持透明 */
 }
 
 /* 效率值的五檔簡約顔色分級 */
