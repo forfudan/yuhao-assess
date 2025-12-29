@@ -231,13 +231,20 @@ import KeyButton from './KeyButton.vue'
 import { useCollapse } from '../composables/useCollapse'
 import { codeTableProcessingService } from '../services'
 import { ExportService } from '../services/exportService'
-import type { CodeTable, KeyData, KeyInfo, AnalysisStats } from '../types/index'
+import type { CodeTable, KeyData, KeyInfo, AnalysisStats, CharFrequency } from '../types/index'
 
 interface Props {
   codeTable: CodeTable
   analysisReady: boolean
   codeTableName?: string
   id?: string
+  globalCharFrequencies?: {
+    zhihu: CharFrequency
+    sc: CharFrequency
+    tc: CharFrequency
+    guji: CharFrequency
+    combined: CharFrequency
+  } | null
 }
 
 const props = defineProps<Props>()
@@ -279,37 +286,14 @@ async function exportCard() {
   }
 }
 
-// 字符頻率數據
-const charFrequency = ref<Record<string, number>>({})
-const charFrequencyTC = ref<Record<string, number>>({})
+// 字符頻率數據（使用全局字頻）
+const charFrequency = computed(() => {
+  return props.globalCharFrequencies?.zhihu || {}
+})
 
-// 載入字符頻率數據
-const loadCharFrequency = async () => {
-  try {
-    const response = await fetch('/data/charFrequencyZhihu.json')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
-    charFrequency.value = data
-  } catch (error) {
-    console.error('載入字符頻率數據失敗:', error)
-  }
-}
-
-// 載入台標繁體字符頻率數據
-const loadCharFrequencyTC = async () => {
-  try {
-    const response = await fetch('/data/charFrequencyTC.json')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
-    charFrequencyTC.value = data
-  } catch (error) {
-    console.error('載入台標繁體字符頻率數據失敗:', error)
-  }
-}
+const charFrequencyTC = computed(() => {
+  return props.globalCharFrequencies?.tc || {}
+})
 
 // 響應式數據
 const keyboardScale = ref(1.0)
@@ -403,8 +387,7 @@ const handleResize = () => {
 
 // 生命週期鈎子
 onMounted(() => {
-  loadCharFrequency()
-  loadCharFrequencyTC()
+  // 字頻數據由 props 提供，不需要加載
   
   // 延遲計算縮放，確保DOM已渲染
   setTimeout(() => {

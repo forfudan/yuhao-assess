@@ -841,12 +841,7 @@ import {
   formatNumber, 
   formatEquiv
 } from '../services/uiService'
-import { 
-  loadCharFrequency,
-  loadCharFrequencySC,
-  loadCharFrequencyTC,
-  loadCharFrequencyGuji,
-  loadCharFrequencyUnified,
+import {
   loadAllCharFrequencies,
   getFrequencyCharsUnion
 } from '../services/dataService'
@@ -866,6 +861,13 @@ interface Props {
   currentCodeTable?: CodeTable | null
   currentCodeTableName?: string
   globalPrefixKeys?: string[]
+  globalCharFrequencies?: {
+    zhihu: CharFrequency
+    sc: CharFrequency
+    tc: CharFrequency
+    guji: CharFrequency
+    combined: CharFrequency
+  } | null
 }
 
 const props = defineProps<Props>()
@@ -2046,22 +2048,28 @@ async function calculateStaticData(scheme: Scheme): Promise<StaticData> {
 
 // 計算動態重碼數據（使用預處理的數據）- 高性能版本
 async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
-  console.time(`動態重碼計算-${scheme.name}`)
+  const timerName = `動態重碼計算-${scheme.name}`
+  
+  // 確保沒有重複的 timer
+  try { console.timeEnd(timerName) } catch {}
+  console.time(timerName)
   
   if (!scheme.processedTables) {
     throw new Error('方案缺少預處理數據')
   }
   
+  if (!props.globalCharFrequencies) {
+    throw new Error('全局字頻數據未加載')
+  }
+  
   const fullCodeTable = scheme.processedTables.full
   
-  // 加載所有字頻數據
-  const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyGuji, charFrequencyUnified] = await Promise.all([
-    loadCharFrequency(),
-    loadCharFrequencySC(),
-    loadCharFrequencyTC(),
-    loadCharFrequencyGuji(),
-    loadCharFrequencyUnified()
-  ])
+  // 使用全局字頻數據
+  const charFrequency = props.globalCharFrequencies.zhihu
+  const charFrequencySC = props.globalCharFrequencies.sc
+  const charFrequencyTC = props.globalCharFrequencies.tc
+  const charFrequencyGuji = props.globalCharFrequencies.guji
+  const charFrequencyUnified = props.globalCharFrequencies.combined
   
   // 計算各種動態選重率（只計算全碼）
   const dynamicDupRate = getDynamicDupRate(fullCodeTable, charFrequency)
@@ -2070,7 +2078,7 @@ async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
   const dynamicDupRateGuji = getDynamicDupRate(fullCodeTable, charFrequencyGuji)
   const dynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
   
-  console.timeEnd(`動態重碼計算-${scheme.name}`)
+  console.timeEnd(timerName)
   return {
     dynamicDupRate,
     dynamicDupRateSC,
@@ -2082,22 +2090,28 @@ async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
 
 // 計算動態重碼數據 - 原始排序（使用預處理的數據）- 高性能版本
 async function calculateDynamicOriginalData(scheme: Scheme): Promise<DynamicData> {
-  console.time(`動態重碼計算-原始-${scheme.name}`)
+  const timerName = `動態重碼計算-原始-${scheme.name}`
+  
+  // 確保沒有重複的 timer
+  try { console.timeEnd(timerName) } catch {}
+  console.time(timerName)
   
   if (!scheme.processedTables) {
     throw new Error('方案缺少預處理數據')
   }
   
+  if (!props.globalCharFrequencies) {
+    throw new Error('全局字頻數據未加載')
+  }
+  
   const fullWithSelectionTable = scheme.processedTables.fullWithSelection
   
-  // 加載所有字頻數據
-  const [charFrequency, charFrequencySC, charFrequencyTC, charFrequencyGuji, charFrequencyUnified] = await Promise.all([
-    loadCharFrequency(),
-    loadCharFrequencySC(),
-    loadCharFrequencyTC(),
-    loadCharFrequencyGuji(),
-    loadCharFrequencyUnified()
-  ])
+  // 使用全局字頻數據
+  const charFrequency = props.globalCharFrequencies.zhihu
+  const charFrequencySC = props.globalCharFrequencies.sc
+  const charFrequencyTC = props.globalCharFrequencies.tc
+  const charFrequencyGuji = props.globalCharFrequencies.guji
+  const charFrequencyUnified = props.globalCharFrequencies.combined
   
   // 使用新函數計算各種動態選重率（從原始順序的帶選重鍵碼表）
   const dynamicDupRate = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequency)
@@ -2106,7 +2120,7 @@ async function calculateDynamicOriginalData(scheme: Scheme): Promise<DynamicData
   const dynamicDupRateGuji = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyGuji)
   const dynamicDupRateUnified = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyUnified)
   
-  console.timeEnd(`動態重碼計算-原始-${scheme.name}`)
+  console.timeEnd(timerName)
   return {
     dynamicDupRate,
     dynamicDupRateSC,
@@ -2118,7 +2132,11 @@ async function calculateDynamicOriginalData(scheme: Scheme): Promise<DynamicData
 
 // 計算速度當量數據（使用預處理的數據）- 高性能版本  
 async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> {
-  console.time(`速度當量計算-${scheme.name}`)
+  const timerName = `速度當量計算-${scheme.name}`
+  
+  // 確保沒有重複的 timer
+  try { console.timeEnd(timerName) } catch {}
+  console.time(timerName)
   
   if (!scheme.processedTables) {
     throw new Error('方案缺少預處理數據')
@@ -2147,6 +2165,10 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
       throw new Error(`方案 ${scheme.name} 缺少預處理的選重表數據`)
     }
     
+    if (!props.globalCharFrequencies) {
+      throw new Error('全局字頻數據未加載')
+    }
+    
     // 加載當量表
     const response = await fetch('/data/equivTable.json')
     if (!response.ok) {
@@ -2155,15 +2177,12 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     const equivTableData = await response.json()
     const equivTable = equivTableData.data || {}
     
-    // 加載各種字頻表
-    const builtinService = new BuiltinCodeTableService()
-    const [zhihuFreq, scFreq, tcFreq, gujiFreq, unifiedFreq] = await Promise.all([
-      builtinService.loadCharFrequency(),
-      builtinService.loadCharFrequencySC(),
-      builtinService.loadCharFrequencyTC(),
-      builtinService.loadCharFrequencyGuji(),
-      builtinService.loadCharFrequencyUnified()
-    ])
+    // 使用全局字頻數據
+    const zhihuFreq = props.globalCharFrequencies.zhihu
+    const scFreq = props.globalCharFrequencies.sc
+    const tcFreq = props.globalCharFrequencies.tc
+    const gujiFreq = props.globalCharFrequencies.guji
+    const unifiedFreq = props.globalCharFrequencies.combined
     
     // 計算各種字頻下的速度當量
     const zhihuEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, zhihuFreq, equivTable)
@@ -2172,7 +2191,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     const gujiEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, gujiFreq, equivTable)
     const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
     
-    console.timeEnd(`速度當量計算-${scheme.name}`)
+    console.timeEnd(timerName)
     return {
       zhihuEquiv,
       scEquiv,
@@ -2182,7 +2201,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     }
   } catch (error) {
     console.error('速度當量計算失敗:', error)
-    console.timeEnd(`速度當量計算-${scheme.name}`)
+    console.timeEnd(timerName)
     return {
       zhihuEquiv: 0,
       scEquiv: 0,

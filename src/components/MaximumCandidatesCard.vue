@@ -164,6 +164,7 @@ interface Props {
   codeTable: CodeTable
   codeTableName?: string
   id?: string
+  processedTables?: any | null  // 處理後的碼表數據
 }
 
 const props = defineProps<Props>()
@@ -306,6 +307,11 @@ const calculateData = async () => {
     return
   }
   
+  if (!props.processedTables) {
+    console.warn('碼表處理結果尚未準備好，等待處理完成...')
+    return
+  }
+  
   loading.value = true
   error.value = null
   
@@ -330,16 +336,16 @@ const refreshData = async () => {
   await calculateData()
 }
 
-// 監聽碼表變化
-watch(() => props.codeTable, () => {
-  if (props.codeTable && props.codeTable.size > 0) {
+// 監聽碼表和處理結果變化
+watch([() => props.codeTable, () => props.processedTables], ([newCodeTable, newProcessedTables]) => {
+  if (newCodeTable && newCodeTable.size > 0 && newProcessedTables) {
     calculateData()
   }
 }, { immediate: true })
 
 // 組件掛載時計算
 onMounted(() => {
-  if (props.codeTable && props.codeTable.size > 0) {
+  if (props.codeTable && props.codeTable.size > 0 && props.processedTables) {
     calculateData()
   }
 })

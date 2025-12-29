@@ -188,7 +188,6 @@
 import { ref, computed, watch, onMounted, onUnmounted, Teleport } from 'vue'
 import { calculateShortCodeEfficiency } from '../services/shortCodeEfficiencyService'
 import { useCollapse } from '../composables/useCollapse'
-import { loadCharFrequency, loadCharFrequencySC, loadCharFrequencyTC, loadCharFrequencyGuji } from '../services/dataService'
 import { createTooltipManager } from '../services/uiService'
 import { ExportService } from '../services/exportService'
 import { CodeTableProcessingService } from '../services/codeTableProcessingService'
@@ -202,6 +201,13 @@ interface Props {
   codeTableName?: string
   id?: string
   processedTables?: any | null  // 處理後的碼表數據
+  globalCharFrequencies: {
+    zhihu: CharFrequency
+    sc: CharFrequency
+    tc: CharFrequency
+    guji: CharFrequency
+    combined: CharFrequency
+  }
 }
 
 const props = defineProps<Props>()
@@ -531,42 +537,13 @@ const calculateShortCodeEfficiencyWithMaps = (
 // 載入字頻數據
 const loadCharFrequencyData = async () => {
   try {
-    // 加載字頻數據
-    const [charFreqSC, charFreqTC, charFreqGuji, charFreqZhihu] = await Promise.all([
-      loadCharFrequencySC(),
-      loadCharFrequencyTC(),
-      loadCharFrequencyGuji(),
-      loadCharFrequency()
-    ])
-
-    // 計算聯合字頻
-    const combined: CharFrequency = {}
-    const allChars = new Set([
-      ...Object.keys(charFreqSC),
-      ...Object.keys(charFreqTC),
-      ...Object.keys(charFreqGuji),
-      ...Object.keys(charFreqZhihu)
-    ])
-
-    for (const char of allChars) {
-      const frequencies = [
-        charFreqSC[char] || 0,
-        charFreqTC[char] || 0,
-        charFreqGuji[char] || 0,
-        charFreqZhihu[char] || 0
-      ].filter(f => f > 0)
-      
-      if (frequencies.length > 0) {
-        combined[char] = frequencies.reduce((a, b) => a + b, 0) / frequencies.length
-      }
-    }
-
+    // 使用全局字頻數據
     charFrequencies.value = {
-      charFrequencySC: charFreqSC,
-      charFrequencyTC: charFreqTC,
-      charFrequencyGuji: charFreqGuji,
-      charFrequencyZhihu: charFreqZhihu,
-      combined: combined
+      charFrequencySC: props.globalCharFrequencies.sc,
+      charFrequencyTC: props.globalCharFrequencies.tc,
+      charFrequencyGuji: props.globalCharFrequencies.guji,
+      charFrequencyZhihu: props.globalCharFrequencies.zhihu,
+      combined: props.globalCharFrequencies.combined
     }
   } catch (err) {
     error.value = `載入字頻數據時出錯: ${err instanceof Error ? err.message : String(err)}`

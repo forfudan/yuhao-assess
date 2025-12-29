@@ -136,6 +136,8 @@
             ref="duplicateAnalysisCardRef"
             :code-table="codeTable" 
             :code-table-name="codeTableName"
+            :processed-tables="processedTables"
+            :global-char-frequencies="globalCharFrequencies"
           />
 
           <!-- 最大候選個數卡片 -->
@@ -145,6 +147,7 @@
             ref="maximumCandidatesCardRef"
             :code-table="codeTable" 
             :code-table-name="codeTableName"
+            :processed-tables="processedTables"
           />
 
           <!-- 速度當量卡片 -->
@@ -157,11 +160,12 @@
             :initial-prefix="uploadPrefixFlag"
             :global-prefix-keys="uploadPrefixKeys"
             :processed-tables="processedTables"
+            :global-char-frequencies="globalCharFrequencies"
           />
 
           <!-- 簡碼效率卡片 -->
           <ShortCodeEfficiencyCard 
-            v-if="analysisReady" 
+            v-if="analysisReady && globalCharFrequencies" 
             id="card-efficiency"
             ref="shortCodeEfficiencyCardRef"
             :code-table="codeTable" 
@@ -169,6 +173,7 @@
             :global-prefix-keys="uploadPrefixKeys"
             :code-table-name="codeTableName"
             :processed-tables="processedTables"
+            :global-char-frequencies="globalCharFrequencies"
           />
 
           <!-- 鍵位熱力圖卡片 -->
@@ -179,6 +184,7 @@
             :code-table="codeTable" 
             :analysis-ready="analysisReady" 
             :code-table-name="codeTableName"
+            :global-char-frequencies="globalCharFrequencies"
           />
 
           <!-- 
@@ -202,6 +208,7 @@
             :currentCodeTable="codeTable" 
             :currentCodeTableName="codeTableName" 
             :globalPrefixKeys="uploadPrefixKeys"
+            :global-char-frequencies="globalCharFrequencies"
           />
         </div>
       </div>
@@ -235,7 +242,14 @@ import SpeedEquivCard from './components/SpeedEquivCard.vue'
 import ShortCodeEfficiencyCard from './components/ShortCodeEfficiencyCard.vue'
 import { codeTableProcessingService } from './services/codeTableProcessingService'
 import { isInCJKToJ } from './services/charsetService' 
-import type { CodeTable, RawCodeTable, UploadStatus, CodeTableAnalysis } from './types/index'
+import type { CodeTable, RawCodeTable, UploadStatus, CodeTableAnalysis, CharFrequency } from './types/index'
+import { 
+  loadCharFrequency, 
+  loadCharFrequencySC, 
+  loadCharFrequencyTC, 
+  loadCharFrequencyGuji,
+  loadCharFrequencyUnified
+} from './services/dataService'
 
 // 響應式數據
 const codeTable = ref<CodeTable>(new Map())
@@ -248,6 +262,15 @@ const uploadPrefixFlag = ref<boolean>(false)
 const uploadPrefixKeys = ref<string[]>([])
 const globalMaxLength = ref<number>(4) // 全局最大碼長，計算一次後不再改變
 const processedTables = ref<any>(null) // 處理後的碼表數據，作為 golden source
+
+// 全局字頻表
+const globalCharFrequencies = ref<{
+  zhihu: CharFrequency
+  sc: CharFrequency
+  tc: CharFrequency
+  guji: CharFrequency
+  combined: CharFrequency
+} | null>(null)
 
 // 上傳卡片引用
 const uploaderCardRef = ref()
@@ -348,15 +371,47 @@ const toggleAllCards = () => {
 // 主題相關
 const isDarkMode = ref(false)
 
+// 加載全局字頻數據
+const loadGlobalCharFrequencies = async () => {
+  try {
+    console.log('[全局字頻] 開始加載字頻數據...')
+    
+    // 並行加載所有字頻表
+    const [zhihu, sc, tc, guji, combined] = await Promise.all([
+      loadCharFrequency(),      // Zhihu 簡體
+      loadCharFrequencySC(),    // Beiyun 簡體
+      loadCharFrequencyTC(),    // Taiwan 繁體
+      loadCharFrequencyGuji(),  // 古籍繁體
+      loadCharFrequencyUnified() // 混合字頻
+    ])
+    
+    globalCharFrequencies.value = {
+      zhihu: zhihu,
+      sc: sc,
+      tc: tc,
+      guji: guji,
+      combined: combined
+    }
+    
+    console.log('[全局字頻] 字頻數據加載完成')
+  } catch (error) {
+    console.error('[全局字頻] 加載失敗:', error)
+  }
+}
+
 // 初始化主題和數據恢復
 onMounted(async () => {
   // 初始化主題，默認淺色模式
   const savedTheme = localStorage.getItem('theme')
   isDarkMode.value = savedTheme === 'dark'
   updateTheme()
-  
+
   // 恢復碼表數據
   await restoreCodeTableData()
+
+  // 加載全局字頻數據
+  await loadGlobalCharFrequencies()
+  
 })
 
 // 切換主題
