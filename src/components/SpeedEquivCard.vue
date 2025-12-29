@@ -554,9 +554,9 @@ async function calculateSpeedEquivAnalysis() {
   }
 }
 
-// 监听碼表变化
-watch(() => props.codeTable, async (newCodeTable) => {
-  if (newCodeTable && newCodeTable.size > 0) {
+// 監聽碼表和處理結果變化
+watch([() => props.codeTable, () => props.processedTables], async ([newCodeTable, newProcessedTables]) => {
+  if (newCodeTable && newCodeTable.size > 0 && newProcessedTables) {
     // 延迟一点确保其他watch已执行
     await nextTick()
     calculateSpeedEquivAnalysis()
@@ -567,7 +567,7 @@ watch(() => props.codeTable, async (newCodeTable) => {
 onMounted(async () => {
   // SpeedEquivCard不再自己檢測前綴碼，完全依賴App.vue的處理結果
   // 直接執行計算
-  if (props.codeTable && props.codeTable.size > 0) {
+  if (props.codeTable && props.codeTable.size > 0 && props.processedTables) {
     calculateSpeedEquivAnalysis()
   }
 })

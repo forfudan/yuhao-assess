@@ -147,6 +147,7 @@
             ref="maximumCandidatesCardRef"
             :code-table="codeTable" 
             :code-table-name="codeTableName"
+            :processed-tables="processedTables"
             :global-char-frequencies="globalCharFrequencies"
           />
 
@@ -408,7 +409,7 @@ onMounted(async () => {
 
   // 恢復碼表數據
   await restoreCodeTableData()
-  
+
   // 加載全局字頻數據
   await loadGlobalCharFrequencies()
   
