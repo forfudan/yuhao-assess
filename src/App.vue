@@ -160,6 +160,7 @@
             :initial-prefix="uploadPrefixFlag"
             :global-prefix-keys="uploadPrefixKeys"
             :processed-tables="processedTables"
+            :global-char-frequencies="globalCharFrequencies"
           />
 
           <!-- 簡碼效率卡片 -->

@@ -176,7 +176,6 @@ import { ExportService } from '../services/exportService'
 import type { CodeTable } from '../types/index'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
-import { loadAllCharFrequencies } from '../services/dataService'
 import {
   calculateSpeedEquiv,
   calculateCodePairFrequencies,
@@ -192,6 +191,13 @@ interface Props {
   initialPrefix?: boolean
   globalPrefixKeys?: string[]
   processedTables?: any | null  // 處理後的碼表數據
+  globalCharFrequencies?: {  // 全局字频表数据
+    zhihu: Record<string, number> | null
+    sc: Record<string, number> | null
+    tc: Record<string, number> | null
+    guji: Record<string, number> | null
+    combined: Record<string, number> | null
+  } | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -199,7 +205,8 @@ const props = withDefaults(defineProps<Props>(), {
   codeTableName: '',
   initialPrefix: false,
   globalPrefixKeys: () => [],
-  processedTables: null
+  processedTables: null,
+  globalCharFrequencies: null
 })
 
 // 摺疊功能
@@ -327,14 +334,16 @@ async function showEquivDetails(freqType: string, codeType: string) {
       )
     }
     
-    // 加載字頻和當量表
-    const { zhihuFreq, scFreq, tcFreq, gujiFreq, unifiedFreq } = await loadAllCharFrequencies()
+    // 使用全局字頻表
+    if (!props.globalCharFrequencies) {
+      throw new Error('全局字頻表尚未加載')
+    }
     const freqMap: Record<string, Record<string, number>> = {
-      zhihu: zhihuFreq,
-      sc: scFreq,
-      tc: tcFreq,
-      guji: gujiFreq,
-      unified: unifiedFreq
+      zhihu: props.globalCharFrequencies.zhihu || {},
+      sc: props.globalCharFrequencies.sc || {},
+      tc: props.globalCharFrequencies.tc || {},
+      guji: props.globalCharFrequencies.guji || {},
+      unified: props.globalCharFrequencies.combined || {}
     }
     
     const charFrequency = freqMap[freqType]
@@ -493,8 +502,15 @@ async function calculateSpeedEquivAnalysis() {
     // 4. 加載當量表
     const equivTable = await loadEquivTable()
     
-    // 5. 加載各種字頻表
-    const { zhihuFreq, scFreq, tcFreq, gujiFreq, unifiedFreq } = await loadAllCharFrequencies()
+    // 5. 使用全局字頻表
+    if (!props.globalCharFrequencies) {
+      throw new Error('全局字頻表尚未加載')
+    }
+    const zhihuFreq = props.globalCharFrequencies.zhihu || {}
+    const scFreq = props.globalCharFrequencies.sc || {}
+    const tcFreq = props.globalCharFrequencies.tc || {}
+    const gujiFreq = props.globalCharFrequencies.guji || {}
+    const unifiedFreq = props.globalCharFrequencies.combined || {}
     
     // 6. 計算各種字頻下的全碼速度當量
     const zhihuPairFreq = calculateCodePairFrequencies(processedCodeTable, zhihuFreq)
@@ -555,20 +571,24 @@ async function calculateSpeedEquivAnalysis() {
   }
 }
 
-// 監聽碼表和處理結果變化
-watch([() => props.codeTable, () => props.processedTables], async ([newCodeTable, newProcessedTables]) => {
-  if (newCodeTable && newCodeTable.size > 0 && newProcessedTables) {
-    // 延迟一点确保其他watch已执行
-    await nextTick()
-    calculateSpeedEquivAnalysis()
-  }
-}, { immediate: false })  // 不立即执行，让组件挂载逻辑控制
+// 監聽碼表、處理結果和全局字頻變化
+watch(
+  [() => props.codeTable, () => props.processedTables, () => props.globalCharFrequencies], 
+  async ([newCodeTable, newProcessedTables, newFrequencies]) => {
+    if (newCodeTable && newCodeTable.size > 0 && newProcessedTables && newFrequencies) {
+      // 延迟一点确保其他watch已执行
+      await nextTick()
+      calculateSpeedEquivAnalysis()
+    }
+  }, 
+  { immediate: true }
+)
 
 // 組件掛載時自動計算
 onMounted(async () => {
   // SpeedEquivCard不再自己檢測前綴碼，完全依賴App.vue的處理結果
   // 直接執行計算
-  if (props.codeTable && props.codeTable.size > 0 && props.processedTables) {
+  if (props.codeTable && props.codeTable.size > 0 && props.processedTables && props.globalCharFrequencies) {
     calculateSpeedEquivAnalysis()
   }
 })
