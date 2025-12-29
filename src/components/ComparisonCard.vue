@@ -2048,7 +2048,11 @@ async function calculateStaticData(scheme: Scheme): Promise<StaticData> {
 
 // 計算動態重碼數據（使用預處理的數據）- 高性能版本
 async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
-  console.time(`動態重碼計算-${scheme.name}`)
+  const timerName = `動態重碼計算-${scheme.name}`
+  
+  // 確保沒有重複的 timer
+  try { console.timeEnd(timerName) } catch {}
+  console.time(timerName)
   
   if (!scheme.processedTables) {
     throw new Error('方案缺少預處理數據')
@@ -2074,7 +2078,7 @@ async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
   const dynamicDupRateGuji = getDynamicDupRate(fullCodeTable, charFrequencyGuji)
   const dynamicDupRateUnified = getDynamicDupRate(fullCodeTable, charFrequencyUnified)
   
-  console.timeEnd(`動態重碼計算-${scheme.name}`)
+  console.timeEnd(timerName)
   return {
     dynamicDupRate,
     dynamicDupRateSC,
@@ -2086,7 +2090,11 @@ async function calculateDynamicData(scheme: Scheme): Promise<DynamicData> {
 
 // 計算動態重碼數據 - 原始排序（使用預處理的數據）- 高性能版本
 async function calculateDynamicOriginalData(scheme: Scheme): Promise<DynamicData> {
-  console.time(`動態重碼計算-原始-${scheme.name}`)
+  const timerName = `動態重碼計算-原始-${scheme.name}`
+  
+  // 確保沒有重複的 timer
+  try { console.timeEnd(timerName) } catch {}
+  console.time(timerName)
   
   if (!scheme.processedTables) {
     throw new Error('方案缺少預處理數據')
@@ -2112,7 +2120,7 @@ async function calculateDynamicOriginalData(scheme: Scheme): Promise<DynamicData
   const dynamicDupRateGuji = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyGuji)
   const dynamicDupRateUnified = getDynamicDupRateFromOriginalOrder(fullWithSelectionTable, charFrequencyUnified)
   
-  console.timeEnd(`動態重碼計算-原始-${scheme.name}`)
+  console.timeEnd(timerName)
   return {
     dynamicDupRate,
     dynamicDupRateSC,
@@ -2124,7 +2132,11 @@ async function calculateDynamicOriginalData(scheme: Scheme): Promise<DynamicData
 
 // 計算速度當量數據（使用預處理的數據）- 高性能版本  
 async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> {
-  console.time(`速度當量計算-${scheme.name}`)
+  const timerName = `速度當量計算-${scheme.name}`
+  
+  // 確保沒有重複的 timer
+  try { console.timeEnd(timerName) } catch {}
+  console.time(timerName)
   
   if (!scheme.processedTables) {
     throw new Error('方案缺少預處理數據')
@@ -2179,7 +2191,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     const gujiEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, gujiFreq, equivTable)
     const unifiedEquiv = calculateSpeedEquivFromCodeTable(processedCodeTable, unifiedFreq, equivTable)
     
-    console.timeEnd(`速度當量計算-${scheme.name}`)
+    console.timeEnd(timerName)
     return {
       zhihuEquiv,
       scEquiv,
@@ -2189,7 +2201,7 @@ async function calculateSpeedEquivData(scheme: Scheme): Promise<SpeedEquivData> 
     }
   } catch (error) {
     console.error('速度當量計算失敗:', error)
-    console.timeEnd(`速度當量計算-${scheme.name}`)
+    console.timeEnd(timerName)
     return {
       zhihuEquiv: 0,
       scEquiv: 0,
