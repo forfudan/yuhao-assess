@@ -231,7 +231,7 @@ import KeyButton from './KeyButton.vue'
 import { useCollapse } from '../composables/useCollapse'
 import { codeTableProcessingService } from '../services'
 import { ExportService } from '../services/exportService'
-import type { CodeTable, KeyData, KeyInfo, AnalysisStats, CharFrequency } from '../types/index'
+import type { CodeTable, KeyData, KeyInfo, AnalysisStats, CharFrequency, WordFrequency } from '../types/index'
 
 interface Props {
   codeTable: CodeTable
@@ -244,6 +244,10 @@ interface Props {
     tc: CharFrequency
     guji: CharFrequency
     combined: CharFrequency
+  } | null
+  wordCodeTable?: CodeTable | null
+  globalWordFrequencies?: {
+    sc?: WordFrequency
   } | null
 }
 
@@ -269,7 +273,7 @@ async function exportCard() {
     await ExportService.exportQuadModeCard(cardRef.value, '鍵位熱力', props.codeTableName || '未命名方案', {
       copyToClipboard: ExportService.isClipboardSupported(),
       download: true,
-      switchTabCallback: (mode: 'full' | 'short' | 'fullTC' | 'shortTC') => {
+      switchTabCallback: (mode: 'full' | 'short' | 'fullTC' | 'shortTC' | 'word') => {
         // 切換標籤頁的回調函數
         activeTab.value = mode
         // 等待DOM更新
@@ -312,12 +316,13 @@ const refreshData = () => {
 }
 
 // Tab 切換相關
-const activeTab = ref<'full' | 'short' | 'fullTC' | 'shortTC'>('full')
+const activeTab = ref<'full' | 'short' | 'fullTC' | 'shortTC' | 'word'>('full')
 const tabs = [
   { key: 'full', label: '全碼·簡頻' },
   { key: 'short', label: '出簡·簡頻' },
   { key: 'fullTC', label: '全碼·繁頻' },
-  { key: 'shortTC', label: '出簡·繁頻' }
+  { key: 'shortTC', label: '出簡·繁頻' },
+  { key: 'word', label: '詞語·簡頻' }
 ] as const
 
 // 模擬標點使用頻率選項（默認勾選）
@@ -419,6 +424,11 @@ const processedCodeTable = computed(() => {
   refreshTrigger.value
   
   if (!props.analysisReady) return new Map()
+  
+  // 如果是詞語標籤頁，使用詞語碼表
+  if (activeTab.value === 'word') {
+    return props.wordCodeTable || new Map()
+  }
   
   const processedTables = codeTableProcessingService.getProcessedTables()
   if (!processedTables) return new Map()
@@ -547,32 +557,39 @@ const stats = computed<AnalysisStats>(() => {
   let totalCodes = 0
   let totalCodeLength = 0
 
-  // 分析碼表 - 使用字频权重
-  for (const [char, codes] of processedCodeTable.value.entries()) {
-    // 获取字符频率权重，默认为0（归一化后的字频是0-1之间的概率值）
-    const charWeight = currentCharFrequency.value[char] || 0
+  // 分析碼表 - 使用字频或词频权重
+  for (const [item, codes] of processedCodeTable.value.entries()) {
+    // 根據當前標籤頁選擇相應的頻率權重
+    let itemWeight = 0
+    if (activeTab.value === 'word') {
+      // 使用詞頻
+      itemWeight = props.globalWordFrequencies?.sc?.[item] || 0
+    } else {
+      // 使用字頻
+      itemWeight = currentCharFrequency.value[item] || 0
+    }
     
     for (const code of codes) {
       totalCodes++
       totalCodeLength += code.length
 
-      // 統計每个按键的使用次数（应用字频权重）
+      // 統計每个按键的使用次数（应用频率权重）
       // 注意：这里需要特殊處理下划线，将其视为空格键
       for (const key of code.toLowerCase()) {
         const actualKey = key === '_' ? 'space' : key
         
-        keyDistribution.set(actualKey, (keyDistribution.get(actualKey) || 0) + charWeight)
+        keyDistribution.set(actualKey, (keyDistribution.get(actualKey) || 0) + itemWeight)
         
         // 統計手指负担
         const finger = fingerMapping[actualKey]
         if (finger) {
-          fingerLoad.set(finger, (fingerLoad.get(finger) || 0) + charWeight)
+          fingerLoad.set(finger, (fingerLoad.get(finger) || 0) + itemWeight)
         }
         
         // 統計按排分布
         const row = rowMapping[actualKey]
         if (row) {
-          rowDistribution.set(row, (rowDistribution.get(row) || 0) + charWeight)
+          rowDistribution.set(row, (rowDistribution.get(row) || 0) + itemWeight)
         }
       }
     }
@@ -830,7 +847,7 @@ defineExpose({
   toggle: toggleCollapsed,
   getCollapsedState,
   activeTab,
-  setActiveTab: (tab: 'full' | 'short') => {
+  setActiveTab: (tab: 'full' | 'short' | 'fullTC' | 'shortTC' | 'word') => {
     activeTab.value = tab
   }
 })

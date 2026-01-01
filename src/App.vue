@@ -185,6 +185,8 @@
             :analysis-ready="analysisReady" 
             :code-table-name="codeTableName"
             :global-char-frequencies="globalCharFrequencies"
+            :word-code-table="processedTables?.wordFullCodeWithSelection"
+            :global-word-frequencies="globalWordFrequencies"
           />
 
           <!-- 
