@@ -842,7 +842,6 @@ import {
   formatEquiv
 } from '../services/uiService'
 import {
-  loadAllCharFrequencies,
   getFrequencyCharsUnion
 } from '../services/dataService'
 import {

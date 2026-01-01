@@ -378,14 +378,95 @@ RawCodeTable = Map<number, [string, string, number]>
 
 #### 5. 字頻數據融合
 
-**相關服務**: `dataService.ts`
+**相關服務**: `dataService.ts`、`App.vue`
 
-預處理完成後，某些分析還會結合字頻數據：
+##### 字頻數據加載與歸一化
 
-- **知乎簡體字頻** (`charFrequencyZhihu.json`)
-- **北語簡體字頻** (`charFrequencySC.json`)
-- **臺標繁體字頻** (`charFrequencyTC.json`)
-- **古籍繁體字頻** (`charFrequencyGuji.json`)
+系統在 `App.vue` 的 `loadGlobalCharFrequencies()` 函數中統一加載並歸一化所有字頻數據：
+
+1. **原始數據加載**：從 JSON 文件並行加載 5 個字頻表
+   - **知乎簡體字頻** (`charFrequencyZhihu.json`)
+   - **北語簡體字頻** (`charFrequencySC.json`)
+   - **臺標繁體字頻** (`charFrequencyTC.json`)
+   - **古籍繁體字頻** (`charFrequencyGuji.json`)
+   - **繁簡聯合字頻** (簡體+繁體合併)
+
+2. **歸一化處理**：將原始頻數（約 10 億量級）轉換為概率值（0-1 之間）
+
+   ```typescript
+   const normalizeCharFrequency = (charFreq: CharFrequency): CharFrequency => {
+     const totalFreq = Object.values(charFreq).reduce((sum, freq) => sum + freq, 0)
+     if (totalFreq === 0) return {}
+     
+     const normalized: CharFrequency = {}
+     for (const [char, freq] of Object.entries(charFreq)) {
+       normalized[char] = freq / totalFreq
+     }
+     return normalized
+   }
+   ```
+
+3. **全局傳遞**：通過 `props.globalCharFrequencies` 傳遞給所有需要字頻數據的組件
+
+##### API 使用規範
+
+**✅ 正確做法**：組件只使用 `props.globalCharFrequencies`
+
+```vue
+<script setup lang="ts">
+interface Props {
+  globalCharFrequencies: {
+    zhihu: CharFrequency
+    sc: CharFrequency
+    tc: CharFrequency
+    guji: CharFrequency
+    combined: CharFrequency
+  }
+}
+
+const props = defineProps<Props>()
+
+// ✅ 使用 props 中的歸一化字頻
+const charFreq = props.globalCharFrequencies.zhihu[char] || 0
+</script>
+```
+
+**❌ 錯誤做法**：組件直接調用 `dataService` 加載原始字頻
+
+```vue
+<script setup lang="ts">
+import { loadCharFrequency } from '../services/dataService'
+
+// ❌ 不要在組件中直接加載原始字頻
+const rawFreq = await loadCharFrequency()
+</script>
+```
+
+##### 字頻數據用途
+
+歸一化字頻數據用於：
+
+- **簡碼效率分析**：計算字頻加權節約碼長
+- **速度當量計算**：加權計算按鍵組合頻率
+- **動態重碼率**：基於實際使用頻率的重碼統計
+- **鍵盤熱力圖**：按鍵使用頻率可視化
+
+##### 為什麼要歸一化？
+
+1. **統一接口**：所有組件使用一致的概率值格式
+2. **性能優化**：避免每個組件重複計算總頻數（約 10 億次累加）
+3. **數值精度**：概率值（0-1）更適合浮點運算，避免大數溢出
+4. **顯示友好**：直接乘以 10000 轉換為萬分率（‱）或乘以 100 轉換為百分比（%）
+
+##### 顯示轉換示例
+
+```typescript
+// 原始頻數顯示（舊方式，已廢棄）
+const displayValue = (rawFreq / 1_000_000_000 * 10_000).toFixed(4) + '‱'
+
+// 歸一化頻率顯示（新方式，推薦）
+const displayValue = (normalizedFreq * 10_000).toFixed(4) + '‱'
+```
 
 字頻融合用於：
 

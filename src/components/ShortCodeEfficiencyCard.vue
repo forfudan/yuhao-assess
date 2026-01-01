@@ -880,40 +880,28 @@ const copyCharsToClipboard = async () => {
 
 // 計算字頻加權節約碼長
 const getWeightedCodeSaving = (char: string, freqType: string): string => {
-  // 獲取字頻數據 - 直接使用props中的全局字頻（原始頻數）
-  let charFreq = 0
-  let charFreqData: CharFrequency = {}
+  // 獲取歸一化的字頻數據（已經是概率值，0-1之間）
+  let normalizedFreq = 0
   
   switch (freqType) {
     case 'zhihu':
-      charFreqData = props.globalCharFrequencies.zhihu
-      charFreq = charFreqData[char] || 0
+      normalizedFreq = props.globalCharFrequencies.zhihu[char] || 0
       break
     case 'SC':
-      charFreqData = props.globalCharFrequencies.sc
-      charFreq = charFreqData[char] || 0
+      normalizedFreq = props.globalCharFrequencies.sc[char] || 0
       break
     case 'TC':
-      charFreqData = props.globalCharFrequencies.tc
-      charFreq = charFreqData[char] || 0
+      normalizedFreq = props.globalCharFrequencies.tc[char] || 0
       break
     case 'guji':
-      charFreqData = props.globalCharFrequencies.guji
-      charFreq = charFreqData[char] || 0
+      normalizedFreq = props.globalCharFrequencies.guji[char] || 0
       break
     case 'combined':
-      charFreqData = props.globalCharFrequencies.combined
-      charFreq = charFreqData[char] || 0
+      normalizedFreq = props.globalCharFrequencies.combined[char] || 0
       break
     default:
       return '-0.0000'
   }
-  
-  // 計算總頻數用於歸一化
-  const totalFreq = Object.values(charFreqData).reduce((sum, freq) => sum + freq, 0)
-  
-  // 歸一化字頻（轉為概率）
-  const normalizedFreq = totalFreq > 0 ? charFreq / totalFreq : 0
   
   // 獲取簡碼和全碼
   const shortCode = getFullShortCodeWithSelection(char)
