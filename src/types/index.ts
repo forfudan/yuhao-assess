@@ -10,6 +10,7 @@ export interface ProcessedCodeTables {
   short: CodeTable                   // 簡碼表  
   fullWithSelection: CodeTable       // 全碼加選重表
   shortWithSelection: CodeTable      // 簡碼加選重表
+  wordFullCodeWithSelection?: CodeTable  // 詞語全碼加選重表（可選）
 }
 
 // 碼表格式類型
@@ -68,6 +69,9 @@ export interface EquivTable {
 
 // 字頻數據
 export type CharFrequency = Record<string, number>
+
+// 詞頻數據
+export type WordFrequency = Record<string, number>
 
 // 碼表條目
 export interface CodeTableEntry {

@@ -5,7 +5,7 @@
 
 import { getFrequencyCharsUnion } from './dataService'
 import { isInCJKToJ } from './charsetService'
-import type { CodeTable, RawCodeTable } from '../types'
+import type { CodeTable, RawCodeTable, WordFrequency } from '../types'
 
 // 處理後的碼表結果接口
 export interface ProcessedCodeTables {
@@ -19,7 +19,7 @@ export interface ProcessedCodeTables {
 export class CodeTableProcessingService {
   private static instance: CodeTableProcessingService
   private processedTables: ProcessedCodeTables | null = null
-  private processingOptions: { isPrefix: boolean; maxLength: number } | null = null
+  private processingOptions: { isPrefix: boolean; maxLength: number; prefixKeys?: string[] } | null = null
 
   private constructor() {}
 
@@ -67,8 +67,8 @@ export class CodeTableProcessingService {
     }
     const maxLength = options?.maxLength || globalMaxLength || 4
     
-    // 保存處理選項
-    this.processingOptions = { isPrefix, maxLength }
+    // 保存處理選項（包括 prefixKeys）
+    this.processingOptions = { isPrefix, maxLength, prefixKeys }
     
     // 按行號順序遍歷 rawCodeTable
     const sortedEntries = Array.from(rawCodeTable.entries()).sort((a, b) => a[0] - b[0])
@@ -179,7 +179,7 @@ export class CodeTableProcessingService {
     return this.processedTables
   }
 
-  getProcessingOptions(): { isPrefix: boolean; maxLength: number } | null {
+  getProcessingOptions(): { isPrefix: boolean; maxLength: number; prefixKeys?: string[] } | null {
     return this.processingOptions
   }
 
@@ -207,6 +207,100 @@ export class CodeTableProcessingService {
       return null
     }
     return this.processedTables[type]
+  }
+
+  /**
+   * 生成詞語編碼（根據詞長使用不同規則）
+   */
+  private getWordCode(word: string, fullCodeTable: CodeTable): string {
+    try {
+      const len = word.length
+      if (len === 1) {
+        // 單字：直接使用單字全碼
+        const codes = fullCodeTable.get(word)
+        return codes && codes.length > 0 ? codes[0] : ''
+      } else if (len === 2) {
+        // 兩字詞：兩個字各取前兩碼
+        const code1 = fullCodeTable.get(word[0])?.[0] || ''
+        const code2 = fullCodeTable.get(word[1])?.[0] || ''
+        return code1.slice(0, 2) + code2.slice(0, 2)
+      } else if (len === 3) {
+        // 三字詞：首二字各取一碼，第三字兩碼
+        const code1 = fullCodeTable.get(word[0])?.[0] || ''
+        const code2 = fullCodeTable.get(word[1])?.[0] || ''
+        const code3 = fullCodeTable.get(word[2])?.[0] || ''
+        return code1.slice(0, 1) + code2.slice(0, 1) + code3.slice(0, 2)
+      } else {
+        // 四字及以上：首二三末各取第一碼
+        const code1 = fullCodeTable.get(word[0])?.[0] || ''
+        const code2 = fullCodeTable.get(word[1])?.[0] || ''
+        const code3 = fullCodeTable.get(word[2])?.[0] || ''
+        const codeLast = fullCodeTable.get(word[len - 1])?.[0] || ''
+        return code1.slice(0, 1) + code2.slice(0, 1) + code3.slice(0, 1) + codeLast.slice(0, 1)
+      }
+    } catch (error) {
+      return ''
+    }
+  }
+
+  /**
+   * 生成詞語輔助碼表（帶選重鍵）
+   * @param wordFreq 歸一化後的詞頻表（按頻數降序排列）
+   * @param fullCodeTable 單字全碼表
+   * @returns 詞語碼表 Map<詞語, [編碼+選重鍵]>
+   */
+  generateWordCodeTableWithSelection(
+    wordFreq: WordFrequency,
+    fullCodeTable: CodeTable
+  ): CodeTable {
+    const wordFullCodeWithSelection: CodeTable = new Map()
+    
+    // 獲取處理選項（最大碼長和前綴碼設置）
+    const options = this.processingOptions
+    if (!options) {
+      console.warn('[CodeTableProcessingService] 處理選項未設置，無法生成詞語碼表')
+      return wordFullCodeWithSelection
+    }
+    
+    const { maxLength, isPrefix } = options
+    const prefixKeys = this.getPrefixKeys()
+    
+    // 用於追蹤每個編碼的出現次數（選重位置）
+    const codePositionMap = new Map<string, number>()
+    
+    // 詞頻表已經按頻數降序排列，直接遍歷
+    for (const [word, freq] of Object.entries(wordFreq)) {
+      // 生成詞語編碼
+      const code = this.getWordCode(word, fullCodeTable)
+      if (!code) continue
+      
+      // 獲取當前編碼的選重位置
+      const position = (codePositionMap.get(code) || 0) + 1
+      codePositionMap.set(code, position)
+      
+      // 使用與 fullWithSelection 相同的邏輯生成帶選重鍵的編碼
+      const codeWithSelection = this.generateCodeWithSelection(
+        code,
+        position,
+        code.length,
+        maxLength,
+        isPrefix,
+        prefixKeys
+      )
+      
+      // 存儲詞語和編碼
+      wordFullCodeWithSelection.set(word, [codeWithSelection])
+    }
+    
+    console.log(`[CodeTableProcessingService] 詞語碼表生成完成，共 ${wordFullCodeWithSelection.size} 個詞語`)
+    return wordFullCodeWithSelection
+  }
+  
+  /**
+   * 獲取前綴鍵配置（私有方法，用於內部調用）
+   */
+  private getPrefixKeys(): string[] | undefined {
+    return this.processingOptions?.prefixKeys
   }
 }
 

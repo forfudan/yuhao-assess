@@ -138,6 +138,8 @@
             :code-table-name="codeTableName"
             :processed-tables="processedTables"
             :global-char-frequencies="globalCharFrequencies"
+            :word-code-table="processedTables?.wordFullCodeWithSelection"
+            :global-word-frequencies="globalWordFrequencies"
           />
 
           <!-- 最大候選個數卡片 -->
@@ -161,6 +163,8 @@
             :global-prefix-keys="uploadPrefixKeys"
             :processed-tables="processedTables"
             :global-char-frequencies="globalCharFrequencies"
+            :word-code-table="processedTables?.wordFullCodeWithSelection"
+            :global-word-frequencies="globalWordFrequencies"
           />
 
           <!-- 簡碼效率卡片 -->
@@ -185,6 +189,8 @@
             :analysis-ready="analysisReady" 
             :code-table-name="codeTableName"
             :global-char-frequencies="globalCharFrequencies"
+            :word-code-table="processedTables?.wordFullCodeWithSelection"
+            :global-word-frequencies="globalWordFrequencies"
           />
 
           <!-- 
@@ -242,7 +248,7 @@ import SpeedEquivCard from './components/SpeedEquivCard.vue'
 import ShortCodeEfficiencyCard from './components/ShortCodeEfficiencyCard.vue'
 import { codeTableProcessingService } from './services/codeTableProcessingService'
 import { isInCJKToJ } from './services/charsetService' 
-import type { CodeTable, RawCodeTable, UploadStatus, CodeTableAnalysis, CharFrequency } from './types/index'
+import type { CodeTable, RawCodeTable, UploadStatus, CodeTableAnalysis, CharFrequency, WordFrequency } from './types/index'
 import { 
   loadCharFrequency, 
   loadCharFrequencySC, 
@@ -270,6 +276,11 @@ const globalCharFrequencies = ref<{
   tc: CharFrequency
   guji: CharFrequency
   combined: CharFrequency
+} | null>(null)
+
+// 全局詞頻表
+const globalWordFrequencies = ref<{
+  sc: WordFrequency
 } | null>(null)
 
 // 上傳卡片引用
@@ -388,6 +399,18 @@ const normalizeCharFrequency = (charFreq: CharFrequency): CharFrequency => {
   return normalized
 }
 
+// 歸一化詞頻數據：將原始頻數轉換為概率（0-1 區間）
+const normalizeWordFrequency = (wordFreq: WordFrequency): WordFrequency => {
+  const totalFreq = Object.values(wordFreq).reduce((sum, freq) => sum + freq, 0)
+  if (totalFreq === 0) return {}
+  
+  const normalized: WordFrequency = {}
+  for (const [word, freq] of Object.entries(wordFreq)) {
+    normalized[word] = freq / totalFreq
+  }
+  return normalized
+}
+
 // 加載全局字頻數據
 const loadGlobalCharFrequencies = async () => {
   try {
@@ -395,11 +418,11 @@ const loadGlobalCharFrequencies = async () => {
     
     // 並行加載所有字頻表（原始頻數）
     const [zhihuRaw, scRaw, tcRaw, gujiRaw, combinedRaw] = await Promise.all([
-      loadCharFrequency(),      // Zhihu 簡體
-      loadCharFrequencySC(),    // Beiyun 簡體
-      loadCharFrequencyTC(),    // Taiwan 繁體
-      loadCharFrequencyGuji(),  // 古籍繁體
-      loadCharFrequencyUnified() // 混合字頻
+      loadCharFrequency(),      // 知乎簡體字頻
+      loadCharFrequencySC(),    // 北語簡體字頻
+      loadCharFrequencyTC(),    // 臺標繁體字頻
+      loadCharFrequencyGuji(),  // 古籍繁體字頻
+      loadCharFrequencyUnified() // 繁簡混合字頻（北語 + 臺標）
     ])
     
     console.log('[全局字頻] 原始數據加載完成，開始歸一化處理...')
@@ -419,6 +442,46 @@ const loadGlobalCharFrequencies = async () => {
   }
 }
 
+// 加載全局詞頻數據
+const loadGlobalWordFrequencies = async () => {
+  try {
+    console.log('[全局詞頻] 開始加載詞頻數據...')
+    
+    // 加載簡體詞頻表（原始頻數）
+    // 現代漢語語料庫分詞類詞頻表
+    const response = await fetch('/data/wordFrequencySC.json')
+    if (!response.ok) {
+      throw new Error(`加載詞頻數據失敗: ${response.statusText}`)
+    }
+    const scRaw: WordFrequency = await response.json()
+    
+    console.log('[全局詞頻] 原始數據加載完成，開始歸一化處理...')
+    
+    // 歸一化詞頻表（頻數 -> 概率）
+    globalWordFrequencies.value = {
+      sc: normalizeWordFrequency(scRaw)
+    }
+    
+    console.log('[全局詞頻] 詞頻數據歸一化完成')
+    
+    // 如果已有碼表數據，生成詞語輔助碼表
+    if (processedTables.value?.full && globalWordFrequencies.value?.sc) {
+      console.log('[全局詞頻] 檢測到已有碼表，開始生成詞語輔助碼表...')
+      const wordFullCodeWithSelection = codeTableProcessingService.generateWordCodeTableWithSelection(
+        globalWordFrequencies.value.sc,
+        processedTables.value.full
+      )
+      processedTables.value = {
+        ...processedTables.value,
+        wordFullCodeWithSelection
+      }
+      console.log('[全局詞頻] 詞語輔助碼表生成完成')
+    }
+  } catch (error) {
+    console.error('[全局詞頻] 加載失敗:', error)
+  }
+}
+
 // 初始化主題和數據恢復
 onMounted(async () => {
   // 初始化主題，默認淺色模式
@@ -432,6 +495,8 @@ onMounted(async () => {
   // 加載全局字頻數據
   await loadGlobalCharFrequencies()
   
+  // 加載全局詞頻數據
+  await loadGlobalWordFrequencies()
 })
 
 // 切換主題
@@ -628,6 +693,21 @@ const handleCodeTableUpload = async (data: {
     // 獲取處理後的表格數據作為 golden source
     processedTables.value = processedTablesResult
     console.log('[App] processedTables 更新完成:', processedTables.value)
+    
+    // 生成詞語輔助碼表（如果詞頻表已加載）
+    if (globalWordFrequencies.value?.sc && processedTablesResult.full) {
+      console.log('[App] 開始生成詞語輔助碼表...')
+      const wordFullCodeWithSelection = codeTableProcessingService.generateWordCodeTableWithSelection(
+        globalWordFrequencies.value.sc,
+        processedTablesResult.full
+      )
+      // 將詞語碼表添加到 processedTables 中
+      processedTables.value = {
+        ...processedTablesResult,
+        wordFullCodeWithSelection
+      }
+      console.log('[App] 詞語輔助碼表生成完成')
+    }
     
     // 如果是預設方案，从fileName中提取名称（格式：預設方案：方案名）
     if (data.tableKey && data.fileName.startsWith('預設方案：')) {

@@ -174,7 +174,7 @@
     </div>
 
     <!-- 預覽區域 -->
-    <div v-if="previewData.length > 0" class="preview-section">
+    <div v-if="previewData.length > 0" class="preview-section file-preview">
       <h4 class="preview-title">文件預覽（前100行）</h4>
       <div class="preview-content">
         <div 
@@ -194,8 +194,8 @@
     </div>
 
     <!-- 碼表編碼分析預覽 -->
-    <div v-if="encodingPreviewData.length > 0" class="encoding-preview-section">
-      <h4 class="preview-title">編碼預覽（100個）</h4>
+    <div v-if="encodingPreviewData.length > 0" class="preview-section encoding-preview">
+      <h4 class="preview-title">單字編碼預覽（前100行）</h4>
       <div class="encoding-table-container">
         <table class="encoding-table">
           <thead>
@@ -223,11 +223,8 @@
     </div>
 
     <!-- 檢視最長編碼 -->
-    <div v-if="longestCodesData.length > 0" class="longest-codes-section">
-      <h4 class="preview-title">檢視最長編碼（10個編碼最長的字）</h4>
-      <div class="max-length-info">
-        <p><strong>當前計算的全局最大碼長：</strong>{{ globalMaxLengthDisplay }}</p>
-      </div>
+    <div v-if="longestCodesData.length > 0" class="preview-section longest-codes">
+      <h4 class="preview-title">檢視 10 個編碼最長的字（檢測到最大碼長爲 {{ globalMaxLengthDisplay }}）</h4>
       <div class="encoding-table-container">
         <table class="encoding-table">
           <thead>
@@ -250,6 +247,39 @@
               <td class="code-cell">{{ item.shortCode || '-' }}</td>
               <td class="code-cell selection">{{ item.fullWithSelection || '-' }}</td>
               <td class="code-cell selection">{{ item.shortWithSelection || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- 詞語編碼預覽 -->
+    <div v-if="wordEncodingPreviewData.length > 0" class="preview-section word-encoding-preview">
+      <div class="preview-title-with-help">
+        <h4 class="preview-title">檢視詞語編碼（前200個單字詞和多字詞）</h4>
+        <button 
+          @click="showWordHelp = true"
+          class="help-button"
+          title="點擊查看詞語編碼規則說明"
+          type="button"
+        >
+          ?
+        </button>
+      </div>
+      <div class="encoding-table-container">
+        <table class="encoding-table">
+          <thead>
+            <tr>
+              <th class="row-header">序號</th>
+              <th class="word-header">詞語</th>
+              <th class="code-header">全碼及選重鍵</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in wordEncodingPreviewData" :key="index" class="encoding-row">
+              <td class="row-number">{{ index + 1 }}</td>
+              <td class="word-cell">{{ item.word }}</td>
+              <td class="code-cell selection">{{ item.codeWithSelection || '-' }}</td>
             </tr>
           </tbody>
         </table>
@@ -286,6 +316,35 @@
         </div>
         <div class="help-footer">
           <button @click="showPrefixHelp = false" class="btn btn-primary">我知道了</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- 詞語幫助信息框 - 使用 Teleport 傳送到 body -->
+  <Teleport to="body">
+    <div v-if="showWordHelp" class="help-modal-overlay" @click="showWordHelp = false">
+      <div class="help-modal" @click.stop>
+        <div class="help-header">
+          <h4>詞語編碼規則説明</h4>
+          <button @click="showWordHelp = false" class="help-close-btn">×</button>
+        </div>
+        <div class="help-content">
+          <p>本測評網根據現代漢語語料庫分類詞頻表自動生成詞語編碼。</p>
+          <p><strong>編碼規則：</strong></p>
+          <ul>
+            <li><strong>單字詞：</strong>使用該字的編碼</li>
+            <li><strong>二字詞：</strong>每個字各取其全碼前2碼，共4碼</li>
+            <li><strong>三字詞：</strong>前兩字各取其全碼1碼，末字取其全碼前2碼，共4碼</li>
+            <li><strong>四字及以上：</strong>第1、2、3、末字各取其全碼首碼，共4碼</li>
+          </ul>
+          <p><strong>選重鍵處理：</strong></p>
+          <p>詞語編碼會自動添加選重鍵（2、3、4、5等），但首位候選在達到最大碼長時不添加選重鍵。前綴碼方案會根據按鍵設置考慮是否添加空格鍵。</p>
+          <p><strong>注意：</strong></p>
+          <p>此表格展示前200個詞語（包括單字詞和多字詞），用於預覽和檢查詞語編碼是否符合預期。</p>
+        </div>
+        <div class="help-footer">
+          <button @click="showWordHelp = false" class="btn btn-primary">我知道了</button>
         </div>
       </div>
     </div>
@@ -345,6 +404,7 @@ const isUploading = ref(false)
 const isPrefixCode = ref(false)
 const prefixKeysInput = ref('')
 const showPrefixHelp = ref(false)
+const showWordHelp = ref(false)
 const fileInput = ref<HTMLInputElement>()
 const isRestoredFile = ref(false) // 标记是否为恢复的文件
 const previewData = ref<Array<{
@@ -371,6 +431,12 @@ const longestCodesData = ref<Array<{
   fullWithSelection: string
   shortWithSelection: string
   maxLength: number
+}>>([])
+
+// 詞語編碼預覽數據
+const wordEncodingPreviewData = ref<Array<{
+  word: string
+  codeWithSelection: string
 }>>([])
 
 // 全局最大碼長顯示
@@ -641,6 +707,9 @@ const generateEncodingPreview = () => {
   
   // 同時生成最長編碼檢視數據
   generateLongestCodesData(processedTables)
+  
+  // 生成詞語編碼預覽數據
+  generateWordEncodingPreview(processedTables)
 }
 
 // 生成最長編碼檢視數據
@@ -699,12 +768,46 @@ const generateLongestCodesData = (processedTables: any) => {
   globalMaxLengthDisplay.value = calculatedGlobalMaxLength
 }
 
+// 生成詞語編碼預覽數據
+const generateWordEncodingPreview = (processedTables: any) => {
+  if (!processedTables.wordFullCodeWithSelection) {
+    wordEncodingPreviewData.value = []
+    return
+  }
+  
+  const wordCodeTable = processedTables.wordFullCodeWithSelection
+  const previewItems: Array<{
+    word: string
+    codeWithSelection: string
+  }> = []
+  
+  // 獲取前200個詞語（詞頻表已經按頻數排序）
+  let count = 0
+  for (const [word, codes] of wordCodeTable.entries()) {
+    if (count >= 200) break
+    
+    const codeWithSelection = codes[0] || '-'
+    previewItems.push({
+      word,
+      codeWithSelection
+    })
+    
+    count++
+  }
+  
+  wordEncodingPreviewData.value = previewItems
+}
+
 // 移除文件
 const removeFile = () => {
   selectedFile.value = null
   isRestoredFile.value = false
   previewData.value = []
   encodingPreviewData.value = []
+  longestCodesData.value = []
+  wordEncodingPreviewData.value = []
+  globalMaxLengthDisplay.value = 4
+  stopStatusCheck()
   longestCodesData.value = []
   globalMaxLengthDisplay.value = 4
   stopStatusCheck()
@@ -1450,18 +1553,28 @@ loadBuiltinConfig()
   min-width: 120px;
 }
 
-/* 预览区域 */
+/* 预览区域 - 统一基础样式 */
 .preview-section {
+  margin-top: var(--spacing-lg);  /* 控制section和上面元素之间的间距 */
+}
+
+.preview-section.file-preview {
   background-color: var(--color-bg-secondary);
   border-radius: var(--radius-md);
-  padding: var(--spacing-md); /* 从 var(--spacing-lg) 减少到 var(--spacing-md) */
+  padding: var(--spacing-md);
 }
 
 .preview-title {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-md);
+  margin-top: var(--spacing-md);  /* 控制标题和section顶部之间的间距 */
+  margin-bottom: var(--spacing-md);  /* 控制标题和下面内容之间的间距 */
+}
+
+/* 文件预览的标题不需要额外的margin-top，因为有padding */
+.preview-section.file-preview .preview-title {
+  margin-top: 0;
 }
 
 .preview-content {
@@ -1658,11 +1771,7 @@ loadBuiltinConfig()
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
 
-/* 編碼預覽表格樣式 - 與文件預覽保持一致 */
-.encoding-preview-section {
-  margin-top: var(--spacing-lg);
-}
-
+/* 編碼預覽表格樣式 */
 .encoding-table-container {
   font-family: var(--font-mono);
   font-size: 0.875rem;
@@ -1767,13 +1876,27 @@ loadBuiltinConfig()
   font-weight: 500;
 }
 
-/* 最長編碼表格樣式 */
-.longest-codes-section {
-  margin-top: var(--spacing-lg);
-  border-top: 2px solid var(--color-border-primary);
-  padding-top: var(--spacing-lg);
+/* 詞語編碼特定樣式 */
+.word-header {
+  min-width: 120px;
+  text-align: left !important;
 }
 
+/* 詞語編碼特定樣式 */
+.word-header {
+  min-width: 120px;
+  text-align: left !important;
+}
+
+.word-cell {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  text-align: left;
+  padding-left: var(--spacing-sm);
+}
+
+/* 最長編碼額外信息 */
 .max-length-info {
   margin-bottom: var(--spacing-md);
   padding: var(--spacing-sm);
@@ -1788,5 +1911,22 @@ loadBuiltinConfig()
 
 .code-cell.max-length {
   text-align: center;
+}
+
+/* 標題與幫助按鈕容器 */
+.preview-title-with-help {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.preview-title-with-help .preview-title {
+  margin: 0;
+}
+
+.preview-title-with-help .help-button {
+  flex-shrink: 0;
 }
 </style>

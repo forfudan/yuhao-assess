@@ -57,7 +57,7 @@
               <td class="metric-value first-short-equiv clickable" @click="() => showEquivDetails('zhihu', 'firstShort')">{{ analysisResults.zhihuFirstShortEquiv.toFixed(4) }}</td>
               <td class="metric-value second-short-equiv clickable" @click="() => showEquivDetails('zhihu', 'secondShort')">{{ analysisResults.zhihuSecondShortEquiv.toFixed(4) }}</td>
               <td class="metric-value short-equiv clickable" @click="() => showEquivDetails('zhihu', 'short')">{{ analysisResults.zhihuShortEquiv.toFixed(4) }}</td>
-              <td class="metric-desc">基於<a href="https://github.com/forfudan/chinese-characters-frequency" target="_blank" rel="noopener">知乎字頻表</a>的加權速度當量</td>
+              <td class="metric-desc">基於<a href="https://github.com/forfudan/chinese-characters-frequency" target="_blank" rel="noopener">知乎字頻表</a></td>
             </tr>
             <tr>
               <td>北語簡體字頻</td>
@@ -65,7 +65,7 @@
               <td class="metric-value first-short-equiv clickable" @click="() => showEquivDetails('sc', 'firstShort')">{{ analysisResults.scFirstShortEquiv.toFixed(4) }}</td>
               <td class="metric-value second-short-equiv clickable" @click="() => showEquivDetails('sc', 'secondShort')">{{ analysisResults.scSecondShortEquiv.toFixed(4) }}</td>
               <td class="metric-value short-equiv clickable" @click="() => showEquivDetails('sc', 'short')">{{ analysisResults.scShortEquiv.toFixed(4) }}</td>
-              <td class="metric-desc">基於<a href="https://faculty.blcu.edu.cn/xinghb/zh_CN/article/167473/content/1437.htm" target="_blank" rel="noopener">簡體字頻表</a>的加權速度當量</td>
+              <td class="metric-desc">基於<a href="https://faculty.blcu.edu.cn/xinghb/zh_CN/article/167473/content/1437.htm" target="_blank" rel="noopener">簡體字頻表</a></td>
             </tr>
             <tr>
               <td>臺標繁體字頻</td>
@@ -73,7 +73,7 @@
               <td class="metric-value first-short-equiv clickable" @click="() => showEquivDetails('tc', 'firstShort')">{{ analysisResults.tcFirstShortEquiv.toFixed(4) }}</td>
               <td class="metric-value second-short-equiv clickable" @click="() => showEquivDetails('tc', 'secondShort')">{{ analysisResults.tcSecondShortEquiv.toFixed(4) }}</td>
               <td class="metric-value short-equiv clickable" @click="() => showEquivDetails('tc', 'short')">{{ analysisResults.tcShortEquiv.toFixed(4) }}</td>
-              <td class="metric-desc">基於<a href="https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PIN/biau1.htm" target="_blank" rel="noopener">臺標繁體字頻表</a>的加權速度當量</td>
+              <td class="metric-desc">基於<a href="https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PIN/biau1.htm" target="_blank" rel="noopener">臺標繁體字頻表</a></td>
             </tr>
             <tr>
               <td>古籍繁體字頻</td>
@@ -81,7 +81,7 @@
               <td class="metric-value first-short-equiv clickable" @click="() => showEquivDetails('guji', 'firstShort')">{{ analysisResults.gujiFirstShortEquiv.toFixed(4) }}</td>
               <td class="metric-value second-short-equiv clickable" @click="() => showEquivDetails('guji', 'secondShort')">{{ analysisResults.gujiSecondShortEquiv.toFixed(4) }}</td>
               <td class="metric-value short-equiv clickable" @click="() => showEquivDetails('guji', 'short')">{{ analysisResults.gujiShortEquiv.toFixed(4) }}</td>
-              <td class="metric-desc">基於古籍字頻的加權速度當量</td>
+              <td class="metric-desc">基於古籍字頻</td>
             </tr>
             <tr>
               <td>繁簡聯合字頻</td>
@@ -89,7 +89,25 @@
               <td class="metric-value first-short-equiv clickable" @click="() => showEquivDetails('unified', 'firstShort')">{{ analysisResults.unifiedFirstShortEquiv.toFixed(4) }}</td>
               <td class="metric-value second-short-equiv clickable" @click="() => showEquivDetails('unified', 'secondShort')">{{ analysisResults.unifiedSecondShortEquiv.toFixed(4) }}</td>
               <td class="metric-value short-equiv clickable" @click="() => showEquivDetails('unified', 'short')">{{ analysisResults.unifiedShortEquiv.toFixed(4) }}</td>
-              <td class="metric-desc">基於繁簡聯合字頻表的加權速度當量</td>
+              <td class="metric-desc">基於繁簡聯合字頻表</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 詞語當量表格 -->
+        <table class="metrics-table" style="margin-top: 2rem;">
+          <thead>
+            <tr>
+              <th>詞頻來源</th>
+              <th>全碼當量</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>簡體漢語詞頻</td>
+              <td class="metric-value clickable" @click="() => showEquivDetails('word', 'full')">{{ analysisResults.wordEquiv.toFixed(4) }}</td>
+              <td class="metric-desc">基於現代漢語語料庫分類詞頻表，包含单字词和多字词</td>
             </tr>
           </tbody>
         </table>
@@ -198,6 +216,10 @@ interface Props {
     guji: Record<string, number> | null
     combined: Record<string, number> | null
   } | null
+  wordCodeTable?: CodeTable | null  // 词语码表
+  globalWordFrequencies?: {  // 全局词频数据
+    sc?: Record<string, number>
+  } | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -206,7 +228,9 @@ const props = withDefaults(defineProps<Props>(), {
   initialPrefix: false,
   globalPrefixKeys: () => [],
   processedTables: null,
-  globalCharFrequencies: null
+  globalCharFrequencies: null,
+  wordCodeTable: null,
+  globalWordFrequencies: null
 })
 
 // 摺疊功能
@@ -263,6 +287,7 @@ interface SpeedEquivResults {
   tcShortEquiv: number
   gujiShortEquiv: number
   unifiedShortEquiv: number
+  wordEquiv: number  // 词语全码当量
 }
 
 // 響應式數據
@@ -297,6 +322,7 @@ async function showEquivDetails(freqType: string, codeType: string) {
   
   // 設置標題
   const freqNames: Record<string, string> = {
+    word: '簡體漢語詞頻',
     zhihu: '知乎簡體字頻',
     sc: '北語簡體字頻',
     tc: '臺標繁體字頻',
@@ -314,45 +340,60 @@ async function showEquivDetails(freqType: string, codeType: string) {
   modalTitle.value = `${freqNames[freqType]} - ${codeNames[codeType]}當量分布`
   
   try {
-    // 獲取對應的碼表
+    // 獲取對應的碼表和頻率表
     let codeTable: CodeTable
-    if (codeType === 'full') {
-      codeTable = props.processedTables.fullWithSelection
-    } else if (codeType === 'short') {
-      codeTable = props.processedTables.shortWithSelection
-    } else if (codeType === 'firstShort') {
-      codeTable = generateFirstShortCodeTable(
-        props.processedTables.shortWithSelection,
-        props.processedTables.fullWithSelection,
-        props.globalPrefixKeys
-      )
-    } else { // secondShort
-      codeTable = generateSecondShortCodeTable(
-        props.processedTables.shortWithSelection,
-        props.processedTables.fullWithSelection,
-        props.globalPrefixKeys
-      )
+    let itemFrequency: Record<string, number>
+    
+    if (freqType === 'word') {
+      // 使用詞語碼表和詞頻
+      if (!props.wordCodeTable) {
+        throw new Error('詞語碼表尚未加載')
+      }
+      if (!props.globalWordFrequencies?.sc) {
+        throw new Error('詞頻表尚未加載')
+      }
+      codeTable = props.wordCodeTable
+      itemFrequency = props.globalWordFrequencies.sc
+    } else {
+      // 使用字碼表和字頻
+      if (codeType === 'full') {
+        codeTable = props.processedTables.fullWithSelection
+      } else if (codeType === 'short') {
+        codeTable = props.processedTables.shortWithSelection
+      } else if (codeType === 'firstShort') {
+        codeTable = generateFirstShortCodeTable(
+          props.processedTables.shortWithSelection,
+          props.processedTables.fullWithSelection,
+          props.globalPrefixKeys
+        )
+      } else { // secondShort
+        codeTable = generateSecondShortCodeTable(
+          props.processedTables.shortWithSelection,
+          props.processedTables.fullWithSelection,
+          props.globalPrefixKeys
+        )
+      }
+      
+      // 使用全局字頻表
+      if (!props.globalCharFrequencies) {
+        throw new Error('全局字頻表尚未加載')
+      }
+      const freqMap: Record<string, Record<string, number>> = {
+        zhihu: props.globalCharFrequencies.zhihu || {},
+        sc: props.globalCharFrequencies.sc || {},
+        tc: props.globalCharFrequencies.tc || {},
+        guji: props.globalCharFrequencies.guji || {},
+        unified: props.globalCharFrequencies.combined || {}
+      }
+      itemFrequency = freqMap[freqType]
     }
     
-    // 使用全局字頻表
-    if (!props.globalCharFrequencies) {
-      throw new Error('全局字頻表尚未加載')
-    }
-    const freqMap: Record<string, Record<string, number>> = {
-      zhihu: props.globalCharFrequencies.zhihu || {},
-      sc: props.globalCharFrequencies.sc || {},
-      tc: props.globalCharFrequencies.tc || {},
-      guji: props.globalCharFrequencies.guji || {},
-      unified: props.globalCharFrequencies.combined || {}
-    }
-    
-    const charFrequency = freqMap[freqType]
     const equivTable = cachedEquivTable && Object.keys(cachedEquivTable).length > 0 
       ? cachedEquivTable 
       : await loadEquivTable()
     
     // 計算碼對頻率
-    const pairFrequencies = calculateCodePairFrequencies(codeTable, charFrequency)
+    const pairFrequencies = calculateCodePairFrequencies(codeTable, itemFrequency)
     
     // 計算分檔詳情
     equivDetails.value = calculateEquivDistribution(pairFrequencies, equivTable)
@@ -540,6 +581,12 @@ async function calculateSpeedEquivAnalysis() {
     const gujiShortPairFreq = calculateCodePairFrequencies(shortProcessedCodeTable, gujiFreq)
     const unifiedShortPairFreq = calculateCodePairFrequencies(shortProcessedCodeTable, unifiedFreq)
     
+    // 10. 計算詞語速度當量
+    let wordPairFreq: Record<string, number> = {}
+    if (props.wordCodeTable && props.globalWordFrequencies?.sc) {
+      wordPairFreq = calculateCodePairFrequencies(props.wordCodeTable, props.globalWordFrequencies.sc)
+    }
+    
     analysisResults.value = {
       zhihuEquiv: calculateSpeedEquiv(zhihuPairFreq, equivTable),
       scEquiv: calculateSpeedEquiv(scPairFreq, equivTable),
@@ -560,7 +607,8 @@ async function calculateSpeedEquivAnalysis() {
       scShortEquiv: calculateSpeedEquiv(scShortPairFreq, equivTable),
       tcShortEquiv: calculateSpeedEquiv(tcShortPairFreq, equivTable),
       gujiShortEquiv: calculateSpeedEquiv(gujiShortPairFreq, equivTable),
-      unifiedShortEquiv: calculateSpeedEquiv(unifiedShortPairFreq, equivTable)
+      unifiedShortEquiv: calculateSpeedEquiv(unifiedShortPairFreq, equivTable),
+      wordEquiv: calculateSpeedEquiv(wordPairFreq, equivTable)
     }
     
   } catch (err) {
@@ -571,10 +619,16 @@ async function calculateSpeedEquivAnalysis() {
   }
 }
 
-// 監聽碼表、處理結果和全局字頻變化
+// 監聽碼表、處理結果、全局字頻和詞語數據變化
 watch(
-  [() => props.codeTable, () => props.processedTables, () => props.globalCharFrequencies], 
-  async ([newCodeTable, newProcessedTables, newFrequencies]) => {
+  [
+    () => props.codeTable, 
+    () => props.processedTables, 
+    () => props.globalCharFrequencies,
+    () => props.wordCodeTable,
+    () => props.globalWordFrequencies
+  ], 
+  async ([newCodeTable, newProcessedTables, newFrequencies, newWordCodeTable, newWordFrequencies]) => {
     if (newCodeTable && newCodeTable.size > 0 && newProcessedTables && newFrequencies) {
       // 延迟一点确保其他watch已执行
       await nextTick()
