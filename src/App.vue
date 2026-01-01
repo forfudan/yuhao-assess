@@ -371,13 +371,30 @@ const toggleAllCards = () => {
 // 主題相關
 const isDarkMode = ref(false)
 
+const updateTheme = () => {
+  document.documentElement.setAttribute('data-theme', isDarkMode.value ? 'dark' : 'light')
+  localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light')
+}
+
+// 歸一化字頻數據（頻數 -> 頻率）
+const normalizeCharFrequency = (charFreq: CharFrequency): CharFrequency => {
+  const totalFreq = Object.values(charFreq).reduce((sum, freq) => sum + freq, 0)
+  if (totalFreq === 0) return {}
+  
+  const normalized: CharFrequency = {}
+  for (const [char, freq] of Object.entries(charFreq)) {
+    normalized[char] = freq / totalFreq
+  }
+  return normalized
+}
+
 // 加載全局字頻數據
 const loadGlobalCharFrequencies = async () => {
   try {
     console.log('[全局字頻] 開始加載字頻數據...')
     
-    // 並行加載所有字頻表
-    const [zhihu, sc, tc, guji, combined] = await Promise.all([
+    // 並行加載所有字頻表（原始頻數）
+    const [zhihuRaw, scRaw, tcRaw, gujiRaw, combinedRaw] = await Promise.all([
       loadCharFrequency(),      // Zhihu 簡體
       loadCharFrequencySC(),    // Beiyun 簡體
       loadCharFrequencyTC(),    // Taiwan 繁體
@@ -385,15 +402,18 @@ const loadGlobalCharFrequencies = async () => {
       loadCharFrequencyUnified() // 混合字頻
     ])
     
+    console.log('[全局字頻] 原始數據加載完成，開始歸一化處理...')
+    
+    // 歸一化所有字頻表（頻數 -> 概率）
     globalCharFrequencies.value = {
-      zhihu: zhihu,
-      sc: sc,
-      tc: tc,
-      guji: guji,
-      combined: combined
+      zhihu: normalizeCharFrequency(zhihuRaw),
+      sc: normalizeCharFrequency(scRaw),
+      tc: normalizeCharFrequency(tcRaw),
+      guji: normalizeCharFrequency(gujiRaw),
+      combined: normalizeCharFrequency(combinedRaw)
     }
     
-    console.log('[全局字頻] 字頻數據加載完成')
+    console.log('[全局字頻] 字頻數據歸一化完成')
   } catch (error) {
     console.error('[全局字頻] 加載失敗:', error)
   }
@@ -419,11 +439,6 @@ const toggleTheme = () => {
   isDarkMode.value = !isDarkMode.value
   updateTheme()
   localStorage.setItem('theme', isDarkMode.value ? 'dark' : 'light')
-}
-
-// 更新主題
-const updateTheme = () => {
-  document.documentElement.setAttribute('data-theme', isDarkMode.value ? 'dark' : 'light')
 }
 
 // 保存碼表數據到本地存儲

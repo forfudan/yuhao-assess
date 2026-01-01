@@ -371,7 +371,7 @@
                   <td class="rank-display">{{ item.rank }}</td>
                   <td class="duplicate-char">{{ item.char }}</td>
                   <td class="code-display">{{ item.code }}</td>
-                  <td class="frequency">{{ (item.frequency / 1_000_000_000 * 10_000).toFixed(4) }}‱</td>
+                  <td class="frequency">{{ (item.frequency * 10_000).toFixed(4) }}‱</td>
                   <td class="chars-on-code">
                     <span v-for="(char, i) in item.allCharsOnCode" :key="i" class="char-badge">{{ char }}</span>
                   </td>
@@ -622,7 +622,7 @@ function exportToCSV() {
     item.rank.toString(),
     item.char,
     item.code,
-    `${(item.frequency / 1_000_000_000 * 10_000).toFixed(2)}‱`,
+    `${(item.frequency * 10_000).toFixed(2)}‱`,
     item.allCharsOnCode.join(' ')
   ])
   
