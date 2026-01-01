@@ -69,6 +69,9 @@ export interface EquivTable {
 // 字頻數據
 export type CharFrequency = Record<string, number>
 
+// 詞頻數據
+export type WordFrequency = Record<string, number>
+
 // 碼表條目
 export interface CodeTableEntry {
   char: string

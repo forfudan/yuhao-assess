@@ -380,6 +380,84 @@ RawCodeTable = Map<number, [string, string, number]>
 
 **相關服務**: `dataService.ts`、`App.vue`
 
+#### 字頻與詞頻數據
+
+##### 數據源概覽
+
+系統使用多個字頻和詞頻數據源，以適應不同的分析場景和用戶群體：
+
+**字頻數據（5 個）**：
+
+1. **知乎簡體字頻** (`charFrequencyZhihu.json`)
+   - 來源：知乎平臺的現代簡體中文語料
+   - 用途：分析簡體中文現代網絡用語場景
+   - 特點：包含網絡用語、新詞、流行語
+
+2. **北語簡體字頻** (`charFrequencySC.json`)
+   - 來源：北京語言大學邢紅兵現代漢語語料庫
+   - 用途：標準簡體中文分析的首選
+   - 特點：語料規範、覆蓋面廣、學術權威性高
+
+3. **臺標繁體字頻** (`charFrequencyTC.json`)
+   - 來源：臺灣常用國字標準字體表統計數據
+   - 用途：繁體中文輸入法分析
+   - 特點：符合臺灣用字習慣、包含臺灣特有用字
+
+4. **古籍繁體字頻** (`charFrequencyGuji.json`)
+   - 來源：二十四史的古籍語料統計
+   - 用途：古文、文言文輸入場景分析
+   - 特點：包含大量古字、異體字、生僻字
+
+5. **繁簡聯合字頻** (`combined`)
+   - 來源：北語簡體 + 臺標繁體合併計算
+   - 用途：繁簡混合輸入場景
+   - 特點：兼顧繁簡兩種用字習慣，適合繁簡通打用戶
+
+**詞頻數據（1 個）**：
+
+1. **現代漢語語料庫分詞類詞頻表** (`wordFrequencySC.json`)
+   - 格式：詞語-出現次數配對
+   - 詞數：14,887 個常用詞語
+   - 用途：詞語重碼分析、詞組輸入效率評估
+   - 特點：
+     - 已按詞語分組並求和（一個詞語只出現一次）
+     - 保持原始排序（按使用頻率從高到低）
+     - 覆蓋日常使用的絕大多數詞彙
+
+##### 數據格式
+
+**字頻數據格式**（JSON 對象）：
+
+```json
+{
+  "的": 40529650,
+  "一": 18584230,
+  "了": 18338520,
+  "是": 16552880,
+  ...
+}
+```
+
+**詞頻數據格式**（JSON 對象）：
+
+```json
+{
+  "的": 744863,
+  "了": 130263,
+  "是": 118554,
+  "在": 119696,
+  "我們": 26821,
+  ...
+}
+```
+
+##### 數據規模
+
+- **字頻數據**：原始頻數約 10 億量級（實際文本統計結果）
+- **詞頻數據**：原始頻數約 9550 萬量級（語料庫總字數）
+- **字符覆蓋**：常用字 3000-5000 個，包含生僻字可達 8000+ 個
+- **詞語覆蓋**：常用詞 14,887 個，涵蓋日常使用的 99%+ 詞彙
+
 ##### 字頻數據加載與歸一化
 
 系統在 `App.vue` 的 `loadGlobalCharFrequencies()` 函數中統一加載並歸一化所有字頻數據：
@@ -408,30 +486,60 @@ RawCodeTable = Map<number, [string, string, number]>
 
 3. **全局傳遞**：通過 `props.globalCharFrequencies` 傳遞給所有需要字頻數據的組件
 
+##### 詞頻數據加載與歸一化
+
+系統在 `App.vue` 的 `loadGlobalWordFrequencies()` 函數中統一加載並歸一化詞頻數據：
+
+1. **原始數據加載**：從 JSON 文件加載簡體詞頻表
+   - **現代漢語語料庫分詞類詞頻表** (`wordFrequencySC.json`)
+
+2. **歸一化處理**：將原始頻數轉換為概率值（0-1 之間）
+
+   ```typescript
+   const normalizeWordFrequency = (wordFreq: WordFrequency): WordFrequency => {
+     const totalFreq = Object.values(wordFreq).reduce((sum, freq) => sum + freq, 0)
+     if (totalFreq === 0) return {}
+     
+     const normalized: WordFrequency = {}
+     for (const [word, freq] of Object.entries(wordFreq)) {
+       normalized[word] = freq / totalFreq
+     }
+     return normalized
+   }
+   ```
+
+3. **全局傳遞**：通過 `props.globalWordFrequencies` 傳遞給需要詞頻數據的組件（未來將用於詞語重碼分析卡片）
+
 ##### API 使用規範
 
-**✅ 正確做法**：組件只使用 `props.globalCharFrequencies`
+**✅ 正確做法**：組件只使用 `props.globalCharFrequencies` 或 `props.globalWordFrequencies`
 
 ```vue
 <script setup lang="ts">
 interface Props {
-  globalCharFrequencies: {
+  globalCharFrequencies?: {
     zhihu: CharFrequency
     sc: CharFrequency
     tc: CharFrequency
     guji: CharFrequency
     combined: CharFrequency
   }
+  globalWordFrequencies?: {
+    sc: WordFrequency
+  }
 }
 
 const props = defineProps<Props>()
 
 // ✅ 使用 props 中的歸一化字頻
-const charFreq = props.globalCharFrequencies.zhihu[char] || 0
+const charFreq = props.globalCharFrequencies?.zhihu[char] || 0
+
+// ✅ 使用 props 中的歸一化詞頻
+const wordFreq = props.globalWordFrequencies?.sc[word] || 0
 </script>
 ```
 
-**❌ 錯誤做法**：組件直接調用 `dataService` 加載原始字頻
+**❌ 錯誤做法**：組件直接調用 `dataService` 或 `fetch` 加載原始頻率
 
 ```vue
 <script setup lang="ts">
@@ -439,17 +547,27 @@ import { loadCharFrequency } from '../services/dataService'
 
 // ❌ 不要在組件中直接加載原始字頻
 const rawFreq = await loadCharFrequency()
+
+// ❌ 不要在組件中直接 fetch 詞頻數據
+const response = await fetch('/data/wordFrequencySC.json')
+const rawWordFreq = await response.json()
 </script>
 ```
 
-##### 字頻數據用途
+##### 字頻與詞頻數據用途
 
-歸一化字頻數據用於：
+**字頻數據用於**：
 
 - **簡碼效率分析**：計算字頻加權節約碼長
 - **速度當量計算**：加權計算按鍵組合頻率
 - **動態重碼率**：基於實際使用頻率的重碼統計
 - **鍵盤熱力圖**：按鍵使用頻率可視化
+
+**詞頻數據用於**（計劃中）：
+
+- **詞語重碼分析**：統計常用詞語的編碼重複情況
+- **詞組輸入效率**：評估詞語輸入相比逐字輸入的效率提升
+- **智能組詞建議**：基於詞頻推薦高頻詞組優化方案
 
 ##### 為什麼要歸一化？
 
@@ -457,6 +575,7 @@ const rawFreq = await loadCharFrequency()
 2. **性能優化**：避免每個組件重複計算總頻數（約 10 億次累加）
 3. **數值精度**：概率值（0-1）更適合浮點運算，避免大數溢出
 4. **顯示友好**：直接乘以 10000 轉換為萬分率（‱）或乘以 100 轉換為百分比（%）
+5. **字詞統一**：字頻和詞頻使用相同的歸一化邏輯，便於後續混合分析
 
 ##### 顯示轉換示例
 
@@ -466,13 +585,10 @@ const displayValue = (rawFreq / 1_000_000_000 * 10_000).toFixed(4) + '‱'
 
 // 歸一化頻率顯示（新方式，推薦）
 const displayValue = (normalizedFreq * 10_000).toFixed(4) + '‱'
+
+// 百分比顯示
+const displayPercent = (normalizedFreq * 100).toFixed(2) + '%'
 ```
-
-字頻融合用於：
-
-- 簡碼效率分析：只處理在字頻表中的字符
-- 速度當量計算：加權計算按鍵組合頻率
-- 動態重碼率：基於實際使用頻率的重碼統計
 
 ### 組件調用關係
 
