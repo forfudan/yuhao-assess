@@ -19,7 +19,7 @@ export interface ProcessedCodeTables {
 export class CodeTableProcessingService {
   private static instance: CodeTableProcessingService
   private processedTables: ProcessedCodeTables | null = null
-  private processingOptions: { isPrefix: boolean; maxLength: number } | null = null
+  private processingOptions: { isPrefix: boolean; maxLength: number; prefixKeys?: string[] } | null = null
 
   private constructor() {}
 
@@ -67,8 +67,8 @@ export class CodeTableProcessingService {
     }
     const maxLength = options?.maxLength || globalMaxLength || 4
     
-    // 保存處理選項
-    this.processingOptions = { isPrefix, maxLength }
+    // 保存處理選項（包括 prefixKeys）
+    this.processingOptions = { isPrefix, maxLength, prefixKeys }
     
     // 按行號順序遍歷 rawCodeTable
     const sortedEntries = Array.from(rawCodeTable.entries()).sort((a, b) => a[0] - b[0])
@@ -179,7 +179,7 @@ export class CodeTableProcessingService {
     return this.processedTables
   }
 
-  getProcessingOptions(): { isPrefix: boolean; maxLength: number } | null {
+  getProcessingOptions(): { isPrefix: boolean; maxLength: number; prefixKeys?: string[] } | null {
     return this.processingOptions
   }
 
@@ -255,6 +255,16 @@ export class CodeTableProcessingService {
   ): CodeTable {
     const wordFullCodeWithSelection: CodeTable = new Map()
     
+    // 獲取處理選項（最大碼長和前綴碼設置）
+    const options = this.processingOptions
+    if (!options) {
+      console.warn('[CodeTableProcessingService] 處理選項未設置，無法生成詞語碼表')
+      return wordFullCodeWithSelection
+    }
+    
+    const { maxLength, isPrefix } = options
+    const prefixKeys = this.getPrefixKeys()
+    
     // 用於追蹤每個編碼的出現次數（選重位置）
     const codePositionMap = new Map<string, number>()
     
@@ -268,12 +278,15 @@ export class CodeTableProcessingService {
       const position = (codePositionMap.get(code) || 0) + 1
       codePositionMap.set(code, position)
       
-      // 生成帶選重鍵的編碼
-      let codeWithSelection = code
-      if (position > 1) {
-        // 非首選：添加選擇鍵 2, 3, 4, 5, 6...
-        codeWithSelection += position.toString()
-      }
+      // 使用與 fullWithSelection 相同的邏輯生成帶選重鍵的編碼
+      const codeWithSelection = this.generateCodeWithSelection(
+        code,
+        position,
+        code.length,
+        maxLength,
+        isPrefix,
+        prefixKeys
+      )
       
       // 存儲詞語和編碼
       wordFullCodeWithSelection.set(word, [codeWithSelection])
@@ -281,6 +294,13 @@ export class CodeTableProcessingService {
     
     console.log(`[CodeTableProcessingService] 詞語碼表生成完成，共 ${wordFullCodeWithSelection.size} 個詞語`)
     return wordFullCodeWithSelection
+  }
+  
+  /**
+   * 獲取前綴鍵配置（私有方法，用於內部調用）
+   */
+  private getPrefixKeys(): string[] | undefined {
+    return this.processingOptions?.prefixKeys
   }
 }
 
