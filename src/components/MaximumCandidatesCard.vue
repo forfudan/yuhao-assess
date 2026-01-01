@@ -398,7 +398,7 @@ onMounted(() => {
 .results-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 0px;
 }
 
 /* 表格樣式 */
@@ -406,7 +406,7 @@ onMounted(() => {
   overflow-x: auto;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
-  margin-bottom: 24px;
+  margin-bottom: 6px; /* 減小表格下方間距 */
 }
 
 .results-table {

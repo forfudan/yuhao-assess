@@ -331,7 +331,7 @@
               </td>
               <td class="metric-value clickable" @click="() => showDuplicateDetails('word', 'full')">{{ (analysisResults.dynamicDupRateWord.full * 10000).toFixed(2) }}‱</td>
               <td class="metric-value clickable" @click="() => showDuplicateDetails('wordShort', 'short')">{{ (analysisResults.dynamicDupRateWord.short * 10000).toFixed(2) }}‱</td>
-              <td class="metric-desc">基於<a href="https://github.com/ling0322/webdict" target="_blank" rel="noopener">現代漢語語料庫分類詞頻表</a>，包含单字词和多字词</td>
+              <td class="metric-desc">基於現代漢語語料庫分類詞頻表，包含单字词和多字词</td>
             </tr>
           </tbody>
         </table>
