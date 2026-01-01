@@ -549,8 +549,8 @@ const stats = computed<AnalysisStats>(() => {
 
   // 分析碼表 - 使用字频权重
   for (const [char, codes] of processedCodeTable.value.entries()) {
-    // 获取字符频率权重，默认为1
-    const charWeight = currentCharFrequency.value[char] || 1
+    // 获取字符频率权重，默认为0（归一化后的字频是0-1之间的概率值）
+    const charWeight = currentCharFrequency.value[char] || 0
     
     for (const code of codes) {
       totalCodes++
@@ -797,8 +797,15 @@ const getKeyData = (key: string): KeyData => {
       const punctuationFrequency = punctuationKeyRatio * punctuationKeys[keyLower]
       // 最終頻率 = 壓縮後的原始頻率 + 標點頻率（疊加而非覆蓋）
       frequency = compressedRawFrequency + punctuationFrequency
-      // 更新 count 以反映疊加後的頻率
-      count = Math.round(totalWeightedKeyUsage * frequency / remainingRatio)
+      // 更新 count：确保标点键有显示值（使用一个放大系数）
+      // 由于 totalWeightedKeyUsage 是归一化后的字频总和，需要放大以确保 count > 0
+      if (totalWeightedKeyUsage > 0) {
+        count = totalWeightedKeyUsage * frequency / remainingRatio
+        // 确保 count 至少为一个可见值
+        if (count < 0.0001) {
+          count = 0.0001
+        }
+      }
     } else {
       // 其他按鍵使用壓縮後的頻率
       frequency = compressedRawFrequency
