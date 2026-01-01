@@ -457,6 +457,20 @@ const loadGlobalWordFrequencies = async () => {
     }
     
     console.log('[全局詞頻] 詞頻數據歸一化完成')
+    
+    // 如果已有碼表數據，生成詞語輔助碼表
+    if (processedTables.value?.full && globalWordFrequencies.value?.sc) {
+      console.log('[全局詞頻] 檢測到已有碼表，開始生成詞語輔助碼表...')
+      const wordFullCodeWithSelection = codeTableProcessingService.generateWordCodeTableWithSelection(
+        globalWordFrequencies.value.sc,
+        processedTables.value.full
+      )
+      processedTables.value = {
+        ...processedTables.value,
+        wordFullCodeWithSelection
+      }
+      console.log('[全局詞頻] 詞語輔助碼表生成完成')
+    }
   } catch (error) {
     console.error('[全局詞頻] 加載失敗:', error)
   }
@@ -673,6 +687,21 @@ const handleCodeTableUpload = async (data: {
     // 獲取處理後的表格數據作為 golden source
     processedTables.value = processedTablesResult
     console.log('[App] processedTables 更新完成:', processedTables.value)
+    
+    // 生成詞語輔助碼表（如果詞頻表已加載）
+    if (globalWordFrequencies.value?.sc && processedTablesResult.full) {
+      console.log('[App] 開始生成詞語輔助碼表...')
+      const wordFullCodeWithSelection = codeTableProcessingService.generateWordCodeTableWithSelection(
+        globalWordFrequencies.value.sc,
+        processedTablesResult.full
+      )
+      // 將詞語碼表添加到 processedTables 中
+      processedTables.value = {
+        ...processedTablesResult,
+        wordFullCodeWithSelection
+      }
+      console.log('[App] 詞語輔助碼表生成完成')
+    }
     
     // 如果是預設方案，从fileName中提取名称（格式：預設方案：方案名）
     if (data.tableKey && data.fileName.startsWith('預設方案：')) {
