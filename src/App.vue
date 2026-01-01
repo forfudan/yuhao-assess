@@ -138,6 +138,8 @@
             :code-table-name="codeTableName"
             :processed-tables="processedTables"
             :global-char-frequencies="globalCharFrequencies"
+            :word-code-table="processedTables?.wordFullCodeWithSelection"
+            :global-word-frequencies="globalWordFrequencies"
           />
 
           <!-- 最大候選個數卡片 -->

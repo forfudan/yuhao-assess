@@ -36,7 +36,7 @@
         <table class="metrics-table">
           <thead>
             <tr>
-              <th>指標</th>
+              <th>單字指標</th>
               <th>全碼</th>
               <th>
                 出簡
@@ -306,7 +306,34 @@
             </tr>
           </tbody>
         </table>
-        
+
+        <!-- 詞語重碼數據表格 -->
+        <table class="metrics-table" style="margin-top: 2rem;">
+          <thead>
+            <tr>
+              <th>詞語指標</th>
+              <th>全碼</th>
+              <th>説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                簡體詞頻動態選重率
+                <span 
+                  class="info-icon" 
+                  @mouseenter="showTooltip($event, '計算詞語動態選重率時，會使用詞頻數據對詞語進行降序重排。')"
+                  @mouseleave="hideTooltip()"
+                >
+                  ⓘ
+                </span>
+              </td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('word', 'full')">{{ (analysisResults.dynamicDupRateWord.full * 10000).toFixed(2) }}‱</td>
+              <td class="metric-desc">基於現代漢語語料庫分類詞頻表，包含单字词和多字词</td>
+            </tr>
+          </tbody>
+        </table>
+
         <div class="info-section">
           <p>💡<strong>提示：</strong>點擊動態選重率的數值，可查看具體需要選重的字符及其編碼詳情。</p>
         </div>
@@ -339,7 +366,7 @@
         <div class="modal-header">
           <h3>{{ modalTitle }}</h3>
           <div class="modal-header-actions">
-            <button @click="exportToCSV" class="export-csv-btn" :disabled="duplicateDetails.length === 0" title="導出CVS">
+            <button @click="exportToCSV" class="export-csv-btn" :disabled="detailType === 'char' ? duplicateDetails.length === 0 : wordDuplicateDetails.length === 0" title="導出CVS">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                 <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
               </svg>
@@ -353,7 +380,8 @@
             <div class="spinner"></div>
             <p>正在計算重碼詳情...</p>
           </div>
-          <div v-else-if="duplicateDetails.length > 0" class="details-table-wrapper">
+          <!-- 字符重碼表 -->
+          <div v-else-if="detailType === 'char' && duplicateDetails.length > 0" class="details-table-wrapper">
             <table class="details-table">
               <thead>
                 <tr>
@@ -379,6 +407,33 @@
               </tbody>
             </table>
           </div>
+          <!-- 詞語重碼表 -->
+          <div v-else-if="detailType === 'word' && wordDuplicateDetails.length > 0" class="details-table-wrapper">
+            <table class="details-table">
+              <thead>
+                <tr>
+                  <th class="col-index">#</th>
+                  <th class="col-rank">詞頻序數</th>
+                  <th class="col-word">重碼詞</th>
+                  <th class="col-code">編碼</th>
+                  <th class="col-freq">詞頻</th>
+                  <th class="col-words">該編碼上的詞（詞頻降序）</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, idx) in wordDuplicateDetails" :key="idx">
+                  <td class="index-display">{{ idx + 1 }}</td>
+                  <td class="rank-display">{{ item.rank }}</td>
+                  <td class="duplicate-word">{{ item.word }}</td>
+                  <td class="code-display">{{ item.code }}</td>
+                  <td class="frequency">{{ (item.frequency * 10_000).toFixed(4) }}‱</td>
+                  <td class="words-on-code">
+                    <span v-for="(word, i) in item.allWordsOnCode" :key="i" class="word-badge">{{ word }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <div v-else class="no-data">
             <p>無重碼數據</p>
           </div>
@@ -395,7 +450,10 @@ import {
   getDynamicDupRate, 
   getDynamicDupRateFromOriginalOrder,
   getNonFirstDuplicateDetails,
-  type NonFirstDuplicateDetail
+  getWordDynamicDupRate,
+  getNonFirstWordDuplicateDetails,
+  type NonFirstDuplicateDetail,
+  type NonFirstWordDuplicateDetail
 } from '../services/duplicateAnalysisService'
 import { BuiltinCodeTableService } from '../services/builtinCodeTableService'
 import { codeTableProcessingService } from '../services/codeTableProcessingService'
@@ -425,11 +483,17 @@ interface Props {
     guji: CharFrequency       // 古籍繁體字頻
     combined: CharFrequency   // 繁簡聯合字頻
   } | null
+  wordCodeTable?: CodeTable | null  // 詞語碼表
+  globalWordFrequencies?: {  // 全局詞頻數據
+    sc?: Record<string, number>
+  } | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   codeTable: () => new Map(),
-  codeTableName: ''
+  codeTableName: '',
+  wordCodeTable: null,
+  globalWordFrequencies: null
 })
 
 // 折叠功能
@@ -482,6 +546,7 @@ interface AnalysisResults {
   dynamicDupRateTCOriginal: DualValue
   dynamicDupRateGujiOriginal: DualValue
   dynamicDupRateUnifiedOriginal: DualValue
+  dynamicDupRateWord: DualValue  // 词语动态选重率
   gb2312DuplicateChars: DualValue
   tongguiDuplicateChars: DualValue
   guoziDuplicateChars: DualValue
@@ -546,6 +611,8 @@ const showModal = ref(false)
 const modalTitle = ref('')
 const isCalculatingDetails = ref(false)
 const duplicateDetails = ref<NonFirstDuplicateDetail[]>([])
+const wordDuplicateDetails = ref<NonFirstWordDuplicateDetail[]>([])
+const detailType = ref<'char' | 'word'>('char')
 
 // 顯示重碼詳情
 async function showDuplicateDetails(freqType: string, codeType: 'full' | 'short', sortByFrequency: boolean = true) {
@@ -554,6 +621,30 @@ async function showDuplicateDetails(freqType: string, codeType: 'full' | 'short'
   
   showModal.value = true
   isCalculatingDetails.value = true
+  
+  // 檢查是否為詞語類型
+  if (freqType === 'word') {
+    detailType.value = 'word'
+    modalTitle.value = '簡體詞頻動態選重率·全碼'
+    
+    try {
+      if (!props.wordCodeTable || !props.globalWordFrequencies?.sc) {
+        throw new Error('詞語碼表或詞頻數據尚未加載')
+      }
+      
+      // 計算詞語重碼詳情
+      wordDuplicateDetails.value = getNonFirstWordDuplicateDetails(props.wordCodeTable, props.globalWordFrequencies.sc)
+    } catch (err) {
+      console.error('計算詞語重碼詳情失敗:', err)
+      wordDuplicateDetails.value = []
+    } finally {
+      isCalculatingDetails.value = false
+    }
+    return
+  }
+  
+  // 字符類型處理
+  detailType.value = 'char'
   
   // 設置標題
   const freqNames: Record<string, string> = {
@@ -607,43 +698,80 @@ async function showDuplicateDetails(freqType: string, codeType: 'full' | 'short'
 function closeModal() {
   showModal.value = false
   duplicateDetails.value = []
+  wordDuplicateDetails.value = []
 }
 
 // 導出CSV
 function exportToCSV() {
-  if (duplicateDetails.value.length === 0) return
-  
-  // CSV 標題行
-  const headers = ['#', '字頻序數', '重碼字', '編碼', '字頻', '該編碼上的字符（字頻降序）']
-  
-  // CSV 數據行
-  const rows = duplicateDetails.value.map((item, idx) => [
-    (idx + 1).toString(),
-    item.rank.toString(),
-    item.char,
-    item.code,
-    `${(item.frequency * 10_000).toFixed(2)}‱`,
-    item.allCharsOnCode.join(' ')
-  ])
-  
-  // 組合成 CSV 格式
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-  ].join('\n')
-  
-  // 創建 Blob 並下載
-  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  const url = URL.createObjectURL(blob)
-  
-  link.setAttribute('href', url)
-  link.setAttribute('download', `${props.codeTableName || '未命名方案'}_重碼詳情_${modalTitle.value}.csv`)
-  link.style.visibility = 'hidden'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+  if (detailType.value === 'word') {
+    if (wordDuplicateDetails.value.length === 0) return
+    
+    // CSV 標題行 - 詞語
+    const headers = ['#', '詞頻序數', '重碼詞', '編碼', '詞頻', '該編碼上的詞（詞頻降序）']
+    
+    // CSV 數據行
+    const rows = wordDuplicateDetails.value.map((item, idx) => [
+      (idx + 1).toString(),
+      item.rank.toString(),
+      item.word,
+      item.code,
+      `${(item.frequency * 10_000).toFixed(4)}‱`,
+      item.allWordsOnCode.join(' ')
+    ])
+    
+    // 組合成 CSV 格式
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+    
+    // 創建 Blob 並下載
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    
+    link.setAttribute('href', url)
+    link.setAttribute('download', `${props.codeTableName || '未命名方案'}_詞語重碼詳情_${modalTitle.value}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } else {
+    if (duplicateDetails.value.length === 0) return
+    
+    // CSV 標題行 - 字符
+    const headers = ['#', '字頻序數', '重碼字', '編碼', '字頻', '該編碼上的字符（字頻降序）']
+    
+    // CSV 數據行
+    const rows = duplicateDetails.value.map((item, idx) => [
+      (idx + 1).toString(),
+      item.rank.toString(),
+      item.char,
+      item.code,
+      `${(item.frequency * 10_000).toFixed(4)}‱`,
+      item.allCharsOnCode.join(' ')
+    ])
+    
+    // 組合成 CSV 格式
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+    
+    // 創建 Blob 並下載
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    
+    link.setAttribute('href', url)
+    link.setAttribute('download', `${props.codeTableName || '未命名方案'}_重碼詳情_${modalTitle.value}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
 }
 
 // 計算字符集的重碼字符數和重碼組數（支持雙碼表）
@@ -962,6 +1090,12 @@ async function calculateAllMetrics() {
       cjkCharsetSizes[name] = cjkStats[name].theoreticalSize
     })
     
+    // 計算詞語動態選重率
+    let fullDynamicDupRateWord = 0
+    if (props.wordCodeTable && props.wordCodeTable.size > 0 && props.globalWordFrequencies?.sc) {
+      fullDynamicDupRateWord = getWordDynamicDupRate(props.wordCodeTable, props.globalWordFrequencies.sc)
+    }
+    
     analysisResults.value = {
       dynamicDupRate: { full: fullDynamicDupRate, short: shortDynamicDupRate },
       dynamicDupRateSC: { full: fullDynamicDupRateSC, short: shortDynamicDupRateSC },
@@ -973,6 +1107,7 @@ async function calculateAllMetrics() {
       dynamicDupRateTCOriginal: { full: fullDynamicDupRateTCOriginal, short: shortDynamicDupRateTCOriginal },
       dynamicDupRateGujiOriginal: { full: fullDynamicDupRateGujiOriginal, short: shortDynamicDupRateGujiOriginal },
       dynamicDupRateUnifiedOriginal: { full: fullDynamicDupRateUnifiedOriginal, short: shortDynamicDupRateUnifiedOriginal },
+      dynamicDupRateWord: { full: fullDynamicDupRateWord, short: 0 },
       gb2312DuplicateChars: gb2312Stats.duplicateChars,
       tongguiDuplicateChars: tongguiStats.duplicateChars,
       guoziDuplicateChars: guoziStats.duplicateChars,
@@ -1010,8 +1145,8 @@ async function calculateAllMetrics() {
 
 // 监听碼表、處理結果和字頻变化
 watch(
-  [() => props.codeTable, () => props.processedTables, () => props.globalCharFrequencies], 
-  ([newCodeTable, newProcessedTables, newFrequencies]) => {
+  [() => props.codeTable, () => props.processedTables, () => props.globalCharFrequencies, () => props.wordCodeTable, () => props.globalWordFrequencies], 
+  ([newCodeTable, newProcessedTables, newFrequencies, newWordCodeTable, newWordFrequencies]) => {
     if (newCodeTable && newCodeTable.size > 0 && newProcessedTables && newFrequencies) {
       calculateAllMetrics()
     }
@@ -1559,6 +1694,48 @@ onMounted(() => {
 }
 
 [data-theme="dark"] .char-badge {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+/* 詞語相關樣式 */
+.col-word {
+  width: 120px;
+  text-align: center;
+}
+
+.col-words {
+  min-width: 250px;
+}
+
+.duplicate-word {
+  font-weight: 600;
+  color: #2563eb;
+  font-size: 1rem;
+}
+
+.words-on-code {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.word-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #334155;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .duplicate-word {
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .word-badge {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }

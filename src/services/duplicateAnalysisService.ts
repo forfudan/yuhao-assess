@@ -4,7 +4,7 @@
  */
 
 import { generateCharset, type CharsetType, charsetInfo } from './charsetService'
-import type { CodeTable, CharFrequency } from '../types/index'
+import type { CodeTable, CharFrequency, WordFrequency } from '../types/index'
 
 /**
  * 計算某個字符集下的靜態重碼數
@@ -146,6 +146,17 @@ export interface NonFirstDuplicateDetail {
 }
 
 /**
+ * 非一選重碼詞的詳細信息
+ */
+export interface NonFirstWordDuplicateDetail {
+  word: string              // 非一選的重碼詞
+  code: string              // 對應的編碼
+  frequency: number         // 該詞的詞頻
+  rank: number              // 該詞在詞頻表中的排名（詞頻降序）
+  allWordsOnCode: string[]  // 該編碼上的所有詞（按詞頻降序）
+}
+
+/**
  * 獲取非一選重碼字的詳細信息
  * @param codeTable 碼表（每個字符對應唯一編碼）
  * @param charFrequency 字頻數據
@@ -209,6 +220,112 @@ export function getNonFirstDuplicateDetails(
   }
   
   // 結果按字頻降序排列
+  results.sort((a, b) => b.frequency - a.frequency)
+  
+  return results
+}
+
+/**
+ * 計算詞語的動態選重率（從帶選重鍵的詞語碼表）
+ * 詞語碼表已按詞頻排序，直接檢查編碼末尾是否有選重鍵即可
+ * @param wordCodeTableWithSelection 帶選重鍵的詞語碼表（編碼末尾包含選重數字 2-9）
+ * @param wordFrequency 詞頻數據
+ * @returns 動態重碼率（0-1之間的小數）
+ */
+export function getWordDynamicDupRate(
+  wordCodeTableWithSelection: CodeTable,
+  wordFrequency: WordFrequency
+): number {
+  let totalDupFreq = 0
+  let totalFreq = 0
+  
+  for (const [word, codes] of wordCodeTableWithSelection.entries()) {
+    const code = codes[0]
+    if (!code) continue
+    
+    const freq = wordFrequency[word] || 0
+    totalFreq += freq
+    
+    // 檢查編碼最後一位是否為數字 0-9（表示需要選重）
+    const lastChar = code.slice(-1)
+    const isSelection = /[0-9]/.test(lastChar)
+    
+    if (isSelection) {
+      totalDupFreq += freq
+    }
+  }
+  
+  return totalFreq > 0 ? totalDupFreq / totalFreq : 0
+}
+
+/**
+ * 獲取需要選重的詞語詳細信息（從帶選重鍵的詞語碼表）
+ * 列出所有有選重鍵的詞，顯示去掉選重鍵後的編碼及該編碼上的所有詞
+ * @param wordCodeTableWithSelection 帶選重鍵的詞語碼表（編碼末尾包含選重數字 2-9）
+ * @param wordFrequency 詞頻數據
+ * @returns 需要選重的詞語詳細信息列表，按詞頻降序排列
+ */
+export function getNonFirstWordDuplicateDetails(
+  wordCodeTableWithSelection: CodeTable,
+  wordFrequency: WordFrequency
+): NonFirstWordDuplicateDetail[] {
+  // 第一步：按去掉選重鍵的編碼分組所有詞語
+  const baseCodeToWords = new Map<string, Array<{ word: string; freq: number; hasSelection: boolean }>>()
+  
+  for (const [word, codes] of wordCodeTableWithSelection.entries()) {
+    const codeWithSelection = codes[0]
+    if (!codeWithSelection) continue
+    
+    const freq = wordFrequency[word]
+    if (freq === undefined || freq <= 0) continue
+    
+    // 檢查是否有選重鍵
+    const lastChar = codeWithSelection.slice(-1)
+    const hasSelection = /[0-9]/.test(lastChar)
+    
+    // 去掉選重鍵得到基礎編碼
+    const baseCode = hasSelection ? codeWithSelection.slice(0, -1) : codeWithSelection
+    
+    if (!baseCodeToWords.has(baseCode)) {
+      baseCodeToWords.set(baseCode, [])
+    }
+    baseCodeToWords.get(baseCode)!.push({ word, freq, hasSelection })
+  }
+  
+  // 創建詞頻排名映射
+  const allWordsWithFreq = Object.entries(wordFrequency)
+    .filter(([_, freq]) => freq > 0)
+    .sort(([_, freqA], [__, freqB]) => freqB - freqA)
+  const wordRankMap = new Map<string, number>()
+  allWordsWithFreq.forEach(([word, _], index) => {
+    wordRankMap.set(word, index + 1)
+  })
+  
+  const results: NonFirstWordDuplicateDetail[] = []
+  
+  // 第二步：對每個基礎編碼，處理有選重鍵的詞
+  for (const [baseCode, wordInfos] of baseCodeToWords.entries()) {
+    // 按詞頻降序排序
+    wordInfos.sort((a, b) => b.freq - a.freq)
+    
+    // 獲取該編碼上所有詞語（按詞頻降序）
+    const allWordsOnCode = wordInfos.map(item => item.word)
+    
+    // 只添加有選重鍵的詞
+    for (const wordInfo of wordInfos) {
+      if (wordInfo.hasSelection) {
+        results.push({
+          word: wordInfo.word,
+          code: baseCode,  // 使用去掉選重鍵的編碼
+          frequency: wordInfo.freq,
+          rank: wordRankMap.get(wordInfo.word) || 0,
+          allWordsOnCode: allWordsOnCode
+        })
+      }
+    }
+  }
+  
+  // 結果按詞頻降序排列
   results.sort((a, b) => b.frequency - a.frequency)
   
   return results
