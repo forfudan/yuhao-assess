@@ -161,6 +161,8 @@
             :global-prefix-keys="uploadPrefixKeys"
             :processed-tables="processedTables"
             :global-char-frequencies="globalCharFrequencies"
+            :word-code-table="processedTables?.wordFullCodeWithSelection"
+            :global-word-frequencies="globalWordFrequencies"
           />
 
           <!-- 簡碼效率卡片 -->

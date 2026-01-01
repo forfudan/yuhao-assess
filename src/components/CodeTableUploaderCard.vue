@@ -255,7 +255,17 @@
     
     <!-- 詞語編碼預覽 -->
     <div v-if="wordEncodingPreviewData.length > 0" class="preview-section word-encoding-preview">
-      <h4 class="preview-title">檢視詞語編碼（前200個單字詞和多字詞）</h4>
+      <div class="preview-title-with-help">
+        <h4 class="preview-title">檢視詞語編碼（前200個單字詞和多字詞）</h4>
+        <button 
+          @click="showWordHelp = true"
+          class="help-button"
+          title="點擊查看詞語編碼規則說明"
+          type="button"
+        >
+          ?
+        </button>
+      </div>
       <div class="encoding-table-container">
         <table class="encoding-table">
           <thead>
@@ -306,6 +316,35 @@
         </div>
         <div class="help-footer">
           <button @click="showPrefixHelp = false" class="btn btn-primary">我知道了</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- 詞語幫助信息框 - 使用 Teleport 傳送到 body -->
+  <Teleport to="body">
+    <div v-if="showWordHelp" class="help-modal-overlay" @click="showWordHelp = false">
+      <div class="help-modal" @click.stop>
+        <div class="help-header">
+          <h4>詞語編碼規則説明</h4>
+          <button @click="showWordHelp = false" class="help-close-btn">×</button>
+        </div>
+        <div class="help-content">
+          <p>本測評網根據現代漢語語料庫分類詞頻表自動生成詞語編碼。</p>
+          <p><strong>編碼規則：</strong></p>
+          <ul>
+            <li><strong>單字詞：</strong>使用該字的編碼</li>
+            <li><strong>二字詞：</strong>每個字各取其全碼前2碼，共4碼</li>
+            <li><strong>三字詞：</strong>前兩字各取其全碼1碼，末字取其全碼前2碼，共4碼</li>
+            <li><strong>四字及以上：</strong>第1、2、3、末字各取其全碼首碼，共4碼</li>
+          </ul>
+          <p><strong>選重鍵處理：</strong></p>
+          <p>詞語編碼會自動添加選重鍵（2、3、4、5等），但首位候選在達到最大碼長時不添加選重鍵。前綴碼方案會根據按鍵設置考慮是否添加空格鍵。</p>
+          <p><strong>注意：</strong></p>
+          <p>此表格展示前200個詞語（包括單字詞和多字詞），用於預覽和檢查詞語編碼是否符合預期。</p>
+        </div>
+        <div class="help-footer">
+          <button @click="showWordHelp = false" class="btn btn-primary">我知道了</button>
         </div>
       </div>
     </div>
@@ -365,6 +404,7 @@ const isUploading = ref(false)
 const isPrefixCode = ref(false)
 const prefixKeysInput = ref('')
 const showPrefixHelp = ref(false)
+const showWordHelp = ref(false)
 const fileInput = ref<HTMLInputElement>()
 const isRestoredFile = ref(false) // 标记是否为恢复的文件
 const previewData = ref<Array<{
@@ -1871,5 +1911,22 @@ loadBuiltinConfig()
 
 .code-cell.max-length {
   text-align: center;
+}
+
+/* 標題與幫助按鈕容器 */
+.preview-title-with-help {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.preview-title-with-help .preview-title {
+  margin: 0;
+}
+
+.preview-title-with-help .help-button {
+  flex-shrink: 0;
 }
 </style>
