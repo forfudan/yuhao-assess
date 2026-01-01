@@ -256,10 +256,27 @@ src/
 
 ### DuplicateAnalysisCard.vue
 
-**功能**: 重碼分析顯示卡片
+**功能**: 字符與詞語重碼分析顯示卡片
 
-- `calculateDuplicateAnalysis()`: 計算重碼分析
+- `calculateAllMetrics()`: 計算所有重碼指標（字符和詞語）
+- `showDuplicateDetails()`: 顯示重碼詳情（支持字符和詞語兩種類型）
 - `exportCard()`: 導出重碼分析結果
+- `exportToCSV()`: 導出重碼詳情為 CSV（字符或詞語）
+
+**Props**:
+
+- `codeTable`: 原始碼表
+- `processedTables`: 處理後的碼表（包含 full, short, fullWithSelection, shortWithSelection）
+- `globalCharFrequencies`: 全局字頻數據（5種字頻）
+- `wordCodeTable`: 詞語碼表（wordFullCodeWithSelection）
+- `globalWordFrequencies`: 全局詞頻數據（簡體詞頻）
+
+**分析內容**:
+
+- 字符動態選重率（5種字頻 × 全碼/出簡 × 按字頻排序/保持原序）
+- 詞語動態選重率（簡體詞頻 × 全碼）
+- 字符集重碼統計（GB2312、通規、國字、CJK各區）
+- 重碼詳情模態框（字符或詞語）
 
 ### KeyboardHeatmapCard.vue
 
@@ -354,6 +371,19 @@ RawCodeTable = Map<number, [string, string, number]>
 - 處理邏輯同 fullWithSelection
 - 用途：簡碼速度當量、簡碼效率評估
 
+##### e) **詞語全碼加選重按鍵表 (wordFullCodeWithSelection)**
+
+- 由 `generateWordCodeTableWithSelection()` 生成
+- 包含單字詞和多字詞的編碼
+- 編碼規則：
+  - 1字詞：取單字全碼
+  - 2字詞：各取前2碼
+  - 3字詞：首字前2碼 + 第2字首碼 + 末字首碼
+  - 4字及以上：前3字各取首碼 + 末字前2碼
+- 已按詞頻排序（基於 `wordFrequencySC.json`）
+- 非首選詞添加選重鍵（2, 3, 4...）在編碼末尾
+- 用途：詞語重碼分析、詞語動態選重率計算
+
 #### 3. 處理選項
 
 預處理過程會考慮以下選項：
@@ -416,6 +446,7 @@ RawCodeTable = Map<number, [string, string, number]>
 **詞頻數據（1 個）**：
 
 1. **現代漢語語料庫分詞類詞頻表** (`wordFrequencySC.json`)
+   - 來源：現代漢語語料庫分詞統計
    - 格式：詞語-出現次數配對
    - 詞數：14,887 個常用詞語
    - 用途：詞語重碼分析、詞組輸入效率評估
@@ -423,6 +454,7 @@ RawCodeTable = Map<number, [string, string, number]>
      - 已按詞語分組並求和（一個詞語只出現一次）
      - 保持原始排序（按使用頻率從高到低）
      - 覆蓋日常使用的絕大多數詞彙
+     - 包含單字詞和多字詞
 
 ##### 數據格式
 
@@ -563,11 +595,12 @@ const rawWordFreq = await response.json()
 - **動態重碼率**：基於實際使用頻率的重碼統計
 - **鍵盤熱力圖**：按鍵使用頻率可視化
 
-**詞頻數據用於**（計劃中）：
+**詞頻數據用於**：
 
-- **詞語重碼分析**：統計常用詞語的編碼重複情況
-- **詞組輸入效率**：評估詞語輸入相比逐字輸入的效率提升
-- **智能組詞建議**：基於詞頻推薦高頻詞組優化方案
+- **詞語重碼分析**：統計常用詞語的動態選重率（已實現）
+- **詞語重碼詳情**：展示需要選重的詞語及其編碼信息（已實現）
+- **詞組輸入效率**：評估詞語輸入相比逐字輸入的效率提升（計劃中）
+- **智能組詞建議**：基於詞頻推薦高頻詞組優化方案（計劃中）
 
 ##### 為什麼要歸一化？
 
@@ -601,15 +634,15 @@ ComparisonCard.vue (調用預處理)
     ↓
 codeTableProcessingService.processRawCodeTable()
     ↓
-生成四個輔助碼表
+生成四個字符輔助碼表 + 一個詞語碼表
     ↓
 分發給各個分析組件：
     ├─ CodeTableAnalysisCard.vue → 使用 full, short
-    ├─ KeyboardHeatmapCard.vue → 使用 fullWithSelection
-    ├─ DuplicateAnalysisCard.vue → 使用 full, short
+    ├─ KeyboardHeatmapCard.vue → 使用 fullWithSelection, wordFullCodeWithSelection
+    ├─ DuplicateAnalysisCard.vue → 使用 full, short, wordFullCodeWithSelection
     ├─ MaximumCandidatesCard.vue → 使用 full
     ├─ ShortCodeEfficiencyCard.vue → 使用 short + 字頻過濾
-    └─ SpeedEquivCard.vue → 使用 fullWithSelection, shortWithSelection
+    └─ SpeedEquivCard.vue → 使用 fullWithSelection, shortWithSelection, wordFullCodeWithSelection
 ```
 
 ### 緩存機制
@@ -722,11 +755,30 @@ codeTableProcessingService.processRawCodeTable()
 
 ### duplicateAnalysisService.ts
 
-**功能**: 重碼分析計算
+**功能**: 字符與詞語重碼分析計算
+
+**字符重碼分析**:
 
 - `getStaticDupRate()`: 獲取靜態重碼率
-- `getDynamicDupRate()`: 獲取動態重碼率
+- `getDynamicDupRate()`: 獲取字符動態重碼率（按字頻重新排序）
+- `getDynamicDupRateFromOriginalOrder()`: 從帶選重鍵的碼表計算動態重碼率（保持原序）
+- `getNonFirstDuplicateDetails()`: 獲取非一選重碼字的詳細信息
 - `calculateCharsetDuplicates()`: 計算字符集重碼
+
+**詞語重碼分析**:
+
+- `getWordDynamicDupRate()`: 計算詞語動態選重率（從帶選重鍵的詞語碼表）
+  - 直接檢查編碼末尾是否有選重鍵（0-9數字）
+  - 累加有選重鍵的詞語頻率除以總詞頻
+- `getNonFirstWordDuplicateDetails()`: 獲取需要選重的詞語詳細信息
+  - 列出所有有選重鍵的詞
+  - 顯示去掉選重鍵後的基礎編碼
+  - 顯示該基礎編碼上的所有詞（按詞頻降序）
+
+**數據類型**:
+
+- `NonFirstDuplicateDetail`: 字符重碼詳情接口
+- `NonFirstWordDuplicateDetail`: 詞語重碼詳情接口
 
 ### exportService.ts
 
