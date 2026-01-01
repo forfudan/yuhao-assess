@@ -100,6 +100,9 @@
             <tr>
               <th>詞頻來源</th>
               <th>全碼當量</th>
+              <th>一簡當量</th>
+              <th>二簡當量</th>
+              <th>全簡當量</th>
               <th>説明</th>
             </tr>
           </thead>
@@ -107,6 +110,9 @@
             <tr>
               <td>簡體漢語詞頻</td>
               <td class="metric-value clickable" @click="() => showEquivDetails('word', 'full')">{{ analysisResults.wordEquiv.toFixed(4) }}</td>
+              <td class="metric-value clickable first-short-equiv" @click="() => showEquivDetails('word', 'firstShort')">{{ analysisResults.wordFirstShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value clickable second-short-equiv" @click="() => showEquivDetails('word', 'secondShort')">{{ analysisResults.wordSecondShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value clickable short-equiv" @click="() => showEquivDetails('word', 'short')">{{ analysisResults.wordShortEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於現代漢語語料庫分類詞頻表，包含单字词和多字词</td>
             </tr>
           </tbody>
@@ -217,6 +223,7 @@ interface Props {
     combined: Record<string, number> | null
   } | null
   wordCodeTable?: CodeTable | null  // 词语码表
+  wordShortCodeTable?: CodeTable | null  // 词语简码码表
   globalWordFrequencies?: {  // 全局词频数据
     sc?: Record<string, number>
   } | null
@@ -230,6 +237,7 @@ const props = withDefaults(defineProps<Props>(), {
   processedTables: null,
   globalCharFrequencies: null,
   wordCodeTable: null,
+  wordShortCodeTable: null,
   globalWordFrequencies: null
 })
 
@@ -288,6 +296,9 @@ interface SpeedEquivResults {
   gujiShortEquiv: number
   unifiedShortEquiv: number
   wordEquiv: number  // 词语全码当量
+  wordFirstShortEquiv: number  // 词语一简当量
+  wordSecondShortEquiv: number  // 词语二简当量
+  wordShortEquiv: number  // 词语全简当量
 }
 
 // 響應式數據
@@ -346,13 +357,26 @@ async function showEquivDetails(freqType: string, codeType: string) {
     
     if (freqType === 'word') {
       // 使用詞語碼表和詞頻
-      if (!props.wordCodeTable) {
+      if (!props.wordCodeTable || !props.wordShortCodeTable) {
         throw new Error('詞語碼表尚未加載')
       }
       if (!props.globalWordFrequencies?.sc) {
         throw new Error('詞頻表尚未加載')
       }
-      codeTable = props.wordCodeTable
+      
+      // 根據碼類型選擇碼表
+      if (codeType === 'full') {
+        codeTable = props.wordCodeTable
+      } else if (codeType === 'firstShort') {
+        codeTable = generateWordFirstShortCodeTable(props.wordShortCodeTable, props.wordCodeTable)
+      } else if (codeType === 'secondShort') {
+        codeTable = generateWordSecondShortCodeTable(props.wordShortCodeTable, props.wordCodeTable)
+      } else if (codeType === 'short') {
+        codeTable = props.wordShortCodeTable
+      } else {
+        throw new Error('未知的碼類型')
+      }
+      
       itemFrequency = props.globalWordFrequencies.sc
     } else {
       // 使用字碼表和字頻
@@ -498,6 +522,62 @@ function generateSecondShortCodeTable(
   return result
 }
 
+// 生成词语一简码表（编码≤1，否则用全码）
+function generateWordFirstShortCodeTable(
+  wordShortCodeTable: CodeTable,
+  wordFullCodeTable: CodeTable
+): CodeTable {
+  const result: CodeTable = new Map()
+  
+  for (const [word, codes] of wordShortCodeTable) {
+    const shortCode = codes[0]
+    if (!shortCode) continue
+    
+    // 去掉选重键和空格，计算实际编码长度
+    const cleanCode = shortCode.replace(/[0-9_]/g, '')
+    
+    // 如果简码长度≤1，使用简码；否则使用全码
+    if (cleanCode.length <= 1) {
+      result.set(word, [shortCode])
+    } else {
+      const fullCodes = wordFullCodeTable.get(word)
+      if (fullCodes) {
+        result.set(word, [fullCodes[0]])
+      }
+    }
+  }
+  
+  return result
+}
+
+// 生成词语二简码表（编码≤2，否则用全码）
+function generateWordSecondShortCodeTable(
+  wordShortCodeTable: CodeTable,
+  wordFullCodeTable: CodeTable
+): CodeTable {
+  const result: CodeTable = new Map()
+  
+  for (const [word, codes] of wordShortCodeTable) {
+    const shortCode = codes[0]
+    if (!shortCode) continue
+    
+    // 去掉选重键和空格，计算实际编码长度
+    const cleanCode = shortCode.replace(/[0-9_]/g, '')
+    
+    // 如果简码长度≤2，使用简码；否则使用全码
+    if (cleanCode.length <= 2) {
+      result.set(word, [shortCode])
+    } else {
+      const fullCodes = wordFullCodeTable.get(word)
+      if (fullCodes) {
+        result.set(word, [fullCodes[0]])
+      }
+    }
+  }
+  
+  return result
+}
+
 // 刷新數據
 const refreshData = async () => {
   console.log('手動刷新速度當量數據...')
@@ -583,7 +663,30 @@ async function calculateSpeedEquivAnalysis() {
     
     // 10. 計算詞語速度當量
     let wordPairFreq: Record<string, number> = {}
-    if (props.wordCodeTable && props.globalWordFrequencies?.sc) {
+    let wordFirstShortPairFreq: Record<string, number> = {}
+    let wordSecondShortPairFreq: Record<string, number> = {}
+    let wordShortPairFreq: Record<string, number> = {}
+    
+    if (props.wordCodeTable && props.wordShortCodeTable && props.globalWordFrequencies?.sc) {
+      // 词语全码当量
+      wordPairFreq = calculateCodePairFrequencies(props.wordCodeTable, props.globalWordFrequencies.sc)
+      
+      // 生成词语一简和二简码表
+      const wordFirstShortCodeTable = generateWordFirstShortCodeTable(
+        props.wordShortCodeTable,
+        props.wordCodeTable
+      )
+      const wordSecondShortCodeTable = generateWordSecondShortCodeTable(
+        props.wordShortCodeTable,
+        props.wordCodeTable
+      )
+      
+      // 计算词语一简、二简、全简当量
+      wordFirstShortPairFreq = calculateCodePairFrequencies(wordFirstShortCodeTable, props.globalWordFrequencies.sc)
+      wordSecondShortPairFreq = calculateCodePairFrequencies(wordSecondShortCodeTable, props.globalWordFrequencies.sc)
+      wordShortPairFreq = calculateCodePairFrequencies(props.wordShortCodeTable, props.globalWordFrequencies.sc)
+    } else if (props.wordCodeTable && props.globalWordFrequencies?.sc) {
+      // 如果只有全码词表，只计算全码当量
       wordPairFreq = calculateCodePairFrequencies(props.wordCodeTable, props.globalWordFrequencies.sc)
     }
     
@@ -608,7 +711,10 @@ async function calculateSpeedEquivAnalysis() {
       tcShortEquiv: calculateSpeedEquiv(tcShortPairFreq, equivTable),
       gujiShortEquiv: calculateSpeedEquiv(gujiShortPairFreq, equivTable),
       unifiedShortEquiv: calculateSpeedEquiv(unifiedShortPairFreq, equivTable),
-      wordEquiv: calculateSpeedEquiv(wordPairFreq, equivTable)
+      wordEquiv: calculateSpeedEquiv(wordPairFreq, equivTable),
+      wordFirstShortEquiv: calculateSpeedEquiv(wordFirstShortPairFreq, equivTable),
+      wordSecondShortEquiv: calculateSpeedEquiv(wordSecondShortPairFreq, equivTable),
+      wordShortEquiv: calculateSpeedEquiv(wordShortPairFreq, equivTable)
     }
     
   } catch (err) {
@@ -626,9 +732,10 @@ watch(
     () => props.processedTables, 
     () => props.globalCharFrequencies,
     () => props.wordCodeTable,
+    () => props.wordShortCodeTable,
     () => props.globalWordFrequencies
   ], 
-  async ([newCodeTable, newProcessedTables, newFrequencies, newWordCodeTable, newWordFrequencies]) => {
+  async ([newCodeTable, newProcessedTables, newFrequencies, newWordCodeTable, newWordShortCodeTable, newWordFrequencies]) => {
     if (newCodeTable && newCodeTable.size > 0 && newProcessedTables && newFrequencies) {
       // 延迟一点确保其他watch已执行
       await nextTick()

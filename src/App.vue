@@ -139,6 +139,7 @@
             :processed-tables="processedTables"
             :global-char-frequencies="globalCharFrequencies"
             :word-code-table="processedTables?.wordFullCodeWithSelection"
+            :word-short-code-table="processedTables?.wordShortCodeWithSelection"
             :global-word-frequencies="globalWordFrequencies"
           />
 
@@ -164,6 +165,7 @@
             :processed-tables="processedTables"
             :global-char-frequencies="globalCharFrequencies"
             :word-code-table="processedTables?.wordFullCodeWithSelection"
+            :word-short-code-table="processedTables?.wordShortCodeWithSelection"
             :global-word-frequencies="globalWordFrequencies"
           />
 
@@ -190,6 +192,7 @@
             :code-table-name="codeTableName"
             :global-char-frequencies="globalCharFrequencies"
             :word-code-table="processedTables?.wordFullCodeWithSelection"
+            :word-short-code-table="processedTables?.wordShortCodeWithSelection"
             :global-word-frequencies="globalWordFrequencies"
           />
 

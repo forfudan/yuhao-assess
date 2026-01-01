@@ -313,6 +313,7 @@
             <tr>
               <th>詞語指標</th>
               <th>全碼</th>
+              <th>出簡</th>
               <th>説明</th>
             </tr>
           </thead>
@@ -329,7 +330,8 @@
                 </span>
               </td>
               <td class="metric-value clickable" @click="() => showDuplicateDetails('word', 'full')">{{ (analysisResults.dynamicDupRateWord.full * 10000).toFixed(2) }}‱</td>
-              <td class="metric-desc">基於現代漢語語料庫分類詞頻表，包含单字词和多字词</td>
+              <td class="metric-value clickable" @click="() => showDuplicateDetails('wordShort', 'short')">{{ (analysisResults.dynamicDupRateWord.short * 10000).toFixed(2) }}‱</td>
+              <td class="metric-desc">基於<a href="https://github.com/ling0322/webdict" target="_blank" rel="noopener">現代漢語語料庫分類詞頻表</a>，包含单字词和多字词</td>
             </tr>
           </tbody>
         </table>
@@ -483,7 +485,8 @@ interface Props {
     guji: CharFrequency       // 古籍繁體字頻
     combined: CharFrequency   // 繁簡聯合字頻
   } | null
-  wordCodeTable?: CodeTable | null  // 詞語碼表
+  wordCodeTable?: CodeTable | null  // 詞語全碼碼表（wordFullCodeWithSelection）
+  wordShortCodeTable?: CodeTable | null  // 詞語簡碼碼表（wordShortCodeWithSelection）
   globalWordFrequencies?: {  // 全局詞頻數據
     sc?: Record<string, number>
   } | null
@@ -493,6 +496,7 @@ const props = withDefaults(defineProps<Props>(), {
   codeTable: () => new Map(),
   codeTableName: '',
   wordCodeTable: null,
+  wordShortCodeTable: null,
   globalWordFrequencies: null
 })
 
@@ -636,6 +640,27 @@ async function showDuplicateDetails(freqType: string, codeType: 'full' | 'short'
       wordDuplicateDetails.value = getNonFirstWordDuplicateDetails(props.wordCodeTable, props.globalWordFrequencies.sc)
     } catch (err) {
       console.error('計算詞語重碼詳情失敗:', err)
+      wordDuplicateDetails.value = []
+    } finally {
+      isCalculatingDetails.value = false
+    }
+    return
+  }
+  
+  // 檢查是否為詞語簡碼類型
+  if (freqType === 'wordShort') {
+    detailType.value = 'word'
+    modalTitle.value = '簡體詞頻動態選重率·出簡'
+    
+    try {
+      if (!props.wordShortCodeTable || !props.globalWordFrequencies?.sc) {
+        throw new Error('詞語簡碼碼表或詞頻數據尚未加載')
+      }
+      
+      // 計算詞語簡碼重碼詳情
+      wordDuplicateDetails.value = getNonFirstWordDuplicateDetails(props.wordShortCodeTable, props.globalWordFrequencies.sc)
+    } catch (err) {
+      console.error('計算詞語簡碼重碼詳情失敗:', err)
       wordDuplicateDetails.value = []
     } finally {
       isCalculatingDetails.value = false
@@ -1090,10 +1115,14 @@ async function calculateAllMetrics() {
       cjkCharsetSizes[name] = cjkStats[name].theoreticalSize
     })
     
-    // 計算詞語動態選重率
+    // 計算詞語動態選重率（全碼和簡碼）
     let fullDynamicDupRateWord = 0
+    let shortDynamicDupRateWord = 0
     if (props.wordCodeTable && props.wordCodeTable.size > 0 && props.globalWordFrequencies?.sc) {
       fullDynamicDupRateWord = getWordDynamicDupRate(props.wordCodeTable, props.globalWordFrequencies.sc)
+    }
+    if (props.wordShortCodeTable && props.wordShortCodeTable.size > 0 && props.globalWordFrequencies?.sc) {
+      shortDynamicDupRateWord = getWordDynamicDupRate(props.wordShortCodeTable, props.globalWordFrequencies.sc)
     }
     
     analysisResults.value = {
@@ -1107,7 +1136,7 @@ async function calculateAllMetrics() {
       dynamicDupRateTCOriginal: { full: fullDynamicDupRateTCOriginal, short: shortDynamicDupRateTCOriginal },
       dynamicDupRateGujiOriginal: { full: fullDynamicDupRateGujiOriginal, short: shortDynamicDupRateGujiOriginal },
       dynamicDupRateUnifiedOriginal: { full: fullDynamicDupRateUnifiedOriginal, short: shortDynamicDupRateUnifiedOriginal },
-      dynamicDupRateWord: { full: fullDynamicDupRateWord, short: 0 },
+      dynamicDupRateWord: { full: fullDynamicDupRateWord, short: shortDynamicDupRateWord },
       gb2312DuplicateChars: gb2312Stats.duplicateChars,
       tongguiDuplicateChars: tongguiStats.duplicateChars,
       guoziDuplicateChars: guoziStats.duplicateChars,
@@ -1145,8 +1174,8 @@ async function calculateAllMetrics() {
 
 // 监听碼表、處理結果和字頻变化
 watch(
-  [() => props.codeTable, () => props.processedTables, () => props.globalCharFrequencies, () => props.wordCodeTable, () => props.globalWordFrequencies], 
-  ([newCodeTable, newProcessedTables, newFrequencies, newWordCodeTable, newWordFrequencies]) => {
+  [() => props.codeTable, () => props.processedTables, () => props.globalCharFrequencies, () => props.wordCodeTable, () => props.wordShortCodeTable, () => props.globalWordFrequencies], 
+  ([newCodeTable, newProcessedTables, newFrequencies, newWordCodeTable, newWordShortCodeTable, newWordFrequencies]) => {
     if (newCodeTable && newCodeTable.size > 0 && newProcessedTables && newFrequencies) {
       calculateAllMetrics()
     }

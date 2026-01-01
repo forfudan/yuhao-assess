@@ -246,6 +246,7 @@ interface Props {
     combined: CharFrequency
   } | null
   wordCodeTable?: CodeTable | null
+  wordShortCodeTable?: CodeTable | null
   globalWordFrequencies?: {
     sc?: WordFrequency
   } | null
@@ -273,7 +274,7 @@ async function exportCard() {
     await ExportService.exportQuadModeCard(cardRef.value, '鍵位熱力', props.codeTableName || '未命名方案', {
       copyToClipboard: ExportService.isClipboardSupported(),
       download: true,
-      switchTabCallback: (mode: 'full' | 'short' | 'fullTC' | 'shortTC' | 'word') => {
+      switchTabCallback: (mode: 'full' | 'short' | 'fullTC' | 'shortTC' | 'word' | 'wordShort') => {
         // 切換標籤頁的回調函數
         activeTab.value = mode
         // 等待DOM更新
@@ -316,13 +317,14 @@ const refreshData = () => {
 }
 
 // Tab 切換相關
-const activeTab = ref<'full' | 'short' | 'fullTC' | 'shortTC' | 'word'>('full')
+const activeTab = ref<'full' | 'short' | 'fullTC' | 'shortTC' | 'word' | 'wordShort'>('full')
 const tabs = [
   { key: 'full', label: '全碼·簡頻' },
   { key: 'short', label: '出簡·簡頻' },
   { key: 'fullTC', label: '全碼·繁頻' },
   { key: 'shortTC', label: '出簡·繁頻' },
-  { key: 'word', label: '詞語·簡頻' }
+  { key: 'word', label: '詞語·簡頻·全碼' },
+  { key: 'wordShort', label: '詞語·簡頻·出簡' }
 ] as const
 
 // 模擬標點使用頻率選項（默認勾選）
@@ -428,6 +430,11 @@ const processedCodeTable = computed(() => {
   // 如果是詞語標籤頁，使用詞語碼表
   if (activeTab.value === 'word') {
     return props.wordCodeTable || new Map()
+  }
+  
+  // 如果是詞語簡碼標籤頁，使用詞語簡碼表
+  if (activeTab.value === 'wordShort') {
+    return props.wordShortCodeTable || new Map()
   }
   
   const processedTables = codeTableProcessingService.getProcessedTables()
@@ -561,7 +568,7 @@ const stats = computed<AnalysisStats>(() => {
   for (const [item, codes] of processedCodeTable.value.entries()) {
     // 根據當前標籤頁選擇相應的頻率權重
     let itemWeight = 0
-    if (activeTab.value === 'word') {
+    if (activeTab.value === 'word' || activeTab.value === 'wordShort') {
       // 使用詞頻
       itemWeight = props.globalWordFrequencies?.sc?.[item] || 0
     } else {
