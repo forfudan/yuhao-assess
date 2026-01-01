@@ -171,6 +171,9 @@
                   <div class="modal-code-row">
                     <span class="modal-char-code full-code">{{ getFullCodeWithSelection(char) }}</span>
                   </div>
+                  <div class="modal-code-row">
+                    <span class="modal-char-code saving-code">{{ getWeightedCodeSaving(char, modalFreqType) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -257,6 +260,7 @@ const tooltipChars = ref('')
 const showModal = ref(false)
 const modalTitle = ref('')
 const modalChars = ref<string[]>([])
+const modalFreqType = ref<string>('') // 當前模態框使用的字頻類型
 
 // 预處理的碼表（包含简码加選重表）
 const processedCodeTable = ref<CodeTable>(new Map())
@@ -320,21 +324,6 @@ const stopStatusCheck = () => {
     statusCheckInterval = null
   }
 }
-
-// 字頻數據
-const charFrequencies = ref<{
-  charFrequencySC: CharFrequency
-  charFrequencyTC: CharFrequency
-  charFrequencyGuji: CharFrequency
-  charFrequencyZhihu: CharFrequency
-  combined: CharFrequency
-}>({
-  charFrequencySC: {},
-  charFrequencyTC: {},
-  charFrequencyGuji: {},
-  charFrequencyZhihu: {},
-  combined: {}
-})
 
 interface TableRow {
   N: number
@@ -534,23 +523,6 @@ const calculateShortCodeEfficiencyWithMaps = (
   return results
 }
 
-// 載入字頻數據
-const loadCharFrequencyData = async () => {
-  try {
-    // 使用全局字頻數據
-    charFrequencies.value = {
-      charFrequencySC: props.globalCharFrequencies.sc,
-      charFrequencyTC: props.globalCharFrequencies.tc,
-      charFrequencyGuji: props.globalCharFrequencies.guji,
-      charFrequencyZhihu: props.globalCharFrequencies.zhihu,
-      combined: props.globalCharFrequencies.combined
-    }
-  } catch (err) {
-    error.value = `載入字頻數據時出錯: ${err instanceof Error ? err.message : String(err)}`
-    console.error('字頻數據載入錯誤:', err)
-  }
-}
-
 // 刷新數據
 const refreshData = async () => {
   console.log('手動刷新簡碼效率數據...')
@@ -637,9 +609,15 @@ const updateEfficiency = async () => {
     const results: Record<string, Array<{ N: number; efficiency: number; selectedChars: string[] }>> = {}
 
     // 爲每個字頻數據計算簡碼效率
-    const frequencies = ['charFrequencySC', 'charFrequencyTC', 'charFrequencyGuji', 'charFrequencyZhihu', 'combined']
-    for (const freqKey of frequencies) {
-      const charFrequency = charFrequencies.value[freqKey as keyof typeof charFrequencies.value]
+    const frequencyMap = {
+      charFrequencyZhihu: props.globalCharFrequencies.zhihu,
+      charFrequencySC: props.globalCharFrequencies.sc,
+      charFrequencyTC: props.globalCharFrequencies.tc,
+      charFrequencyGuji: props.globalCharFrequencies.guji,
+      combined: props.globalCharFrequencies.combined
+    }
+    
+    for (const [freqKey, charFrequency] of Object.entries(frequencyMap)) {
       if (charFrequency && Object.keys(charFrequency).length > 0) {
         const efficiencyResults = calculateShortCodeEfficiencyWithMaps(
           charFrequency,
@@ -881,6 +859,7 @@ const showDetailsModal = (chars: string[], currentN: number, freqType: string) =
   }
   
   modalChars.value = displayChars
+  modalFreqType.value = freqType // 保存當前使用的字頻類型
   showModal.value = true
 }
 
@@ -899,10 +878,63 @@ const copyCharsToClipboard = async () => {
   }
 }
 
+// 計算字頻加權節約碼長
+const getWeightedCodeSaving = (char: string, freqType: string): string => {
+  // 獲取字頻數據 - 直接使用props中的全局字頻（原始頻數）
+  let charFreq = 0
+  let charFreqData: CharFrequency = {}
+  
+  switch (freqType) {
+    case 'zhihu':
+      charFreqData = props.globalCharFrequencies.zhihu
+      charFreq = charFreqData[char] || 0
+      break
+    case 'SC':
+      charFreqData = props.globalCharFrequencies.sc
+      charFreq = charFreqData[char] || 0
+      break
+    case 'TC':
+      charFreqData = props.globalCharFrequencies.tc
+      charFreq = charFreqData[char] || 0
+      break
+    case 'guji':
+      charFreqData = props.globalCharFrequencies.guji
+      charFreq = charFreqData[char] || 0
+      break
+    case 'combined':
+      charFreqData = props.globalCharFrequencies.combined
+      charFreq = charFreqData[char] || 0
+      break
+    default:
+      return '-0.0000'
+  }
+  
+  // 計算總頻數用於歸一化
+  const totalFreq = Object.values(charFreqData).reduce((sum, freq) => sum + freq, 0)
+  
+  // 歸一化字頻（轉為概率）
+  const normalizedFreq = totalFreq > 0 ? charFreq / totalFreq : 0
+  
+  // 獲取簡碼和全碼
+  const shortCode = getFullShortCodeWithSelection(char)
+  const fullCode = getFullCodeWithSelection(char)
+  
+  if (!shortCode || !fullCode) {
+    return '-0.0000'
+  }
+  
+  // 計算節約碼長：歸一化字頻 * (全碼碼長 - 簡碼碼長)
+  const codeSaving = normalizedFreq * (fullCode.length - shortCode.length)
+  
+  // 返回負數格式，保留4位小數
+  return `-${codeSaving.toFixed(4)}`
+}
+
 // 關閉模態框
 const closeModal = () => {
   showModal.value = false
   modalChars.value = []
+  modalFreqType.value = ''
 }
 
 // 監聽 props 變化
@@ -940,8 +972,7 @@ watch(() => props.analysisReady, (newReady) => {
   }
 })
 
-onMounted(async () => {
-  await loadCharFrequencyData()
+onMounted(() => {
   if (props.analysisReady && props.codeTable && props.codeTable.size > 0) {
     startStatusCheck()
   }
@@ -1645,17 +1676,17 @@ onUnmounted(() => {
 
 .modal-chars-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 12px;
-  padding: 12px 0;
+  grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+  gap: 8px;
+  padding: 8px 0;
 }
 
 /* 大屏幕时每行固定显示10个字符 */
 @media (min-width: 900px) {
   .modal-chars-grid {
     grid-template-columns: repeat(10, 1fr);
-    gap: 4px;
-    padding: 8px 0;
+    gap: 3px;
+    padding: 6px 0;
   }
 }
 
@@ -1664,10 +1695,10 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 5px 3px;
   background: #f8fafc;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border-radius: 4px;
   transition: all 0.2s ease;
 }
 
@@ -1681,21 +1712,21 @@ onUnmounted(() => {
 /* 大屏幕下减小字符单元格的内边距 */
 @media (min-width: 900px) {
   .modal-char-item {
-    padding: 6px 4px;
+    padding: 4px 2px;
   }
 }
 
 .modal-char {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: #1f2937;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .modal-codes {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   width: 100%;
 }
 
@@ -1713,12 +1744,12 @@ onUnmounted(() => {
 }
 
 .modal-char-code {
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   color: #059669;
   font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
   background: white;
-  padding: 2px 8px;
-  border-radius: 4px;
+  padding: 1px 4px;
+  border-radius: 3px;
   border: 1px solid #dcfce7;
   font-weight: 600;
 }
@@ -1726,6 +1757,11 @@ onUnmounted(() => {
 .modal-char-code.full-code {
   color: #3b82f6;
   border-color: #dbeafe;
+}
+
+.modal-char-code.saving-code {
+  color: #ea580c;
+  border-color: #fed7aa;
 }
 
 /* 暗黑模式的模態框樣式 */
@@ -1786,6 +1822,11 @@ onUnmounted(() => {
 [data-theme="dark"] .modal-char-code.full-code {
   color: var(--color-primary);
   border-color: var(--color-border-primary);
+}
+
+[data-theme="dark"] .modal-char-code.saving-code {
+  color: #fb923c;
+  border-color: var(--color-border-secondary);
 }
 </style>
 
