@@ -100,6 +100,9 @@
             <tr>
               <th>詞頻來源</th>
               <th>全碼當量</th>
+              <th>一簡當量</th>
+              <th>二簡當量</th>
+              <th>全簡當量</th>
               <th>説明</th>
             </tr>
           </thead>
@@ -107,6 +110,9 @@
             <tr>
               <td>簡體漢語詞頻</td>
               <td class="metric-value clickable" @click="() => showEquivDetails('word', 'full')">{{ analysisResults.wordEquiv.toFixed(4) }}</td>
+              <td class="metric-value clickable first-short-equiv" @click="() => showEquivDetails('word', 'firstShort')">{{ analysisResults.wordFirstShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value clickable second-short-equiv" @click="() => showEquivDetails('word', 'secondShort')">{{ analysisResults.wordSecondShortEquiv.toFixed(4) }}</td>
+              <td class="metric-value clickable short-equiv" @click="() => showEquivDetails('word', 'short')">{{ analysisResults.wordShortEquiv.toFixed(4) }}</td>
               <td class="metric-desc">基於現代漢語語料庫分類詞頻表，包含单字词和多字词</td>
             </tr>
           </tbody>
@@ -198,6 +204,10 @@ import {
   calculateSpeedEquiv,
   calculateCodePairFrequencies,
   calculateEquivDistribution,
+  generateFirstShortCodeTable,
+  generateSecondShortCodeTable,
+  generateWordFirstShortCodeTable,
+  generateWordSecondShortCodeTable,
   type EquivDistributionItem
 } from '../services/speedAnalysisService'
 
@@ -217,6 +227,7 @@ interface Props {
     combined: Record<string, number> | null
   } | null
   wordCodeTable?: CodeTable | null  // 词语码表
+  wordShortCodeTable?: CodeTable | null  // 词语简码码表
   globalWordFrequencies?: {  // 全局词频数据
     sc?: Record<string, number>
   } | null
@@ -230,6 +241,7 @@ const props = withDefaults(defineProps<Props>(), {
   processedTables: null,
   globalCharFrequencies: null,
   wordCodeTable: null,
+  wordShortCodeTable: null,
   globalWordFrequencies: null
 })
 
@@ -288,6 +300,9 @@ interface SpeedEquivResults {
   gujiShortEquiv: number
   unifiedShortEquiv: number
   wordEquiv: number  // 词语全码当量
+  wordFirstShortEquiv: number  // 词语一简当量
+  wordSecondShortEquiv: number  // 词语二简当量
+  wordShortEquiv: number  // 词语全简当量
 }
 
 // 響應式數據
@@ -346,13 +361,26 @@ async function showEquivDetails(freqType: string, codeType: string) {
     
     if (freqType === 'word') {
       // 使用詞語碼表和詞頻
-      if (!props.wordCodeTable) {
+      if (!props.wordCodeTable || !props.wordShortCodeTable) {
         throw new Error('詞語碼表尚未加載')
       }
       if (!props.globalWordFrequencies?.sc) {
         throw new Error('詞頻表尚未加載')
       }
-      codeTable = props.wordCodeTable
+      
+      // 根據碼類型選擇碼表
+      if (codeType === 'full') {
+        codeTable = props.wordCodeTable
+      } else if (codeType === 'firstShort') {
+        codeTable = generateWordFirstShortCodeTable(props.wordShortCodeTable, props.wordCodeTable)
+      } else if (codeType === 'secondShort') {
+        codeTable = generateWordSecondShortCodeTable(props.wordShortCodeTable, props.wordCodeTable)
+      } else if (codeType === 'short') {
+        codeTable = props.wordShortCodeTable
+      } else {
+        throw new Error('未知的碼類型')
+      }
+      
       itemFrequency = props.globalWordFrequencies.sc
     } else {
       // 使用字碼表和字頻
@@ -426,76 +454,6 @@ async function loadEquivTable(): Promise<Record<string, number>> {
     console.error('加載當量表失敗:', error)
     throw new Error('加載當量表失敗')
   }
-}
-
-// 生成一級簡碼表（長度≤2且末尾是空格或上屏鍵）
-function generateFirstShortCodeTable(
-  shortWithSelection: CodeTable, 
-  fullWithSelection: CodeTable,
-  prefixKeys: string[] = []
-): CodeTable {
-  const result: CodeTable = new Map()
-  
-  // 创建上屏键集合，包含空格(_)和用户设置的上屏键
-  const validEndingKeys = new Set(['_', ...prefixKeys])
-  
-  for (const [char, codes] of shortWithSelection) {
-    const validCodes: string[] = []
-    
-    for (const code of codes) {
-      // 檢查是否符合一級簡碼條件：長度≤2且末尾是空格或上屏鍵
-      if (code.length <= 2 && validEndingKeys.has(code[code.length - 1])) {
-        validCodes.push(code)
-      }
-    }
-    
-    // 如果有符合條件的簡碼，使用簡碼；否則使用全碼
-    if (validCodes.length > 0) {
-      result.set(char, validCodes)
-    } else {
-      const fullCodes = fullWithSelection.get(char)
-      if (fullCodes) {
-        result.set(char, [...fullCodes])
-      }
-    }
-  }
-  
-  return result
-}
-
-// 生成二級簡碼表（長度≤3且末尾是空格或上屏鍵）
-function generateSecondShortCodeTable(
-  shortWithSelection: CodeTable, 
-  fullWithSelection: CodeTable,
-  prefixKeys: string[] = []
-): CodeTable {
-  const result: CodeTable = new Map()
-  
-  // 创建上屏键集合，包含空格(_)和用户设置的上屏键
-  const validEndingKeys = new Set(['_', ...prefixKeys])
-  
-  for (const [char, codes] of shortWithSelection) {
-    const validCodes: string[] = []
-    
-    for (const code of codes) {
-      // 檢查是否符合二級簡碼條件：長度≤3且末尾是空格或上屏鍵
-      if (code.length <= 3 && validEndingKeys.has(code[code.length - 1])) {
-        validCodes.push(code)
-      }
-    }
-    
-    // 如果有符合條件的簡碼，使用簡碼；否則使用全碼
-    if (validCodes.length > 0) {
-      result.set(char, validCodes)
-    } else {
-      const fullCodes = fullWithSelection.get(char)
-      if (fullCodes) {
-        result.set(char, [...fullCodes])
-      }
-    }
-  }
-  
-  return result
 }
 
 // 刷新數據
@@ -583,7 +541,30 @@ async function calculateSpeedEquivAnalysis() {
     
     // 10. 計算詞語速度當量
     let wordPairFreq: Record<string, number> = {}
-    if (props.wordCodeTable && props.globalWordFrequencies?.sc) {
+    let wordFirstShortPairFreq: Record<string, number> = {}
+    let wordSecondShortPairFreq: Record<string, number> = {}
+    let wordShortPairFreq: Record<string, number> = {}
+    
+    if (props.wordCodeTable && props.wordShortCodeTable && props.globalWordFrequencies?.sc) {
+      // 词语全码当量
+      wordPairFreq = calculateCodePairFrequencies(props.wordCodeTable, props.globalWordFrequencies.sc)
+      
+      // 生成词语一简和二简码表
+      const wordFirstShortCodeTable = generateWordFirstShortCodeTable(
+        props.wordShortCodeTable,
+        props.wordCodeTable
+      )
+      const wordSecondShortCodeTable = generateWordSecondShortCodeTable(
+        props.wordShortCodeTable,
+        props.wordCodeTable
+      )
+      
+      // 计算词语一简、二简、全简当量
+      wordFirstShortPairFreq = calculateCodePairFrequencies(wordFirstShortCodeTable, props.globalWordFrequencies.sc)
+      wordSecondShortPairFreq = calculateCodePairFrequencies(wordSecondShortCodeTable, props.globalWordFrequencies.sc)
+      wordShortPairFreq = calculateCodePairFrequencies(props.wordShortCodeTable, props.globalWordFrequencies.sc)
+    } else if (props.wordCodeTable && props.globalWordFrequencies?.sc) {
+      // 如果只有全码词表，只计算全码当量
       wordPairFreq = calculateCodePairFrequencies(props.wordCodeTable, props.globalWordFrequencies.sc)
     }
     
@@ -608,7 +589,10 @@ async function calculateSpeedEquivAnalysis() {
       tcShortEquiv: calculateSpeedEquiv(tcShortPairFreq, equivTable),
       gujiShortEquiv: calculateSpeedEquiv(gujiShortPairFreq, equivTable),
       unifiedShortEquiv: calculateSpeedEquiv(unifiedShortPairFreq, equivTable),
-      wordEquiv: calculateSpeedEquiv(wordPairFreq, equivTable)
+      wordEquiv: calculateSpeedEquiv(wordPairFreq, equivTable),
+      wordFirstShortEquiv: calculateSpeedEquiv(wordFirstShortPairFreq, equivTable),
+      wordSecondShortEquiv: calculateSpeedEquiv(wordSecondShortPairFreq, equivTable),
+      wordShortEquiv: calculateSpeedEquiv(wordShortPairFreq, equivTable)
     }
     
   } catch (err) {
@@ -626,9 +610,10 @@ watch(
     () => props.processedTables, 
     () => props.globalCharFrequencies,
     () => props.wordCodeTable,
+    () => props.wordShortCodeTable,
     () => props.globalWordFrequencies
   ], 
-  async ([newCodeTable, newProcessedTables, newFrequencies, newWordCodeTable, newWordFrequencies]) => {
+  async ([newCodeTable, newProcessedTables, newFrequencies, newWordCodeTable, newWordShortCodeTable, newWordFrequencies]) => {
     if (newCodeTable && newCodeTable.size > 0 && newProcessedTables && newFrequencies) {
       // 延迟一点确保其他watch已执行
       await nextTick()
@@ -707,6 +692,7 @@ onMounted(async () => {
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 25px;
+  table-layout: fixed; /* 固定表格布局，确保列宽一致 */
 }
 
 .metrics-table th,
@@ -716,6 +702,28 @@ onMounted(async () => {
   border-bottom: 1px solid #e5e7eb;
   font-size: 0.8rem;
   line-height: 1.3;
+}
+
+/* 固定列宽 */
+.metrics-table th:nth-child(1),
+.metrics-table td:nth-child(1) {
+  width: 15%; /* 来源列 */
+}
+
+.metrics-table th:nth-child(2),
+.metrics-table td:nth-child(2),
+.metrics-table th:nth-child(3),
+.metrics-table td:nth-child(3),
+.metrics-table th:nth-child(4),
+.metrics-table td:nth-child(4),
+.metrics-table th:nth-child(5),
+.metrics-table td:nth-child(5) {
+  width: 10%; /* 数值列 */
+}
+
+.metrics-table th:nth-child(6),
+.metrics-table td:nth-child(6) {
+  width: 45%; /* 说明列 */
 }
 
 .metrics-table th {

@@ -13,6 +13,8 @@ export interface ProcessedCodeTables {
   short: CodeTable                   // 簡碼表（每個字符只保留最短編碼，保持原始順序）
   fullWithSelection: CodeTable       // 全碼加選重按鍵表（用於當量計算等，保持原始順序）
   shortWithSelection: CodeTable      // 簡碼加選重按鍵表（補空格+選重鍵，保持原始順序）
+  wordFullCodeWithSelection?: CodeTable   // 詞語全碼加選重按鍵表（詞語編碼使用單字全碼）
+  wordShortCodeWithSelection?: CodeTable  // 詞語簡碼加選重按鍵表（單字詞使用簡碼，多字詞用全碼截取）
 }
 
 // 碼表處理服務類
@@ -211,14 +213,28 @@ export class CodeTableProcessingService {
 
   /**
    * 生成詞語編碼（根據詞長使用不同規則）
+   * @param word 詞語
+   * @param fullCodeTable 單字全碼表
+   * @param shortCodeTable 單字簡碼表（可選）
+   * @param useShortCode 單字詞是否使用簡碼（默認false）
    */
-  private getWordCode(word: string, fullCodeTable: CodeTable): string {
+  private getWordCode(
+    word: string,
+    fullCodeTable: CodeTable,
+    shortCodeTable?: CodeTable,
+    useShortCode: boolean = false
+  ): string {
     try {
       const len = word.length
       if (len === 1) {
-        // 單字：直接使用單字全碼
-        const codes = fullCodeTable.get(word)
-        return codes && codes.length > 0 ? codes[0] : ''
+        // 單字：根據useShortCode決定使用全碼還是簡碼
+        if (useShortCode && shortCodeTable) {
+          const codes = shortCodeTable.get(word)
+          return codes && codes.length > 0 ? codes[0] : ''
+        } else {
+          const codes = fullCodeTable.get(word)
+          return codes && codes.length > 0 ? codes[0] : ''
+        }
       } else if (len === 2) {
         // 兩字詞：兩個字各取前兩碼
         const code1 = fullCodeTable.get(word[0])?.[0] || ''
@@ -244,7 +260,8 @@ export class CodeTableProcessingService {
   }
 
   /**
-   * 生成詞語輔助碼表（帶選重鍵）
+   * 生成詞語全碼輔助碼表（帶選重鍵）
+   * 單字詞使用全碼，多字詞從全碼截取
    * @param wordFreq 歸一化後的詞頻表（按頻數降序排列）
    * @param fullCodeTable 單字全碼表
    * @returns 詞語碼表 Map<詞語, [編碼+選重鍵]>
@@ -292,8 +309,64 @@ export class CodeTableProcessingService {
       wordFullCodeWithSelection.set(word, [codeWithSelection])
     }
     
-    console.log(`[CodeTableProcessingService] 詞語碼表生成完成，共 ${wordFullCodeWithSelection.size} 個詞語`)
+    console.log(`[CodeTableProcessingService] 詞語全碼表生成完成，共 ${wordFullCodeWithSelection.size} 個詞語`)
     return wordFullCodeWithSelection
+  }
+
+  /**
+   * 生成詞語簡碼輔助碼表（帶選重鍵）
+   * 單字詞使用簡碼，多字詞從全碼截取（與全碼詞表邏輯相同）
+   * @param wordFreq 歸一化後的詞頻表（按頻數降序排列）
+   * @param fullCodeTable 單字全碼表
+   * @param shortCodeTable 單字簡碼表
+   * @returns 詞語碼表 Map<詞語, [編碼+選重鍵]>
+   */
+  generateWordShortCodeTableWithSelection(
+    wordFreq: WordFrequency,
+    fullCodeTable: CodeTable,
+    shortCodeTable: CodeTable
+  ): CodeTable {
+    const wordShortCodeWithSelection: CodeTable = new Map()
+    
+    // 獲取處理選項（最大碼長和前綴碼設置）
+    const options = this.processingOptions
+    if (!options) {
+      console.warn('[CodeTableProcessingService] 處理選項未設置，無法生成詞語簡碼表')
+      return wordShortCodeWithSelection
+    }
+    
+    const { maxLength, isPrefix } = options
+    const prefixKeys = this.getPrefixKeys()
+    
+    // 用於追蹤每個編碼的出現次數（選重位置）
+    const codePositionMap = new Map<string, number>()
+    
+    // 詞頻表已經按頻數降序排列，直接遍歷
+    for (const [word, freq] of Object.entries(wordFreq)) {
+      // 生成詞語編碼（單字詞使用簡碼）
+      const code = this.getWordCode(word, fullCodeTable, shortCodeTable, true)
+      if (!code) continue
+      
+      // 獲取當前編碼的選重位置
+      const position = (codePositionMap.get(code) || 0) + 1
+      codePositionMap.set(code, position)
+      
+      // 使用與 shortWithSelection 相同的邏輯生成帶選重鍵的編碼
+      const codeWithSelection = this.generateCodeWithSelection(
+        code,
+        position,
+        code.length,
+        maxLength,
+        isPrefix,
+        prefixKeys
+      )
+      
+      // 存儲詞語和編碼
+      wordShortCodeWithSelection.set(word, [codeWithSelection])
+    }
+    
+    console.log(`[CodeTableProcessingService] 詞語簡碼表生成完成，共 ${wordShortCodeWithSelection.size} 個詞語`)
+    return wordShortCodeWithSelection
   }
   
   /**
