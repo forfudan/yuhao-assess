@@ -1021,6 +1021,110 @@ defineExpose({
 3. **類型定義**: 在 `types/` 目錄更新相關類型
 4. **更新文檔**: 同步更新本文檔的函數列表
 
+## 未來優化建議
+
+### 1. 模塊化改進
+
+**問題**: 當前許多業務邏輯函數直接寫在 Vue 組件的 `<script>` 標籤中，違反了單一職責原則，降低了代碼可維護性和可測試性。
+
+**改進方案**:
+
+- 將所有業務邏輯函數移至 `services/` 目錄下的對應 TypeScript 文件
+- Vue 組件應當專注於視圖層邏輯和用戶交互
+- 示例：
+
+  ```typescript
+  // ❌ 錯誤：在 Vue 組件中定義業務邏輯
+  // SpeedEquivCard.vue
+  function generateFirstShortCodeTable(...) { ... }
+  
+  // ✅ 正確：在 services 中定義業務邏輯
+  // services/speedAnalysisService.ts
+  export function generateFirstShortCodeTable(...) { ... }
+  
+  // SpeedEquivCard.vue
+  import { generateFirstShortCodeTable } from '../services/speedAnalysisService'
+  ```
+
+**優點**:
+
+- 提高代碼可測試性（可單獨測試業務邏輯）
+- 提高代碼可重用性（多個組件可共享同一函數）
+- 降低組件複雜度，提升可維護性
+- 更好的類型推導和 IDE 支援
+
+### 2. App.vue 重構
+
+**問題**: `App.vue` 當前過於臃腫，承擔了太多職責：
+
+- 全局狀態管理
+- 碼表數據處理
+- 字頻數據加載
+- 詞頻數據加載
+- 組件間數據傳遞
+- 事件處理
+
+**改進方案**:
+
+#### 2.1 引入狀態管理
+
+- 使用 Pinia 或 Vuex 管理全局狀態
+- 將碼表數據、字頻數據、詞頻數據等移至 store
+
+#### 2.2 創建專門的 Service
+
+```typescript
+// services/appStateService.ts
+export class AppStateService {
+  // 管理全局碼表數據
+  // 管理全局字頻數據
+  // 管理全局詞頻數據
+}
+
+// services/dataLoaderService.ts
+export class DataLoaderService {
+  // 加載字頻數據
+  // 加載詞頻數據
+  // 加載當量表
+}
+```
+
+#### 2.3 拆分大型函數
+
+- 將 `loadGlobalWordFrequencies` 等大型函數拆分為更小的、職責單一的函數
+- 每個函數應只做一件事
+
+#### 2.4 組件通信優化
+
+- 考慮使用 provide/inject 減少 prop drilling
+- 對於深層嵌套的組件，考慮使用事件總線或狀態管理
+
+**預期效果**:
+
+- `App.vue` 主要負責路由和佈局
+- 數據處理邏輯移至專門的 service
+- 組件更加獨立，耦合度降低
+
+### 3. 其他潛在優化
+
+#### 3.1 性能優化
+
+- 大數據集處理考慮使用 Web Worker
+- 虛擬滾動優化長列表渲染
+- 懶加載非關鍵組件
+
+#### 3.2 代碼質量
+
+- 添加單元測試（特別是 services 層）
+- 使用 ESLint 和 Prettier 統一代碼風格
+- 添加 TypeScript 嚴格模式
+
+#### 3.3 用戶體驗
+
+- 添加數據持久化（LocalStorage）
+- 支援多方案對比
+- 添加數據導出功能（CSV、JSON）
+
 ## 瀏覽器支援
 
 - Chrome/Edge 88+

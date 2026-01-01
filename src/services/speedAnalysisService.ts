@@ -176,3 +176,141 @@ function generateEquivDescription(equivValue: number, keyPairs: string[]): strin
     return '雙手互擊的特殊組合'
   }
 }
+
+/**
+ * 生成一級簡碼表（長度≤2且末尾是空格或上屏鍵）
+ * @param shortWithSelection 簡碼表（帶選重鍵）
+ * @param fullWithSelection 全碼表（帶選重鍵）
+ * @param prefixKeys 上屏鍵列表
+ * @returns 一級簡碼表
+ */
+export function generateFirstShortCodeTable(
+  shortWithSelection: CodeTable, 
+  fullWithSelection: CodeTable,
+  prefixKeys: string[] = []
+): CodeTable {
+  const result: CodeTable = new Map()
+  
+  // 创建上屏键集合，包含空格(_)和用户设置的上屏键
+  const validEndingKeys = new Set(['_', ...prefixKeys])
+  
+  for (const [char, codes] of shortWithSelection) {
+    const shortCode = codes[0]
+    if (!shortCode) continue
+    
+    // 檢查是否為一級簡碼：長度≤2且末尾是空格或上屏鍵
+    if (shortCode.length <= 2 && validEndingKeys.has(shortCode[shortCode.length - 1])) {
+      result.set(char, [shortCode])
+    } else {
+      // 否則使用全碼
+      const fullCodes = fullWithSelection.get(char)
+      if (fullCodes) {
+        result.set(char, [fullCodes[0]])
+      }
+    }
+  }
+  
+  return result
+}
+
+/**
+ * 生成二級簡碼表（長度≤3且末尾是空格或上屏鍵）
+ * @param shortWithSelection 簡碼表（帶選重鍵）
+ * @param fullWithSelection 全碼表（帶選重鍵）
+ * @param prefixKeys 上屏鍵列表
+ * @returns 二級簡碼表
+ */
+export function generateSecondShortCodeTable(
+  shortWithSelection: CodeTable, 
+  fullWithSelection: CodeTable,
+  prefixKeys: string[] = []
+): CodeTable {
+  const result: CodeTable = new Map()
+  
+  // 创建上屏键集合，包含空格(_)和用户设置的上屏键
+  const validEndingKeys = new Set(['_', ...prefixKeys])
+  
+  for (const [char, codes] of shortWithSelection) {
+    const shortCode = codes[0]
+    if (!shortCode) continue
+    
+    // 檢查是否為二級簡碼：長度≤3且末尾是空格或上屏鍵
+    if (shortCode.length <= 3 && validEndingKeys.has(shortCode[shortCode.length - 1])) {
+      result.set(char, [shortCode])
+    } else {
+      // 否則使用全碼
+      const fullCodes = fullWithSelection.get(char)
+      if (fullCodes) {
+        result.set(char, [fullCodes[0]])
+      }
+    }
+  }
+  
+  return result
+}
+
+/**
+ * 生成詞語一簡碼表（編碼≤1，否則用全碼）
+ * @param wordShortCodeTable 詞語簡碼表
+ * @param wordFullCodeTable 詞語全碼表
+ * @returns 詞語一簡碼表
+ */
+export function generateWordFirstShortCodeTable(
+  wordShortCodeTable: CodeTable,
+  wordFullCodeTable: CodeTable
+): CodeTable {
+  const result: CodeTable = new Map()
+  
+  for (const [word, codes] of wordShortCodeTable) {
+    const shortCode = codes[0]
+    if (!shortCode) continue
+    
+    // 移除選重鍵和空格，計算實際碼長
+    const cleanCode = shortCode.replace(/[0-9_]/g, '')
+    
+    // 如果實際碼長≤1，使用簡碼；否則使用全碼
+    if (cleanCode.length <= 1) {
+      result.set(word, [shortCode])
+    } else {
+      const fullCodes = wordFullCodeTable.get(word)
+      if (fullCodes) {
+        result.set(word, [fullCodes[0]])
+      }
+    }
+  }
+  
+  return result
+}
+
+/**
+ * 生成詞語二簡碼表（編碼≤2，否則用全碼）
+ * @param wordShortCodeTable 詞語簡碼表
+ * @param wordFullCodeTable 詞語全碼表
+ * @returns 詞語二簡碼表
+ */
+export function generateWordSecondShortCodeTable(
+  wordShortCodeTable: CodeTable,
+  wordFullCodeTable: CodeTable
+): CodeTable {
+  const result: CodeTable = new Map()
+  
+  for (const [word, codes] of wordShortCodeTable) {
+    const shortCode = codes[0]
+    if (!shortCode) continue
+    
+    // 移除選重鍵和空格，計算實際碼長
+    const cleanCode = shortCode.replace(/[0-9_]/g, '')
+    
+    // 如果實際碼長≤2，使用簡碼；否則使用全碼
+    if (cleanCode.length <= 2) {
+      result.set(word, [shortCode])
+    } else {
+      const fullCodes = wordFullCodeTable.get(word)
+      if (fullCodes) {
+        result.set(word, [fullCodes[0]])
+      }
+    }
+  }
+  
+  return result
+}

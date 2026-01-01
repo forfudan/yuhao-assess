@@ -204,6 +204,10 @@ import {
   calculateSpeedEquiv,
   calculateCodePairFrequencies,
   calculateEquivDistribution,
+  generateFirstShortCodeTable,
+  generateSecondShortCodeTable,
+  generateWordFirstShortCodeTable,
+  generateWordSecondShortCodeTable,
   type EquivDistributionItem
 } from '../services/speedAnalysisService'
 
@@ -452,132 +456,6 @@ async function loadEquivTable(): Promise<Record<string, number>> {
   }
 }
 
-// 生成一級簡碼表（長度≤2且末尾是空格或上屏鍵）
-function generateFirstShortCodeTable(
-  shortWithSelection: CodeTable, 
-  fullWithSelection: CodeTable,
-  prefixKeys: string[] = []
-): CodeTable {
-  const result: CodeTable = new Map()
-  
-  // 创建上屏键集合，包含空格(_)和用户设置的上屏键
-  const validEndingKeys = new Set(['_', ...prefixKeys])
-  
-  for (const [char, codes] of shortWithSelection) {
-    const validCodes: string[] = []
-    
-    for (const code of codes) {
-      // 檢查是否符合一級簡碼條件：長度≤2且末尾是空格或上屏鍵
-      if (code.length <= 2 && validEndingKeys.has(code[code.length - 1])) {
-        validCodes.push(code)
-      }
-    }
-    
-    // 如果有符合條件的簡碼，使用簡碼；否則使用全碼
-    if (validCodes.length > 0) {
-      result.set(char, validCodes)
-    } else {
-      const fullCodes = fullWithSelection.get(char)
-      if (fullCodes) {
-        result.set(char, [...fullCodes])
-      }
-    }
-  }
-  
-  return result
-}
-
-// 生成二級簡碼表（長度≤3且末尾是空格或上屏鍵）
-function generateSecondShortCodeTable(
-  shortWithSelection: CodeTable, 
-  fullWithSelection: CodeTable,
-  prefixKeys: string[] = []
-): CodeTable {
-  const result: CodeTable = new Map()
-  
-  // 创建上屏键集合，包含空格(_)和用户设置的上屏键
-  const validEndingKeys = new Set(['_', ...prefixKeys])
-  
-  for (const [char, codes] of shortWithSelection) {
-    const validCodes: string[] = []
-    
-    for (const code of codes) {
-      // 檢查是否符合二級簡碼條件：長度≤3且末尾是空格或上屏鍵
-      if (code.length <= 3 && validEndingKeys.has(code[code.length - 1])) {
-        validCodes.push(code)
-      }
-    }
-    
-    // 如果有符合條件的簡碼，使用簡碼；否則使用全碼
-    if (validCodes.length > 0) {
-      result.set(char, validCodes)
-    } else {
-      const fullCodes = fullWithSelection.get(char)
-      if (fullCodes) {
-        result.set(char, [...fullCodes])
-      }
-    }
-  }
-  
-  return result
-}
-
-// 生成词语一简码表（编码≤1，否则用全码）
-function generateWordFirstShortCodeTable(
-  wordShortCodeTable: CodeTable,
-  wordFullCodeTable: CodeTable
-): CodeTable {
-  const result: CodeTable = new Map()
-  
-  for (const [word, codes] of wordShortCodeTable) {
-    const shortCode = codes[0]
-    if (!shortCode) continue
-    
-    // 去掉选重键和空格，计算实际编码长度
-    const cleanCode = shortCode.replace(/[0-9_]/g, '')
-    
-    // 如果简码长度≤1，使用简码；否则使用全码
-    if (cleanCode.length <= 1) {
-      result.set(word, [shortCode])
-    } else {
-      const fullCodes = wordFullCodeTable.get(word)
-      if (fullCodes) {
-        result.set(word, [fullCodes[0]])
-      }
-    }
-  }
-  
-  return result
-}
-
-// 生成词语二简码表（编码≤2，否则用全码）
-function generateWordSecondShortCodeTable(
-  wordShortCodeTable: CodeTable,
-  wordFullCodeTable: CodeTable
-): CodeTable {
-  const result: CodeTable = new Map()
-  
-  for (const [word, codes] of wordShortCodeTable) {
-    const shortCode = codes[0]
-    if (!shortCode) continue
-    
-    // 去掉选重键和空格，计算实际编码长度
-    const cleanCode = shortCode.replace(/[0-9_]/g, '')
-    
-    // 如果简码长度≤2，使用简码；否则使用全码
-    if (cleanCode.length <= 2) {
-      result.set(word, [shortCode])
-    } else {
-      const fullCodes = wordFullCodeTable.get(word)
-      if (fullCodes) {
-        result.set(word, [fullCodes[0]])
-      }
-    }
-  }
-  
-  return result
-}
-
 // 刷新數據
 const refreshData = async () => {
   console.log('手動刷新速度當量數據...')
@@ -814,6 +692,7 @@ onMounted(async () => {
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 25px;
+  table-layout: fixed; /* 固定表格布局，确保列宽一致 */
 }
 
 .metrics-table th,
@@ -823,6 +702,28 @@ onMounted(async () => {
   border-bottom: 1px solid #e5e7eb;
   font-size: 0.8rem;
   line-height: 1.3;
+}
+
+/* 固定列宽 */
+.metrics-table th:nth-child(1),
+.metrics-table td:nth-child(1) {
+  width: 15%; /* 来源列 */
+}
+
+.metrics-table th:nth-child(2),
+.metrics-table td:nth-child(2),
+.metrics-table th:nth-child(3),
+.metrics-table td:nth-child(3),
+.metrics-table th:nth-child(4),
+.metrics-table td:nth-child(4),
+.metrics-table th:nth-child(5),
+.metrics-table td:nth-child(5) {
+  width: 10%; /* 数值列 */
+}
+
+.metrics-table th:nth-child(6),
+.metrics-table td:nth-child(6) {
+  width: 45%; /* 说明列 */
 }
 
 .metrics-table th {

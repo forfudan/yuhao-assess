@@ -1215,6 +1215,7 @@ onMounted(() => {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  table-layout: fixed; /* 固定表格布局，确保列宽一致 */
 }
 
 .metrics-table th,
@@ -1235,9 +1236,22 @@ onMounted(() => {
   letter-spacing: 0.05em;
 }
 
-.metrics-table th:first-child,
-.metrics-table td:first-child {
-  min-width: 140px;
+/* 固定列宽 */
+.metrics-table th:nth-child(1),
+.metrics-table td:nth-child(1) {
+  width: 20%; /* 指标列 */
+}
+
+.metrics-table th:nth-child(2),
+.metrics-table td:nth-child(2),
+.metrics-table th:nth-child(3),
+.metrics-table td:nth-child(3) {
+  width: 15%; /* 全码和出简列 */
+}
+
+.metrics-table th:nth-child(4),
+.metrics-table td:nth-child(4) {
+  width: 50%; /* 说明列 */
 }
 
 .metrics-table tbody tr:hover {
