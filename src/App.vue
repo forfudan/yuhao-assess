@@ -465,15 +465,21 @@ const loadGlobalWordFrequencies = async () => {
     console.log('[全局詞頻] 詞頻數據歸一化完成')
     
     // 如果已有碼表數據，生成詞語輔助碼表
-    if (processedTables.value?.full && globalWordFrequencies.value?.sc) {
+    if (processedTables.value?.full && processedTables.value?.short && globalWordFrequencies.value?.sc) {
       console.log('[全局詞頻] 檢測到已有碼表，開始生成詞語輔助碼表...')
       const wordFullCodeWithSelection = codeTableProcessingService.generateWordCodeTableWithSelection(
         globalWordFrequencies.value.sc,
         processedTables.value.full
       )
+      const wordShortCodeWithSelection = codeTableProcessingService.generateWordShortCodeTableWithSelection(
+        globalWordFrequencies.value.sc,
+        processedTables.value.full,
+        processedTables.value.short
+      )
       processedTables.value = {
         ...processedTables.value,
-        wordFullCodeWithSelection
+        wordFullCodeWithSelection,
+        wordShortCodeWithSelection
       }
       console.log('[全局詞頻] 詞語輔助碼表生成完成')
     }
@@ -695,16 +701,22 @@ const handleCodeTableUpload = async (data: {
     console.log('[App] processedTables 更新完成:', processedTables.value)
     
     // 生成詞語輔助碼表（如果詞頻表已加載）
-    if (globalWordFrequencies.value?.sc && processedTablesResult.full) {
+    if (globalWordFrequencies.value?.sc && processedTablesResult.full && processedTablesResult.short) {
       console.log('[App] 開始生成詞語輔助碼表...')
       const wordFullCodeWithSelection = codeTableProcessingService.generateWordCodeTableWithSelection(
         globalWordFrequencies.value.sc,
         processedTablesResult.full
       )
+      const wordShortCodeWithSelection = codeTableProcessingService.generateWordShortCodeTableWithSelection(
+        globalWordFrequencies.value.sc,
+        processedTablesResult.full,
+        processedTablesResult.short
+      )
       // 將詞語碼表添加到 processedTables 中
       processedTables.value = {
         ...processedTablesResult,
-        wordFullCodeWithSelection
+        wordFullCodeWithSelection,
+        wordShortCodeWithSelection
       }
       console.log('[App] 詞語輔助碼表生成完成')
     }

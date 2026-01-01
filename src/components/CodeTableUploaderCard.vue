@@ -273,6 +273,7 @@
               <th class="row-header">序號</th>
               <th class="word-header">詞語</th>
               <th class="code-header">全碼及選重鍵</th>
+              <th class="code-header">簡碼及選重鍵</th>
             </tr>
           </thead>
           <tbody>
@@ -280,6 +281,7 @@
               <td class="row-number">{{ index + 1 }}</td>
               <td class="word-cell">{{ item.word }}</td>
               <td class="code-cell selection">{{ item.codeWithSelection || '-' }}</td>
+              <td class="code-cell selection">{{ item.shortCodeWithSelection || '-' }}</td>
             </tr>
           </tbody>
         </table>
@@ -333,7 +335,7 @@
           <p>本測評網根據現代漢語語料庫分類詞頻表自動生成詞語編碼。</p>
           <p><strong>編碼規則：</strong></p>
           <ul>
-            <li><strong>單字詞：</strong>使用該字的編碼</li>
+            <li><strong>單字詞：</strong>使用該字的全碼或簡碼</li>
             <li><strong>二字詞：</strong>每個字各取其全碼前2碼，共4碼</li>
             <li><strong>三字詞：</strong>前兩字各取其全碼1碼，末字取其全碼前2碼，共4碼</li>
             <li><strong>四字及以上：</strong>第1、2、3、末字各取其全碼首碼，共4碼</li>
@@ -437,6 +439,7 @@ const longestCodesData = ref<Array<{
 const wordEncodingPreviewData = ref<Array<{
   word: string
   codeWithSelection: string
+  shortCodeWithSelection: string
 }>>([])
 
 // 全局最大碼長顯示
@@ -775,21 +778,26 @@ const generateWordEncodingPreview = (processedTables: any) => {
     return
   }
   
-  const wordCodeTable = processedTables.wordFullCodeWithSelection
+  const wordFullCodeTable = processedTables.wordFullCodeWithSelection
+  const wordShortCodeTable = processedTables.wordShortCodeWithSelection
   const previewItems: Array<{
     word: string
     codeWithSelection: string
+    shortCodeWithSelection: string
   }> = []
   
   // 獲取前200個詞語（詞頻表已經按頻數排序）
   let count = 0
-  for (const [word, codes] of wordCodeTable.entries()) {
+  for (const [word, codes] of wordFullCodeTable.entries()) {
     if (count >= 200) break
     
     const codeWithSelection = codes[0] || '-'
+    const shortCodeWithSelection = wordShortCodeTable?.get(word)?.[0] || '-'
+    
     previewItems.push({
       word,
-      codeWithSelection
+      codeWithSelection,
+      shortCodeWithSelection
     })
     
     count++
