@@ -448,7 +448,7 @@ const loadGlobalCharFrequencies = async () => {
 // 加載全局詞頻數據
 const loadGlobalWordFrequencies = async () => {
   try {
-    console.log('[全局詞頻] 開始加載詞頻數據...')
+    console.log('[詞頻處理服務] 開始加載詞頻數據...')
     
     // 加載簡體詞頻表（原始頻數）
     // 現代漢語語料庫分詞類詞頻表
@@ -458,18 +458,18 @@ const loadGlobalWordFrequencies = async () => {
     }
     const scRaw: WordFrequency = await response.json()
     
-    console.log('[全局詞頻] 原始數據加載完成，開始歸一化處理...')
+    console.log('[詞頻處理服務] 原始數據加載完成，開始歸一化處理...')
     
     // 歸一化詞頻表（頻數 -> 概率）
     globalWordFrequencies.value = {
       sc: normalizeWordFrequency(scRaw)
     }
     
-    console.log('[全局詞頻] 詞頻數據歸一化完成')
+    console.log('[詞頻處理服務] 詞頻數據歸一化完成')
     
     // 如果已有碼表數據，生成詞語輔助碼表
     if (processedTables.value?.full && processedTables.value?.short && globalWordFrequencies.value?.sc) {
-      console.log('[全局詞頻] 檢測到已有碼表，開始生成詞語輔助碼表...')
+      console.log('[詞頻處理服務] 檢測到已有碼表，開始生成詞語輔助碼表...')
       const wordFullCodeWithSelection = codeTableProcessingService.generateWordCodeTableWithSelection(
         globalWordFrequencies.value.sc,
         processedTables.value.full
@@ -484,10 +484,10 @@ const loadGlobalWordFrequencies = async () => {
         wordFullCodeWithSelection,
         wordShortCodeWithSelection
       }
-      console.log('[全局詞頻] 詞語輔助碼表生成完成')
+      console.log('[詞頻處理服務] 詞語輔助碼表生成完成')
     }
   } catch (error) {
-    console.error('[全局詞頻] 加載失敗:', error)
+    console.error('[詞頻處理服務] 加載失敗:', error)
   }
 }
 

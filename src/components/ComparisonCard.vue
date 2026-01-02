@@ -1056,6 +1056,22 @@ const COMPARISON_STORAGE_KEY = 'yuhao-comparison-schemes'
 const saveComparisonData = () => {
   try {
     const dataToSave = {
+      // 保存主方案的計算結果快照
+      mainScheme: currentUserScheme.value ? {
+        name: currentUserScheme.value.name,
+        codeTableSize: currentUserScheme.value.rawCodeTable?.size || 0,
+        isPrefix: currentUserScheme.value.isPrefix,
+        prefixKeys: currentUserScheme.value.prefixKeys,
+        data: currentUserScheme.value.data, // 保存所有計算結果
+        charCount: currentUserScheme.value.charCount,
+        // 添加緩存指紋，用於驗證主方案是否改變
+        fingerprint: {
+          name: currentUserScheme.value.name,
+          size: currentUserScheme.value.rawCodeTable?.size || 0,
+          isPrefix: currentUserScheme.value.isPrefix
+        },
+        cachedAt: Date.now()
+      } : null,
       additionalSchemes: additionalSchemes.value.map(scheme => ({
         id: scheme.id,
         name: scheme.name,
@@ -1076,18 +1092,93 @@ const saveComparisonData = () => {
       }))
     }
     localStorage.setItem(COMPARISON_STORAGE_KEY, JSON.stringify(dataToSave))
+    console.log('[方案對比卡片]✅ 對比數據已保存（包含主方案快照）')
   } catch (error) {
     console.error('保存對比數據失敗:', error)
   }
 }
 
+// 驗證主方案緩存是否仍然有效
+const isMainSchemeCacheValid = (cachedMainScheme: any): boolean => {
+  console.log('[方案對比卡片-緩存驗證] 開始驗證主方案緩存', {
+    hasCachedMainScheme: !!cachedMainScheme,
+    hasFingerprint: !!cachedMainScheme?.fingerprint,
+    hasCurrentCodeTable: !!props.currentCodeTable,
+    hasCurrentCodeTableName: !!props.currentCodeTableName
+  })
+  
+  if (!cachedMainScheme || !cachedMainScheme.fingerprint) {
+    console.log('[方案對比卡片-緩存驗證] ❌ 缺少緩存或指紋')
+    return false
+  }
+  if (!props.currentCodeTable || !props.currentCodeTableName) {
+    console.log('[方案對比卡片-緩存驗證] ❌ 缺少當前碼表')
+    return false
+  }
+  
+  const processingOptions = codeTableProcessingService.getProcessingOptions()
+  const currentIsPrefix = processingOptions?.isPrefix || false
+  
+  // 檢查指紋是否匹配
+  const nameMatch = cachedMainScheme.fingerprint.name === props.currentCodeTableName
+  const sizeMatch = cachedMainScheme.fingerprint.size === props.currentCodeTable.size
+  const prefixMatch = cachedMainScheme.fingerprint.isPrefix === currentIsPrefix
+  const fingerprintMatch = nameMatch && sizeMatch && prefixMatch
+  
+  console.log('[方案對比卡片-緩存驗證] 指紋檢查', {
+    nameMatch,
+    cachedName: cachedMainScheme.fingerprint.name,
+    currentName: props.currentCodeTableName,
+    sizeMatch,
+    cachedSize: cachedMainScheme.fingerprint.size,
+    currentSize: props.currentCodeTable.size,
+    prefixMatch,
+    cachedPrefix: cachedMainScheme.fingerprint.isPrefix,
+    currentPrefix: currentIsPrefix
+  })
+  
+  // 檢查緩存時間（24小時內有效）
+  const cacheAge = Date.now() - (cachedMainScheme.cachedAt || 0)
+  const isNotExpired = cacheAge < 24 * 60 * 60 * 1000
+  
+  console.log('[方案對比卡片-緩存驗證] 時間檢查', {
+    cacheAge: Math.floor(cacheAge / 1000 / 60), // 分鐘
+    isNotExpired
+  })
+  
+  const isValid = fingerprintMatch && isNotExpired
+  console.log(`[方案對比卡片-緩存驗證] ${isValid ? '✅ 有效' : '❌ 無效'}`)
+  
+  return isValid
+}
+
 // 從本地存儲載入方案數據
 const loadComparisonData = async () => {
+  console.log('[方案對比卡片-對比數據讀取] 開始載入對比數據')
   try {
     const savedData = localStorage.getItem(COMPARISON_STORAGE_KEY)
-    if (!savedData) return
+    if (!savedData) {
+      console.log('[方案對比卡片-對比數據讀取] 沒有保存的數據')
+      return
+    }
 
     const data = JSON.parse(savedData)
+    console.log('[方案對比卡片-對比數據讀取] 已解析數據', {
+      hasMainScheme: !!data.mainScheme,
+      mainSchemeName: data.mainScheme?.name,
+      hasData: !!data.mainScheme?.data,
+      additionalSchemesCount: data.additionalSchemes?.length || 0
+    })
+    
+    // 🆕 不在這裡驗證，而是直接保存供 loadCurrentUserScheme 使用
+    // 因為此時 props.currentCodeTable 可能還沒有完全初始化
+    if (data.mainScheme) {
+      console.log('✅ 發現主方案快照，保存供後續驗證')
+      sessionStorage.setItem('mainSchemeCache', JSON.stringify(data.mainScheme))
+    } else {
+      console.log('ℹ️ 沒有主方案快照')
+      sessionStorage.removeItem('mainSchemeCache')
+    }
     
     // 恢復額外方案
     if (data.additionalSchemes && Array.isArray(data.additionalSchemes)) {
@@ -1354,7 +1445,7 @@ const backgroundProgress = computed(() => {
   const percentage = shouldShowProgress ? Math.round((completedTasks / targetTotalTasks) * 100) : 100
   
   // 控制台輸出調試信息
-  console.log('[進度條調試]', {
+  console.log('[方案對比卡片-進度條]', {
     pendingUploadCount,
     currentSchemes,
     targetTotalSchemes,
@@ -1497,7 +1588,7 @@ const scheduleCalculation = async (scheme: Scheme, tabType: TabType, priority: '
         scheme.isCalculating = true
       }
       
-      console.log(`[智能計算] 開始計算 ${scheme.name} - ${tabType} (${priority} 優先級)`)
+      console.log(`[方案對比卡片-智能計算] 開始計算 ${scheme.name} - ${tabType} (${priority} 優先級)`)
       
       // 確保有預處理數據（使用完整預處理以支持速度當量計算）
       if (!scheme.processedTables && scheme.rawCodeTable) {
@@ -1534,13 +1625,13 @@ const scheduleCalculation = async (scheme: Scheme, tabType: TabType, priority: '
         scheme.data.speedEquiv = await calculateSpeedEquivData(scheme)
       }
       
-      console.log(`[智能計算] 完成計算 ${scheme.name} - ${tabType}`)
+      console.log(`[方案對比卡片-智能計算] 完成計算 ${scheme.name} - ${tabType}`)
       
       // 保存數據
       saveComparisonData()
     } catch (error) {
       if (!abortController.signal.aborted) {
-        console.error(`[智能計算] 計算失敗 ${scheme.name} - ${tabType}:`, error)
+        console.error(`[方案對比卡片-智能計算] 計算失敗 ${scheme.name} - ${tabType}:`, error)
       }
     } finally {
       if (priority === 'high') {
@@ -1569,7 +1660,7 @@ const ensureCurrentTabDataLoaded = async () => {
   
   if (schemes.length === 0) return
   
-  console.log(`[智能計算] 開始智能計算策略 - 當前Tab: ${activeTab.value}`)
+  console.log(`[方案對比卡片-智能計算] 開始智能計算策略 - 當前Tab: ${activeTab.value}`)
   
   // 第一階段：立即計算當前Tab的所有數據（高優先級）
   const currentTabPromises = schemes.map(scheme => 
@@ -1577,7 +1668,7 @@ const ensureCurrentTabDataLoaded = async () => {
   )
   
   await Promise.all(currentTabPromises)
-  console.log(`[智能計算] 當前Tab ${activeTab.value} 計算完成`)
+  console.log(`[方案對比卡片-智能計算] 當前Tab ${activeTab.value} 計算完成`)
   
   // 第二階段：後台預計算其他Tab的數據（低優先級）
   const allTabs: TabType[] = ['dynamic', 'dynamicOriginal', 'static', 'maxCandidates', 'speedEquiv']
@@ -1590,7 +1681,7 @@ const ensureCurrentTabDataLoaded = async () => {
     })
   }
   
-  console.log(`[智能計算] 已安排 ${otherTabs.length} 個Tab的後台預計算任務`)
+  console.log(`[方案對比卡片-智能計算] 已安排 ${otherTabs.length} 個Tab的後台預計算任務`)
 }
 
 // 爲方案計算缺失的數據
@@ -1714,7 +1805,7 @@ const recalculateScheme = async (scheme: Scheme) => {
 
 // 智能計算：監聽 Tab 切換
 watch(activeTab, async (newTab) => {
-  console.log(`[智能計算] Tab切換到: ${newTab}`)
+  console.log(`[方案對比卡片-智能計算] Tab切換到: ${newTab}`)
   // 取消所有低優先級任務，重新安排計算
   cancelLowPriorityTasks()
   await ensureCurrentTabDataLoaded()
@@ -1885,21 +1976,29 @@ onUnmounted(() => {
   calculationQueue.value = []
   runningTasks.value.clear()
   
+  // 清除緩存標記
+  sessionStorage.removeItem('mainSchemeCache')
+  sessionStorage.removeItem('mainSchemeLoaded')
+  
   clearCache()
 })
 
 // 監聽當前方案變化
 watch(() => [props.currentCodeTable, props.currentCodeTableName], ([newCodeTable, newCodeTableName]) => {
-  console.log('[ComparisonCard] 監聽器觸發:', {
+  console.log('[方案對比卡片] 監聽器觸發:', {
     hasCodeTable: !!newCodeTable,
     codeTableSize: (newCodeTable as CodeTable)?.size,
     codeTableName: newCodeTableName
   })
   
+  // 清除加載標記，允許重新加載
+  sessionStorage.removeItem('mainSchemeLoaded')
+  
   if (newCodeTable) {
     loadCurrentUserScheme()
   } else {
     currentUserScheme.value = null
+    sessionStorage.removeItem('mainSchemeCache')
   }
 })
 
@@ -1917,6 +2016,15 @@ const loadCurrentUserScheme = async () => {
     const schemeName = props.currentCodeTableName || '用户方案'
     const processingOptions = codeTableProcessingService.getProcessingOptions()
     const globalIsPrefix = processingOptions?.isPrefix || false
+    
+    // 🆕 检查是否已经有主方案且数据完整，避免重复加载
+    if (currentUserScheme.value && 
+        currentUserScheme.value.name === schemeName &&
+        currentUserScheme.value.data && 
+        Object.keys(currentUserScheme.value.data).length >= 4) {
+      console.log('⏭️ 主方案已加载且数据完整，跳过重复加载')
+      return
+    }
     
     currentUserScheme.value = {
       id: `current-${Date.now()}`,
@@ -1984,8 +2092,49 @@ const loadCurrentUserScheme = async () => {
       currentUserScheme.value.charCount = await calculateCharCountFromRaw(convertCodeTableToRaw(props.currentCodeTable!))
     }
     
-    // 使用智能計算策略：立即計算當前Tab，後台計算其他Tab
-    if (currentUserScheme.value) {
+    // 🆕 檢查是否有可用的主方案緩存
+    const cachedMainScheme = sessionStorage.getItem('mainSchemeCache')
+    const alreadyLoaded = sessionStorage.getItem('mainSchemeLoaded') === 'true'
+    let cacheRestored = false
+    
+    console.log('[方案對比卡片-主碼表讀取服務] 檢查緩存', {
+      hasCachedMainScheme: !!cachedMainScheme,
+      alreadyLoaded,
+      currentUserScheme: !!currentUserScheme.value
+    })
+    
+    // 如果已經加載過，直接跳過
+    if (alreadyLoaded && currentUserScheme.value?.data && Object.keys(currentUserScheme.value.data).length > 0) {
+      console.log('⏭️ 主方案已加載，跳過重複加載')
+      return
+    }
+    
+    if (cachedMainScheme && currentUserScheme.value) {
+      try {
+        const cache = JSON.parse(cachedMainScheme)
+        console.log('[方案對比卡片-主碼表讀取服務] 解析緩存', {
+          hasData: !!cache.data,
+          dataKeys: cache.data ? Object.keys(cache.data) : []
+        })
+        
+        if (cache.data && Object.keys(cache.data).length > 0) {
+          console.log('✅ 從快照恢復主方案計算結果', cache.data)
+          currentUserScheme.value.data = cache.data
+          currentUserScheme.value.isCalculating = false
+          cacheRestored = true
+          // 🆕 標記為已加載，但不清除緩存數據
+          sessionStorage.setItem('mainSchemeLoaded', 'true')
+        } else {
+          console.log('⚠️ 緩存數據為空或無效')
+        }
+      } catch (error) {
+        console.error('恢復主方案快照失敗:', error)
+      }
+    }
+    
+    // 如果沒有使用緩存，則使用智能計算策略
+    if (!cacheRestored && currentUserScheme.value) {
+      console.log('🔄 開始智能計算（無有效緩存）')
       currentUserScheme.value.data = {}
       
       // 高優先級：立即計算當前Tab數據

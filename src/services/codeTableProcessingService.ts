@@ -275,7 +275,7 @@ export class CodeTableProcessingService {
     // 獲取處理選項（最大碼長和前綴碼設置）
     const options = this.processingOptions
     if (!options) {
-      console.warn('[CodeTableProcessingService] 處理選項未設置，無法生成詞語碼表')
+      console.warn('[碼表處理服務] 處理選項未設置，無法生成詞語碼表')
       return wordFullCodeWithSelection
     }
     
@@ -309,7 +309,7 @@ export class CodeTableProcessingService {
       wordFullCodeWithSelection.set(word, [codeWithSelection])
     }
     
-    console.log(`[CodeTableProcessingService] 詞語全碼表生成完成，共 ${wordFullCodeWithSelection.size} 個詞語`)
+    console.log(`[碼表處理服務] 詞語全碼表生成完成，共 ${wordFullCodeWithSelection.size} 個詞語`)
     return wordFullCodeWithSelection
   }
 
@@ -331,7 +331,7 @@ export class CodeTableProcessingService {
     // 獲取處理選項（最大碼長和前綴碼設置）
     const options = this.processingOptions
     if (!options) {
-      console.warn('[CodeTableProcessingService] 處理選項未設置，無法生成詞語簡碼表')
+      console.warn('[碼表處理服務] 處理選項未設置，無法生成詞語簡碼表')
       return wordShortCodeWithSelection
     }
     
@@ -365,7 +365,7 @@ export class CodeTableProcessingService {
       wordShortCodeWithSelection.set(word, [codeWithSelection])
     }
     
-    console.log(`[CodeTableProcessingService] 詞語簡碼表生成完成，共 ${wordShortCodeWithSelection.size} 個詞語`)
+    console.log(`[碼表處理服務] 詞語簡碼表生成完成，共 ${wordShortCodeWithSelection.size} 個詞語`)
     return wordShortCodeWithSelection
   }
   
