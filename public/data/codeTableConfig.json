@@ -4,17 +4,33 @@
   "defaultScheme": "yuhao-ming",
   "builtinCodeTables": [
     {
-      "key": "yuhao-ming",
-      "name": "日月輸入法",
-      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-ming.txt",
+      "key": "yuhao-star",
+      "name": "星陳",
+      "url": "https://shurufa.app/mabiao-star.txt",
       "format": "code_first",
-      "description": "宇浩拆分·世上首款純形前綴碼",
+      "description": "宇浩拆分·四碼限長",
+      "website": "https://shurufa.app/",
+      "category": "形碼",
+      "tags": [
+        "形碼",
+        "限長",
+        "四碼"
+      ],
+      "isPrefix": false,
+      "enabled": true
+    },
+    {
+      "key": "yuhao-ling",
+      "name": "靈明",
+      "url": "https://shurufa.app/mabiao-ling.txt",
+      "format": "code_first",
+      "description": "宇浩拆分·四碼限長·無空格自分割·二十五鍵",
       "website": "https://shurufa.app/",
       "category": "形碼",
       "tags": [
         "形碼",
         "前綴碼",
-        "五碼"
+        "四碼"
       ],
       "isPrefix": true,
       "prefixKeys": [
@@ -28,17 +44,17 @@
       "enabled": true
     },
     {
-      "key": "yuhao-ling",
-      "name": "靈明輸入法",
-      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-ling.txt",
+      "key": "yuhao-ling5",
+      "name": "五碼靈明",
+      "url": "https://shurufa.app/mabiao-ling5.txt",
       "format": "code_first",
-      "description": "宇浩拆分·四碼前綴·二十五鍵",
+      "description": "靈明五碼版·日月編碼規則",
       "website": "https://shurufa.app/",
       "category": "形碼",
       "tags": [
         "形碼",
         "前綴碼",
-        "四碼"
+        "五碼"
       ],
       "isPrefix": true,
       "prefixKeys": [
@@ -53,80 +69,72 @@
     },
     {
       "key": "yuhao-joy",
-      "name": "卿雲輸入法",
-      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-joy.txt",
+      "name": "卿雲",
+      "url": "https://shurufa.app/mabiao-joy.txt",
       "format": "code_first",
-      "description": "宇浩拆分·四碼定長",
+      "description": "宇浩拆分·四碼限長",
       "website": "https://shurufa.app/",
       "category": "形碼",
       "tags": [
         "形碼",
-        "定長",
+        "限長",
         "四碼"
       ],
       "isPrefix": false,
       "enabled": true
     },
     {
-      "key": "yuhao-star",
-      "name": "星陳輸入法",
-      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-star.txt",
+      "key": "yuhao-ming",
+      "name": "日月",
+      "url": "https://shurufa.app/mabiao-ming.txt",
       "format": "code_first",
-      "description": "宇浩拆分·四碼定長",
+      "description": "宇浩拆分·世上首款純形前綴碼·五碼限長",
       "website": "https://shurufa.app/",
       "category": "形碼",
       "tags": [
         "形碼",
-        "定長",
-        "四碼"
+        "前綴碼",
+        "五碼"
       ],
-      "isPrefix": false,
+      "isPrefix": true,
+      "prefixKeys": [
+        "a",
+        "o",
+        "e",
+        "i",
+        "u",
+        "_"
+      ],
       "enabled": true
     },
     {
       "key": "yuhao-light",
-      "name": "光華輸入法",
-      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-light.txt",
+      "name": "光華",
+      "url": "https://shurufa.app/mabiao-light.txt",
       "format": "code_first",
-      "description": "宇浩拆分·四碼定長",
+      "description": "宇浩拆分·四碼限長",
       "website": "https://shurufa.app/",
       "category": "形碼",
       "tags": [
         "形碼",
-        "定長",
+        "限長",
         "四碼"
-      ],
-      "isPrefix": false,
-      "enabled": true
-    },
-    {
-      "key": "cangjie5",
-      "name": "倉頡五代",
-      "url": "https://raw.githubusercontent.com/Jackchows/Cangjie5/master/Cangjie5.txt",
-      "format": "char_first",
-      "description": "朱邦復製作·倉頡五代補完計劃",
-      "website": "https://github.com/Jackchows/Cangjie5",
-      "category": "形碼",
-      "tags": [
-        "形碼",
-        "定長",
-        "五碼"
       ],
       "isPrefix": false,
       "enabled": true
     },
     {
       "key": "sky",
-      "name": "天碼輸入法",
+      "name": "天碼",
       "url": "https://raw.githubusercontent.com/forfudan/tianma-sky/main/mabiao-sky.txt",
       "format": "char_first",
-      "description": "宋天製作·表形碼·四碼定長",
+      "description": "宋天製作·表形碼·四碼限長",
       "website": "http://soongsky.com/sky/",
       "category": "形碼",
       "tags": [
         "形碼",
         "表形碼",
-        "定長",
+        "限長",
         "四碼"
       ],
       "isPrefix": false,
@@ -134,8 +142,8 @@
     },
     {
       "key": "snow",
-      "name": "清韻輸入法",
-      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-snow.txt",
+      "name": "清韻",
+      "url": "https://shurufa.app/mabiao-snow.txt",
       "format": "char_first",
       "description": "譚淞宸製作·冰雪系列·三十鍵純形前綴碼",
       "website": "https://ding.tansongchen.com/",
@@ -162,15 +170,15 @@
     },
     {
       "key": "xuma",
-      "name": "徐碼輸入法",
-      "url": "https://raw.githubusercontent.com/forfudan/yu/main/src/public/mabiao-xuma.txt",
+      "name": "徐碼",
+      "url": "https://shurufa.app/mabiao-xuma.txt",
       "format": "char_first",
-      "description": "徐國銀製作·四碼定長",
+      "description": "徐國銀製作·四碼限長",
       "website": "http://xumax.cn/",
       "category": "形碼",
       "tags": [
         "形碼",
-        "定長",
+        "限長",
         "四碼"
       ],
       "isPrefix": false,
