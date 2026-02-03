@@ -4,6 +4,7 @@
   "description": "宇浩測評網 - 輸入法性能測評工具",
   "type": "module",
   "scripts": {
+    "fetch": "node scripts/fetch-data.js",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",

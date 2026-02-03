@@ -143,15 +143,15 @@ src/
 - **倉庫**：`forfudan/chinese-ime-metrics`
 - **技術棧**：Rust + WebAssembly（純 WASM 實現，無 JS 降級）
 - **API**：所有函數均爲異步（async）
-- **集成方式**：開發環境本地路徑，生產環境 CDN 加載
+- **集成方式**：開發環境本地路徑，生産環境 CDN 加載
 
 ### 術語規範（必須遵守）
 
 **頻數 vs. 頻率**：
 
-| 中文 | 英文 | 含義 | 示例 |
-| --- | --- | --- | --- |
-| **頻數** | **Absolute Frequency** | 出現次數（整數） | "的" 出現 1000 次 |
+| 中文     | 英文                   | 含義             | 示例               |
+| -------- | ---------------------- | ---------------- | ------------------ |
+| **頻數** | **Absolute Frequency** | 出現次數（整數） | "的" 出現 1000 次  |
 | **頻率** | **Relative Frequency** | 出現比例（小數） | "的" 佔 0.05（5%） |
 
 **命名規則**：
@@ -342,28 +342,39 @@ const 字频数据 = await loadCharFrequency() // 舊代碼
 }
 ````
 
-## 🗂️ 数据文件管理
+## 🗂️ 數據文件管理
 
-### 目录结构
+### 數據同步機制
+
+**開發環境**：
+
+```bash
+pnpm run fetch   # 從 CDN 下載數據到 public/data/
+pnpm run dev     # 啟動開發服務器（讀取 public/data/）
+```
+
+**生産環境**：
+
+- 運行時直接從 CDN fetch（`https://forfudan.github.io/yuhao-assess-data/`）
+- `public/data/` 目録已加入 `.gitignore`，不會提交到 Git
+
+### 目録結構
 
 ```text
 public/
-├── data/           # 大数据文件（Git LFS）
-│   ├── charFrequencyZhihu.json
-│   ├── charFrequencySC.json
-│   ├── wordFrequencySC.json
-│   └── ...
-└── settings/       # 配置文件（普通 Git）
+└── data/           # 開發用數據（gitignore）
+    ├── charAbsoluteFrequencyZhihu.json
+    ├── charAbsoluteFrequencySC.json
+    ├── wordAbsoluteFrequencySC.json
     ├── charsets.json
-    ├── cjkBlocks.json
     └── ...
 ```
 
-### Git LFS 配置
+### 相關文件
 
-```gitattributes
-public/data/** filter=lfs diff=lfs merge=lfs -text
-```
+- `scripts/fetch-data.js` - 數據同步腳本
+- `src/utils/data-loader.ts` - 數據加載工具（開發/生産環境切換）
+- `yuhao-assess-data/` - 獨立數據倉庫（與 yuhao-assess 平級）
 
 ## 🚀 重构路线图
 

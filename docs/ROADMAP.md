@@ -34,13 +34,13 @@
 
 **數據文件命名規範**（2026-02-03 更新）：
 
-| 舊文件名                  | 新文件名                              | 説明           |
-| ------------------------- | ------------------------------------- | -------------- |
-| `charFrequencyZhihu.json` | `charAbsoluteFrequencyZhihu.json`     | 知乎字頻數     |
-| `charFrequencySC.json`    | `charAbsoluteFrequencySC.json`        | 北語簡體字頻數 |
-| `charFrequencyTC.json`    | `charAbsoluteFrequencyTC.json`        | 臺灣繁體字頻數 |
-| `charFrequencyGuji.json`  | `charAbsoluteFrequencyGuji.json`      | 古籍字頻數     |
-| `wordFrequencySC.json`    | `wordAbsoluteFrequencySC.json`        | 簡體詞頻數     |
+| 舊文件名                  | 新文件名                          | 説明           |
+| ------------------------- | --------------------------------- | -------------- |
+| `charFrequencyZhihu.json` | `charAbsoluteFrequencyZhihu.json` | 知乎字頻數     |
+| `charFrequencySC.json`    | `charAbsoluteFrequencySC.json`    | 北語簡體字頻數 |
+| `charFrequencyTC.json`    | `charAbsoluteFrequencyTC.json`    | 臺灣繁體字頻數 |
+| `charFrequencyGuji.json`  | `charAbsoluteFrequencyGuji.json`  | 古籍字頻數     |
+| `wordFrequencySC.json`    | `wordAbsoluteFrequencySC.json`    | 簡體詞頻數     |
 
 **術語規範**：
 
@@ -122,12 +122,25 @@
 - ✅ 創建 `src/utils/data-loader.ts`
 - ✅ 開發環境用本地文件，生産環境用 CDN
 
-**下一步**（需手動操作）：
+**數據同步機制**：
 
-1. 在 GitHub 創建 `yuhao-assess-data` 倉庫
-2. 推送數據：`cd ../yuhao-assess-data && git push -u origin main`
-3. 啟用 GitHub Pages（Settings → Pages → main branch）
-4. ⚠️ **重構完成後**：删除 `public/data/*.json`（生産環境會自動從 CDN 加載）
+1. **開發環境**：運行 `pnpm run fetch` 從 CDN 下載數據到 `public/data/`
+2. **生産環境**：運行時直接從 CDN 讀取（不需要本地文件）
+3. ⚠️ `public/data/` 已加入 `.gitignore`，不會提交到 Git
+
+**前提條件**：
+
+- yuhao-assess-data 已推送到 GitHub
+- GitHub Pages 已啟用（Settings → Pages → Deploy from main branch）
+
+**使用方式**：
+
+```bash
+pnpm run fetch   # 同步數據文件
+pnpm run dev     # 啟動開發服務器
+pnpm run build   # 構建生産版本
+pnpm run preview # 測試生産構建（從 CDN 讀取）
+```
 
 ### 0.2 Pre-commit Hook 設置 ✅
 
@@ -316,8 +329,8 @@ src/
 
 **實現的 Hooks**：
 
-1. **`useCharFrequency(文件名: string)`** - 加載字頻數據
-   - 參數：`文件名`（如 `'charFrequencySC'`、`'charFrequencyTC'`）
+1. **`useCharAbsoluteFrequency(文件名: string)`** - 加載字頻數據
+   - 參數：`文件名`（如 `'charAbsoluteFrequencySC'`、`'charAbsoluteFrequencyTC'`）
    - 返回：`{ data: 數據, loading: 加載中, error: 錯誤, refetch: 重新加載 }`
    - 特性：
      - ✅ 自動加載數據（開發環境用本地，生産環境用 CDN）
@@ -325,7 +338,7 @@ src/
      - ✅ 錯誤處理（捕獲加載失敗）
      - ✅ 支持重新加載（`refetch` 函數）
 
-2. **`useWordFrequency(文件名: string)`** - 加載詞頻數據
+2. **`useWordAbsoluteFrequency(文件名: string)`** - 加載詞頻數據
    - 與 `useCharFrequency` 類似，用於加載詞頻文件
    - 返回類型相同
 
@@ -338,12 +351,12 @@ src/
 
 - ✅ **全部使用繁體中文**（如：`數據`、`加載中`、`錯誤`、`設置數據`、`加載數據`、`已取消`）
 - ✅ 詳細的中文註釋（教學向，解釋 React Hooks 原理）
-- ✅ 類型名保持英文（如 `CharFrequencyData`、`CharsetsData`）以保持跨項目兼容性
+- ✅ 類型名保持英文（如 `CharAbsoluteFrequencyData`、`CharsetsData`）以保持跨項目兼容性
 
 **使用示例**（見 HomePage.tsx）：
 
 ```typescript
-const { data: 字頻數據, loading: 字頻加載中, error: 字頻錯誤 } = useCharFrequency('charFrequencySC')
+const { data: 字頻數據, loading: 字頻加載中, error: 字頻錯誤 } = useCharAbsoluteFrequency('charAbsoluteFrequencySC')
 const { data: 字符集數據, loading: 字符集加載中 } = useCharsets()
 
 if (字頻加載中) return <Spin />
