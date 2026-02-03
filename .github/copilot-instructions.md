@@ -181,22 +181,71 @@ pnpm exec tsx src/utils/normalize-traditional-chars.ts <文件路径>
 
 ### 命名約定
 
-- **變量/函數**：使用漢字拼音或英文，優先漢字繁體（如 `碼表`、`字頻`）
-- **類型**：PascalCase（如 `CodeTable`、`CharFrequency`）
-- **文件**：kebab-case（如 `code-table.ts`）
+#### 核心原則
 
-**繁體中文命名示例**：
+所有對話、文檔註釋、變量名都使用繁體中文
+
+#### 變量命名規範
+
+- **變量/函數名**：**必須使用繁體中文**（TypeScript 完全支持 Unicode 標識符）
+- **組件文件名**：PascalCase（`HomePage.tsx`、`MainLayout.tsx`）
+- **工具文件名**：camelCase（`useDataLoaders.ts`）
+- **類型名**：PascalCase 英文（`CodeTable`、`CharFrequency`）- 因為需要導出給其他項目使用
+
+**✅ 推薦的繁體中文命名**：
 
 ```typescript
-// ✅ 推薦：繁體中文
+// 變量使用繁體中文
 const 碼表 = new Map<string, string>()
-const 字頻數據 = await loadCharFrequency()
-const 重碼率 = calculateDuplicateRate(碼表)
+const 字頻數據 = await 加載字符頻率()
+const 重碼率 = 計算重碼率(碼表)
+const 是否加載中 = true
+const 錯誤信息 = null
+
+// 函數使用繁體中文
+function 加載字符頻率(文件名: string) {}
+function 計算重碼率(碼表: CodeTable) {}
+async function 解析碼表(內容: string) {}
+
+// React Hooks 使用繁體中文
+const [數據, 設置數據] = useState(null)
+const [加載中, 設置加載中] = useState(false)
+const { 字頻數據, 加載中: 字頻加載中, 錯誤 } = useCharFrequency('charFrequencySC')
+
+// 類型保持英文（便於跨項目引用）
+interface UseDataResult<T> {
+  data: T | null
+  loading: boolean
+  error: string | null
+}
+```
+
+**❌ 避免的命名**：
+
+```typescript
+// 不要用英文變量名
+const data = null // ❌
+const loading = true // ❌
+const errorMessage = '' // ❌
+
+// 不要用拼音
+const shuju = null // ❌
+const jiazaizhong = true // ❌
+```
+
+**為什麼使用中文變量名？**
+
+1. ✅ 與註釋、文檔語言一致，更易讀
+2. ✅ 業務邏輯更清晰（「重碼率」比 `duplicateRate` 更直觀）
+3. ✅ 減少中英文混雜（註釋中文、變量英文很分裂）
+4. ✅ TypeScript/React 完全支持 Unicode 標識符
+5. ✅ 現代編輯器對中文輸入有良好支持
 
 // ⚠️ 簡體中文（需漸進遷移）
 const 码表 = new Map<string, string>() // 舊代碼
 const 字频数据 = await loadCharFrequency() // 舊代碼
-```
+
+````typescript
 
 ### Pre-commit 检查
 
@@ -208,7 +257,7 @@ const 字频数据 = await loadCharFrequency() // 舊代碼
     "prettier --write"
   ]
 }
-```
+````
 
 ## 🗂️ 数据文件管理
 

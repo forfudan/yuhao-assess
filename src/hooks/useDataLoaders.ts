@@ -6,7 +6,7 @@ import { loadDataJSON } from '@/utils/data-loader'
  *
  * 📖 功能：加載字符頻率數據
  *
- * 💡 為什麼需要這個 Hook？
+ * 💡 爲什麽需要這個 Hook？
  * - 封裝數據加載邏輯，讓組件更簡潔
  * - 處理加載狀態（loading、error）
  * - 自動緩存數據，避免重複請求
@@ -33,69 +33,56 @@ interface UseDataResult<T> {
 
 /**
  * 加載字符頻率數據
- * @param filename 文件名（如 'charFrequencySC', 'charFrequencyTC'）
+ * @param 文件名 文件名（如 'charFrequencySC', 'charFrequencyTC'）
  */
-export function useCharFrequency(filename: string): UseDataResult<CharFrequencyData> {
-  // 📌 useState：管理組件狀態
-  // - data: 存儲加載的數據
-  // - loading: 追蹤加載狀態
-  // - error: 記錄錯誤信息
-  const [data, setData] = useState<CharFrequencyData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+export function useCharFrequency(文件名: string): UseDataResult<CharFrequencyData> {
+  const [數據, 設置數據] = useState<CharFrequencyData | null>(null)
+  const [加載中, 設置加載中] = useState(false)
+  const [錯誤, 設置錯誤] = useState<string | null>(null)
 
-  // 📌 useEffect：副作用處理
-  // - 當 filename 改變時，重新加載數據
-  // - 依賴陣列 [filename] 確保只在必要時重新執行
   useEffect(() => {
-    // 如果沒有指定文件名，直接返回
-    if (!filename) {
-      setData(null)
+    if (!文件名) {
+      設置數據(null)
       return
     }
 
-    let cancelled = false // 防止競態條件（race condition）
+    let 已取消 = false
 
-    const loadData = async () => {
+    const 加載數據 = async () => {
       try {
-        setLoading(true)
-        setError(null)
+        設置加載中(true)
+        設置錯誤(null)
 
-        // 從 CDN 或本地加載數據
-        const result = await loadDataJSON<CharFrequencyData>(`${filename}.json`)
+        const 結果 = await loadDataJSON<CharFrequencyData>(`${文件名}.json`)
 
-        // 📌 防止組件卸載後更新狀態（React 18 嚴格模式）
-        if (!cancelled) {
-          setData(result)
+        if (!已取消) {
+          設置數據(結果)
         }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : '加載字符頻率數據失敗')
-          console.error('加載字符頻率失敗:', err)
+      } catch (錯誤對象) {
+        if (!已取消) {
+          設置錯誤(錯誤對象 instanceof Error ? 錯誤對象.message : '加載字符頻率數據失敗')
+          console.error('加載字符頻率失敗:', 錯誤對象)
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false)
+        if (!已取消) {
+          設置加載中(false)
         }
       }
     }
 
-    loadData()
+    加載數據()
 
-    // 📌 清理函數：組件卸載或 filename 改變時執行
     return () => {
-      cancelled = true
+      已取消 = true
     }
-  }, [filename])
+  }, [文件名])
 
-  // 手動重新加載函數
-  const refetch = () => {
-    setData(null)
-    setError(null)
-    // 觸發 useEffect 重新執行（通過改變依賴）
+  const 重新加載 = () => {
+    設置數據(null)
+    設置錯誤(null)
   }
 
-  return { data, loading, error, refetch }
+  return { data: 數據, loading: 加載中, error: 錯誤, refetch: 重新加載 }
 }
 
 /**
@@ -106,54 +93,54 @@ export function useCharFrequency(filename: string): UseDataResult<CharFrequencyD
  */
 export type WordFrequencyData = Record<string, number>
 
-export function useWordFrequency(filename: string): UseDataResult<WordFrequencyData> {
-  const [data, setData] = useState<WordFrequencyData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+export function useWordFrequency(文件名: string): UseDataResult<WordFrequencyData> {
+  const [數據, 設置數據] = useState<WordFrequencyData | null>(null)
+  const [加載中, 設置加載中] = useState(false)
+  const [錯誤, 設置錯誤] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!filename) {
-      setData(null)
+    if (!文件名) {
+      設置數據(null)
       return
     }
 
-    let cancelled = false
+    let 已取消 = false
 
-    const loadData = async () => {
+    const 加載數據 = async () => {
       try {
-        setLoading(true)
-        setError(null)
+        設置加載中(true)
+        設置錯誤(null)
 
-        const result = await loadDataJSON<WordFrequencyData>(`${filename}.json`)
+        const 結果 = await loadDataJSON<WordFrequencyData>(`${文件名}.json`)
 
-        if (!cancelled) {
-          setData(result)
+        if (!已取消) {
+          設置數據(結果)
         }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : '加載詞語頻率數據失敗')
-          console.error('加載詞語頻率失敗:', err)
+      } catch (錯誤對象) {
+        if (!已取消) {
+          設置錯誤(錯誤對象 instanceof Error ? 錯誤對象.message : '加載詞語頻率數據失敗')
+          console.error('加載詞語頻率失敗:', 錯誤對象)
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false)
+        if (!已取消) {
+          設置加載中(false)
         }
       }
     }
 
-    loadData()
+    加載數據()
 
     return () => {
-      cancelled = true
+      已取消 = true
     }
-  }, [filename])
+  }, [文件名])
 
-  const refetch = () => {
-    setData(null)
-    setError(null)
+  const 重新加載 = () => {
+    設置數據(null)
+    設置錯誤(null)
   }
 
-  return { data, loading, error, refetch }
+  return { data: 數據, loading: 加載中, error: 錯誤, refetch: 重新加載 }
 }
 
 /**
@@ -170,46 +157,46 @@ export interface Charset {
 export type CharsetsData = Record<string, Charset>
 
 export function useCharsets(): UseDataResult<CharsetsData> {
-  const [data, setData] = useState<CharsetsData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [數據, 設置數據] = useState<CharsetsData | null>(null)
+  const [加載中, 設置加載中] = useState(false)
+  const [錯誤, 設置錯誤] = useState<string | null>(null)
 
   useEffect(() => {
-    let cancelled = false
+    let 已取消 = false
 
-    const loadData = async () => {
+    const 加載數據 = async () => {
       try {
-        setLoading(true)
-        setError(null)
+        設置加載中(true)
+        設置錯誤(null)
 
-        const result = await loadDataJSON<CharsetsData>('charsets.json')
+        const 結果 = await loadDataJSON<CharsetsData>('charsets.json')
 
-        if (!cancelled) {
-          setData(result)
+        if (!已取消) {
+          設置數據(結果)
         }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : '加載字符集數據失敗')
-          console.error('加載字符集失敗:', err)
+      } catch (錯誤對象) {
+        if (!已取消) {
+          設置錯誤(錯誤對象 instanceof Error ? 錯誤對象.message : '加載字符集數據失敗')
+          console.error('加載字符集失敗:', 錯誤對象)
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false)
+        if (!已取消) {
+          設置加載中(false)
         }
       }
     }
 
-    loadData()
+    加載數據()
 
     return () => {
-      cancelled = true
+      已取消 = true
     }
-  }, []) // 空依賴陣列 = 只在組件掛載時執行一次
+  }, [])
 
-  const refetch = () => {
-    setData(null)
-    setError(null)
+  const 重新加載 = () => {
+    設置數據(null)
+    設置錯誤(null)
   }
 
-  return { data, loading, error, refetch }
+  return { data: 數據, loading: 加載中, error: 錯誤, refetch: 重新加載 }
 }
