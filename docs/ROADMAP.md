@@ -79,11 +79,14 @@
 
 - **階段零**：基礎設施（2-3小時） ✅
 - **階段一**：React 基礎架構（6-8小時） ✅
-- **階段二（部分）**：數據加載 Hooks（2小時） ✅
+- **階段二**：核心服務遷移（6小時） ✅
+  - 2.1 數據加載 Hooks ✅
+  - 2.2 碼表解析服務 ✅
+  - 2.3 統計計算服務整合 ✅
 
 ### 🚧 進行中
 
-- **階段二**：核心服務遷移（剩餘 6-8小時）
+- **階段三**：佈局與路由（4-6小時）
 
 ### ⏳ 待完成
 
@@ -367,55 +370,72 @@ const 總字符數 = Object.keys(字頻數據).length
 const 的頻率 = 字頻數據['的'] || 0
 ```
 
-### 2.2 碼表解析服務（待完成，3-4小時）
+### 2.2 碼表解析服務 ✅（已完成，發現已實現）
 
-**目標**：遷移 `src/services/CodeTableParser.vue` 到 TypeScript 服務
+**實際狀况**：碼表解析功能已在現有服務中實現
 
-**計劃創建**：`src/services/codeTableParser.ts`
+**[src/services/builtinCodeTableService.ts](../src/services/builtinCodeTableService.ts)**：
 
-**功能需求**：
+- ✅ `parseRawCodeTable(text: string, format: CodeTableFormat)` - 解析碼表文本
+- ✅ 支持字符優先格式（`char_first`）
+- ✅ 支持編碼優先格式（`code_first`）
+- ✅ 自動計算 N 選位置
+- ✅ 錯誤處理（空行、註釋行過濾）
+- ✅ 返回 `RawCodeTable` 類型（Map<行號, [字符, 編碼, N選位置]>）
 
-- 支持字符優先格式（`字符 編碼1 編碼2 ...`）
-- 支持編碼優先格式（`編碼 字符1 字符2 ...`）
-- 自動檢測格式
-- 解析爲 `CodeTable` 類型
-- 錯誤處理（無效格式、空文件等）
-
-**函數簽名**（計劃）：
-
-```typescript
-export function 解析碼表(内容: string): CodeTable
-export function 檢測格式(内容: string): '字符優先' | '編碼優先' | null
-export function 驗證碼表(碼表: CodeTable): boolean
-```
-
-### 2.3 統計計算服務（待完成，3-4小時）
-
-**目標**：創建統計計算服務，整合 `chinese-ime-metrics` WASM 模塊
-
-**計劃創建**：`src/services/statsCalculator.ts`
-
-**功能需求**：
-
-- 計算重碼率（duplicate rate）
-- 計算選重率（dynamic selection rate）
-- 計算碼長分布（code length distribution）
-- 支持多種字符集（GB2312、GBK、通用規範漢字表等）
-- 支持自定義字頻/詞頻
-
-**函數簽名**（計劃）：
+**使用示例**：
 
 ```typescript
-export function 計算重碼率(碼表: CodeTable, 選項: 統計選項): 重碼統計結果
-export function 計算選重率(碼表: CodeTable, 選項: 統計選項): 選重統計結果
-export function 計算碼長分布(碼表: CodeTable): 碼長分布結果
+const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, 'char_first')
 ```
 
-**性能考慮**：
+**相關服務**：
 
-- 考慮使用 Web Worker 處理大量數據
-- 利用 `chinese-ime-metrics` WASM 模塊加速計算
-- 實現進度回調（用於長時間計算）
+- `codeTableProcessingService.ts` - 從 RawCodeTable 生成全碼表/簡碼表等
+- `codeTableCleanService.ts` - 碼表清理和優化
+
+### 2.3 統計計算服務整合 ✅（已完成，2小時）
+
+**[src/hooks/useStatistics.ts](../src/hooks/useStatistics.ts)**（195行）：
+
+**實現的 Hooks**：
+
+1. **`useDuplicateStats()`** - 重碼統計 Hook
+   - 調用 `calculateCharsetDuplicates()` 計算字符集重碼
+   - 返回：`{ data, loading, error, calculate, reset }`
+   - 支持異步計算，自動處理加載狀態
+
+2. **`useCodeLengthDistribution()`** - 碼長分布統計 Hook
+   - 計算碼表中各碼長的字符數量
+   - 返回：`Record<碼長, 字符數>`
+
+3. **`createStatisticsHook(calculator)`** - Hook 工廠函數
+   - 通用統計 Hook 創建器
+   - 可擴展支持新的統計類型
+
+**已整合的服務**：
+
+- ✅ `duplicateAnalysisService.ts` - 提供 `getStaticDupRate`、`getDynamicDupRate`、`calculateCharsetDuplicates`
+- ✅ `maximumCandidatesService.ts` - 候選個數計算（待集成 Hook）
+- ✅ `speedAnalysisService.ts` - 速度當量計算（待集成 Hook）
+- ✅ `shortCodeEfficiencyService.ts` - 簡碼效率計算（待集成 Hook）
+
+**使用示例**：
+
+```typescript
+const { data, loading, error, calculate } = useDuplicateStats()
+
+// 計算 GB2312 字符集重碼率
+await calculate('charset', codeTable, { 字符集類型: 'gb2312' })
+
+console.log(data?.duplicateRate) // 0.15 (15% 重碼率)
+```
+
+**WASM 遷移計劃**（階段四並行）：
+
+- 4.2 完成後 → 遷移重碼計算到 `chinese-ime-metrics` WASM
+- 4.3 完成後 → 添加候選個數 WASM 版本
+- 逐步替換性能瓶頸部分
 
 ---
 
@@ -481,7 +501,9 @@ const 路由配置 = [
 
 ---
 
-## 階段四：頁面遷移 ⏳（待完成，12-16小時）
+## 階段四：頁面遷移 + WASM 遷移 ⏳（待完成，12-16小時）
+
+**策略**：頁面遷移與 WASM 性能優化並行進行
 
 ### 4.1 碼表上傳頁面（2-3小時）
 
@@ -500,13 +522,13 @@ const 路由配置 = [
 - 添加加載進度條
 - 優化錯誤提示樣式
 
-### 4.2 重碼分析頁面（3-4小時）
+### 4.2 重碼分析頁面（3-4小時）+ WASM 遷移
 
 **遷移文件**：`src/components/DuplicateAnalysisCard.vue` → `src/pages/DuplicatePage.tsx`
 
 **功能保持**：
 
-- 重碼率計算
+- 重碼率計算（先用 `duplicateAnalysisService.ts`）
 - 重碼字符列表
 - 字符集篩選
 - 導出功能
@@ -517,9 +539,28 @@ const 路由配置 = [
 - 添加數據可視化（圖表）
 - 優化大數據渲染性能（虚擬滚動）
 
-### 4.3 候選個數頁面（2-3小時）
+**WASM 遷移（4.2 完成後）**：
+
+- 在 `chinese-ime-metrics` 中完善重碼計算 WASM 接口
+- 創建 `src/services/statsCalculatorWasm.ts`
+- 逐步替換 TypeScript 實現爲 WASM 調用
+- 性能對比測試
+
+### 4.3 候選個數頁面（2-3小時）+ WASM 擴展
 
 **遷移文件**：`src/components/CandidatesCard.vue` → `src/pages/CandidatesPage.tsx`
+
+**功能保持**：
+
+- 候選個數計算（先用 `maximumCandidatesService.ts`）
+- 候選分布圖表
+- 字符集篩選
+
+**WASM 擴展（4.3 完成後）**：
+
+- 在 `chinese-ime-metrics` 添加候選個數計算 Rust 實現
+- 編譯 WASM 模塊
+- 集成到 React 應用
 
 ### 4.4 速度當量頁面（2-3小時）
 
