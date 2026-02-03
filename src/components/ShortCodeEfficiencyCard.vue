@@ -297,7 +297,7 @@ const checkProcessingStatus = () => {
 }
 
 // 定期檢查處理狀態
-let statusCheckInterval: number | null = null
+let statusCheckInterval: ReturnType<typeof setInterval> | null = null
 let statusCheckStartTime: number = 0
 
 const startStatusCheck = () => {

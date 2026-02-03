@@ -6,8 +6,9 @@
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "baseUrl": ".",
-    "target": "ES2017",
-    "lib": ["ES2017", "DOM", "DOM.Iterable"],
+    "target": "ES2021",
+    "lib": ["ES2021", "DOM", "DOM.Iterable"],
+    "types": ["node"],
     "paths": {
       "@/*": ["./src/*"]
     }
