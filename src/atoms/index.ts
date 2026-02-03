@@ -1,2 +1,15 @@
-export * from './codeTable'
-export * from './settings'
+/**
+ * Jotai 原子狀態統一導出
+ */
+
+// 碼表相關原子狀態
+export {
+  原始碼表原子狀態,
+  碼表原子狀態,
+  碼表元數據原子狀態,
+  碼表加載中原子狀態,
+  碼表錯誤原子狀態,
+} from './codeTable'
+
+// 應用設置原子狀態
+export { 設置原子狀態, 分析參數原子狀態 } from './settings'

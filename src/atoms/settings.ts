@@ -1,7 +1,7 @@
 import { atomWithStorage } from 'jotai/utils'
 
-// 應用設置
-export const settingsAtom = atomWithStorage('app-settings', {
+// 應用設置（持久化原子狀態）
+export const 設置原子狀態 = atomWithStorage('app-settings', {
   // 字符集設置
   charset: 'GB2312' as string,
   includeSimplified: true,
@@ -17,9 +17,9 @@ export const settingsAtom = atomWithStorage('app-settings', {
   language: 'zh-TW' as 'zh-TW' | 'zh-CN',
 })
 
-// 分析參數
-export const analysisParamsAtom = atomWithStorage('analysis-params', {
-  charFrequency: 'charFrequencySC' as string,
-  wordFrequency: 'wordFrequencySC' as string,
+// 分析參數（持久化原子狀態）
+export const 分析參數原子狀態 = atomWithStorage('analysis-params', {
+  charFrequency: 'charAbsoluteFrequencySC' as string,
+  wordFrequency: 'wordAbsoluteFrequencySC' as string,
   enableWordFrequency: true,
 })
