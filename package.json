@@ -19,6 +19,7 @@
       "prettier --write"
     ],
     "*.md": [
+      "tsx src/utils/normalize-traditional-chars.ts",
       "markdownlint-cli2 --fix",
       "prettier --write"
     ],

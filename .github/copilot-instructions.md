@@ -1,6 +1,6 @@
 # GitHub Copilot 項目指引
 
-> 本文檔為 GitHub Copilot 提供項目背景和開發約定，確保跨會話的上下文連續性。
+> 本文檔爲 GitHub Copilot 提供項目背景和開發約定，確保跨會話的上下文連續性。
 
 ## ⚠️ 重要規範
 
@@ -39,15 +39,15 @@ pnpm test
 
 **強制要求**：
 
-1. **對話語言**：與用戶對話統一使用繁體中文
+1. **對話語言**：與用户對話統一使用繁體中文
 2. **代碼註釋**：所有註釋使用繁體中文
-3. **變量命名**：逐步將簡體中文變量名改為繁體中文
-4. **文檔內容**：所有文檔（README、ROADMAP 等）使用繁體中文
+3. **變量命名**：逐步將簡體中文變量名改爲繁體中文
+4. **文檔内容**：所有文檔（README、ROADMAP 等）使用繁體中文
 
 **漸進式遷移**：
 
 - ✅ 新代碼：直接使用繁體中文
-- ✅ 修改現有代碼時：順便將簡體改為繁體
+- ✅ 修改現有代碼時：順便將簡體改爲繁體
 - ⚠️ 不要一次性大規模替換（避免干擾 git diff）
 
 **示例**：
@@ -86,7 +86,7 @@ const 碼表 = new Map() // 繁體
 3. **性能優化**：側邊欄導航 + 延遲加載
 4. **代碼規範**：pre-commit 自動格式化 + 字形統一
 5. **核心分離**：將計算邏輯遷移到 chinese-ime-metrics
-6. \*\*變量錄結構（React 目標架構）
+6. \*\*變量録結構（React 目標架構）
 
 ```text
 src/
@@ -106,7 +106,7 @@ src/
 └── utils/                     # 工具函數
 ```
 
-**重要**：工具腳本應放在 `src/utils/`，不是根目錄
+**重要**：工具腳本應放在 `src/utils/`，不是根目録
 
 **重要**：工具脚本应放在 `src/utils/`，不是根目录 `scripts/`。
 
@@ -161,23 +161,56 @@ export async function loadMetricsModule() {
 
 ### 字形统一
 
-使用 `src/utils/normalize-traditional-chars.ts` 自动转换台湾繁体到大陆通规字形。
+#### 繁體中文標準
 
-**映射表**：内置在脚本中
+本倉庫採用 **[GujiCC](https://github.com/forfudan/GujiCC) 的「調和大陸繁體標準」**。
 
-**运行**：
+**核心原則**：
+
+- ✅ 可以使用台灣標準繁體書寫（如「群」「峰」「説」）
+- ✅ 提交時自動轉換爲大陸通規字形（如「群」「峰」「説」）
+- ✅ 保證字形統一，避免混用
+
+#### 自動轉換機制
+
+**轉換範圍**：
+
+- ✅ 代碼文件（`.ts`、`.tsx` 等）
+- ✅ Markdown 文檔（`.md`）
+- ❌ JSON、CSS 文件（僅格式化，不轉換字形）
+
+**轉換行爲**：
+
+- ✅ 全局替換所有出現的台灣字形
+- ✅ 包括代碼、註釋、字符串字面量
+- ⚠️ 注意：引號内的字符串也會被轉換（如 `const 説明 = "説明"` → `const 説明 = "説明"`）
+- ❌ 轉換腳本本身（`normalize-traditional-chars.ts`）不會被轉換
+
+**運行方式**：
 
 ```bash
-pnpm exec tsx src/utils/normalize-traditional-chars.ts <文件路径>
+# 手動轉換單個文件
+pnpm exec tsx src/utils/normalize-traditional-chars.ts src/App.tsx
+
+# 手動轉換多個文件
+pnpm exec tsx src/utils/normalize-traditional-chars.ts docs/*.md
+
+# Pre-commit 自動轉換（無需手動執行）
+git commit -m "提交信息"  # 自動觸發字形轉換
 ```
 
-**示例映射**：
+**映射表示例**（共 76 組）：
 
-- 羣 → 群
-- 峯 → 峰
-- 綠 → 緑（注意：「緑」是大陆通规字形）
-- 說 → 説
-- 為 → 爲
+| 台灣字形 | 大陸通規 | 類别 |
+| -------- | -------- | ---- |
+| 群       | 群       | 羊部 |
+| 峰       | 峰       | 山部 |
+| 緑       | 緑       | 糸部 |
+| 説       | 説       | 兑部 |
+| 爲       | 爲       | 爪部 |
+| 着       | 着       | 羊部 |
+
+完整映射表參考：`src/utils/normalize-traditional-chars.ts`
 
 ### 命名約定
 
@@ -190,7 +223,7 @@ pnpm exec tsx src/utils/normalize-traditional-chars.ts <文件路径>
 - **變量/函數名**：**必須使用繁體中文**（TypeScript 完全支持 Unicode 標識符）
 - **組件文件名**：PascalCase（`HomePage.tsx`、`MainLayout.tsx`）
 - **工具文件名**：camelCase（`useDataLoaders.ts`）
-- **類型名**：PascalCase 英文（`CodeTable`、`CharFrequency`）- 因為需要導出給其他項目使用
+- **類型名**：PascalCase 英文（`CodeTable`、`CharFrequency`）- 因爲需要導出給其他項目使用
 
 **✅ 推薦的繁體中文命名**：
 
@@ -205,7 +238,7 @@ const 錯誤信息 = null
 // 函數使用繁體中文
 function 加載字符頻率(文件名: string) {}
 function 計算重碼率(碼表: CodeTable) {}
-async function 解析碼表(內容: string) {}
+async function 解析碼表(内容: string) {}
 
 // React Hooks 使用繁體中文
 const [數據, 設置數據] = useState(null)
@@ -233,7 +266,7 @@ const shuju = null // ❌
 const jiazaizhong = true // ❌
 ```
 
-**為什麼使用中文變量名？**
+**爲什麽使用中文變量名？**
 
 1. ✅ 與註釋、文檔語言一致，更易讀
 2. ✅ 業務邏輯更清晰（「重碼率」比 `duplicateRate` 更直觀）
