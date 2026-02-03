@@ -29,12 +29,12 @@ function MainLayout() {
   return (
     <StyledLayout>
       <StyledHeader>
-        <h1>宇浩輸入法評測系統</h1>
+        <h1>輸入法測評系統</h1>
       </StyledHeader>
       <StyledContent>
         <Outlet />
       </StyledContent>
-      <StyledFooter>宇浩輸入法評測系統 ©2024</StyledFooter>
+      <StyledFooter>輸入法測評系統 ©2024</StyledFooter>
     </StyledLayout>
   )
 }

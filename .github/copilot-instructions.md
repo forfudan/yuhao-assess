@@ -288,7 +288,6 @@ describe('DuplicatePage', () => {
 
 - [ROADMAP.md](../docs/ROADMAP.md) - 完整重构路线图
 - [QUICK_START.md](../docs/QUICK_START.md) - 快速开始指南
-- [tw_to_tonggui.md](../docs/tw_to_tonggui.md) - 字形映射表
 - [chinese-ime-metrics 文档](../../chinese-ime-metrics/docs/)
 - [hanzi-chai](https://github.com/hanzi-chai/hanzi-chai.github.io)
 - [shurufa.app](https://shurufa.app)
