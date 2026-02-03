@@ -68,6 +68,7 @@
 1. 在 GitHub 創建 `yuhao-assess-data` 倉庫
 2. 推送數據：`cd ../yuhao-assess-data && git push -u origin main`
 3. 啟用 GitHub Pages（Settings → Pages → main branch）
+4. ⚠️ **重構完成後**：刪除 `public/data/*.json`（生產環境會自動從 CDN 加載）
 
 ### 0.2 Pre-commit Hook 設置
 
