@@ -32,7 +32,44 @@
 - ✅ 無需 Git LFS（節省存儲成本）
 - ✅ CDN 加速 + 瀏覽器緩存
 
+**數據文件命名規範**（2026-02-03 更新）：
+
+| 舊文件名                  | 新文件名                              | 説明           |
+| ------------------------- | ------------------------------------- | -------------- |
+| `charFrequencyZhihu.json` | `charAbsoluteFrequencyZhihu.json`     | 知乎字頻數     |
+| `charFrequencySC.json`    | `charAbsoluteFrequencySC.json`        | 北語簡體字頻數 |
+| `charFrequencyTC.json`    | `charAbsoluteFrequencyTC.json`        | 臺灣繁體字頻數 |
+| `charFrequencyGuji.json`  | `charAbsoluteFrequencyGuji.json`      | 古籍字頻數     |
+| `wordFrequencySC.json`    | `wordAbsoluteFrequencySC.json`        | 簡體詞頻數     |
+
+**術語規範**：
+
+- **頻數（Absolute Frequency）**：出現次數（整數），如「的」出現 1000 次
+- **頻率（Relative Frequency）**：出現比例（小數），如「的」佔 0.05（5%）
+
 詳見：[src/utils/data-loader.ts](../src/utils/data-loader.ts)
+
+### 🔗 與 chinese-ime-metrics 的協作
+
+本項目計算邏輯將逐步遷移到 [chinese-ime-metrics](https://github.com/forfudan/chinese-ime-metrics)：
+
+- **yuhao-assess**：UI 層，負責數據展示、用户交互、設置管理
+- **chinese-ime-metrics**：計算層，Rust + WASM 實現高性能統計算法
+
+**集成方式**：
+
+- 開發環境：使用本地相對路徑（`../chinese-ime-metrics`）
+- 生産環境：從 GitHub Pages CDN 加載 WASM 模塊
+
+**計劃集成的功能**：
+
+- ✅ 靜態重碼計算（`calculateDuplicateStats`）
+- ✅ 動態選重率（`calculateDynamicDupRate`）
+- ⏳ 碼長分布統計
+- ⏳ 鍵位熱力圖計算
+- ⏳ 速度當量計算
+
+詳見：[chinese-ime-metrics/docs/ROADMAP.md](../../chinese-ime-metrics/docs/ROADMAP.md)
 
 ---
 

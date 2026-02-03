@@ -138,16 +138,40 @@ src/
 
 ## 🔗 chinese-ime-metrics 集成
 
-### 关键信息
+### 關鍵信息
 
-- **仓库**：`forfudan/chinese-ime-metrics`
-- **技术栈**：Rust + WebAssembly（纯 WASM 实现，无 JS 降级）
-- **API**：所有函数均为异步（async）
-- **集成方式**：开发环境本地路径，生产环境 CDN 加载
+- **倉庫**：`forfudan/chinese-ime-metrics`
+- **技術棧**：Rust + WebAssembly（純 WASM 實現，無 JS 降級）
+- **API**：所有函數均爲異步（async）
+- **集成方式**：開發環境本地路徑，生產環境 CDN 加載
 
-### API 命名约定
+### 術語規範（必須遵守）
 
-❌ **错误**：`calculateDuplicateStatsHybrid`（已废弃）  
+**頻數 vs. 頻率**：
+
+| 中文 | 英文 | 含義 | 示例 |
+| --- | --- | --- | --- |
+| **頻數** | **Absolute Frequency** | 出現次數（整數） | "的" 出現 1000 次 |
+| **頻率** | **Relative Frequency** | 出現比例（小數） | "的" 佔 0.05（5%） |
+
+**命名規則**：
+
+- ✅ 變量名：`字頻數`、`詞頻數`、`相對頻率`
+- ✅ 文件名：`charAbsoluteFrequencySC.json`、`wordAbsoluteFrequencySC.json`
+- ✅ 函數名：`計算頻數`、`歸一化爲頻率`
+- ❌ 避免混淆：不要將頻數稱爲「頻率」
+
+**數據文件命名**（yuhao-assess-data 倉庫）：
+
+- `charAbsoluteFrequencyZhihu.json` - 知乎字頻數
+- `charAbsoluteFrequencySC.json` - 北語簡體字頻數
+- `charAbsoluteFrequencyTC.json` - 臺灣繁體字頻數
+- `charAbsoluteFrequencyGuji.json` - 古籍字頻數
+- `wordAbsoluteFrequencySC.json` - 簡體詞頻數
+
+### API 命名約定
+
+❌ **錯誤**：`calculateDuplicateStatsHybrid`（已廢棄）  
 ✅ **正确**：`calculateDuplicateStats`（纯 WASM）
 
 ### 集成策略

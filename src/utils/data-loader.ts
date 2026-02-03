@@ -80,25 +80,25 @@ export async function loadDataJSONWithCache<T = any>(
  * 預定義的數據文件加載器
  */
 export const dataLoaders = {
-  /** 知乎字頻 */
-  charFrequencyZhihu: () => 
-    loadDataJSONWithCache('charFrequencyZhihu.json', 'charFreq-zhihu'),
+  /** 知乎字頻數 */
+  charAbsoluteFrequencyZhihu: () => 
+    loadDataJSONWithCache('charAbsoluteFrequencyZhihu.json', 'charAbsFreq-zhihu'),
   
-  /** 北語簡體字頻 */
-  charFrequencySC: () => 
-    loadDataJSONWithCache('charFrequencySC.json', 'charFreq-sc'),
+  /** 北語簡體字頻數 */
+  charAbsoluteFrequencySC: () => 
+    loadDataJSONWithCache('charAbsoluteFrequencySC.json', 'charAbsFreq-sc'),
   
-  /** 臺灣繁體字頻 */
-  charFrequencyTC: () => 
-    loadDataJSONWithCache('charFrequencyTC.json', 'charFreq-tc'),
+  /** 臺灣繁體字頻數 */
+  charAbsoluteFrequencyTC: () => 
+    loadDataJSONWithCache('charAbsoluteFrequencyTC.json', 'charAbsFreq-tc'),
   
-  /** 古籍字頻 */
-  charFrequencyGuji: () => 
-    loadDataJSONWithCache('charFrequencyGuji.json', 'charFreq-guji'),
+  /** 古籍字頻數 */
+  charAbsoluteFrequencyGuji: () => 
+    loadDataJSONWithCache('charAbsoluteFrequencyGuji.json', 'charAbsFreq-guji'),
   
-  /** 簡體詞頻 */
-  wordFrequencySC: () => 
-    loadDataJSONWithCache('wordFrequencySC.json', 'wordFreq-sc'),
+  /** 簡體詞頻數 */
+  wordAbsoluteFrequencySC: () => 
+    loadDataJSONWithCache('wordAbsoluteFrequencySC.json', 'wordAbsFreq-sc'),
   
   /** 字符集 */
   charsets: () => 

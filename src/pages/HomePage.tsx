@@ -1,5 +1,5 @@
 import { Card, Typography, Spin, Alert, Space, Statistic, Row, Col } from 'antd'
-import { useCharFrequency, useCharsets } from '@/hooks/useDataLoaders'
+import { useCharAbsoluteFrequency, useCharsets } from '@/hooks/useDataLoaders'
 
 const { Title, Paragraph, Text } = Typography
 
@@ -8,7 +8,7 @@ function HomePage() {
     data: charFreqData,
     loading: charFreqLoading,
     error: charFreqError,
-  } = useCharFrequency('charFrequencySC')
+  } = useCharAbsoluteFrequency('charAbsoluteFrequencySC')
 
   const { data: charsetsData, loading: charsetsLoading, error: charsetsError } = useCharsets()
 
@@ -43,7 +43,7 @@ function HomePage() {
       {!isLoading && !hasError && (
         <>
           {charFreqData && (
-            <Card title="📊 字符頻率數據（簡體中文）">
+            <Card title="📊 字符頻數數據（簡體中文）">
               <Row gutter={16}>
                 <Col span={6}>
                   <Statistic

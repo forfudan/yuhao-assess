@@ -2,27 +2,27 @@ import { useState, useEffect } from 'react'
 import { loadDataJSON } from '@/utils/data-loader'
 
 /**
- * 🎯 教學：自定義 Hook - useCharFrequency
+ * 自定義 Hook - useCharAbsoluteFrequency
  *
- * 📖 功能：加載字符頻率數據
+ * 加載字符頻數數據（Absolute Frequency，出現次數）
  *
- * 💡 爲什麽需要這個 Hook？
+ * 爲什麽需要這個 Hook？
  * - 封裝數據加載邏輯，讓組件更簡潔
  * - 處理加載狀態（loading、error）
  * - 自動緩存數據，避免重複請求
  *
- * 🔧 使用方式：
+ * 使用方式：
  * ```tsx
- * const { data, loading, error } = useCharFrequency('charFrequencySC')
+ * const { data, loading, error } = useCharAbsoluteFrequency('charAbsoluteFrequencySC')
  *
  * if (loading) return <Spin />
  * if (error) return <Alert message={error} type="error" />
- * return <div>{data['我']}</div>  // 顯示「我」的頻率
+ * return <div>{data['我']}</div>  // 顯示「我」的頻數（出現次數）
  * ```
  */
 
-// 字符頻率數據類型：字符 -> 頻率值
-export type CharFrequencyData = Record<string, number>
+// 字符頻數數據類型：字符 -> 頻數值（Absolute Frequency，出現次數）
+export type CharAbsoluteFrequencyData = Record<string, number>
 
 interface UseDataResult<T> {
   data: T | null // 加載的數據（null 表示尚未加載）
@@ -32,11 +32,11 @@ interface UseDataResult<T> {
 }
 
 /**
- * 加載字符頻率數據
- * @param 文件名 文件名（如 'charFrequencySC', 'charFrequencyTC'）
+ * 加載字符頻數數據
+ * @param 文件名 文件名（如 'charAbsoluteFrequencySC', 'charAbsoluteFrequencyTC'）
  */
-export function useCharFrequency(文件名: string): UseDataResult<CharFrequencyData> {
-  const [數據, 設置數據] = useState<CharFrequencyData | null>(null)
+export function useCharAbsoluteFrequency(文件名: string): UseDataResult<CharAbsoluteFrequencyData> {
+  const [數據, 設置數據] = useState<CharAbsoluteFrequencyData | null>(null)
   const [加載中, 設置加載中] = useState(false)
   const [錯誤, 設置錯誤] = useState<string | null>(null)
 
@@ -53,7 +53,7 @@ export function useCharFrequency(文件名: string): UseDataResult<CharFrequency
         設置加載中(true)
         設置錯誤(null)
 
-        const 結果 = await loadDataJSON<CharFrequencyData>(`${文件名}.json`)
+        const 結果 = await loadDataJSON<CharAbsoluteFrequencyData>(`${文件名}.json`)
 
         if (!已取消) {
           設置數據(結果)
@@ -86,15 +86,15 @@ export function useCharFrequency(文件名: string): UseDataResult<CharFrequency
 }
 
 /**
- * 🎯 教學：詞語頻率 Hook
+ * 🎯 教學：詞語頻數 Hook
  *
- * 📖 功能：加載詞語頻率數據
- * 結構與 useCharFrequency 相同，但數據格式不同
+ * 📖 功能：加載詞語頻數數據（Absolute Frequency，出現次數）
+ * 結構與 useCharAbsoluteFrequency 相同，但數據格式不同
  */
-export type WordFrequencyData = Record<string, number>
+export type WordAbsoluteFrequencyData = Record<string, number>
 
-export function useWordFrequency(文件名: string): UseDataResult<WordFrequencyData> {
-  const [數據, 設置數據] = useState<WordFrequencyData | null>(null)
+export function useWordAbsoluteFrequency(文件名: string): UseDataResult<WordAbsoluteFrequencyData> {
+  const [數據, 設置數據] = useState<WordAbsoluteFrequencyData | null>(null)
   const [加載中, 設置加載中] = useState(false)
   const [錯誤, 設置錯誤] = useState<string | null>(null)
 
@@ -111,15 +111,15 @@ export function useWordFrequency(文件名: string): UseDataResult<WordFrequency
         設置加載中(true)
         設置錯誤(null)
 
-        const 結果 = await loadDataJSON<WordFrequencyData>(`${文件名}.json`)
+        const 結果 = await loadDataJSON<WordAbsoluteFrequencyData>(`${文件名}.json`)
 
         if (!已取消) {
           設置數據(結果)
         }
       } catch (錯誤對象) {
         if (!已取消) {
-          設置錯誤(錯誤對象 instanceof Error ? 錯誤對象.message : '加載詞語頻率數據失敗')
-          console.error('加載詞語頻率失敗:', 錯誤對象)
+          設置錯誤(錯誤對象 instanceof Error ? 錯誤對象.message : '加載詞語頻數數據失敗')
+          console.error('加載詞語頻數失敗:', 錯誤對象)
         }
       } finally {
         if (!已取消) {
