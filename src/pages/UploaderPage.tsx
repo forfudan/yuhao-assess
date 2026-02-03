@@ -1,0 +1,454 @@
+import React, { useState, useRef, useEffect } from 'react'
+import { useAtom, useSetAtom } from 'jotai'
+import { Upload, Button, Radio, Input, Select, Alert, Table, Modal, Space, Divider } from 'antd'
+import {
+  UploadOutlined,
+  InboxOutlined,
+  DeleteOutlined,
+  QuestionCircleOutlined,
+} from '@ant-design/icons'
+import type { UploadFile, RadioChangeEvent } from 'antd'
+import type { RcFile } from 'antd/es/upload'
+import { 原始碼表原子狀態, 碼表原子狀態, 碼表元數據原子狀態, 碼表加載中原子狀態 } from '@/atoms'
+import { BuiltinCodeTableService } from '@/services/builtinCodeTableService'
+import { CodeTableProcessingService } from '@/services/codeTableProcessingService'
+import type { CodeTableFormat, RawCodeTable } from '@/types'
+
+interface EncodingPreviewItem {
+  char: string
+  fullCode: string
+  shortCode: string
+  fullWithSelection: string
+  shortWithSelection: string
+}
+
+const UploaderPage: React.FC = () => {
+  // Jotai 狀態
+  const 設置原始碼表 = useSetAtom(原始碼表原子狀態)
+  const 設置碼表 = useSetAtom(碼表原子狀態)
+  const 設置碼表元數據 = useSetAtom(碼表元數據原子狀態)
+  const [加載中, 設置加載中] = useAtom(碼表加載中原子狀態)
+
+  // 本地狀態
+  const [格式, 設置格式] = useState<CodeTableFormat>('char_first')
+  const [選中的文件, 設置選中的文件] = useState<RcFile | null>(null)
+  const [前綴模式, 設置前綴模式] = useState(false)
+  const [前綴按鍵, 設置前綴按鍵] = useState('')
+  const [編碼預覽數據, 設置編碼預覽數據] = useState<EncodingPreviewItem[]>([])
+  const [預設方案, 設置預設方案] = useState<string>('')
+  const [錯誤信息, 設置錯誤信息] = useState<string | null>(null)
+  const [成功信息, 設置成功信息] = useState<string | null>(null)
+  const [顯示前綴幫助, 設置顯示前綴幫助] = useState(false)
+
+  // 服務實例
+  const 内置碼表服務 = useRef(new BuiltinCodeTableService())
+  const 碼表處理服務 = useRef(CodeTableProcessingService.getInstance())
+
+  // 獲取預設碼表列表
+  const [預設碼表列表, 設置預設碼表列表] = useState<
+    Array<{ key: string; name: string; description: string }>
+  >([])
+
+  useEffect(() => {
+    内置碼表服務.current
+      .loadConfig()
+      .then(() => {
+        const tables = 内置碼表服務.current.getAvailableTables()
+        設置預設碼表列表(tables)
+      })
+      .catch(err => {
+        console.error('加載預設碼表配置失敗:', err)
+      })
+  }, [])
+
+  // 當選擇預設方案時自動開始分析
+  useEffect(() => {
+    if (預設方案) {
+      console.log('預設方案已選擇，自動開始分析:', 預設方案)
+      開始分析()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [預設方案])
+
+  // 讀取文件爲文本
+  const 讀取文件 = (file: RcFile): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new window.FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsText(file)
+    })
+  }
+
+  // 處理文件上傳
+  const 處理文件變化 = async (file: RcFile) => {
+    設置錯誤信息(null)
+    設置成功信息(null)
+
+    const 文件名 = file.name.toLowerCase()
+    if (
+      !文件名.endsWith('.txt') &&
+      !文件名.endsWith('.csv') &&
+      !文件名.endsWith('.yaml') &&
+      !文件名.endsWith('.yml')
+    ) {
+      設置錯誤信息('請選擇 .txt、.csv、.yaml 或 .yml 格式的文件')
+      return false
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      設置錯誤信息('文件大小不能超過 10MB')
+      return false
+    }
+
+    設置選中的文件(file)
+    設置預設方案('')
+    return false // 阻止自動上傳
+  }
+
+  // 開始分析
+  const 開始分析 = async () => {
+    if (!選中的文件 && !預設方案) {
+      設置錯誤信息('請選擇文件或預設方案')
+      return
+    }
+
+    設置加載中(true)
+    設置錯誤信息(null)
+    設置成功信息(null)
+
+    try {
+      let rawCodeTable: RawCodeTable
+      let 文件名: string
+
+      if (預設方案) {
+        // 使用預設碼表
+        console.log('開始下載預設碼表:', 預設方案)
+
+        try {
+          // 先獲取碼表配置
+          const 碼表配置 = 内置碼表服務.current.getTableConfig(預設方案)
+          console.log('碼表配置:', 碼表配置)
+
+          if (!碼表配置) {
+            throw new Error(`找不到碼表配置: ${預設方案}`)
+          }
+
+          // 下載碼表文件
+          console.log('正在從 URL 下載:', 碼表配置.url)
+          const response = await fetch(碼表配置.url)
+
+          if (!response.ok) {
+            throw new Error(`下載失敗: ${response.status} ${response.statusText}`)
+          }
+
+          const 文本 = await response.text()
+          console.log('下載成功，文本長度:', 文本.length)
+          console.log('文本前 500 字符:', 文本.substring(0, 500))
+          console.log('使用格式:', 碼表配置.format)
+
+          // 解析碼表
+          const 解析結果 = await BuiltinCodeTableService.parseRawCodeTable(文本, 碼表配置.format)
+          console.log('解析結果 rawCodeTable size:', 解析結果.rawCodeTable.size)
+
+          if (!解析結果.rawCodeTable || 解析結果.rawCodeTable.size === 0) {
+            throw new Error(`碼表解析爲空，請檢查格式。格式設置: ${碼表配置.format}`)
+          }
+
+          rawCodeTable = 解析結果.rawCodeTable
+          文件名 = 碼表配置.name
+          console.log('預設碼表處理成功:', 文件名, '字符數:', rawCodeTable.size)
+        } catch (downloadError) {
+          console.error('下載預設碼表失敗:', downloadError)
+          throw new Error(
+            `預設碼表下載失敗: ${downloadError instanceof Error ? downloadError.message : String(downloadError)}`
+          )
+        }
+      } else if (選中的文件) {
+        // 使用上傳的文件
+        console.log('開始解析上傳文件:', 選中的文件.name)
+        const 文本 = await 讀取文件(選中的文件)
+        文件名 = 選中的文件.name
+
+        const 解析結果 = await BuiltinCodeTableService.parseRawCodeTable(文本, 格式)
+
+        if (!解析結果.rawCodeTable || 解析結果.rawCodeTable.size === 0) {
+          throw new Error('碼表解析失敗，請檢查格式是否正確')
+        }
+
+        rawCodeTable = 解析結果.rawCodeTable
+        console.log('文件解析成功，字符數:', rawCodeTable.size)
+      } else {
+        throw new Error('没有選擇文件或方案')
+      }
+
+      // 處理前綴按鍵
+      const 前綴按鍵數組 = 前綴模式 && 前綴按鍵 ? Array.from(前綴按鍵.trim()) : undefined
+
+      // 處理碼表
+      console.log('開始處理碼表，前綴模式:', 前綴模式, '前綴按鍵:', 前綴按鍵數組)
+      const 處理結果 = await 碼表處理服務.current.processRawCodeTable(rawCodeTable, {
+        isPrefix: 前綴模式,
+        prefixKeys: 前綴按鍵數組,
+      })
+      console.log('碼表處理完成，處理結果:', 處理結果)
+
+      // 設置全局狀態
+      設置原始碼表('')
+      設置碼表元數據({
+        name: 文件名,
+        uploadTime: Date.now(),
+        totalChars: rawCodeTable.size,
+      })
+      設置碼表(處理結果 as any)
+
+      設置成功信息(`成功加載碼表：${文件名}，共 ${rawCodeTable.size} 個字符`)
+      console.log('全局狀態設置完成')
+
+      // 生成編碼預覽
+      生成編碼預覽(rawCodeTable, 處理結果)
+    } catch (error) {
+      console.error('碼表處理失敗，完整錯誤:', error)
+      if (error instanceof Error) {
+        console.error('錯誤堆棧:', error.stack)
+      }
+      設置錯誤信息(error instanceof Error ? error.message : '碼表處理失敗')
+    } finally {
+      設置加載中(false)
+    }
+  }
+
+  // 生成編碼預覽
+  const 生成編碼預覽 = (原始碼表: RawCodeTable, 處理結果: any) => {
+    const { full, short, fullWithSelection, shortWithSelection } = 處理結果
+    const 預覽項目: EncodingPreviewItem[] = []
+
+    // 獲取前 100 個字符
+    let count = 0
+    for (const [, [char]] of 原始碼表) {
+      if (count >= 100) break
+      if (!full.has(char)) continue
+
+      const fullCodes = full.get(char) || []
+      const shortCodes = short.get(char) || []
+      const fullWithSelectionCodes = fullWithSelection.get(char) || []
+      const shortWithSelectionCodes = shortWithSelection.get(char) || []
+
+      預覽項目.push({
+        char,
+        fullCode: fullCodes[0] || '-',
+        shortCode: shortCodes[0] || '-',
+        fullWithSelection: fullWithSelectionCodes[0] || '-',
+        shortWithSelection: shortWithSelectionCodes[0] || '-',
+      })
+
+      count++
+    }
+
+    設置編碼預覽數據(預覽項目)
+  }
+
+  // 處理預設方案變化
+  const 處理預設方案變化 = (value: string) => {
+    設置預設方案(value)
+    設置選中的文件(null)
+    設置編碼預覽數據([])
+    設置錯誤信息(null)
+    設置成功信息(null)
+  }
+
+  // 移除文件
+  const 移除文件 = () => {
+    設置選中的文件(null)
+    設置編碼預覽數據([])
+    設置錯誤信息(null)
+    設置成功信息(null)
+  }
+
+  return (
+    <div style={{ padding: 24 }}>
+      <Space direction="vertical" style={{ width: '100%' }} size="large">
+        {/* 預設方案選擇 */}
+        <div>
+          <label style={{ marginRight: 8 }}>預設方案：</label>
+          <Select
+            style={{ width: 400 }}
+            placeholder="選擇預設方案..."
+            value={預設方案 || undefined}
+            onChange={處理預設方案變化}
+            disabled={加載中}
+            options={[
+              { value: '', label: '選擇預設方案...', disabled: true },
+              ...預設碼表列表.map(table => ({
+                value: table.key,
+                label: `${table.name} - ${table.description}`,
+              })),
+            ]}
+          />
+        </div>
+
+        <Divider plain>或者</Divider>
+
+        {/* 格式選擇 */}
+        <div>
+          <label style={{ marginRight: 8 }}>碼表格式：</label>
+          <Radio.Group value={格式} onChange={(e: RadioChangeEvent) => 設置格式(e.target.value)}>
+            <Space direction="vertical">
+              <Radio value="char_first">
+                字符-編碼 <span style={{ color: '#999', marginLeft: 8 }}>例：的 de</span>
+              </Radio>
+              <Radio value="code_first">
+                編碼-字符 <span style={{ color: '#999', marginLeft: 8 }}>例：de 的</span>
+              </Radio>
+            </Space>
+          </Radio.Group>
+        </div>
+
+        {/* 前綴碼設置 */}
+        <Space>
+          <Button type={前綴模式 ? 'primary' : 'default'} onClick={() => 設置前綴模式(!前綴模式)}>
+            {前綴模式 ? '✓ ' : ''}前綴或頂功方案
+          </Button>
+          <Button icon={<QuestionCircleOutlined />} onClick={() => 設置顯示前綴幫助(true)}>
+            幫助
+          </Button>
+          {前綴模式 && (
+            <Input
+              style={{ width: 300 }}
+              placeholder="輸入上屏碼，如 aoeiu_;"
+              value={前綴按鍵}
+              onChange={e => 設置前綴按鍵(e.target.value)}
+            />
+          )}
+        </Space>
+
+        {/* 文件上傳 */}
+        <Upload.Dragger
+          accept=".txt,.csv,.yaml,.yml"
+          beforeUpload={處理文件變化}
+          fileList={
+            選中的文件
+              ? [
+                  {
+                    uid: '-1',
+                    name: 選中的文件.name,
+                    status: 'done',
+                    size: 選中的文件.size,
+                  } as UploadFile,
+                ]
+              : []
+          }
+          onRemove={移除文件}
+          disabled={加載中}
+        >
+          <p className="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
+          <p className="ant-upload-text">點擊上傳或拖拽文件到此處</p>
+          <p className="ant-upload-hint">支持 .txt、.csv、.yaml 和 .yml 格式</p>
+        </Upload.Dragger>
+
+        {/* 操作按鈕 */}
+        <Space>
+          <Button
+            type="primary"
+            size="large"
+            icon={<UploadOutlined />}
+            onClick={開始分析}
+            disabled={(!選中的文件 && !預設方案) || 加載中}
+            loading={加載中}
+          >
+            {加載中 ? '解析中...' : '開始分析'}
+          </Button>
+          {選中的文件 && (
+            <Button size="large" icon={<DeleteOutlined />} onClick={移除文件} disabled={加載中}>
+              重新選擇
+            </Button>
+          )}
+        </Space>
+
+        {/* 狀態提示 */}
+        {錯誤信息 && (
+          <Alert
+            message="錯誤"
+            description={錯誤信息}
+            type="error"
+            closable
+            onClose={() => 設置錯誤信息(null)}
+          />
+        )}
+        {成功信息 && (
+          <Alert
+            message="成功"
+            description={成功信息}
+            type="success"
+            closable
+            onClose={() => 設置成功信息(null)}
+          />
+        )}
+      </Space>
+
+      {/* 編碼預覽 */}
+      {編碼預覽數據.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>單字編碼預覽（前 100 行）</h3>
+          <Table
+            columns={[
+              { title: '行號', render: (_: any, __: any, index: number) => index + 1, width: 80 },
+              { title: '漢字', dataIndex: 'char', width: 80 },
+              { title: '全碼', dataIndex: 'fullCode', width: 120 },
+              { title: '簡碼', dataIndex: 'shortCode', width: 120 },
+              { title: '全碼及選重鍵', dataIndex: 'fullWithSelection', width: 150 },
+              { title: '簡碼及選重鍵', dataIndex: 'shortWithSelection', width: 150 },
+            ]}
+            dataSource={編碼預覽數據}
+            rowKey="char"
+            pagination={false}
+            scroll={{ y: 400 }}
+            size="small"
+          />
+        </div>
+      )}
+
+      {/* 前綴幫助 Modal */}
+      <Modal
+        title="前綴或頂功方案説明"
+        open={顯示前綴幫助}
+        onCancel={() => 設置顯示前綴幫助(false)}
+        footer={[
+          <Button key="ok" type="primary" onClick={() => 設置顯示前綴幫助(false)}>
+            我知道了
+          </Button>,
+        ]}
+      >
+        <Space direction="vertical">
+          <p>
+            <a
+              href="https://shurufa.app/docs/concepts.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              前綴或頂功方案
+            </a>
+            是一類特殊上屏候選字的輸入方案，對於未達到最大碼長的候選項，在某些特殊的模式下，可以自動上屏，而不需要使用空格鍵。
+          </p>
+          <p>
+            <strong>上屏碼設置：</strong>
+          </p>
+          <p>
+            勾選了前綴或頂功的方案，可以在輸入框中填入特定的上屏按鍵，例如：&ldquo;aoeiu_&rdquo;
+            表示編碼結尾是 a、o、e、i、u、空格等按鍵的，不再自動添加空格。
+          </p>
+          <p>
+            如果你的碼表已經將空格鍵等特殊符號作爲編碼的一部分，可填寫到輸入框中，避免本測評工具自動添加空格鍵。
+          </p>
+          <p>
+            <strong>注意：</strong>請謹慎使用本功能，不要利用它來取得更好的碼長計算結果。
+          </p>
+        </Space>
+      </Modal>
+    </div>
+  )
+}
+
+export default UploaderPage

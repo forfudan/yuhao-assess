@@ -1,5 +1,12 @@
-import type { CodeTableConfig, BuiltinCodeTable, CodeTable, RawCodeTable, CodeTableFormat, CharFrequency, EquivTable } from '../types/index'
-import { isInCJKToJ } from './charsetService'
+import type {
+  CodeTableConfig,
+  BuiltinCodeTable,
+  RawCodeTable,
+  CodeTableFormat,
+  CharFrequency,
+  EquivTable,
+} from '../types/index'
+import { isInCJKToJ, loadCJKBlockData } from './charsetService'
 
 export class BuiltinCodeTableService {
   private config: CodeTableConfig | null = null
@@ -91,16 +98,16 @@ export class BuiltinCodeTableService {
     try {
       const [scFreq, tcFreq] = await Promise.all([
         this.loadCharFrequencySC(),
-        this.loadCharFrequencyTC()
+        this.loadCharFrequencyTC(),
       ])
 
       const unifiedFreq: CharFrequency = {}
-      
+
       // 合併簡體字頻
       for (const [char, freq] of Object.entries(scFreq)) {
         unifiedFreq[char] = freq
       }
-      
+
       // 合併繁體字頻，如果字符已存在則相加頻數
       for (const [char, freq] of Object.entries(tcFreq)) {
         if (unifiedFreq[char]) {
@@ -109,7 +116,7 @@ export class BuiltinCodeTableService {
           unifiedFreq[char] = freq
         }
       }
-      
+
       return unifiedFreq
     } catch (error) {
       console.error('Error creating unified character frequency data:', error)
@@ -143,15 +150,17 @@ export class BuiltinCodeTableService {
   }
 
   // 獲取可用的預設碼表列表
-  getAvailableTables(): Array<{key: string, name: string, description: string}> {
+  getAvailableTables(): Array<{ key: string; name: string; description: string }> {
     if (!this.config) {
       return []
     }
-    return this.config.builtinCodeTables.map(table => ({
-      key: table.key,
-      name: table.name,
-      description: table.description
-    }))
+    return this.config.builtinCodeTables
+      .filter(table => table.enabled)
+      .map(table => ({
+        key: table.key,
+        name: table.name,
+        description: table.description,
+      }))
   }
 
   // 根據key獲取預設碼表配置
@@ -169,16 +178,22 @@ export class BuiltinCodeTableService {
   }
 
   /**
-   * 解析碼表文本為原始碼表（保持行順序）
+   * 解析碼表文本爲原始碼表（保持行順序）
    */
-  public static parseRawCodeTable(text: string, format: CodeTableFormat): { rawCodeTable: RawCodeTable } {
+  public static async parseRawCodeTable(
+    text: string,
+    format: CodeTableFormat
+  ): Promise<{ rawCodeTable: RawCodeTable }> {
+    // 先加載 CJK 區塊數據，確保 isInCJKToJ 可以正常工作
+    await loadCJKBlockData()
+
     const rawCodeTable: RawCodeTable = new Map()
     const lines = text.split('\n')
     let lineIndex = 0
-    
+
     // 第一遍：收集所有字符-編碼對
-    const tempEntries: Array<{ lineIndex: number, char: string, code: string }> = []
-    
+    const tempEntries: Array<{ lineIndex: number; char: string; code: string }> = []
+
     for (const line of lines) {
       const trimmedLine = line.trim()
       if (!trimmedLine || trimmedLine.startsWith('#') || trimmedLine.startsWith('//')) {
@@ -201,29 +216,29 @@ export class BuiltinCodeTableService {
 
       if (!char || !code) continue
 
-      // 只處理單個 CJK 漢字
+      // 只處理單個字符（包括 CJK 漢字）
       if (Array.from(char).length === 1 && isInCJKToJ(char)) {
         tempEntries.push({ lineIndex: lineIndex++, char, code })
       }
     }
-    
+
     // 第二遍：計算每個編碼下的 N 選位置
     const codePositionMap = new Map<string, Map<string, number>>() // code -> char -> position
-    
+
     for (const entry of tempEntries) {
       const { code, char } = entry
-      
+
       if (!codePositionMap.has(code)) {
         codePositionMap.set(code, new Map())
       }
-      
+
       const charMap = codePositionMap.get(code)!
       if (!charMap.has(char)) {
         // 當前編碼下已有的字符數量 + 1 就是這個字符的位置
         charMap.set(char, charMap.size + 1)
       }
     }
-    
+
     // 第三遍：構建最終的 RawCodeTable，包含 N 選信息
     for (const entry of tempEntries) {
       const { lineIndex, char, code } = entry
@@ -237,29 +252,29 @@ export class BuiltinCodeTableService {
   /**
    * 下載並解析預設碼表，返回 RawCodeTable
    */
-  async downloadRawCodeTable(key: string): Promise<{ 
-    rawCodeTable: RawCodeTable; 
-    fileName: string; 
-    format: CodeTableFormat 
+  async downloadRawCodeTable(key: string): Promise<{
+    rawCodeTable: RawCodeTable
+    fileName: string
+    format: CodeTableFormat
   }> {
     const table = await this.getBuiltinCodeTable(key)
     if (!table) {
       throw new Error(`Unknown code table: ${key}`)
     }
-    
+
     try {
       const response = await fetch(table.url)
       if (!response.ok) {
         throw new Error(`Failed to download code table: ${response.statusText}`)
       }
-      
+
       const text = await response.text()
-      const { rawCodeTable } = BuiltinCodeTableService.parseRawCodeTable(text, table.format)
-      
+      const { rawCodeTable } = await BuiltinCodeTableService.parseRawCodeTable(text, table.format)
+
       return {
         rawCodeTable,
         fileName: table.name,
-        format: table.format
+        format: table.format,
       }
     } catch (error) {
       console.error('Error downloading code table:', error)

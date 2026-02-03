@@ -51,14 +51,14 @@ function MainLayout() {
       <Sidebar />
       <Layout>
         <StyledHeader>
-          <h1>輸入法測評系統</h1>
+          <h1>宇浩·漢字輸入法測評系統</h1>
         </StyledHeader>
         <StyledContent>
           <ContentInner>
             <Outlet />
           </ContentInner>
         </StyledContent>
-        <StyledFooter>輸入法測評系統 © {new Date().getFullYear()}</StyledFooter>
+        <StyledFooter>宇浩·漢字輸入法測評系統 © {new Date().getFullYear()}</StyledFooter>
       </Layout>
     </StyledLayout>
   )

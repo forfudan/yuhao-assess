@@ -1,4 +1,4 @@
-# yuhao-assess 重構路線圖
+# 宇浩·漢字輸入法測評系統 - 重構路線圖
 
 ## 概述
 
@@ -83,15 +83,18 @@
   - 2.1 數據加載 Hooks ✅
   - 2.2 碼表解析服務 ✅
   - 2.3 統計計算服務整合 ✅
+- **階段三**：佈局與路由（4-6小時） ✅
+  - 3.1 側邊欄導航 ✅
+  - 3.2 主佈局優化 ✅
+  - 3.3 術語統一（Jotai 原子狀態）✅
 
 ### 🚧 進行中
 
-- **階段三**：佈局與路由（4-6小時）
+- **階段四**：頁面遷移 + WASM 遷移（12-16小時）
 
 ### ⏳ 待完成
 
-- **階段三**：佈局與路由（4-6小時）
-- **階段四**：頁面遷移（12-16小時）
+- **階段四**：頁面遷移 + WASM 遷移（12-16小時）
 - **階段五**：樣式統一（4-5小時）
 - **階段六**：性能優化（3-4小時）
 - **階段七**：測試與部署（2-3小時）
@@ -439,65 +442,92 @@ console.log(data?.duplicateRate) // 0.15 (15% 重碼率)
 
 ---
 
-## 階段三：佈局與路由 ⏳（待完成，4-6小時）
+## 階段三：佈局與路由 ✅（已完成，4-6小時）
 
-### 3.1 側邊欄導航
+### 3.1 側邊欄導航 ✅
 
-**創建組件**：`src/components/layout/Sidebar.tsx`
+**已創建組件**：[src/components/layout/Sidebar.tsx](../src/components/layout/Sidebar.tsx)（147行）
 
-**功能需求**：
+**已實現功能**：
 
-- 使用 Ant Design `Menu` 組件
-- 支持折疊/展開
-- 高亮當前頁面
-- 圖標 + 文字（使用 Ant Design Icons）
+- ✅ 使用 Ant Design `Menu` + `Layout.Sider` 組件
+- ✅ 可折疊/展開（`MenuFoldOutlined` / `MenuUnfoldOutlined` 圖標）
+- ✅ 使用 `react-router-dom` 的 `navigate()` 進行路由跳轉
+- ✅ 深色主題（`theme="dark"`）
+- ✅ 圖標 + 文字（`@ant-design/icons`）
 
-**導航項**：
+**導航項（9個）**：
 
-1. 首頁 / 歡迎
-2. 碼表上傳
-3. 重碼分析
-4. 候選個數
-5. 速度當量
-6. 簡碼效率
-7. 鍵位熱力
-8. 方案對比
-9. 設置
+1. 首頁（`HomeOutlined`）
+2. 碼表上傳（`UploadOutlined`）
+3. 重碼分析（`BarChartOutlined`）
+4. 候選個數（`NumberOutlined`）
+5. 速度當量（`ThunderboltOutlined`）
+6. 簡碼效率（`RocketOutlined`）
+7. 鍵位熱力（`FireOutlined`）
+8. 方案對比（`SwapOutlined`）
+9. 設置（`SettingOutlined`）
 
-### 3.2 路由配置
+### 3.2 主佈局優化 ✅
 
-**更新文件**：`src/App.tsx`
+**已更新組件**：[src/components/layout/MainLayout.tsx](../src/components/layout/MainLayout.tsx)（67行）
 
-**路由結構**：
+**已實現功能**：
+
+- ✅ 整合 Sidebar 組件（`<Sidebar />` + `<Layout>` 嵌套結構）
+- ✅ 深色主題 Header（`#001529` 背景色）
+- ✅ 白色 Content 區域（`#f0f2f5` 外層 + 白色内容卡片）
+- ✅ 使用 `<Outlet />` 渲染子路由
+- ✅ 響應式佈局（flex 布局，最小高度 100vh）
+
+**佈局結構**：
 
 ```typescript
-const 路由配置 = [
-  {
-    path: '/',
-    element: <MainLayout />,
-    children: [
-      { path: '/', element: <HomePage /> },
-      { path: '/uploader', element: <UploaderPage /> },
-      { path: '/duplicate', element: <DuplicatePage /> },
-      { path: '/candidates', element: <CandidatesPage /> },
-      { path: '/speed-equiv', element: <SpeedEquivPage /> },
-      { path: '/efficiency', element: <EfficiencyPage /> },
-      { path: '/heatmap', element: <HeatmapPage /> },
-      { path: '/comparison', element: <ComparisonPage /> },
-      { path: '/settings', element: <SettingsPage /> },
-    ],
-  },
-]
+<StyledLayout>
+  <Sidebar />  {/* 側邊欄導航 */}
+  <Layout>
+    <StyledHeader>
+      <h1>宇浩·漢字輸入法測評系統</h1>
+    </StyledHeader>
+    <StyledContent>
+      <ContentInner>
+        <Outlet />  {/* 路由内容 */}
+      </ContentInner>
+    </StyledContent>
+    <StyledFooter>
+      © {new Date().getFullYear()} 宇浩輸入法
+    </StyledFooter>
+  </Layout>
+</StyledLayout>
 ```
 
-### 3.3 佈局優化
+### 3.3 原子狀態術語統一 ✅
 
-**更新組件**：`src/components/layout/MainLayout.tsx`
+**已更新文件**：
 
-- 添加 Sidebar 組件
-- 實現響應式佈局（移動端折疊側邊欄）
-- Content 區域添加麵包屑導航
-- 添加頁面過渡動畫
+- [src/atoms/codeTable.ts](../src/atoms/codeTable.ts) - 所有 atom 重命名爲「原子狀態」後綴
+- [src/atoms/settings.ts](../src/atoms/settings.ts) - 設置和分析參數原子狀態
+- [src/atoms/index.ts](../src/atoms/index.ts) - 統一導出
+
+**Jotai 術語規範**：
+
+- **英文 atom** → **中文「原子狀態」**
+- 示例：`rawCodeTableAtom` → `原始碼表原子狀態`
+- 使用方式：
+
+  ```typescript
+  const [碼表, 設置碼表] = useAtom(碼表原子狀態) // 讀寫
+  const 碼表 = useAtomValue(碼表原子狀態) // 只讀
+  const 設置碼表 = useSetAtom(碼表原子狀態) // 只寫
+  ```
+
+**驗證結果**：
+
+- ✅ TypeScript 編譯通過（0 錯誤）
+- ✅ 構建成功（1.83s）
+- ✅ 開發服務器運行正常（<http://localhost:3001）>
+- ✅ 側邊欄導航功能正常
+- ✅ Git 提交（commit `ed623d2`）
 
 ---
 
@@ -505,16 +535,35 @@ const 路由配置 = [
 
 **策略**：頁面遷移與 WASM 性能優化並行進行
 
-### 4.1 碼表上傳頁面（2-3小時）
+### 4.1 碼表上傳頁面 ✅（已完成，3小時）
 
-**遷移文件**：`src/components/CodeTableUploaderCard.vue` → `src/pages/UploaderPage.tsx`
+**遷移文件**：`src/components/CodeTableUploaderCard.vue` → `src/pages/UploaderPage.tsx`（366行）
 
-**功能保持**：
+**已實現功能**：
 
-- 文件拖拽上傳
-- 格式檢測
-- 預覽前 10 行
-- 錯誤提示
+- ✅ 文件拖拽上傳（Upload.Dragger 組件）
+- ✅ 預設方案選擇（Select 組件，自動加載並分析）
+- ✅ 格式選擇（char_first / code_first）
+- ✅ 前綴模式支持（帶幫助 Modal）
+- ✅ 編碼預覽表格（前 100 個字符）
+- ✅ 自動分析（選擇預設方案時觸發）
+- ✅ 錯誤/成功提示（Alert 組件）
+- ✅ 全局狀態管理（Jotai 原子狀態）
+
+**已修復問題**：
+
+- ✅ `isInCJKToJ()` 函數異步加載問題
+  - 問題：函數依賴 `cjkBlockData`，但數據需異步加載，導致同步調用時返回 `false`
+  - 解決：將 `loadCJKBlockData` 導出爲公共函數，在 `parseRawCodeTable` 前調用
+  - 修改：`parseRawCodeTable` 改爲 `async` 函數
+- ✅ 移除所有 Card 容器，使用簡潔樣式
+- ✅ 移除頁面標題（側邊欄已有導航）
+
+**樣式原則**：
+
+- ✅ 只使用必要的内聯樣式（padding、width、margin）
+- ✅ 無自定義 styled-components
+- ✅ 全部使用 Ant Design 原生組件
 
 **優化點**：
 
@@ -663,13 +712,234 @@ export const 主題配置 = {
 - ⚠️ Ant Design 體積較大（640 kB），考慮按需加載優化
 - ⚠️ 現有 Vue 組件（`src/components/*.vue`）尚未遷移，暫時保留
 - ⚠️ 現有樣式文件（`src/styles/*.css`）已保留，需逐步重構爲 styled-components
+- ⚠️ **路由切換導致頁面重新渲染問題**（2026-02-04 識别）
+  - **現象**：切換到其他頁面再返回時，計算頁面會完全重新渲染，本地狀態（如表格數據、UI狀態）丢失
+  - **影響**：用户需要重新觸發計算，等待時間長（尤其是重碼分析等耗時操作）
+  - **原因**：React Router 默認會卸載（unmount）離開的組件，再次進入時重新挂載（mount）
 
-### 未來優化
+### 未來優化 - 路由狀態保持方案
+
+**問題詳述**：
+切換路由時，React Router 默認行爲是：
+
+1. 離開頁面 → 組件卸載（unmount）→ 本地狀態丢失
+2. 返回頁面 → 組件重新挂載（mount）→ 重新計算
+
+**影響範圍**：
+
+- 重碼分析頁面（計算耗時：5-10秒）
+- 動態選重率頁面（計算耗時：10-20秒）
+- 碼長分布頁面（計算耗時：3-5秒）
+
+**可選方案**（按推薦度排序）：
+
+#### 方案 A：全局狀態管理 ⭐⭐⭐⭐⭐
+
+**思路**：將計算結果存儲到 Jotai 全局原子狀態中
+
+**優點**：
+
+- ✅ 實現簡單，與現有架構一致（已在用 Jotai）
+- ✅ 狀態跨路由持久化
+- ✅ 可選擇性持久化到 localStorage（`atomWithStorage`）
+- ✅ 類型安全
+
+**實現要點**：
+
+```typescript
+// src/atoms/analysis.ts
+export const 重碼分析結果原子狀態 = atom<DuplicateAnalysisResult | null>(null)
+export const 動態選重率結果原子狀態 = atom<DynamicRateResult | null>(null)
+export const 碼長分布結果原子狀態 = atom<CodeLengthDistribution | null>(null)
+
+// 在頁面組件中
+const [結果, 設置結果] = useAtom(重碼分析結果原子狀態)
+
+// 只在結果爲空時計算
+useEffect(() => {
+  if (!結果 && 碼表) {
+    執行計算()
+  }
+}, [碼表, 結果])
+```
+
+**缺點**：
+
+- ❌ 需要手動管理緩存失效（碼表更新時清空結果）
+- ❌ 内存占用增加（結果長期駐留）
+
+**預估工時**：1-2小時
+
+---
+
+#### 方案 B：React Router Outlet Context ⭐⭐⭐⭐
+
+**思路**：在 MainLayout 中管理所有頁面狀態，通過 Outlet context 傳遞
+
+**優點**：
+
+- ✅ 集中管理，邏輯清晰
+- ✅ 狀態與路由綁定
+- ✅ 不依賴全局狀態庫
+
+**實現要點**：
+
+```typescript
+// MainLayout.tsx
+const [頁面狀態, 設置頁面狀態] = useState({
+  uploader: { /* ... */ },
+  duplicate: { 結果: null, 加載中: false },
+  dynamic: { 結果: null, 加載中: false }
+})
+
+<Outlet context={{ 頁面狀態, 設置頁面狀態 }} />
+
+// 子頁面
+const { 頁面狀態, 設置頁面狀態 } = useOutletContext()
+```
+
+**缺點**：
+
+- ❌ MainLayout 變得臃腫
+- ❌ Context 更新會導致所有子組件重新渲染（需要 memo 優化）
+
+**預估工時**：2-3小時
+
+---
+
+#### 方案 C：自定義路由緩存（KeepAlive） ⭐⭐⭐
+
+**思路**：用 `display: none` 隱藏組件而不卸載
+
+**優點**：
+
+- ✅ 完全保留組件狀態（包括 DOM、事件監聽器）
+- ✅ 類似 Vue 的 `<keep-alive>` 體驗
+
+**實現要點**：
+
+```typescript
+// CachedOutlet.tsx
+const [緩存頁面, 設置緩存頁面] = useState<Map<string, ReactElement>>(new Map())
+
+useEffect(() => {
+  const 當前組件 = <Outlet />
+  設置緩存頁面(prev => new Map(prev).set(location.pathname, 當前組件))
+}, [location])
+
+return (
+  <>
+    {Array.from(緩存頁面).map(([path, element]) => (
+      <div key={path} style={{ display: path === location.pathname ? 'block' : 'none' }}>
+        {element}
+      </div>
+    ))}
+  </>
+)
+```
+
+**缺點**：
+
+- ❌ 實現複雜，需要處理緩存清理邏輯
+- ❌ 内存占用高（所有訪問過的頁面都保留在 DOM 中）
+- ❌ 可能影響性能（大量隱藏 DOM 節點）
+- ❌ 生命週期管理複雜（何時清理緩存？）
+
+**預估工時**：4-6小時
+
+---
+
+#### 方案 D：IndexedDB 持久化 ⭐⭐
+
+**思路**：將計算結果存儲到瀏覽器本地數據庫
+
+**優點**：
+
+- ✅ 跨會話持久化（刷新頁面後仍保留）
+- ✅ 不占用内存
+- ✅ 存儲容量大（至少 50MB）
+
+**實現要點**：
+
+```typescript
+// 使用 idb-keyval 簡化 IndexedDB 操作
+import { get, set } from 'idb-keyval'
+
+// 保存結果
+await set('duplicate-result', 結果)
+
+// 讀取結果
+const 緩存結果 = await get('duplicate-result')
+```
+
+**缺點**：
+
+- ❌ 異步操作，增加複雜度
+- ❌ 需要處理數據版本問題（碼表更新後緩存失效）
+- ❌ 序列化開銷（Map/Set 需要轉換）
+
+**預估工時**：2-3小時
+
+---
+
+#### 方案 E：React.memo + useMemo 優化 ⭐⭐
+
+**思路**：減少不必要的重新渲染和計算
+
+**優點**：
+
+- ✅ 標準 React 優化手段
+- ✅ 無需額外狀態管理
+
+**實現要點**：
+
+```typescript
+const 計算結果 = useMemo(() => {
+  if (!碼表) return null
+  return 執行重碼分析(碼表)
+}, [碼表]) // 只在碼表變化時重新計算
+
+export default React.memo(DuplicateAnalysisPage)
+```
+
+**缺點**：
+
+- ❌ **無法解決路由切換導致組件卸載的問題**（組件卸載後 useMemo 緩存也丢失）
+- ❌ 只能減少組件内部的重複計算
+
+**結論**：此方案**無法解決**路由切換問題，但可作爲輔助優化
+
+---
+
+### 推薦方案
+
+**短期（立即實施）**：
+
+- 🎯 **方案 A：全局狀態管理**（推薦）
+  - 與現有架構無縫集成
+  - 工時短，風險低
+  - 足以解決當前問題
+
+**中期（視需求）**：
+
+- 方案 D：IndexedDB 持久化（可選）
+  - 適合需要跨會話保留結果的場景
+
+**長期（性能極致優化）**：
+
+- 方案 C：自定義路由緩存
+  - 僅在性能成爲瓶頸時考慮
+  - 需要完善的緩存管理策略
+
+---
+
+### 其他未來優化
 
 - 考慮實現 normalize-traditional-chars.ts 的引號跳過邏輯（如果字符串字面量轉換導致問題）
 - 添加單元測試覆蓋率要求
 - 實現 CI/CD 自動化部署
 - 優化 ui-vendor 體積（tree-shaking、動態導入）
+- idb-keyval 文檔：<https://github.com/jakearchibald/idb-keyval>（如選擇 IndexedDB 方案）
 
 ---
 
