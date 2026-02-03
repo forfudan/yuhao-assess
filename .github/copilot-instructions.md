@@ -23,11 +23,13 @@ pnpm test
 ```
 
 **驗證標準**：
+
 - ✅ 所有 TypeScript 文件無類型錯誤
 - ✅ 構建成功，無編譯錯誤
 - ✅ 測試通過（如有測試文件）
 
 **如果構建失敗**：
+
 1. 立即報告錯誤信息
 2. 分析錯誤原因
 3. 修復所有類型錯誤
@@ -43,6 +45,7 @@ pnpm test
 4. **文檔內容**：所有文檔（README、ROADMAP 等）使用繁體中文
 
 **漸進式遷移**：
+
 - ✅ 新代碼：直接使用繁體中文
 - ✅ 修改現有代碼時：順便將簡體改為繁體
 - ⚠️ 不要一次性大規模替換（避免干擾 git diff）
@@ -51,15 +54,16 @@ pnpm test
 
 ```typescript
 // ❌ 錯誤：簡體中文
-const 字频 = await loadCharFrequency()  // 简体
-const 码表 = new Map()                   // 简体
+const 字频 = await loadCharFrequency() // 简体
+const 码表 = new Map() // 简体
 
 // ✅ 正確：繁體中文
-const 字頻 = await loadCharFrequency()  // 繁體
-const 碼表 = new Map()                   // 繁體
+const 字頻 = await loadCharFrequency() // 繁體
+const 碼表 = new Map() // 繁體
 ```
 
 **文檔標題示例**：
+
 - ❌ `# 重构路线图`（簡體）
 - ✅ `# 重構路線圖`（繁體）
 
@@ -82,9 +86,9 @@ const 碼表 = new Map()                   // 繁體
 3. **性能優化**：側邊欄導航 + 延遲加載
 4. **代碼規範**：pre-commit 自動格式化 + 字形統一
 5. **核心分離**：將計算邏輯遷移到 chinese-ime-metrics
-6. **變量錄結構（React 目標架構）
+6. \*\*變量錄結構（React 目標架構）
 
-```
+```text
 src/
 ├── app.tsx                    # 應用入口
 ├── main.tsx                   # React 渲染
@@ -123,6 +127,7 @@ src/
 ### 集成策略
 
 **开发环境**：
+
 ```typescript
 // vite.config.ts
 resolve: {
@@ -133,6 +138,7 @@ resolve: {
 ```
 
 **生产环境**（推荐 CDN 方式）：
+
 ```typescript
 // src/utils/metrics-loader.ts
 const CDN_BASE = 'https://forfudan.github.io/chinese-ime-metrics/dist'
@@ -145,6 +151,7 @@ export async function loadMetricsModule() {
 ```
 
 **原因**：
+
 - ✅ 仓库独立，便于分开维护
 - ✅ chinese-ime-metrics 更新后无需重新构建 yuhao-assess
 - ✅ 其他项目可直接使用 CDN
@@ -159,13 +166,15 @@ export async function loadMetricsModule() {
 **映射表**：内置在脚本中
 
 **运行**：
+
 ```bash
 pnpm exec tsx src/utils/normalize-traditional-chars.ts <文件路径>
 ```
 
 **示例映射**：
+
 - 羣 → 群
-- 峯 → 峰  
+- 峯 → 峰
 - 綠 → 緑（注意：「緑」是大陆通规字形）
 - 說 → 説
 - 為 → 爲
@@ -177,6 +186,7 @@ pnpm exec tsx src/utils/normalize-traditional-chars.ts <文件路径>
 - **文件**：kebab-case（如 `code-table.ts`）
 
 **繁體中文命名示例**：
+
 ```typescript
 // ✅ 推薦：繁體中文
 const 碼表 = new Map<string, string>()
@@ -184,8 +194,8 @@ const 字頻數據 = await loadCharFrequency()
 const 重碼率 = calculateDuplicateRate(碼表)
 
 // ⚠️ 簡體中文（需漸進遷移）
-const 码表 = new Map<string, string>()  // 舊代碼
-const 字频数据 = await loadCharFrequency()  // 舊代碼
+const 码表 = new Map<string, string>() // 舊代碼
+const 字频数据 = await loadCharFrequency() // 舊代碼
 ```
 
 ### Pre-commit 检查
@@ -204,7 +214,7 @@ const 字频数据 = await loadCharFrequency()  // 舊代碼
 
 ### 目录结构
 
-```
+```text
 public/
 ├── data/           # 大数据文件（Git LFS）
 │   ├── charFrequencyZhihu.json
@@ -270,25 +280,30 @@ describe('DuplicatePage', () => {
 ## 🔍 常见问题
 
 ### Q1: 使用哪个 UI 框架？
+
 **A**: Ant Design
 
 ### Q2: 状态管理用什么？
+
 **A**: Jotai（原子化状态管理，不是 Redux/Zustand）
 
 ### Q3: 样式方案？
+
 **A**: styled-components + Ant Design 主题
 
 ### Q4: 是否需要 SSR？
+
 **A**: 不需要，纯客户端渲染
 
 ### Q5: WASM 加载失败怎么办？
+
 **A**: 显示友好错误提示，chinese-ime-metrics 已移除 JS 降级
 
 ## 📚 参考资源
 
-- [ROADMAP.md](../docs/ROADMAP.md) - 完整重构路线图
-- [QUICK_START.md](../docs/QUICK_START.md) - 快速开始指南
-- [chinese-ime-metrics 文档](../../chinese-ime-metrics/docs/)
+- `docs/ROADMAP.md` - 完整重構路線圖
+- `docs/QUICK_START.md` - 快速開始指南
+- `../chinese-ime-metrics/docs/` - chinese-ime-metrics 文檔
 - [hanzi-chai](https://github.com/hanzi-chai/hanzi-chai.github.io)
 - [shurufa.app](https://shurufa.app)
 
