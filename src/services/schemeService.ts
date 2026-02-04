@@ -80,8 +80,17 @@ export function 驗證方案(配置: 方案配置): void {
     throw new Error('「方案參數.最大碼長」必須是正整數')
   }
 
-  if (!['char_first', 'code_first'].includes(配置.方案參數.碼表格式)) {
-    throw new Error('「方案參數.碼表格式」必須是 "char_first" 或 "code_first"')
+  // 驗證碼表元數據（如果存在）
+  if (配置.碼表元數據) {
+    const 允許的分隔符 = ['空格', '製表符', '逗號', '分號']
+    if (!允許的分隔符.includes(配置.碼表元數據.分隔符)) {
+      throw new Error('「碼表元數據.分隔符」必須是「空格」、「製表符」、「逗號」或「分號」')
+    }
+
+    const 允許的第一列類型 = ['字符', '編碼']
+    if (!允許的第一列類型.includes(配置.碼表元數據.第一列類型)) {
+      throw new Error('「碼表元數據.第一列類型」必須是「字符」或「編碼」')
+    }
   }
 }
 
@@ -125,7 +134,6 @@ export function 創建空白方案(): 方案配置 {
     方案參數: {
       是否爲前綴碼: false,
       最大碼長: 4,
-      碼表格式: 'char_first',
     },
   }
 }

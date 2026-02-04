@@ -100,94 +100,99 @@ function HomePage() {
   }
 
   return (
-    <Space orientation="vertical" size="large" style={{ width: '100%' }}>
-      {/* 頁面標題 */}
-      <Card>
-        <Title level={2}>方案配置</Title>
-        <Paragraph type="secondary">選擇預設方案或導入自定義配置，開始輸入法性能測評</Paragraph>
-      </Card>
-
+    <Space orientation="vertical" size="large" style={{ width: '100%', padding: '24px' }}>
       {/* 方案選擇與操作 */}
-      <Card title="選擇方案">
-        <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
-          <Space wrap>
-            <Select
-              style={{ width: 200 }}
-              placeholder="選擇預設方案"
-              loading={加載中}
-              onChange={處理選擇方案}
-              value={當前方案?.元數據.標識符}
-            >
-              {方案列表.map(方案 => (
-                <Option key={方案.元數據.標識符} value={方案.元數據.標識符}>
-                  {方案.元數據.方案名}
-                </Option>
-              ))}
-            </Select>
-            <Upload beforeUpload={處理導入JSON} showUploadList={false} accept=".json">
-              <Button icon={<UploadOutlined />}>導入 JSON</Button>
-            </Upload>
-            <Button icon={<PlusOutlined />} onClick={處理創建新方案}>
-              創建新方案
-            </Button>
-            <Button icon={<DownloadOutlined />} onClick={處理導出JSON} disabled={!當前方案}>
-              導出 JSON
-            </Button>
-            <Button icon={<ReloadOutlined />} onClick={() => 設置當前方案(null)}>
-              清除
-            </Button>
-          </Space>
-        </Space>
-      </Card>
+      <Space wrap>
+        <Select
+          style={{ width: 200 }}
+          placeholder="選擇預設方案"
+          loading={加載中}
+          onChange={處理選擇方案}
+          value={當前方案?.元數據.標識符}
+        >
+          {方案列表.map(方案 => (
+            <Option key={方案.元數據.標識符} value={方案.元數據.標識符}>
+              {方案.元數據.方案名}
+            </Option>
+          ))}
+        </Select>
+        <Upload beforeUpload={處理導入JSON} showUploadList={false} accept=".json">
+          <Button icon={<UploadOutlined />}>導入 JSON</Button>
+        </Upload>
+        <Button icon={<PlusOutlined />} onClick={處理創建新方案}>
+          創建新方案
+        </Button>
+        <Button icon={<DownloadOutlined />} onClick={處理導出JSON} disabled={!當前方案}>
+          導出 JSON
+        </Button>
+        <Button icon={<ReloadOutlined />} onClick={() => 設置當前方案(null)}>
+          清除
+        </Button>
+      </Space>
 
       {/* 當前方案信息 */}
       {當前方案 && (
-        <Card title="當前方案信息">
-          <Descriptions column={2} bordered size="small">
-            <Descriptions.Item label="方案名">{當前方案.元數據.方案名}</Descriptions.Item>
-            <Descriptions.Item label="標識符">
-              <Text code>{當前方案.元數據.標識符}</Text>
+        <Descriptions column={2} bordered size="small">
+          <Descriptions.Item label="方案名">{當前方案.元數據.方案名}</Descriptions.Item>
+          <Descriptions.Item label="標識符">
+            <Text code>{當前方案.元數據.標識符}</Text>
+          </Descriptions.Item>
+          {當前方案.元數據.作者 && (
+            <Descriptions.Item label="作者">{當前方案.元數據.作者}</Descriptions.Item>
+          )}
+          <Descriptions.Item label="版本">{當前方案.元數據.版本}</Descriptions.Item>
+          {當前方案.元數據.官網 && (
+            <Descriptions.Item label="官網" span={2}>
+              <a href={當前方案.元數據.官網} target="_blank" rel="noopener noreferrer">
+                {當前方案.元數據.官網}
+              </a>
             </Descriptions.Item>
-            {當前方案.元數據.作者 && (
-              <Descriptions.Item label="作者">{當前方案.元數據.作者}</Descriptions.Item>
-            )}
-            <Descriptions.Item label="版本">{當前方案.元數據.版本}</Descriptions.Item>
-            {當前方案.元數據.官網 && (
-              <Descriptions.Item label="官網" span={2}>
-                <a href={當前方案.元數據.官網} target="_blank" rel="noopener noreferrer">
-                  {當前方案.元數據.官網}
-                </a>
-              </Descriptions.Item>
-            )}
-            {當前方案.元數據.描述 && (
-              <Descriptions.Item label="描述" span={2}>
-                {當前方案.元數據.描述}
-              </Descriptions.Item>
-            )}
-            <Descriptions.Item label="前綴碼">
-              {當前方案.方案參數.是否爲前綴碼 ? '是' : '否'}
+          )}
+          {當前方案.元數據.碼表下載鏈接 && (
+            <Descriptions.Item label="碼表下載" span={2}>
+              <a href={當前方案.元數據.碼表下載鏈接} target="_blank" rel="noopener noreferrer">
+                {當前方案.元數據.碼表下載鏈接}
+              </a>
             </Descriptions.Item>
-            <Descriptions.Item label="最大碼長">{當前方案.方案參數.最大碼長}</Descriptions.Item>
-            {當前方案.方案參數.前綴鍵 && (
-              <Descriptions.Item label="前綴鍵" span={2}>
-                <Text code>{當前方案.方案參數.前綴鍵.join(', ')}</Text>
-              </Descriptions.Item>
-            )}
-            <Descriptions.Item label="碼表格式" span={2}>
-              {當前方案.方案參數.碼表格式 === 'char_first' ? '字符優先' : '編碼優先'}
+          )}
+          {當前方案.元數據.描述 && (
+            <Descriptions.Item label="描述" span={2}>
+              {當前方案.元數據.描述}
             </Descriptions.Item>
-          </Descriptions>
-        </Card>
+          )}
+          {當前方案.元數據.標籤 && 當前方案.元數據.標籤.length > 0 && (
+            <Descriptions.Item label="標籤" span={2}>
+              <Space size="small">
+                {當前方案.元數據.標籤.map((標籤, index) => (
+                  <Text key={index} type="secondary">
+                    #{標籤}
+                  </Text>
+                ))}
+              </Space>
+            </Descriptions.Item>
+          )}
+          <Descriptions.Item label="前綴碼">
+            {當前方案.方案參數.是否爲前綴碼 ? '是' : '否'}
+          </Descriptions.Item>
+          <Descriptions.Item label="最大碼長">{當前方案.方案參數.最大碼長}</Descriptions.Item>
+          {當前方案.方案參數.前綴鍵 && (
+            <Descriptions.Item label="前綴鍵" span={2}>
+              <Text code>{當前方案.方案參數.前綴鍵.join(', ')}</Text>
+            </Descriptions.Item>
+          )}
+          {當前方案.碼表元數據 && (
+            <>
+              <Descriptions.Item label="分隔符">{當前方案.碼表元數據.分隔符}</Descriptions.Item>
+              <Descriptions.Item label="第一列類型">
+                {當前方案.碼表元數據.第一列類型}
+              </Descriptions.Item>
+            </>
+          )}
+        </Descriptions>
       )}
 
       {/* 提示信息 */}
-      {!當前方案 && (
-        <Card>
-          <Paragraph type="secondary" style={{ textAlign: 'center', margin: 0 }}>
-            請選擇或創建方案以開始測評
-          </Paragraph>
-        </Card>
-      )}
+      {!當前方案 && <Paragraph type="secondary">請選擇或創建方案以開始測評</Paragraph>}
     </Space>
   )
 }
