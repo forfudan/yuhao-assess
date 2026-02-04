@@ -1,6 +1,6 @@
 /**
  * 數據服務
- * 
+ *
  * 負責加載各種數據文件，包括字頻數據、當量表等
  */
 
@@ -27,15 +27,15 @@ export async function getFrequencyCharsUnion(): Promise<Set<string>> {
   if (frequencyCharsCache) {
     return frequencyCharsCache
   }
-  
+
   // 如果正在加載中，等待已有的Promise
   if (frequencyCharsCachePromise) {
     return frequencyCharsCachePromise
   }
-  
+
   // 開始加載並緩存Promise
   frequencyCharsCachePromise = loadFrequencyCharsUnion()
-  
+
   try {
     frequencyCharsCache = await frequencyCharsCachePromise
     return frequencyCharsCache
@@ -51,50 +51,50 @@ export async function getFrequencyCharsUnion(): Promise<Set<string>> {
  */
 async function loadFrequencyCharsUnion(): Promise<Set<string>> {
   console.time('加載字頻表字符並集')
-  
+
   try {
     // 並行加載四個字頻表（不包含 unified，因爲它是合成的）
     const [zhihuFreq, scFreq, tcFreq, gujiFreq] = await Promise.all([
-      loadCharFrequency(),        // charFrequencyZhihu.json
-      loadCharFrequencySC(),      // charFrequencySC.json  
-      loadCharFrequencyTC(),      // charFrequencyTC.json
-      loadCharFrequencyGuji()     // charFrequencyGuji.json
+      loadCharFrequency(), // charFrequencyZhihu.json
+      loadCharFrequencySC(), // charFrequencySC.json
+      loadCharFrequencyTC(), // charFrequencyTC.json
+      loadCharFrequencyGuji(), // charFrequencyGuji.json
     ])
-    
+
     // 使用Set進行高性能去重和並集運算
     const allChars = new Set<string>()
-    
+
     // 添加知乎字頻表中的字符
     for (const char in zhihuFreq) {
-      if (zhihuFreq[char] > 0) {  // 只添加字頻大於0的字符
+      if (zhihuFreq[char] > 0) {
+        // 只添加字頻大於0的字符
         allChars.add(char)
       }
     }
-    
+
     // 添加簡體字頻表中的字符
     for (const char in scFreq) {
       if (scFreq[char] > 0) {
         allChars.add(char)
       }
     }
-    
+
     // 添加繁體字頻表中的字符
     for (const char in tcFreq) {
       if (tcFreq[char] > 0) {
         allChars.add(char)
       }
     }
-    
+
     // 添加古籍字頻表中的字符
     for (const char in gujiFreq) {
       if (gujiFreq[char] > 0) {
         allChars.add(char)
       }
     }
-    
+
     console.timeEnd('加載字頻表字符並集')
 
-    
     return allChars
   } catch (error) {
     console.error('加載字頻表字符並集失敗:', error)
@@ -180,15 +180,15 @@ export async function loadAllCharFrequencies() {
     loadCharFrequencySC(),
     loadCharFrequencyTC(),
     loadCharFrequencyGuji(),
-    loadCharFrequencyUnified()
+    loadCharFrequencyUnified(),
   ])
-  
+
   return {
     zhihuFreq,
     scFreq,
     tcFreq,
     gujiFreq,
-    unifiedFreq
+    unifiedFreq,
   }
 }
 
@@ -201,7 +201,7 @@ export async function loadAllCharFrequencies() {
  */
 export async function loadEquivTable(): Promise<Record<string, number>> {
   try {
-    const response = await fetch('/data/equivTable.json')
+    const response = await fetch('/settings/equivTable.json')
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }

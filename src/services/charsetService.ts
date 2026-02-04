@@ -47,7 +47,7 @@ export async function loadCJKBlockData(): Promise<void> {
   if (cjkBlockData) return
 
   try {
-    const response = await fetch('/data/cjkBlocks.json')
+    const response = await fetch('/settings/cjkBlocks.json')
     cjkBlockData = (await response.json()) as CJKBlockData
   } catch (error) {
     console.error('Failed to load CJK block data:', error)

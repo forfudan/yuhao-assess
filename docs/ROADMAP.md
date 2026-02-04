@@ -18,21 +18,39 @@
 
 **問題**：`public/data/` 包含 1.5MB 數據文件，頻繁更新會污染 Git 歷史。
 
-**解決方案**：使用獨立倉庫 [yuhao-assess-data](https://github.com/forfudan/yuhao-assess-data)
+**解決方案**：使用獨立倉庫 [yuhao-assess-data](https://github.com/forfudan/yuhao-assess-data) + 本地配置文件
 
-| 環境     | 數據來源                | 説明                        |
-| -------- | ----------------------- | --------------------------- |
-| **開發** | `/public/data/`（本地） | `.gitignore` 忽略，手動同步 |
-| **生産** | GitHub Pages CDN        | 自動從 CDN 加載             |
+| 環境     | 大型數據文件            | 配置文件                   |
+| -------- | ----------------------- | -------------------------- |
+| **開發** | `/public/data/`（本地） | `/public/settings/`（Git） |
+| **生産** | GitHub Pages CDN        | 隨應用部署                 |
+
+**文件分類**（2026-02-04 更新）：
+
+**大型數據文件**（`public/data/`，不 track，從 CDN 加載）：
+
+- `charAbsoluteFrequencyZhihu.json` - 知乎字頻數
+- `charAbsoluteFrequencySC.json` - 北語簡體字頻數
+- `charAbsoluteFrequencyTC.json` - 臺灣繁體字頻數
+- `charAbsoluteFrequencyGuji.json` - 古籍字頻數
+- `wordAbsoluteFrequencySC.json` - 簡體詞頻數
+- `charsets.json` - 字符集數據
+
+**配置文件**（`public/settings/`，track changes，隨應用部署）：
+
+- `cjkBlocks.json` - CJK Unicode 區塊定義
+- `codeTableConfig.json` - 預設碼表配置
+- `equivTable.json` - 按鍵當量表
 
 **優勢**：
 
-- ✅ 主倉庫輕量（不含數據文件）
-- ✅ 數據更新支持覆蓋式提交（`commit --amend` + `push -f`）
+- ✅ 主倉庫輕量（不含大型數據文件）
+- ✅ 大型數據更新支持覆蓋式提交（`commit --amend` + `push -f`）
+- ✅ 配置文件保持版本控制，方便回溯
 - ✅ 無需 Git LFS（節省存儲成本）
 - ✅ CDN 加速 + 瀏覽器緩存
 
-**數據文件命名規範**（2026-02-03 更新）：
+**數據文件命名規範**（已廢棄，僅供參考）：
 
 | 舊文件名                  | 新文件名                          | 説明           |
 | ------------------------- | --------------------------------- | -------------- |
@@ -46,8 +64,6 @@
 
 - **頻數（Absolute Frequency）**：出現次數（整數），如「的」出現 1000 次
 - **頻率（Relative Frequency）**：出現比例（小數），如「的」佔 0.05（5%）
-
-詳見：[src/utils/data-loader.ts](../src/utils/data-loader.ts)
 
 ### 🔗 與 chinese-ime-metrics 的協作
 
@@ -105,33 +121,57 @@
 
 ### 0.1 數據文件外部化 ✅
 
-**實施方案**：使用獨立倉庫 [yuhao-assess-data](https://github.com/forfudan/yuhao-assess-data) 管理數據文件
+**實施方案**：
 
-**倉庫結構**：
+- **大型數據文件**：使用獨立倉庫 [yuhao-assess-data](https://github.com/forfudan/yuhao-assess-data)
+- **配置文件**：存放在 `public/settings/`，保持版本控制
+
+**目録結構**（2026-02-04 更新）：
 
 ```text
 /Users/ZHU/Programs/ime/
 ├── yuhao-assess/              # 主應用
-│   ├── public/data/          # ← .gitignore（開發保留，Git 忽略）
+│   ├── public/
+│   │   ├── data/             # ← .gitignore（大型數據，開發保留）
+│   │   │   ├── charAbsoluteFrequency*.json
+│   │   │   ├── wordAbsoluteFrequencySC.json
+│   │   │   └── charsets.json
+│   │   └── settings/         # ← Git track（配置文件）
+│   │       ├── cjkBlocks.json
+│   │       ├── codeTableConfig.json
+│   │       └── equivTable.json
 │   └── src/utils/
 │       └── data-loader.ts    # ← CDN 加載工具
 │
 └── yuhao-assess-data/         # 數據倉庫（獨立 Git）
-    ├── charFrequency*.json
-    └── ...（9 個文件，1.5MB）
+    ├── charAbsoluteFrequency*.json
+    ├── wordAbsoluteFrequencySC.json
+    └── charsets.json          # （6 個大型文件）
 ```
 
 **已完成**：
 
 - ✅ 創建 `yuhao-assess-data` 倉庫
 - ✅ 添加 `public/data/` 到 `.gitignore`
+- ✅ 創建 `public/settings/` 目録
+- ✅ 移動配置文件到 `public/settings/`
+- ✅ 更新代碼引用路徑（`/data/` → `/settings/`）
 - ✅ 創建 `src/utils/data-loader.ts`
 - ✅ 開發環境用本地文件，生産環境用 CDN
+
+**文件訪問策略**：
+
+| 文件類型 | 開發環境     | 生産環境 | Git 追蹤 |
+| -------- | ------------ | -------- | -------- |
+| 大型數據 | 本地或 CDN   | CDN 加載 | ❌       |
+| 配置文件 | 本地（打包） | 打包部署 | ✅       |
 
 **數據同步機制**：
 
 1. **開發環境**：運行 `pnpm run fetch` 從 CDN 下載數據到 `public/data/`
-2. **生産環境**：運行時直接從 CDN 讀取（不需要本地文件）
+2. **生産環境**：
+   - 大型數據：運行時從 CDN 讀取
+   - 配置文件：隨應用打包部署
 3. ⚠️ `public/data/` 已加入 `.gitignore`，不會提交到 Git
 
 **前提條件**：

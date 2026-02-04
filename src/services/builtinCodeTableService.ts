@@ -20,7 +20,7 @@ export class BuiltinCodeTableService {
     }
 
     try {
-      const response = await fetch('/data/codeTableConfig.json')
+      const response = await fetch('/settings/codeTableConfig.json')
       if (!response.ok) {
         throw new Error('Failed to load code table config')
       }
@@ -131,7 +131,7 @@ export class BuiltinCodeTableService {
     }
 
     try {
-      const response = await fetch('/data/equivTable.json')
+      const response = await fetch('/settings/equivTable.json')
       if (!response.ok) {
         throw new Error('Failed to load equivalence table')
       }
