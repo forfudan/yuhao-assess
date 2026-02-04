@@ -7,11 +7,14 @@ export type CodeTable = Map<string, string[]>
 // 處理後的四個輔助碼表
 export interface ProcessedCodeTables {
   full: CodeTable                    // 全碼表
-  short: CodeTable                   // 簡碼表  
+  short: CodeTable                   // 簡碼表
   fullWithSelection: CodeTable       // 全碼加選重表
   shortWithSelection: CodeTable      // 簡碼加選重表
   wordFullCodeWithSelection?: CodeTable  // 詞語全碼加選重表（可選）
 }
+
+// 方案配置相關類型
+export * from './scheme'
 
 // 碼表格式類型
 export type CodeTableFormat = 'char_first' | 'code_first'
