@@ -17,12 +17,12 @@ export function getStaticDupRate(
   charset: Set<string> | 'all' = 'all'
 ): number {
   const codeToChars = new Map<string, string[]>()
-  
+
   for (const [char, codes] of codeTable.entries()) {
     if (charset !== 'all' && !charset.has(char)) {
       continue
     }
-    
+
     const code = codes[0]
     if (code) {
       if (!codeToChars.has(code)) {
@@ -31,14 +31,14 @@ export function getStaticDupRate(
       codeToChars.get(code)!.push(char)
     }
   }
-  
+
   let duplicateCount = 0
   for (const chars of codeToChars.values()) {
     if (chars.length > 1) {
       duplicateCount += chars.length
     }
   }
-  
+
   return duplicateCount
 }
 
@@ -55,38 +55,38 @@ export function getDynamicDupRate(
   sortByFrequency: boolean = true
 ): number {
   const codeToCharFreqs = new Map<string, Array<{ char: string; freq: number }>>()
-  
+
   for (const [char, codes] of codeTable.entries()) {
     const code = codes[0]
     if (code) {
       const freq = charFrequency[char] || 0
-      
+
       if (!codeToCharFreqs.has(code)) {
         codeToCharFreqs.set(code, [])
       }
       codeToCharFreqs.get(code)!.push({ char, freq })
     }
   }
-  
+
   let totalDupFreq = 0
-  
+
   for (const charFreqs of codeToCharFreqs.values()) {
     if (charFreqs.length > 1) {
       if (sortByFrequency) {
         charFreqs.sort((a, b) => b.freq - a.freq)
       }
-      
+
       const groupTotalFreq = charFreqs.reduce((sum, item) => sum + item.freq, 0)
       const firstCharFreq = charFreqs[0].freq
       totalDupFreq += groupTotalFreq - firstCharFreq
     }
   }
-  
+
   let totalFreq = 0
   for (const [char] of codeTable.entries()) {
     totalFreq += charFrequency[char] || 0
   }
-  
+
   return totalFreq > 0 ? totalDupFreq / totalFreq : 0
 }
 
@@ -103,23 +103,23 @@ export function getDynamicDupRateFromOriginalOrder(
 ): number {
   let totalDupFreq = 0
   let totalFreq = 0
-  
+
   for (const [char, codes] of codeTableWithSelection.entries()) {
     const code = codes[0]
     if (!code) continue
-    
+
     const freq = charFrequency[char] || 0
     totalFreq += freq
-    
+
     // 檢查編碼最後一位是否爲數字 0-9（表示需要選重）
     const lastChar = code.slice(-1)
     const isSelection = /[0-9]/.test(lastChar)
-    
+
     if (isSelection) {
       totalDupFreq += freq
     }
   }
-  
+
   return totalFreq > 0 ? totalDupFreq / totalFreq : 0
 }
 
@@ -128,7 +128,8 @@ export interface DuplicateStats {
   charsetName: string
   description: string
   totalChars: number
-  duplicateCount: number
+  duplicateCount: number // 重碼字數（所有重碼字符的總數）
+  duplicateGroupCount: number // 重碼組數（有多少個編碼存在重碼）
   duplicateRate: number
   uniqueCodes: number
   codeEfficiency: number
@@ -138,22 +139,22 @@ export interface DuplicateStats {
  * 非一選重碼字的詳細信息
  */
 export interface NonFirstDuplicateDetail {
-  char: string              // 非一選的重碼字
-  code: string              // 對應的編碼
-  frequency: number         // 該字的字頻
-  rank: number              // 該字在字頻表中的排名（字頻降序）
-  allCharsOnCode: string[]  // 該編碼上的所有字符（按字頻降序）
+  char: string // 非一選的重碼字
+  code: string // 對應的編碼
+  frequency: number // 該字的字頻
+  rank: number // 該字在字頻表中的排名（字頻降序）
+  allCharsOnCode: string[] // 該編碼上的所有字符（按字頻降序）
 }
 
 /**
  * 非一選重碼詞的詳細信息
  */
 export interface NonFirstWordDuplicateDetail {
-  word: string              // 非一選的重碼詞
-  code: string              // 對應的編碼
-  frequency: number         // 該詞的詞頻
-  rank: number              // 該詞在詞頻表中的排名（詞頻降序）
-  allWordsOnCode: string[]  // 該編碼上的所有詞（按詞頻降序）
+  word: string // 非一選的重碼詞
+  code: string // 對應的編碼
+  frequency: number // 該詞的詞頻
+  rank: number // 該詞在詞頻表中的排名（詞頻降序）
+  allWordsOnCode: string[] // 該編碼上的所有詞（按詞頻降序）
 }
 
 /**
@@ -169,7 +170,7 @@ export function getNonFirstDuplicateDetails(
   sortByFrequency: boolean = true
 ): NonFirstDuplicateDetail[] {
   const codeToCharFreqs = new Map<string, Array<{ char: string; freq: number }>>()
-  
+
   // 按編碼分組字符，只保留在字頻表中存在的字符
   for (const [char, codes] of codeTable.entries()) {
     const code = codes[0]
@@ -184,7 +185,7 @@ export function getNonFirstDuplicateDetails(
       }
     }
   }
-  
+
   // 創建字頻排名映射
   const allCharsWithFreq = Object.entries(charFrequency)
     .filter(([_, freq]) => freq > 0)
@@ -193,19 +194,19 @@ export function getNonFirstDuplicateDetails(
   allCharsWithFreq.forEach(([char, _], index) => {
     charRankMap.set(char, index + 1)
   })
-  
+
   const results: NonFirstDuplicateDetail[] = []
-  
+
   for (const [code, charFreqs] of codeToCharFreqs.entries()) {
     if (charFreqs.length > 1) {
       // 排序：按字頻降序
       if (sortByFrequency) {
         charFreqs.sort((a, b) => b.freq - a.freq)
       }
-      
+
       // 獲取該編碼上所有字符
       const allCharsOnCode = charFreqs.map(item => item.char)
-      
+
       // 添加非一選的字符（跳過第一個）
       for (let i = 1; i < charFreqs.length; i++) {
         results.push({
@@ -213,15 +214,15 @@ export function getNonFirstDuplicateDetails(
           code: code,
           frequency: charFreqs[i].freq,
           rank: charRankMap.get(charFreqs[i].char) || 0,
-          allCharsOnCode: allCharsOnCode
+          allCharsOnCode: allCharsOnCode,
         })
       }
     }
   }
-  
+
   // 結果按字頻降序排列
   results.sort((a, b) => b.frequency - a.frequency)
-  
+
   return results
 }
 
@@ -238,23 +239,23 @@ export function getWordDynamicDupRate(
 ): number {
   let totalDupFreq = 0
   let totalFreq = 0
-  
+
   for (const [word, codes] of wordCodeTableWithSelection.entries()) {
     const code = codes[0]
     if (!code) continue
-    
+
     const freq = wordFrequency[word] || 0
     totalFreq += freq
-    
+
     // 檢查編碼最後一位是否爲數字 0-9（表示需要選重）
     const lastChar = code.slice(-1)
     const isSelection = /[0-9]/.test(lastChar)
-    
+
     if (isSelection) {
       totalDupFreq += freq
     }
   }
-  
+
   return totalFreq > 0 ? totalDupFreq / totalFreq : 0
 }
 
@@ -270,28 +271,31 @@ export function getNonFirstWordDuplicateDetails(
   wordFrequency: WordFrequency
 ): NonFirstWordDuplicateDetail[] {
   // 第一步：按去掉選重鍵的編碼分組所有詞語
-  const baseCodeToWords = new Map<string, Array<{ word: string; freq: number; hasSelection: boolean }>>()
-  
+  const baseCodeToWords = new Map<
+    string,
+    Array<{ word: string; freq: number; hasSelection: boolean }>
+  >()
+
   for (const [word, codes] of wordCodeTableWithSelection.entries()) {
     const codeWithSelection = codes[0]
     if (!codeWithSelection) continue
-    
+
     const freq = wordFrequency[word]
     if (freq === undefined || freq <= 0) continue
-    
+
     // 檢查是否有選重鍵
     const lastChar = codeWithSelection.slice(-1)
     const hasSelection = /[0-9]/.test(lastChar)
-    
+
     // 去掉選重鍵得到基礎編碼
     const baseCode = hasSelection ? codeWithSelection.slice(0, -1) : codeWithSelection
-    
+
     if (!baseCodeToWords.has(baseCode)) {
       baseCodeToWords.set(baseCode, [])
     }
     baseCodeToWords.get(baseCode)!.push({ word, freq, hasSelection })
   }
-  
+
   // 創建詞頻排名映射
   const allWordsWithFreq = Object.entries(wordFrequency)
     .filter(([_, freq]) => freq > 0)
@@ -300,34 +304,34 @@ export function getNonFirstWordDuplicateDetails(
   allWordsWithFreq.forEach(([word, _], index) => {
     wordRankMap.set(word, index + 1)
   })
-  
+
   const results: NonFirstWordDuplicateDetail[] = []
-  
+
   // 第二步：對每個基礎編碼，處理有選重鍵的詞
   for (const [baseCode, wordInfos] of baseCodeToWords.entries()) {
     // 按詞頻降序排序
     wordInfos.sort((a, b) => b.freq - a.freq)
-    
+
     // 獲取該編碼上所有詞語（按詞頻降序）
     const allWordsOnCode = wordInfos.map(item => item.word)
-    
+
     // 只添加有選重鍵的詞
     for (const wordInfo of wordInfos) {
       if (wordInfo.hasSelection) {
         results.push({
           word: wordInfo.word,
-          code: baseCode,  // 使用去掉選重鍵的編碼
+          code: baseCode, // 使用去掉選重鍵的編碼
           frequency: wordInfo.freq,
           rank: wordRankMap.get(wordInfo.word) || 0,
-          allWordsOnCode: allWordsOnCode
+          allWordsOnCode: allWordsOnCode,
         })
       }
     }
   }
-  
+
   // 結果按詞頻降序排列
   results.sort((a, b) => b.frequency - a.frequency)
-  
+
   return results
 }
 
@@ -342,29 +346,55 @@ export async function calculateCharsetDuplicates(
   charsetType: CharsetType
 ): Promise<DuplicateStats> {
   const allChars = new Set(fullCodeTable.keys())
+  console.log(
+    `[calculateCharsetDuplicates] charsetType: ${charsetType}, 碼表總字數: ${allChars.size}`
+  )
+
   const charset = await generateCharset(charsetType, allChars)
-  
-  const duplicateCount = getStaticDupRate(fullCodeTable, charset)
-  const totalChars = charset.size
-  
-  const codesInCharset = new Set<string>()
+  console.log(
+    `[calculateCharsetDuplicates] 生成字符集大小: ${charset.size}, 前10個字符:`,
+    Array.from(charset).slice(0, 10)
+  )
+
+  // 計算重碼字數和重碼組數
+  const codeToChars = new Map<string, string[]>()
   for (const char of charset) {
     const codes = fullCodeTable.get(char)
     if (codes && codes.length > 0) {
-      codesInCharset.add(codes[0])
+      const code = codes[0]
+      if (!codeToChars.has(code)) {
+        codeToChars.set(code, [])
+      }
+      codeToChars.get(code)!.push(char)
     }
   }
-  
+
+  let duplicateCount = 0 // 重碼字數
+  let duplicateGroupCount = 0 // 重碼組數
+  for (const chars of codeToChars.values()) {
+    if (chars.length > 1) {
+      duplicateCount += chars.length
+      duplicateGroupCount++
+    }
+  }
+
+  const totalChars = charset.size
+  console.log(
+    `[calculateCharsetDuplicates] ${charsetType} - 重碼字數: ${duplicateCount}, 重碼組數: ${duplicateGroupCount}, 總字數: ${totalChars}`
+  )
+
+  const uniqueCodes = codeToChars.size
   const info = charsetInfo[charsetType]
-  
+
   return {
     charset: charsetType,
     charsetName: info.name,
     description: info.description,
     totalChars,
     duplicateCount,
+    duplicateGroupCount,
     duplicateRate: totalChars > 0 ? duplicateCount / totalChars : 0,
-    uniqueCodes: codesInCharset.size,
-    codeEfficiency: totalChars > 0 ? codesInCharset.size / totalChars : 0
+    uniqueCodes,
+    codeEfficiency: totalChars > 0 ? uniqueCodes / totalChars : 0,
   }
 }

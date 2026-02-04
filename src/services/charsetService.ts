@@ -564,12 +564,16 @@ export async function generateCharset(
   allChars: Set<string>
 ): Promise<Set<string>> {
   const charset = new Set<string>()
+  console.log(`[generateCharset] charsetType: ${charsetType}, allChars.size: ${allChars.size}`)
 
   // 對於 gb2312、tonggui 和 guozi，直接從字符集數據中過濾
   if (charsetType === 'gb2312' || charsetType === 'tonggui' || charsetType === 'guozi') {
     await loadCharsetData()
     const store = getDefaultStore()
     const charsetData = store.get(字符集數據原子狀態)
+    console.log(
+      `[generateCharset] charsetData 是否存在: ${!!charsetData}, 總記録數: ${charsetData ? Object.keys(charsetData).length : 0}`
+    )
     if (!charsetData) return charset
 
     for (const char of allChars) {
@@ -584,6 +588,7 @@ export async function generateCharset(
         }
       }
     }
+    console.log(`[generateCharset] ${charsetType} 過濾後字符集大小: ${charset.size}`)
   } else {
     // 對於其他字符集，加載CJK塊數據並使用Unicode範圍檢查
     await loadCJKBlockData()
@@ -598,6 +603,7 @@ export async function generateCharset(
         charset.add(char)
       }
     }
+    console.log(`[generateCharset] ${charsetType} CJK區塊過濾後字符集大小: ${charset.size}`)
   }
 
   return charset

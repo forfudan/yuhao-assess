@@ -172,49 +172,49 @@ const DuplicatePage: React.FC = () => {
         古籍繁體動態選重率原序,
         繁簡聯合動態選重率原序,
         GB2312靜態重碼: {
-          重碼組數: 0,
+          重碼組數: GB2312數據.duplicateGroupCount,
           重碼字數: GB2312數據.duplicateCount,
           總字符數: GB2312數據.totalChars,
           重碼率: GB2312數據.duplicateRate,
         },
         通用規範靜態重碼: {
-          重碼組數: 0,
+          重碼組數: 通用規範數據.duplicateGroupCount,
           重碼字數: 通用規範數據.duplicateCount,
           總字符數: 通用規範數據.totalChars,
           重碼率: 通用規範數據.duplicateRate,
         },
         常用國字靜態重碼: {
-          重碼組數: 0,
+          重碼組數: 常用國字數據.duplicateGroupCount,
           重碼字數: 常用國字數據.duplicateCount,
           總字符數: 常用國字數據.totalChars,
           重碼率: 常用國字數據.duplicateRate,
         },
         CJK基本靜態重碼: {
-          重碼組數: 0,
+          重碼組數: CJK基本數據.duplicateGroupCount,
           重碼字數: CJK基本數據.duplicateCount,
           總字符數: CJK基本數據.totalChars,
           重碼率: CJK基本數據.duplicateRate,
         },
         CJK擴A靜態重碼: {
-          重碼組數: 0,
+          重碼組數: CJKA數據.duplicateGroupCount,
           重碼字數: CJKA數據.duplicateCount,
           總字符數: CJKA數據.totalChars,
           重碼率: CJKA數據.duplicateRate,
         },
         CJK擴B靜態重碼: {
-          重碼組數: 0,
+          重碼組數: CJKB數據.duplicateGroupCount,
           重碼字數: CJKB數據.duplicateCount,
           總字符數: CJKB數據.totalChars,
           重碼率: CJKB數據.duplicateRate,
         },
         CJK擴F靜態重碼: {
-          重碼組數: 0,
+          重碼組數: CJKF數據.duplicateGroupCount,
           重碼字數: CJKF數據.duplicateCount,
           總字符數: CJKF數據.totalChars,
           重碼率: CJKF數據.duplicateRate,
         },
         CJK擴J靜態重碼: {
-          重碼組數: 0,
+          重碼組數: CJKJ數據.duplicateGroupCount,
           重碼字數: CJKJ數據.duplicateCount,
           總字符數: CJKJ數據.totalChars,
           重碼率: CJKJ數據.duplicateRate,
@@ -700,13 +700,12 @@ const DuplicatePage: React.FC = () => {
       <Space orientation="vertical" size="large" style={{ width: '100%' }}>
         {/* 頁面標題 */}
         <div>
-          <Title level={3}>重碼數據</Title>
           <Paragraph>
             分析不同字符集下的重碼情况，計算靜態重碼率和動態選重率。閲讀
             <Link href="https://shurufa.app/docs/concepts.html" target="_blank">
               瓊林擷英
             </Link>
-            瞭解詳細定義。
+            瞭解詳細定義。‱ 爲萬分符。
           </Paragraph>
         </div>
 

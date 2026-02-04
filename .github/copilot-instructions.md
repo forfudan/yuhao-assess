@@ -61,6 +61,30 @@ pnpm test
 3. 修復所有類型錯誤
 4. 再次驗證直到成功
 
+### 📝 Git Commit 規範
+
+**Commit Message 格式**：
+
+- ✅ **直接描述修改内容**：「優化數據加載：字頻表改用全局緩存」
+- ✅ **使用繁體中文**：「修復靜態重碼計算錯誤」
+- ✅ **多行説明**：第一行簡述，空行後列出詳細修改點
+- ❌ **不使用前綴**：不要用 `feat(serve):` `fix:` `chore:` 等 Conventional Commits 格式
+
+**示例**：
+
+```bash
+# ✅ 推薦格式
+git commit -m "優化數據加載：字頻表和字符集改用全局 atom 緩存
+
+- 創建 charset.ts atom 存儲字符集數據
+- 修改 charFrequencyService 使用 atom 緩存
+- 所有數據改用 import 直接導入"
+
+# ❌ 避免格式
+git commit -m "feat(service): add charset atom cache"
+git commit -m "fix: charset loading issue"
+```
+
 ### 🈶 語言規範：統一使用繁體中文
 
 **強制要求**：
