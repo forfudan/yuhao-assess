@@ -21,8 +21,24 @@ export {
 // 導出服務
 export { ExportService } from './exportService'
 
-// 導出碼表處理服務
-export { cleanCodeTable, validateCodeTable, getCodeTableStats } from './codeTableCleanService'
+// 導出碼表服務（統一服務）
+export {
+  碼表處理服務,
+  碼表處理服務實例,
+  清理碼表,
+  驗證碼表,
+  獲取碼表統計,
+  type 處理後的碼表結果,
+  type 碼表處理選項,
+  type 碼表清理選項,
+  type 清理結果,
+} from './codeTableService'
+
+// 導出當量表服務
+export { 當量表服務, 當量表服務實例 } from './equivTableService'
+
+// 導出字頻表服務
+export { 字頻表服務 } from './charFrequencyService'
 
 // 導出數據服務
 export {
@@ -73,12 +89,6 @@ export {
   type MaximumCandidatesResult,
 } from './maximumCandidatesService'
 
-// 導出預設碼表服務
-export { 内置碼表服務, 内置碼表服務實例 } from './builtinCodeTableService'
-
-// 導出碼表處理服務
-export { codeTableProcessingService } from './codeTableProcessingService'
-
 // 導出簡碼效率服務
 export {
   calculateShortCodeEfficiency,
@@ -87,10 +97,4 @@ export {
 } from './shortCodeEfficiencyService'
 
 // 導出類型
-export type {
-  AnalysisParams,
-  CodeTableMetrics,
-  CharsetType,
-  CodeTableCleanOptions,
-  CleanResult,
-} from '../types/index'
+export type { AnalysisParams, CodeTableMetrics, CharsetType } from '../types/index'

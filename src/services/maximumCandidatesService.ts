@@ -1,5 +1,5 @@
 import { generateCharset, type CharsetType } from './charsetService'
-import { codeTableProcessingService } from './codeTableProcessingService'
+import { 碼表處理服務實例 } from './codeTableService'
 import type { CodeTable } from '../types/index'
 
 // 定義返回數據的接口
@@ -26,20 +26,20 @@ export async function getMaximumCandidates(
     }
   }
 
-  // 使用全局緩存的正确處理结果，而不是重新處理
-  const processedTables = codeTableProcessingService.getProcessedTables()
+  // 使用全局緩存的正確處理結果，而不是重新處理
+  const processedTables = 碼表處理服務實例.獲取已處理碼表()
   if (!processedTables) {
-    throw new Error('全局碼表處理结果不可用，请先處理主碼表')
+    throw new Error('全局碼表處理結果不可用，請先處理主碼表')
   }
-  
-  const fullCodeTable = processedTables.full
-  
+
+  const fullCodeTable = processedTables.全碼表
+
   // 生成指定字符集
   const charset = await generateCharset(charsetType, allUniqueChars)
-  
+
   // 統計每個編碼對應的字符
   const codeToChars = new Map<string, string[]>()
-  
+
   for (const char of charset) {
     const codes = fullCodeTable.get(char)
     if (codes && codes.length > 0) {
@@ -50,7 +50,7 @@ export async function getMaximumCandidates(
       codeToChars.get(code)!.push(char)
     }
   }
-  
+
   // 找出最大候選項個數
   let maxCount = 0
   for (const chars of codeToChars.values()) {
@@ -58,7 +58,7 @@ export async function getMaximumCandidates(
       maxCount = chars.length
     }
   }
-  
+
   // 找出所有達到最大候選項個數的編碼
   const maxCodes: Array<{ code: string; chars: string[] }> = []
   for (const [code, chars] of codeToChars.entries()) {
@@ -66,10 +66,10 @@ export async function getMaximumCandidates(
       maxCodes.push({ code, chars })
     }
   }
-  
+
   return {
     maxCount,
-    codes: maxCodes
+    codes: maxCodes,
   }
 }
 
@@ -85,11 +85,11 @@ export async function getAllMaximumCandidates(codeTable: CodeTable) {
     'cjk_to_a',
     'cjk_to_b',
     'cjk_to_f',
-    'cjk_to_j'
+    'cjk_to_j',
   ]
-  
+
   const results: Record<string, MaximumCandidatesResult> = {}
-  
+
   for (const charsetType of charsetTypes) {
     try {
       const result = await getMaximumCandidates(codeTable, charsetType)
@@ -98,10 +98,10 @@ export async function getAllMaximumCandidates(codeTable: CodeTable) {
       console.error(`計算 ${charsetType} 最大候選項失敗:`, error)
       results[charsetType] = {
         maxCount: 0,
-        codes: []
+        codes: [],
       }
     }
   }
-  
+
   return results
 }

@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useAtom, useSetAtom } from 'jotai'
-import { Upload, Button, Input, Alert, Table, Space, Typography } from 'antd'
+import { Upload, Button, Alert, Table, Space, Typography } from 'antd'
 import {
   DownloadOutlined,
   InboxOutlined,
@@ -11,8 +11,7 @@ import type { UploadFile } from 'antd'
 import type { RcFile } from 'antd/es/upload'
 import { 當前方案原子狀態 } from '@/atoms/scheme'
 import { 原始碼表原子狀態, 碼表原子狀態, 碼表元數據原子狀態, 碼表加載中原子狀態 } from '@/atoms'
-import { 内置碼表服務 } from '@/services/builtinCodeTableService'
-import { CodeTableProcessingService } from '@/services/codeTableProcessingService'
+import { 碼表處理服務實例 } from '@/services/codeTableService'
 import type { RawCodeTable } from '@/types'
 
 const { Title, Paragraph, Text, Link } = Typography
@@ -21,8 +20,8 @@ interface 編碼預覽項 {
   char: string
   fullCode: string
   shortCode: string
-  fullWithSelection: string
-  shortWithSelection: string
+  全碼加選重鍵表: string
+  簡碼加選重鍵表: string
 }
 
 const ProcessTablePage: React.FC = () => {
@@ -40,8 +39,7 @@ const ProcessTablePage: React.FC = () => {
   const [錯誤信息, 設置錯誤信息] = useState<string | null>(null)
   const [成功信息, 設置成功信息] = useState<string | null>(null)
 
-  // 服務實例
-  const 碼表處理服務 = useRef(CodeTableProcessingService.getInstance())
+  // 服務實例（不再需要 useRef，直接使用單例）
 
   // 讀取文件内容
   const 讀取文件 = (file: RcFile): Promise<string> => {
@@ -130,7 +128,7 @@ const ProcessTablePage: React.FC = () => {
         }
 
         const 文本 = await response.text()
-        const 解析結果 = await 内置碼表服務.解析原始碼表(
+        const 解析結果 = await 碼表處理服務實例.解析原始碼表文本(
           文本,
           當前方案.碼表元數據.分隔符,
           當前方案.碼表元數據.第一列類型
@@ -145,7 +143,7 @@ const ProcessTablePage: React.FC = () => {
       } else if (選中的文件) {
         // 從上傳文件
         const 文本 = await 讀取文件(選中的文件)
-        const 解析結果 = await 内置碼表服務.解析原始碼表(
+        const 解析結果 = await 碼表處理服務實例.解析原始碼表文本(
           文本,
           當前方案.碼表元數據.分隔符,
           當前方案.碼表元數據.第一列類型
@@ -168,9 +166,9 @@ const ProcessTablePage: React.FC = () => {
           : undefined
 
       // 處理碼表
-      const 處理結果 = await 碼表處理服務.current.processRawCodeTable(原始碼表, {
-        isPrefix: 當前方案.方案參數.是否爲前綴碼,
-        prefixKeys: 前綴按鍵數組,
+      const 處理結果 = await 碼表處理服務實例.處理原始碼表(原始碼表, {
+        是否爲前綴碼: 當前方案.方案參數.是否爲前綴碼,
+        前綴鍵列表: 前綴按鍵數組,
       })
 
       // 設置全局狀態
@@ -187,26 +185,26 @@ const ProcessTablePage: React.FC = () => {
       let 計數 = 0
       for (const [, [字符]] of 原始碼表) {
         if (計數 >= 100) break
-        if (!處理結果.full.has(字符)) continue
+        if (!處理結果.全碼表.has(字符)) continue
 
-        const 全碼數組 = 處理結果.full.get(字符) || []
-        const 簡碼數組 = 處理結果.short.get(字符) || []
-        const 全碼選重數組 = 處理結果.fullWithSelection.get(字符) || []
-        const 簡碼選重數組 = 處理結果.shortWithSelection.get(字符) || []
+        const 全碼數組 = 處理結果.全碼表.get(字符) || []
+        const 簡碼數組 = 處理結果.簡碼表.get(字符) || []
+        const 全碼選重數組 = 處理結果.全碼加選重鍵表.get(字符) || []
+        const 簡碼選重數組 = 處理結果.簡碼加選重鍵表.get(字符) || []
 
         預覽項.push({
           char: 字符,
           fullCode: 全碼數組[0] || '-',
           shortCode: 簡碼數組[0] || '-',
-          fullWithSelection: 全碼選重數組[0] || '-',
-          shortWithSelection: 簡碼選重數組[0] || '-',
+          全碼加選重鍵表: 全碼選重數組[0] || '-',
+          簡碼加選重鍵表: 簡碼選重數組[0] || '-',
         })
         計數++
       }
       設置編碼預覽數據(預覽項)
 
       設置成功信息(
-        `碼表解析完成！共 ${原始碼表.size} 個字符，${處理結果.wordFullCodeWithSelection ? '包含詞語數據' : '僅單字數據'}`
+        `碼表解析完成！共 ${原始碼表.size} 個字符，${處理結果.詞語全碼加選重鍵表 ? '包含詞語數據' : '僅單字數據'}`
       )
     } catch (error) {
       設置錯誤信息(error instanceof Error ? error.message : '分析失敗')
@@ -383,8 +381,8 @@ const ProcessTablePage: React.FC = () => {
                 { title: '漢字', dataIndex: 'char', width: 60 },
                 { title: '全碼', dataIndex: 'fullCode', width: 120 },
                 { title: '簡碼', dataIndex: 'shortCode', width: 120 },
-                { title: '全碼（帶選重）', dataIndex: 'fullWithSelection', width: 150 },
-                { title: '簡碼（帶選重）', dataIndex: 'shortWithSelection', width: 150 },
+                { title: '全碼（帶選重）', dataIndex: '全碼加選重鍵表', width: 150 },
+                { title: '簡碼（帶選重）', dataIndex: '簡碼加選重鍵表', width: 150 },
               ]}
             />
           </div>

@@ -5,14 +5,11 @@
  */
 
 import type { CharFrequency } from '../types'
-import { 内置碼表服務 } from './builtinCodeTableService'
 import { 字頻表服務 } from './charFrequencyService'
 
 // =============================================================================
 // 字頻數據加載
 // =============================================================================
-
-const builtinService = new 内置碼表服務()
 
 // 字頻表字符並集緩存（用於優化碼表生成）
 let frequencyCharsCache: Set<string> | null = null
