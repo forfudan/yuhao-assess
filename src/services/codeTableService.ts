@@ -4,23 +4,11 @@
  */
 
 import { isInCJKToJ, loadCJKBlockData } from './charsetService'
-import type { CodeTable, RawCodeTable, WordFrequency } from '../types'
+import type { CodeTable, RawCodeTable, WordFrequency, 處理後的碼表結果 } from '../types'
 
 // =============================================================================
 // 類型定義
 // =============================================================================
-
-/**
- * 處理後的碼表結果接口
- */
-export interface 處理後的碼表結果 {
-  全碼表: CodeTable // 全碼表（每個字符只保留最長編碼，保持原始順序）
-  簡碼表: CodeTable // 簡碼表（每個字符只保留最短編碼，保持原始順序）
-  全碼加選重鍵表: CodeTable // 全碼加選重按鍵表（用於當量計算等，保持原始順序）
-  簡碼加選重鍵表: CodeTable // 簡碼加選重按鍵表（補空格+選重鍵，保持原始順序）
-  詞語全碼加選重鍵表?: CodeTable // 詞語全碼加選重按鍵表（詞語編碼使用單字全碼）
-  詞語簡碼加選重鍵表?: CodeTable // 詞語簡碼加選重按鍵表（單字詞使用簡碼，多字詞用全碼截取）
-}
 
 /**
  * 碼表處理選項

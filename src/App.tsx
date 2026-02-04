@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage'
 import ProcessTablePage from './pages/ProcessTablePage'
 import DuplicateAnalysisPage from './pages/DuplicateAnalysisPage'
 import MaximumCandidatesPage from './pages/MaximumCandidatesPage'
+import SpeedEquivalentPage from './pages/SpeedEquivalentPage'
 
 const routes = [
   {
@@ -25,6 +26,10 @@ const routes = [
       {
         path: '/candidates',
         element: <MaximumCandidatesPage />,
+      },
+      {
+        path: '/speed',
+        element: <SpeedEquivalentPage />,
       },
     ],
   },

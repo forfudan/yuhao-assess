@@ -28,11 +28,12 @@ export {
   清理碼表,
   驗證碼表,
   獲取碼表統計,
-  type 處理後的碼表結果,
   type 碼表處理選項,
   type 碼表清理選項,
   type 清理結果,
 } from './codeTableService'
+// 處理後的碼表結果類型從 types 導入
+export type { 處理後的碼表結果 } from '../types'
 
 // 導出當量表服務
 export { 當量表服務, 當量表服務實例 } from './equivTableService'

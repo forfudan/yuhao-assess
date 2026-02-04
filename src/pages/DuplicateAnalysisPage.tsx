@@ -12,8 +12,7 @@ import {
   calculateCharsetDuplicates,
 } from '../services/duplicateAnalysisService'
 import { 字頻表服務 } from '../services/charFrequencyService'
-import type { CodeTable } from '../types'
-import type { 處理後的碼表結果 } from '../services/codeTableService'
+import type { CodeTable, 處理後的碼表結果 } from '../types'
 
 const { Paragraph, Text, Link } = Typography
 

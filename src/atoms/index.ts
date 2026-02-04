@@ -25,3 +25,10 @@ export type { 字頻表類型 } from './charFrequency'
 // 字符集原子狀態
 export { 字符集數據原子狀態, CJK區塊數據原子狀態 } from './charset'
 export type { CharsetData, CharsetRecord, CJKBlockData } from './charset'
+
+// 速度當量分析原子狀態
+export { 速度當量分析原子狀態, 當量詳情原子狀態 } from './speedEquivalent'
+export type { 速度当量分析结果, 當量例字信息, 當量詳情數據 } from './speedEquivalent'
+
+// 當量表原子狀態
+export { 當量表原子狀態, 當量表加載中原子狀態, 當量表錯誤原子狀態 } from './equivTable'

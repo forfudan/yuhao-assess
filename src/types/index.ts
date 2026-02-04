@@ -4,13 +4,14 @@ export type RawCodeTable = Map<number, [string, string, number]> // number: 行�
 // 碼表類型定義
 export type CodeTable = Map<string, string[]>
 
-// 處理後的四個輔助碼表
-export interface ProcessedCodeTables {
-  full: CodeTable // 全碼表
-  short: CodeTable // 簡碼表
-  fullWithSelection: CodeTable // 全碼加選重表
-  shortWithSelection: CodeTable // 簡碼加選重表
-  wordFullCodeWithSelection?: CodeTable // 詞語全碼加選重表（可選）
+// 處理後的碼表結果接口
+export interface 處理後的碼表結果 {
+  全碼表: CodeTable // 全碼表（每個字符只保留最長編碼，保持原始順序）
+  簡碼表: CodeTable // 簡碼表（每個字符只保留最短編碼，保持原始順序）
+  全碼加選重鍵表: CodeTable // 全碼加選重按鍵表（用於當量計算等，保持原始順序）
+  簡碼加選重鍵表: CodeTable // 簡碼加選重按鍵表（補空格+選重鍵，保持原始順序）
+  詞語全碼加選重鍵表?: CodeTable // 詞語全碼加選重按鍵表（詞語編碼使用單字全碼）
+  詞語簡碼加選重鍵表?: CodeTable // 詞語簡碼加選重按鍵表（單字詞使用簡碼，多字詞用全碼截取）
 }
 
 // 方案配置相關類型
