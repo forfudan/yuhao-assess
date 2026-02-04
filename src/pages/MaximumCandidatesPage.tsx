@@ -250,7 +250,6 @@ const MaximumCandidatesPage: React.FC = () => {
         dataSource={表格數據}
         pagination={false}
         bordered
-        size="small"
         style={{ marginTop: 16 }}
       />
     )

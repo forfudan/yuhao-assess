@@ -76,11 +76,9 @@ const ProcessTablePage: React.FC = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     設置碼表(處理結果 as any)
 
-    // 生成編碼預覽
+    // 生成編碼預覽（所有数据）
     const 預覽項: 編碼預覽項[] = []
-    let 計數 = 0
     for (const [, [字符]] of 原始碼表) {
-      if (計數 >= 100) break
       if (!處理結果.全碼表.has(字符)) continue
 
       const 全碼數組 = 處理結果.全碼表.get(字符) || []
@@ -95,7 +93,6 @@ const ProcessTablePage: React.FC = () => {
         全碼加選重鍵表: 全碼選重數組[0] || '-',
         簡碼加選重鍵表: 簡碼選重數組[0] || '-',
       })
-      計數++
     }
     設置編碼預覽數據(預覽項)
     設置文件預覽數據([]) // 隱藏源文件預覽
@@ -125,8 +122,8 @@ const ProcessTablePage: React.FC = () => {
 
       const 文本 = await response.text()
 
-      // 生成文件预览
-      const 行數組 = 文本.split('\n').slice(0, 100)
+      // 生成文件预览（所有行）
+      const 行數組 = 文本.split('\n')
       設置文件預覽數據(行數組)
 
       // 创建一个虚拟文件对象（用于后续解析）
@@ -152,7 +149,7 @@ const ProcessTablePage: React.FC = () => {
 
     try {
       const 文本 = await 讀取文件(file)
-      const 行數組 = 文本.split('\n').slice(0, 100)
+      const 行數組 = 文本.split('\n')
       設置文件預覽數據(行數組)
       設置成功信息(`文件已選擇: ${file.name}，請點擊「開始解析」`)
     } catch (error) {
@@ -321,25 +318,26 @@ const ProcessTablePage: React.FC = () => {
         {/* 文件預覽 */}
         {文件預覽數據.length > 0 && (
           <div>
-            <Title level={4}>文件預覽（前 100 行）</Title>
-            <div
-              style={{
-                maxHeight: '300px',
-                overflow: 'auto',
-                border: '1px solid #d9d9d9',
-                padding: '12px',
-                borderRadius: '4px',
-                backgroundColor: '#fafafa',
+            <Title level={4}>文件預覽（共 {文件預覽數據.length} 行）</Title>
+            <Table
+              dataSource={文件預覽數據.map((行, 索引) => ({ key: 索引, 行號: 索引 + 1, 內容: 行 }))}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                pageSizeOptions: ['10', '20', '50', '100'],
+                showTotal: (total) => `共 ${total} 行`,
               }}
-            >
-              <pre style={{ margin: 0, fontSize: '12px' }}>
-                {文件預覽數據.map((行, 索引) => (
-                  <div key={索引}>
-                    {索引 + 1}: {行}
-                  </div>
-                ))}
-              </pre>
-            </div>
+              columns={[
+                { title: '行號', dataIndex: '行號', width: 80 },
+                { 
+                  title: '內容', 
+                  dataIndex: '內容',
+                  render: (text: string) => (
+                    <span className="monospace-cell">{text}</span>
+                  ),
+                },
+              ]}
+            />
           </div>
         )}
 
@@ -385,13 +383,16 @@ const ProcessTablePage: React.FC = () => {
         {/* 編碼預覽 */}
         {編碼預覽數據.length > 0 && (
           <div>
-            <Title level={4}>單字編碼預覽（前 100 個）</Title>
+            <Title level={4}>單字編碼預覽（共 {編碼預覽數據.length} 個）</Title>
             <Table
-              size="small"
-              pagination={false}
-              scroll={{ y: 400 }}
               dataSource={編碼預覽數據}
               rowKey="char"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                pageSizeOptions: ['10', '20', '50', '100'],
+                showTotal: (total) => `共 ${total} 個字符`,
+              }}
               columns={[
                 { title: '行號', render: (_: any, __: any, index: number) => index + 1, width: 60 },
                 { title: '漢字', dataIndex: 'char', width: 60 },

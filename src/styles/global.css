@@ -1,5 +1,6 @@
-/* 导入公共Tab样式 */
+/* 导入公共样式 */
 @import './tabs-common.css';
+@import './table-common.css';
 
 /* 全局樣式重置和基礎樣式 */
 * {

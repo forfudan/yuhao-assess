@@ -971,12 +971,12 @@ const DuplicatePage: React.FC = () => {
         align: 'right',
         render: (text, record) =>
           record.可點擊 ? (
-            <Text
+            <span
               style={{ cursor: 'pointer', color: '#1890ff' }}
               onClick={() => record.點擊處理?.('全碼')}
             >
               {text}
-            </Text>
+            </span>
           ) : (
             text
           ),
@@ -993,12 +993,12 @@ const DuplicatePage: React.FC = () => {
         align: 'right',
         render: (text, record) =>
           record.可點擊 ? (
-            <Text
+            <span
               style={{ cursor: 'pointer', color: '#1890ff' }}
               onClick={() => record.點擊處理?.('簡碼')}
             >
               {text}
-            </Text>
+            </span>
           ) : (
             text
           ),
@@ -1016,7 +1016,6 @@ const DuplicatePage: React.FC = () => {
         dataSource={動態選重率數據}
         pagination={false}
         bordered
-        size="small"
         style={{ marginTop: 16 }}
       />
     )
