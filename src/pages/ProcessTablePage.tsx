@@ -53,29 +53,102 @@ const ProcessTablePage: React.FC = () => {
     })
   }
 
-  // 抓取碼表文件
-  const 抓取碼表 = async () => {
+  // 處理碼表（共用邏輯）
+  const 處理碼表 = async (原始碼表: RawCodeTable, 文件名: string) => {
+    // 處理前綴按鍵
+    const 前綴按鍵數組 =
+      當前方案!.方案參數.是否爲前綴碼 && 當前方案!.方案參數.前綴鍵
+        ? 當前方案!.方案參數.前綴鍵
+        : undefined
+
+    // 處理碼表
+    const 處理結果 = await 碼表處理服務實例.處理原始碼表(原始碼表, {
+      是否爲前綴碼: 當前方案!.方案參數.是否爲前綴碼,
+      前綴鍵列表: 前綴按鍵數組,
+    })
+
+    // 設置全局狀態
+    設置原始碼表('')
+    設置碼表元數據({
+      name: 文件名,
+      uploadTime: Date.now(),
+      totalChars: 原始碼表.size,
+    })
+    設置碼表(處理結果 as any)
+
+    // 生成編碼預覽
+    const 預覽項: 編碼預覽項[] = []
+    let 計數 = 0
+    for (const [, [字符]] of 原始碼表) {
+      if (計數 >= 100) break
+      if (!處理結果.全碼表.has(字符)) continue
+
+      const 全碼數組 = 處理結果.全碼表.get(字符) || []
+      const 簡碼數組 = 處理結果.簡碼表.get(字符) || []
+      const 全碼選重數組 = 處理結果.全碼加選重鍵表.get(字符) || []
+      const 簡碼選重數組 = 處理結果.簡碼加選重鍵表.get(字符) || []
+
+      預覽項.push({
+        char: 字符,
+        fullCode: 全碼數組[0] || '-',
+        shortCode: 簡碼數組[0] || '-',
+        全碼加選重鍵表: 全碼選重數組[0] || '-',
+        簡碼加選重鍵表: 簡碼選重數組[0] || '-',
+      })
+      計數++
+    }
+    設置編碼預覽數據(預覽項)
+    設置文件預覽數據([]) // 隱藏源文件預覽
+
+    設置成功信息(
+      `碼表解析完成！共 ${原始碼表.size} 個字符，${處理結果.詞語全碼加選重鍵表 ? '包含詞語數據' : '僅單字數據'}`
+    )
+  }
+
+  // 抓取並解析碼表
+  const 抓取並解析碼表 = async () => {
     if (!當前方案?.元數據.碼表下載鏈接) {
       設置錯誤信息('没有碼表下載鏈接')
+      return
+    }
+
+    if (!當前方案.碼表元數據) {
+      設置錯誤信息('請先在首頁添加碼表元數據（分隔符、第一列類型等）')
       return
     }
 
     設置加載中(true)
     設置錯誤信息(null)
     設置成功信息(null)
+    設置編碼預覽數據([])
 
     try {
+      // 下載碼表
       const response = await fetch(當前方案.元數據.碼表下載鏈接)
       if (!response.ok) {
         throw new Error(`下載失敗: ${response.status} ${response.statusText}`)
       }
 
       const 文本 = await response.text()
-      const 行數組 = 文本.split('\n').slice(0, 100) // 只顯示前 100 行
-      設置文件預覽數據(行數組)
-      設置成功信息(`成功抓取碼表，共 ${文本.split('\n').length} 行`)
+
+      // 解析原始碼表
+      const 解析結果 = await 碼表處理服務實例.解析原始碼表文本(
+        文本,
+        當前方案.碼表元數據.分隔符,
+        當前方案.碼表元數據.第一列類型
+      )
+
+      if (!解析結果.rawCodeTable || 解析結果.rawCodeTable.size === 0) {
+        throw new Error('碼表解析爲空，請檢查格式')
+      }
+
+      const 原始碼表 = 解析結果.rawCodeTable
+      const 文件名 = 當前方案.元數據.標識符 + '.txt'
+
+      // 處理碼表
+      await 處理碼表(原始碼表, 文件名)
     } catch (error) {
-      設置錯誤信息(error instanceof Error ? error.message : '抓取失敗')
+      設置錯誤信息(error instanceof Error ? error.message : '抓取解析失敗')
     } finally {
       設置加載中(false)
     }
@@ -92,7 +165,7 @@ const ProcessTablePage: React.FC = () => {
       const 文本 = await 讀取文件(file)
       const 行數組 = 文本.split('\n').slice(0, 100)
       設置文件預覽數據(行數組)
-      設置成功信息(`文件已選擇: ${file.name}`)
+      設置成功信息(`文件已選擇: ${file.name}，請點擊「開始解析」`)
     } catch (error) {
       設置錯誤信息(error instanceof Error ? error.message : '文件讀取失敗')
     }
@@ -100,8 +173,8 @@ const ProcessTablePage: React.FC = () => {
     return false // 阻止自動上傳
   }
 
-  // 開始分析碼表
-  const 開始分析 = async () => {
+  // 開始解析（用户上傳文件）
+  const 開始解析 = async () => {
     if (!當前方案) {
       設置錯誤信息('請先在首頁選擇或創建方案')
       return
@@ -112,102 +185,31 @@ const ProcessTablePage: React.FC = () => {
       return
     }
 
+    if (!選中的文件) {
+      設置錯誤信息('請先上傳碼表文件')
+      return
+    }
+
     設置加載中(true)
     設置錯誤信息(null)
     設置成功信息(null)
+    設置編碼預覽數據([])
 
     try {
-      let 原始碼表: RawCodeTable
-      let 文件名: string
-
-      if (當前方案.元數據.碼表下載鏈接 && !選中的文件) {
-        // 從 URL 抓取
-        const response = await fetch(當前方案.元數據.碼表下載鏈接)
-        if (!response.ok) {
-          throw new Error(`下載失敗: ${response.status}`)
-        }
-
-        const 文本 = await response.text()
-        const 解析結果 = await 碼表處理服務實例.解析原始碼表文本(
-          文本,
-          當前方案.碼表元數據.分隔符,
-          當前方案.碼表元數據.第一列類型
-        )
-
-        if (!解析結果.rawCodeTable || 解析結果.rawCodeTable.size === 0) {
-          throw new Error('碼表解析爲空，請檢查格式')
-        }
-
-        原始碼表 = 解析結果.rawCodeTable
-        文件名 = 當前方案.元數據.標識符 + '.txt'
-      } else if (選中的文件) {
-        // 從上傳文件
-        const 文本 = await 讀取文件(選中的文件)
-        const 解析結果 = await 碼表處理服務實例.解析原始碼表文本(
-          文本,
-          當前方案.碼表元數據.分隔符,
-          當前方案.碼表元數據.第一列類型
-        )
-
-        if (!解析結果.rawCodeTable || 解析結果.rawCodeTable.size === 0) {
-          throw new Error('碼表解析失敗，請檢查格式是否正確')
-        }
-
-        原始碼表 = 解析結果.rawCodeTable
-        文件名 = 選中的文件.name
-      } else {
-        throw new Error('請先抓取或上傳碼表文件')
-      }
-
-      // 處理前綴按鍵
-      const 前綴按鍵數組 =
-        當前方案.方案參數.是否爲前綴碼 && 當前方案.方案參數.前綴鍵
-          ? 當前方案.方案參數.前綴鍵
-          : undefined
-
-      // 處理碼表
-      const 處理結果 = await 碼表處理服務實例.處理原始碼表(原始碼表, {
-        是否爲前綴碼: 當前方案.方案參數.是否爲前綴碼,
-        前綴鍵列表: 前綴按鍵數組,
-      })
-
-      // 設置全局狀態
-      設置原始碼表('')
-      設置碼表元數據({
-        name: 文件名,
-        uploadTime: Date.now(),
-        totalChars: 原始碼表.size,
-      })
-      設置碼表(處理結果 as any)
-
-      // 生成編碼預覽
-      const 預覽項: 編碼預覽項[] = []
-      let 計數 = 0
-      for (const [, [字符]] of 原始碼表) {
-        if (計數 >= 100) break
-        if (!處理結果.全碼表.has(字符)) continue
-
-        const 全碼數組 = 處理結果.全碼表.get(字符) || []
-        const 簡碼數組 = 處理結果.簡碼表.get(字符) || []
-        const 全碼選重數組 = 處理結果.全碼加選重鍵表.get(字符) || []
-        const 簡碼選重數組 = 處理結果.簡碼加選重鍵表.get(字符) || []
-
-        預覽項.push({
-          char: 字符,
-          fullCode: 全碼數組[0] || '-',
-          shortCode: 簡碼數組[0] || '-',
-          全碼加選重鍵表: 全碼選重數組[0] || '-',
-          簡碼加選重鍵表: 簡碼選重數組[0] || '-',
-        })
-        計數++
-      }
-      設置編碼預覽數據(預覽項)
-
-      設置成功信息(
-        `碼表解析完成！共 ${原始碼表.size} 個字符，${處理結果.詞語全碼加選重鍵表 ? '包含詞語數據' : '僅單字數據'}`
+      const 文本 = await 讀取文件(選中的文件)
+      const 解析結果 = await 碼表處理服務實例.解析原始碼表文本(
+        文本,
+        當前方案.碼表元數據.分隔符,
+        當前方案.碼表元數據.第一列類型
       )
+
+      if (!解析結果.rawCodeTable || 解析結果.rawCodeTable.size === 0) {
+        throw new Error('碼表解析失敗，請檢查格式是否正確')
+      }
+
+      await 處理碼表(解析結果.rawCodeTable, 選中的文件.name)
     } catch (error) {
-      設置錯誤信息(error instanceof Error ? error.message : '分析失敗')
+      設置錯誤信息(error instanceof Error ? error.message : '解析失敗')
     } finally {
       設置加載中(false)
     }
@@ -258,11 +260,11 @@ const ProcessTablePage: React.FC = () => {
                 </Link>
                 <Button
                   icon={<DownloadOutlined />}
-                  onClick={抓取碼表}
+                  onClick={抓取並解析碼表}
                   loading={加載中}
                   disabled={!當前方案.碼表元數據}
                 >
-                  抓取文件
+                  抓取並解析
                 </Button>
               </Space>
             </div>
@@ -328,18 +330,13 @@ const ProcessTablePage: React.FC = () => {
             type="primary"
             size="large"
             icon={<ThunderboltOutlined />}
-            onClick={開始分析}
-            disabled={
-              !當前方案 ||
-              !當前方案.碼表元數據 ||
-              (文件預覽數據.length === 0 && !當前方案.元數據.碼表下載鏈接) ||
-              加載中
-            }
+            onClick={開始解析}
+            disabled={!當前方案 || !當前方案.碼表元數據 || !選中的文件 || 加載中}
             loading={加載中}
           >
-            {加載中 ? '解析中...' : '開始分析'}
+            {加載中 ? '解析中...' : '開始解析'}
           </Button>
-          {(選中的文件 || 文件預覽數據.length > 0) && (
+          {(選中的文件 || 編碼預覽數據.length > 0) && (
             <Button size="large" icon={<ReloadOutlined />} onClick={移除文件} disabled={加載中}>
               重新選擇
             </Button>
