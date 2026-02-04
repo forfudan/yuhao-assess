@@ -1,113 +1,192 @@
-import { Card, Typography, Spin, Alert, Space, Statistic, Row, Col } from 'antd'
-import { useCharAbsoluteFrequency, useCharsets } from '@/hooks/useDataLoaders'
+/* eslint-env browser */
+import { Card, Typography, Button, Space, Select, Descriptions, message, Upload } from 'antd'
+import { DownloadOutlined, UploadOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
+import { useAtom } from 'jotai'
+import { useEffect, useState } from 'react'
+import { 當前方案原子狀態, 方案列表原子狀態 } from '@/atoms/scheme'
+import {
+  加載方案,
+  列出可用方案,
+  導出JSON,
+  從JSON導入,
+  創建空白方案,
+} from '@/services/schemeService'
+import type { 方案配置 } from '@/types/scheme'
+import type { UploadFile } from 'antd'
 
 const { Title, Paragraph, Text } = Typography
+const { Option } = Select
 
 function HomePage() {
-  const {
-    data: charFreqData,
-    loading: charFreqLoading,
-    error: charFreqError,
-  } = useCharAbsoluteFrequency('charAbsoluteFrequencySC')
+  const [當前方案, 設置當前方案] = useAtom(當前方案原子狀態)
+  const [方案列表, 設置方案列表] = useAtom(方案列表原子狀態)
+  const [加載中, 設置加載中] = useState(false)
 
-  const { data: charsetsData, loading: charsetsLoading, error: charsetsError } = useCharsets()
+  // 初始化：加載可用方案列表
+  useEffect(() => {
+    async function 初始化方案列表() {
+      try {
+        const 方案鍵名列表 = await 列出可用方案()
+        const 加載的方案列表 = await Promise.all(
+          方案鍵名列表.map(async 鍵名 => {
+            try {
+              return await 加載方案(鍵名)
+            } catch {
+              return null
+            }
+          })
+        )
+        設置方案列表(加載的方案列表.filter((方案): 方案 is 方案配置 => 方案 !== null))
+      } catch (錯誤) {
+        message.error('加載方案列表失敗')
+      }
+    }
+    初始化方案列表()
+  }, [設置方案列表])
 
-  const isLoading = charFreqLoading || charsetsLoading
-  const hasError = charFreqError || charsetsError
+  // 加載預設方案
+  const 處理選擇方案 = async (方案鍵名: string) => {
+    設置加載中(true)
+    try {
+      const 方案 = await 加載方案(方案鍵名)
+      設置當前方案(方案)
+      message.success(`已加載方案「${方案.元數據.方案名}」`)
+    } catch (錯誤) {
+      message.error(錯誤 instanceof Error ? 錯誤.message : '加載方案失敗')
+    } finally {
+      設置加載中(false)
+    }
+  }
+
+  // 導出 JSON
+  const 處理導出JSON = () => {
+    if (!當前方案) {
+      message.warning('請先選擇或創建方案')
+      return
+    }
+    const json文本 = 導出JSON(當前方案, true)
+    const blob = new Blob([json文本], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${當前方案.元數據.標識符}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    message.success('方案配置已導出')
+  }
+
+  // 導入 JSON
+  const 處理導入JSON = async (file: UploadFile) => {
+    const reader = new FileReader()
+    reader.onload = e => {
+      try {
+        const 文本 = e.target?.result as string
+        const 方案 = 從JSON導入(文本)
+        設置當前方案(方案)
+        message.success(`已導入方案「${方案.元數據.方案名}」`)
+      } catch (錯誤) {
+        message.error(錯誤 instanceof Error ? 錯誤.message : '導入失敗')
+      }
+    }
+    reader.readAsText(file as unknown as Blob)
+    return false // 阻止自動上傳
+  }
+
+  // 創建新方案
+  const 處理創建新方案 = () => {
+    const 新方案 = 創建空白方案()
+    設置當前方案(新方案)
+    message.success('已創建新方案')
+  }
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+      {/* 頁面標題 */}
       <Card>
-        <Title level={2}>歡迎使用輸入法測評系統</Title>
-        <Paragraph>這是基於 React 重構的新版本。本頁面展示數據加載功能。</Paragraph>
+        <Title level={2}>方案配置</Title>
+        <Paragraph type="secondary">選擇預設方案或導入自定義配置，開始輸入法性能測評</Paragraph>
       </Card>
 
-      {hasError && (
-        <Alert
-          message="數據加載錯誤"
-          description={charFreqError || charsetsError}
-          type="error"
-          showIcon
-        />
-      )}
+      {/* 方案選擇與操作 */}
+      <Card title="選擇方案">
+        <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
+          <Space wrap>
+            <Select
+              style={{ width: 200 }}
+              placeholder="選擇預設方案"
+              loading={加載中}
+              onChange={處理選擇方案}
+              value={當前方案?.元數據.標識符}
+            >
+              {方案列表.map(方案 => (
+                <Option key={方案.元數據.標識符} value={方案.元數據.標識符}>
+                  {方案.元數據.方案名}
+                </Option>
+              ))}
+            </Select>
+            <Upload beforeUpload={處理導入JSON} showUploadList={false} accept=".json">
+              <Button icon={<UploadOutlined />}>導入 JSON</Button>
+            </Upload>
+            <Button icon={<PlusOutlined />} onClick={處理創建新方案}>
+              創建新方案
+            </Button>
+            <Button icon={<DownloadOutlined />} onClick={處理導出JSON} disabled={!當前方案}>
+              導出 JSON
+            </Button>
+            <Button icon={<ReloadOutlined />} onClick={() => 設置當前方案(null)}>
+              清除
+            </Button>
+          </Space>
+        </Space>
+      </Card>
 
-      {isLoading && (
-        <Card>
-          <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <Spin size="large" />
-            <Paragraph style={{ marginTop: 16 }}>正在加載數據...</Paragraph>
-          </div>
+      {/* 當前方案信息 */}
+      {當前方案 && (
+        <Card title="當前方案信息">
+          <Descriptions column={2} bordered size="small">
+            <Descriptions.Item label="方案名">{當前方案.元數據.方案名}</Descriptions.Item>
+            <Descriptions.Item label="標識符">
+              <Text code>{當前方案.元數據.標識符}</Text>
+            </Descriptions.Item>
+            {當前方案.元數據.作者 && (
+              <Descriptions.Item label="作者">{當前方案.元數據.作者}</Descriptions.Item>
+            )}
+            <Descriptions.Item label="版本">{當前方案.元數據.版本}</Descriptions.Item>
+            {當前方案.元數據.官網 && (
+              <Descriptions.Item label="官網" span={2}>
+                <a href={當前方案.元數據.官網} target="_blank" rel="noopener noreferrer">
+                  {當前方案.元數據.官網}
+                </a>
+              </Descriptions.Item>
+            )}
+            {當前方案.元數據.描述 && (
+              <Descriptions.Item label="描述" span={2}>
+                {當前方案.元數據.描述}
+              </Descriptions.Item>
+            )}
+            <Descriptions.Item label="前綴碼">
+              {當前方案.方案參數.是否爲前綴碼 ? '是' : '否'}
+            </Descriptions.Item>
+            <Descriptions.Item label="最大碼長">{當前方案.方案參數.最大碼長}</Descriptions.Item>
+            {當前方案.方案參數.前綴鍵 && (
+              <Descriptions.Item label="前綴鍵" span={2}>
+                <Text code>{當前方案.方案參數.前綴鍵.join(', ')}</Text>
+              </Descriptions.Item>
+            )}
+            <Descriptions.Item label="碼表格式" span={2}>
+              {當前方案.方案參數.碼表格式 === 'char_first' ? '字符優先' : '編碼優先'}
+            </Descriptions.Item>
+          </Descriptions>
         </Card>
       )}
 
-      {!isLoading && !hasError && (
-        <>
-          {charFreqData && (
-            <Card title="📊 字符頻數數據（簡體中文）">
-              <Row gutter={16}>
-                <Col span={6}>
-                  <Statistic
-                    title="總字符數"
-                    value={Object.keys(charFreqData).length}
-                    suffix="個"
-                  />
-                </Col>
-                <Col span={6}>
-                  <Statistic title="「的」的頻率" value={charFreqData['的']} precision={2} />
-                </Col>
-                <Col span={6}>
-                  <Statistic title="「一」的頻率" value={charFreqData['一']} precision={2} />
-                </Col>
-                <Col span={6}>
-                  <Statistic title="「是」的頻率" value={charFreqData['是']} precision={2} />
-                </Col>
-              </Row>
-              <Paragraph style={{ marginTop: 16 }}>
-                <Text type="secondary">
-                  數據來源：
-                  {import.meta.env.DEV ? '本地 public/data/' : 'GitHub Pages CDN'}
-                </Text>
-              </Paragraph>
-            </Card>
-          )}
-
-          {charsetsData && (
-            <Card title="📚 字符集數據">
-              <Row gutter={16}>
-                <Col span={6}>
-                  <Statistic
-                    title="可用字符集"
-                    value={Object.keys(charsetsData).length}
-                    suffix="個"
-                  />
-                </Col>
-                {charsetsData['GB2312'] && (
-                  <Col span={6}>
-                    <Statistic
-                      title="GB2312"
-                      value={charsetsData['GB2312'].chars.length}
-                      suffix="字"
-                    />
-                  </Col>
-                )}
-                {charsetsData['GBK'] && (
-                  <Col span={6}>
-                    <Statistic title="GBK" value={charsetsData['GBK'].chars.length} suffix="字" />
-                  </Col>
-                )}
-                {charsetsData['通用規範漢字表'] && (
-                  <Col span={6}>
-                    <Statistic
-                      title="通用規範漢字表"
-                      value={charsetsData['通用規範漢字表'].chars.length}
-                      suffix="字"
-                    />
-                  </Col>
-                )}
-              </Row>
-            </Card>
-          )}
-        </>
+      {/* 提示信息 */}
+      {!當前方案 && (
+        <Card>
+          <Paragraph type="secondary" style={{ textAlign: 'center', margin: 0 }}>
+            請選擇或創建方案以開始測評
+          </Paragraph>
+        </Card>
       )}
     </Space>
   )

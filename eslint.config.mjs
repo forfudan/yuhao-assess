@@ -27,6 +27,9 @@ export default [
         clearInterval: 'readonly',
         fetch: 'readonly',
         localStorage: 'readonly',
+        Blob: 'readonly',
+        URL: 'readonly',
+        FileReader: 'readonly',
       },
     },
     plugins: {
