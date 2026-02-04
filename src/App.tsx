@@ -3,6 +3,7 @@ import MainLayout from './components/layout/MainLayout'
 import HomePage from './pages/HomePage'
 import ProcessTablePage from './pages/ProcessTablePage'
 import DuplicateAnalysisPage from './pages/DuplicateAnalysisPage'
+import MaximumCandidatesPage from './pages/MaximumCandidatesPage'
 
 const routes = [
   {
@@ -14,12 +15,16 @@ const routes = [
         element: <HomePage />,
       },
       {
-        path: '/process-table',
+        path: '/process',
         element: <ProcessTablePage />,
       },
       {
         path: '/duplicate',
         element: <DuplicateAnalysisPage />,
+      },
+      {
+        path: '/candidates',
+        element: <MaximumCandidatesPage />,
       },
     ],
   },

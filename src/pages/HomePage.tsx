@@ -22,6 +22,7 @@ import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { 當前方案原子狀態, 方案列表原子狀態 } from '@/atoms/scheme'
 import { 重碼分析原子狀態 } from '@/atoms/duplicate'
+import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 加載方案, 列出可用方案, 從JSON導入, 創建空白方案 } from '@/services/schemeService'
 import type { 方案配置 } from '@/types/scheme'
 import type { UploadFile } from 'antd'
@@ -34,6 +35,7 @@ function HomePage() {
   const [當前方案, 設置當前方案] = useAtom(當前方案原子狀態)
   const [方案列表, 設置方案列表] = useAtom(方案列表原子狀態)
   const [重碼分析結果, 設置重碼分析結果] = useAtom(重碼分析原子狀態)
+  const [候選個數分析結果, 設置候選個數分析結果] = useAtom(候選個數分析原子狀態)
   const [加載中, 設置加載中] = useState(false)
 
   // 共用：處理方案數據（從JSON導入或加載預設方案）
@@ -41,8 +43,12 @@ function HomePage() {
   const 處理方案數據 = (導入數據: any, 來源: string) => {
     console.log(`[HomePage] 從${來源}獲取的原始數據:`, 導入數據)
 
-    // 分離方案配置和重碼分析結果
-    const { 重碼分析結果: 數據中的重碼結果, ...方案配置 } = 導入數據
+    // 分離方案配置和分析結果
+    const {
+      重碼分析結果: 數據中的重碼結果,
+      候選個數分析結果: 數據中的候選個數結果,
+      ...方案配置
+    } = 導入數據
 
     console.log(`[HomePage] ${來源}的重碼分析結果:`, 數據中的重碼結果)
     console.log(`[HomePage] ${來源}的方案配置:`, 方案配置)
@@ -51,16 +57,31 @@ function HomePage() {
     const 方案 = 從JSON導入(JSON.stringify(方案配置))
     設置當前方案(方案)
 
-    // 如果有重碼分析結果，寫入 atom
-    if (數據中的重碼結果) {
+    // 如果有分析結果，寫入 atom
+    const 有重碼結果 = !!數據中的重碼結果
+    const 有候選個數結果 = !!數據中的候選個數結果
+
+    if (有重碼結果) {
       console.log(`[HomePage] 設置${來源}的重碼分析結果到 atom:`, 數據中的重碼結果)
       設置重碼分析結果(數據中的重碼結果)
-      message.success(`已加載方案「${方案.元數據.方案名}」（包含重碼分析結果）`)
     } else {
       console.log(`[HomePage] ${來源}無重碼分析結果`)
       設置重碼分析結果(null)
-      message.success(`已加載方案「${方案.元數據.方案名}」`)
     }
+
+    if (有候選個數結果) {
+      console.log(`[HomePage] 設置${來源}的候選個數分析結果到 atom:`, 數據中的候選個數結果)
+      設置候選個數分析結果(數據中的候選個數結果)
+    } else {
+      console.log(`[HomePage] ${來源}無候選個數分析結果`)
+      設置候選個數分析結果(null)
+    }
+
+    const 結果提示 = [有重碼結果 && '重碼分析', 有候選個數結果 && '候選個數分析']
+      .filter(Boolean)
+      .join('、')
+    const 完整提示 = 結果提示 ? `（包含${結果提示}結果）` : ''
+    message.success(`已加載方案「${方案.元數據.方案名}」${完整提示}`)
   }
 
   // 初始化：加載可用方案列表
@@ -106,10 +127,11 @@ function HomePage() {
       return
     }
 
-    // 直接導出，將 atom 的重碼分析結果附加到方案配置
+    // 直接導出，將 atom 的分析結果附加到方案配置
     const 導出數據 = {
       ...當前方案,
       重碼分析結果: 重碼分析結果, // 直接使用 atom 的結構
+      候選個數分析結果: 候選個數分析結果,
     }
 
     const json文本 = JSON.stringify(導出數據, null, 2)
@@ -126,7 +148,10 @@ function HomePage() {
     a.click()
     URL.revokeObjectURL(url)
 
-    const 提示 = 重碼分析結果 ? '（包含重碼分析結果）' : ''
+    const 結果列表 = [重碼分析結果 && '重碼分析', 候選個數分析結果 && '候選個數分析'].filter(
+      Boolean
+    )
+    const 提示 = 結果列表.length > 0 ? `（包含${結果列表.join('、')}結果）` : ''
     message.success(`方案配置已導出${提示}`)
   }
 

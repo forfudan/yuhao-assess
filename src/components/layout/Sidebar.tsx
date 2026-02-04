@@ -70,7 +70,7 @@ export function Sidebar({ collapsed = false, onCollapse }: SidebarProps) {
       label: '首頁',
     },
     {
-      key: '/process-table',
+      key: '/process',
       icon: <UploadOutlined />,
       label: '碼表解析',
     },
@@ -85,7 +85,7 @@ export function Sidebar({ collapsed = false, onCollapse }: SidebarProps) {
       label: '候選個數',
     },
     {
-      key: '/speed-equiv',
+      key: '/speed',
       icon: <ThunderboltOutlined />,
       label: '速度當量',
     },

@@ -281,6 +281,43 @@ git commit -m "提交信息"  # 自動觸發字形轉換
 
 完整映射表參考：`src/utils/normalize-traditional-chars.ts`
 
+### Ant Design 組件規範
+
+#### 已廢棄屬性（必須避免）
+
+Ant Design 5.x 中部分屬性已廢棄，使用時會産生 console warning：
+
+**Space 組件**：
+
+- ❌ `direction="vertical"` - 已廢棄
+- ✅ `orientation="vertical"` - 正確用法
+
+**Alert 組件**：
+
+- ❌ `message="提示文字"` - 已廢棄
+- ✅ `title="提示文字"` - 正確用法
+
+**示例**：
+
+```tsx
+// ❌ 錯誤：使用廢棄屬性
+<Space direction="vertical">
+  <Alert message="錯誤提示" type="error" />
+</Space>
+
+// ✅ 正確：使用新屬性
+<Space orientation="vertical">
+  <Alert title="錯誤提示" type="error" />
+</Space>
+```
+
+**檢查方式**：
+
+- 開發時注意 console 中的 deprecation warnings
+- 提交前確保無 `[antd: ComponentName]` 警告
+
+完整映射表參考：`src/utils/normalize-traditional-chars.ts`
+
 ### 命名約定
 
 #### 核心原則
@@ -480,7 +517,7 @@ describe('DuplicatePage', () => {
 
 ### 避免的反模式
 
-❌ 不要在根目錄創建 `scripts/` 文件夾  
+❌ 不要在根目録創建 `scripts/` 文件夾  
 ✅ 工具函數放在 `src/utils/`
 
 ❌ 不要使用已廢棄的 `Hybrid` API  
@@ -494,8 +531,8 @@ describe('DuplicatePage', () => {
 
 ### 遷移時的特殊處理
 
-1. **字頻數據加載**：从 `public/data/` 改為 `public/data/`（注意路徑變化）
-2. **配置文件加載**：从 `public/data/` 改為 `public/settings/`
+1. **字頻數據加載**：从 `public/data/` 改爲 `public/data/`（注意路徑變化）
+2. **配置文件加載**：从 `public/data/` 改爲 `public/settings/`
 3. **導入語句**：Vue 的 `@/` 别名在 React 中保持一致
 4. **組件生命週期**：
    - Vue `onMounted` → React `useEffect`
@@ -504,11 +541,11 @@ describe('DuplicatePage', () => {
 
 ## � 數據持久化原則
 
-### Atom 為標準的設計
+### Atom 爲標準的設計
 
-**核心原則**：所有計算結果的持久化，**以 atom 的類型定義為準**。
+**核心原則**：所有計算結果的持久化，**以 atom 的類型定義爲準**。
 
-#### 為什麼這樣設計？
+#### 爲什麽這樣設計？
 
 1. **atom 是當前系統的計算結果**：atom 中存儲的結構代表網站當前版本的計算結果
 2. **簡化類型系統**：不需要在 atom 類型和 scheme 類型之間維護複雜的映射
@@ -546,8 +583,8 @@ if (導入數據.重碼分析結果) {
 **版本兼容性處理**：
 
 - 如果導入的 JSON 中 `重碼分析結果` 的結構與當前 atom 不匹配：
-  - ✅ **不用擔心**：直接忽略，讓用戶重新計算
-  - ✅ **提示用戶**：「數據版本不匹配，請重新計算」
+  - ✅ **不用擔心**：直接忽略，讓用户重新計算
+  - ✅ **提示用户**：「數據版本不匹配，請重新計算」
   - ❌ **不要**：嘗試轉換或調整類型
 
 #### 其他 Atom 的處理

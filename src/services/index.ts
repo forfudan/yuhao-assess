@@ -86,7 +86,7 @@ export {
 export {
   getMaximumCandidates,
   getAllMaximumCandidates,
-  type MaximumCandidatesResult,
+  type 最大候選個數結果,
 } from './maximumCandidatesService'
 
 // 導出簡碼效率服務

@@ -3,12 +3,9 @@ import { 碼表處理服務實例 } from './codeTableService'
 import type { CodeTable } from '../types/index'
 
 // 定義返回數據的接口
-export interface MaximumCandidatesResult {
-  maxCount: number
-  codes: Array<{
-    code: string
-    chars: string[]
-  }>
+export interface 最大候選個數結果 {
+  最大候選個數: number
+  編碼列表: string[] // 只存儲編碼，不存儲字符列表
 }
 
 /**
@@ -17,7 +14,7 @@ export interface MaximumCandidatesResult {
 export async function getMaximumCandidates(
   codeTable: CodeTable,
   charsetType: CharsetType
-): Promise<MaximumCandidatesResult> {
+): Promise<最大候選個數結果> {
   // 從碼表鍵中提取所有單個字符
   const allUniqueChars = new Set<string>()
   for (const key of codeTable.keys()) {
@@ -52,24 +49,24 @@ export async function getMaximumCandidates(
   }
 
   // 找出最大候選項個數
-  let maxCount = 0
+  let 最大候選個數 = 0
   for (const chars of codeToChars.values()) {
-    if (chars.length > maxCount) {
-      maxCount = chars.length
+    if (chars.length > 最大候選個數) {
+      最大候選個數 = chars.length
     }
   }
 
-  // 找出所有達到最大候選項個數的編碼
-  const maxCodes: Array<{ code: string; chars: string[] }> = []
+  // 找出所有達到最大候選項個數的編碼（只存儲編碼，不存儲字符）
+  const 編碼列表: string[] = []
   for (const [code, chars] of codeToChars.entries()) {
-    if (chars.length === maxCount) {
-      maxCodes.push({ code, chars })
+    if (chars.length === 最大候選個數) {
+      編碼列表.push(code)
     }
   }
 
   return {
-    maxCount,
-    codes: maxCodes,
+    最大候選個數,
+    編碼列表,
   }
 }
 
@@ -88,7 +85,7 @@ export async function getAllMaximumCandidates(codeTable: CodeTable) {
     'cjk_to_j',
   ]
 
-  const results: Record<string, MaximumCandidatesResult> = {}
+  const results: Record<string, 最大候選個數結果> = {}
 
   for (const charsetType of charsetTypes) {
     try {
@@ -97,8 +94,8 @@ export async function getAllMaximumCandidates(codeTable: CodeTable) {
     } catch (error) {
       console.error(`計算 ${charsetType} 最大候選項失敗:`, error)
       results[charsetType] = {
-        maxCount: 0,
-        codes: [],
+        最大候選個數: 0,
+        編碼列表: [],
       }
     }
   }
