@@ -13,7 +13,7 @@
 
 - ✅ 所有變量、類型、函數名使用繁體中文
 - ✅ 命名要求：具體、詳細、準確、自顯示
-- ❌ 禁止使用縮寫、俗稱、別名
+- ❌ 禁止使用縮寫、俗稱、别名
 - 📋 詳見 [docs/NOMENCLATURE.md](./docs/NOMENCLATURE.md)
 
 **示例**：
@@ -30,7 +30,7 @@ function loadScheme(key: string): Promise<Config> { ... }
 
 ## 🚀 快速開始
 
-```bash
+````bash
 # 安裝依賴
 pnpm install
 
@@ -47,7 +47,7 @@ pnpm format
 pnpm tc
 ```bash
 # 命令示例
-```
+````
 
 ## 📦 項目結構
 
@@ -89,7 +89,7 @@ yuhao-assess/
 
 2. **命名規範**：
    - 嚴格遵循 [NOMENCLATURE.md](./docs/NOMENCLATURE.md)
-   - 使用標準名稱，禁止別名
+   - 使用標準名稱，禁止别名
    - 變量名要自顯示，減少註釋需求
 
 3. **代碼組織**：
