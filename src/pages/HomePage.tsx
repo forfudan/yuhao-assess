@@ -1,6 +1,23 @@
 /* eslint-env browser */
-import { Card, Typography, Button, Space, Select, Descriptions, message, Upload } from 'antd'
-import { DownloadOutlined, UploadOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
+import {
+  Typography,
+  Button,
+  Space,
+  Select,
+  Input,
+  InputNumber,
+  Checkbox,
+  message,
+  Upload,
+  Tag,
+} from 'antd'
+import {
+  DownloadOutlined,
+  UploadOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  PlusCircleOutlined,
+} from '@ant-design/icons'
 import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { 當前方案原子狀態, 方案列表原子狀態 } from '@/atoms/scheme'
@@ -14,8 +31,9 @@ import {
 import type { 方案配置 } from '@/types/scheme'
 import type { UploadFile } from 'antd'
 
-const { Title, Paragraph, Text } = Typography
+const { Paragraph, Text } = Typography
 const { Option } = Select
+const { TextArea } = Input
 
 function HomePage() {
   const [當前方案, 設置當前方案] = useAtom(當前方案原子狀態)
@@ -99,6 +117,90 @@ function HomePage() {
     message.success('已創建新方案')
   }
 
+  // 更新元數據字段
+  const 更新元數據 = (字段名: keyof 方案配置['元數據'], 值: string) => {
+    if (!當前方案) return
+    設置當前方案({
+      ...當前方案,
+      元數據: {
+        ...當前方案.元數據,
+        [字段名]: 值,
+        更新時間: new Date().toISOString(),
+      },
+    })
+  }
+
+  // 更新方案參數字段
+  const 更新方案參數 = <K extends keyof 方案配置['方案參數']>(
+    字段名: K,
+    值: 方案配置['方案參數'][K]
+  ) => {
+    if (!當前方案) return
+    設置當前方案({
+      ...當前方案,
+      方案參數: {
+        ...當前方案.方案參數,
+        [字段名]: 值,
+      },
+      元數據: {
+        ...當前方案.元數據,
+        更新時間: new Date().toISOString(),
+      },
+    })
+  }
+
+  // 更新碼表元數據字段
+  const 更新碼表元數據 = <K extends keyof NonNullable<方案配置['碼表元數據']>>(
+    字段名: K,
+    值: NonNullable<方案配置['碼表元數據']>[K]
+  ) => {
+    if (!當前方案) return
+    設置當前方案({
+      ...當前方案,
+      碼表元數據: {
+        ...當前方案.碼表元數據!,
+        [字段名]: 值,
+      },
+      元數據: {
+        ...當前方案.元數據,
+        更新時間: new Date().toISOString(),
+      },
+    })
+  }
+
+  // 添加標籤
+  const 添加標籤 = (標籤: string) => {
+    if (!當前方案 || !標籤.trim()) return
+    const 當前標籤 = 當前方案.元數據.標籤 || []
+    if (當前標籤.includes(標籤.trim())) {
+      message.warning('標籤已存在')
+      return
+    }
+    更新元數據('標籤', [...當前標籤, 標籤.trim()] as never)
+  }
+
+  // 删除標籤
+  const 删除標籤 = (索引: number) => {
+    if (!當前方案) return
+    const 新標籤 = [...(當前方案.元數據.標籤 || [])]
+    新標籤.splice(索引, 1)
+    更新元數據('標籤', 新標籤 as never)
+  }
+
+  // 初始化碼表元數據（如果不存在）
+  const 初始化碼表元數據 = () => {
+    if (!當前方案 || 當前方案.碼表元數據) return
+    設置當前方案({
+      ...當前方案,
+      碼表元數據: {
+        分隔符: '空格',
+        第一列類型: '字符',
+        總字符數: 0,
+        數據來源: 'file',
+      },
+    })
+  }
+
   return (
     <Space orientation="vertical" size="large" style={{ width: '100%', padding: '24px' }}>
       {/* 方案選擇與操作 */}
@@ -130,65 +232,259 @@ function HomePage() {
         </Button>
       </Space>
 
-      {/* 當前方案信息 */}
+      {/* 當前方案配置（可編輯） */}
       {當前方案 && (
-        <Descriptions column={2} bordered size="small">
-          <Descriptions.Item label="方案名">{當前方案.元數據.方案名}</Descriptions.Item>
-          <Descriptions.Item label="標識符">
-            <Text code>{當前方案.元數據.標識符}</Text>
-          </Descriptions.Item>
-          {當前方案.元數據.作者 && (
-            <Descriptions.Item label="作者">{當前方案.元數據.作者}</Descriptions.Item>
-          )}
-          <Descriptions.Item label="版本">{當前方案.元數據.版本}</Descriptions.Item>
-          {當前方案.元數據.官網 && (
-            <Descriptions.Item label="官網" span={2}>
-              <a href={當前方案.元數據.官網} target="_blank" rel="noopener noreferrer">
-                {當前方案.元數據.官網}
-              </a>
-            </Descriptions.Item>
-          )}
-          {當前方案.元數據.碼表下載鏈接 && (
-            <Descriptions.Item label="碼表下載" span={2}>
-              <a href={當前方案.元數據.碼表下載鏈接} target="_blank" rel="noopener noreferrer">
-                {當前方案.元數據.碼表下載鏈接}
-              </a>
-            </Descriptions.Item>
-          )}
-          {當前方案.元數據.描述 && (
-            <Descriptions.Item label="描述" span={2}>
-              {當前方案.元數據.描述}
-            </Descriptions.Item>
-          )}
-          {當前方案.元數據.標籤 && 當前方案.元數據.標籤.length > 0 && (
-            <Descriptions.Item label="標籤" span={2}>
-              <Space size="small">
-                {當前方案.元數據.標籤.map((標籤, index) => (
-                  <Text key={index} type="secondary">
-                    #{標籤}
-                  </Text>
+        <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
+          {/* 元數據 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+            <div>
+              <Text type="secondary">方案名</Text>
+              <Input
+                value={當前方案.元數據.方案名}
+                onBlur={e => 更新元數據('方案名', e.target.value)}
+                onChange={e =>
+                  設置當前方案({
+                    ...當前方案,
+                    元數據: { ...當前方案.元數據, 方案名: e.target.value },
+                  })
+                }
+              />
+            </div>
+            <div>
+              <Text type="secondary">標識符</Text>
+              <Input
+                value={當前方案.元數據.標識符}
+                onBlur={e => 更新元數據('標識符', e.target.value)}
+                onChange={e =>
+                  設置當前方案({
+                    ...當前方案,
+                    元數據: { ...當前方案.元數據, 標識符: e.target.value },
+                  })
+                }
+              />
+            </div>
+            <div>
+              <Text type="secondary">作者</Text>
+              <Input
+                value={當前方案.元數據.作者 || ''}
+                placeholder="可選"
+                onBlur={e => 更新元數據('作者', e.target.value)}
+                onChange={e =>
+                  設置當前方案({
+                    ...當前方案,
+                    元數據: { ...當前方案.元數據, 作者: e.target.value },
+                  })
+                }
+              />
+            </div>
+            <div>
+              <Text type="secondary">版本</Text>
+              <Input
+                value={當前方案.元數據.版本}
+                onBlur={e => 更新元數據('版本', e.target.value)}
+                onChange={e =>
+                  設置當前方案({
+                    ...當前方案,
+                    元數據: { ...當前方案.元數據, 版本: e.target.value },
+                  })
+                }
+              />
+            </div>
+            <div style={{ gridColumn: 'span 2' }}>
+              <Text type="secondary">官網</Text>
+              <Input
+                value={當前方案.元數據.官網 || ''}
+                placeholder="可選"
+                onBlur={e => 更新元數據('官網', e.target.value)}
+                onChange={e =>
+                  設置當前方案({
+                    ...當前方案,
+                    元數據: { ...當前方案.元數據, 官網: e.target.value },
+                  })
+                }
+              />
+            </div>
+            <div style={{ gridColumn: 'span 2' }}>
+              <Text type="secondary">碼表下載鏈接</Text>
+              <Input
+                value={當前方案.元數據.碼表下載鏈接 || ''}
+                placeholder="可選"
+                onBlur={e => 更新元數據('碼表下載鏈接', e.target.value)}
+                onChange={e =>
+                  設置當前方案({
+                    ...當前方案,
+                    元數據: { ...當前方案.元數據, 碼表下載鏈接: e.target.value },
+                  })
+                }
+              />
+            </div>
+            <div style={{ gridColumn: 'span 2' }}>
+              <Text type="secondary">描述</Text>
+              <TextArea
+                value={當前方案.元數據.描述 || ''}
+                placeholder="可選"
+                rows={2}
+                onBlur={e => 更新元數據('描述', e.target.value)}
+                onChange={e =>
+                  設置當前方案({
+                    ...當前方案,
+                    元數據: { ...當前方案.元數據, 描述: e.target.value },
+                  })
+                }
+              />
+            </div>
+            <div style={{ gridColumn: 'span 2' }}>
+              <Text type="secondary">標籤</Text>
+              <Space wrap style={{ marginTop: '8px' }}>
+                {(當前方案.元數據.標籤 || []).map((標籤, index) => (
+                  <Tag
+                    key={index}
+                    closable
+                    onClose={() => 删除標籤(index)}
+                    style={{ marginBottom: '4px' }}
+                  >
+                    {標籤}
+                  </Tag>
                 ))}
+                <Tag
+                  icon={<PlusCircleOutlined />}
+                  style={{ cursor: 'pointer', marginBottom: '4px' }}
+                  onClick={() => {
+                    const 標籤 = prompt('輸入新標籤：')
+                    if (標籤) 添加標籤(標籤)
+                  }}
+                >
+                  添加標籤
+                </Tag>
               </Space>
-            </Descriptions.Item>
-          )}
-          <Descriptions.Item label="前綴碼">
-            {當前方案.方案參數.是否爲前綴碼 ? '是' : '否'}
-          </Descriptions.Item>
-          <Descriptions.Item label="最大碼長">{當前方案.方案參數.最大碼長}</Descriptions.Item>
-          {當前方案.方案參數.前綴鍵 && (
-            <Descriptions.Item label="前綴鍵" span={2}>
-              <Text code>{當前方案.方案參數.前綴鍵.join(', ')}</Text>
-            </Descriptions.Item>
-          )}
+            </div>
+          </div>
+
+          {/* 方案參數 */}
+          <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              <div>
+                <Checkbox
+                  checked={當前方案.方案參數.是否爲前綴碼}
+                  onChange={e => 更新方案參數('是否爲前綴碼', e.target.checked)}
+                >
+                  是否爲前綴碼
+                </Checkbox>
+              </div>
+              <div>
+                <Text type="secondary">最大碼長</Text>
+                <InputNumber
+                  value={當前方案.方案參數.最大碼長}
+                  min={1}
+                  max={10}
+                  style={{ width: '100%' }}
+                  onBlur={() => {}}
+                  onChange={值 => 更新方案參數('最大碼長', 值 as number)}
+                />
+              </div>
+              {當前方案.方案參數.是否爲前綴碼 && (
+                <div style={{ gridColumn: 'span 2' }}>
+                  <Text type="secondary">前綴鍵（逗號分隔）</Text>
+                  <Input
+                    value={(當前方案.方案參數.前綴鍵 || []).join(', ')}
+                    placeholder="例如：a, o, e, i, u, _"
+                    onBlur={e => {
+                      const 鍵 = e.target.value
+                        .split(',')
+                        .map(k => k.trim())
+                        .filter(k => k)
+                      更新方案參數('前綴鍵', 鍵.length > 0 ? 鍵 : undefined)
+                    }}
+                    onChange={e =>
+                      設置當前方案({
+                        ...當前方案,
+                        方案參數: {
+                          ...當前方案.方案參數,
+                          前綴鍵: e.target.value
+                            .split(',')
+                            .map(k => k.trim())
+                            .filter(k => k),
+                        },
+                      })
+                    }
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 碼表元數據 */}
           {當前方案.碼表元數據 && (
-            <>
-              <Descriptions.Item label="分隔符">{當前方案.碼表元數據.分隔符}</Descriptions.Item>
-              <Descriptions.Item label="第一列類型">
-                {當前方案.碼表元數據.第一列類型}
-              </Descriptions.Item>
-            </>
+            <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                <div>
+                  <Text type="secondary">分隔符</Text>
+                  <Select
+                    value={當前方案.碼表元數據.分隔符}
+                    style={{ width: '100%' }}
+                    onChange={值 => 更新碼表元數據('分隔符', 值)}
+                  >
+                    <Option value="空格">空格</Option>
+                    <Option value="製表符">製表符</Option>
+                    <Option value="逗號">逗號</Option>
+                    <Option value="分號">分號</Option>
+                  </Select>
+                </div>
+                <div>
+                  <Text type="secondary">第一列類型</Text>
+                  <Select
+                    value={當前方案.碼表元數據.第一列類型}
+                    style={{ width: '100%' }}
+                    onChange={值 => 更新碼表元數據('第一列類型', 值)}
+                  >
+                    <Option value="字符">字符</Option>
+                    <Option value="編碼">編碼</Option>
+                  </Select>
+                </div>
+                <div>
+                  <Text type="secondary">總字符數</Text>
+                  <InputNumber
+                    value={當前方案.碼表元數據.總字符數}
+                    min={0}
+                    style={{ width: '100%' }}
+                    onChange={值 => 更新碼表元數據('總字符數', 值 as number)}
+                  />
+                </div>
+                <div>
+                  <Text type="secondary">數據來源</Text>
+                  <Select
+                    value={當前方案.碼表元數據.數據來源}
+                    style={{ width: '100%' }}
+                    onChange={值 => 更新碼表元數據('數據來源', 值)}
+                  >
+                    <Option value="file">file</Option>
+                    <Option value="url">url</Option>
+                    <Option value="builtin">builtin</Option>
+                  </Select>
+                </div>
+                {當前方案.碼表元數據.哈希值 && (
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <Text type="secondary">哈希值（只讀）</Text>
+                    <Input value={當前方案.碼表元數據.哈希值} disabled />
+                  </div>
+                )}
+              </div>
+            </div>
           )}
-        </Descriptions>
+          {!當前方案.碼表元數據 && <Button onClick={初始化碼表元數據}>添加碼表元數據</Button>}
+
+          {/* 時間戳（只讀） */}
+          <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px' }}>
+            <Space>
+              <Text type="secondary">
+                創建時間：{new Date(當前方案.元數據.創建時間).toLocaleString('zh-CN')}
+              </Text>
+              <Text type="secondary">
+                更新時間：{new Date(當前方案.元數據.更新時間).toLocaleString('zh-CN')}
+              </Text>
+            </Space>
+          </div>
+        </Space>
       )}
 
       {/* 提示信息 */}
