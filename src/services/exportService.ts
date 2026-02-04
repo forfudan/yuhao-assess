@@ -243,13 +243,13 @@ export class ExportService {
         }
       })
 
-      // 捕獲簡碼模式（僅捕獲卡片內容，不包含標題欄）
+      // 捕獲簡碼模式（僅捕獲卡片内容，不包含標題欄）
       await switchTabCallback('short')
       
-      // 查找卡片內容區域，跳過標題欄
+      // 查找卡片内容區域，跳過標題欄
       const cardContentElement = element.querySelector('.card-content')
       if (!cardContentElement) {
-        throw new Error('找不到卡片內容區域')
+        throw new Error('找不到卡片内容區域')
       }
       
       const shortModeCanvas = await html2canvas(cardContentElement as HTMLElement, {
@@ -384,10 +384,10 @@ export class ExportService {
       // 動態導入html2canvas
       const html2canvas = (await import('html2canvas')).default
 
-      // 查找卡片內容區域
+      // 查找卡片内容區域
       const cardContentElement = element.querySelector('.card-content')
       if (!cardContentElement) {
-        throw new Error('找不到卡片內容區域')
+        throw new Error('找不到卡片内容區域')
       }
 
       // 捕獲全碼簡頻模式（包含完整標題欄）
@@ -404,7 +404,7 @@ export class ExportService {
         }
       })
 
-      // 捕獲出簡簡頻模式（僅捕獲卡片內容）
+      // 捕獲出簡簡頻模式（僅捕獲卡片内容）
       await switchTabCallback('short')
       const shortModeCanvas = await html2canvas(cardContentElement as HTMLElement, {
         backgroundColor,
@@ -418,7 +418,7 @@ export class ExportService {
         }
       })
 
-      // 捕獲全碼繁頻模式（僅捕獲卡片內容）
+      // 捕獲全碼繁頻模式（僅捕獲卡片内容）
       await switchTabCallback('fullTC')
       const fullTCModeCanvas = await html2canvas(cardContentElement as HTMLElement, {
         backgroundColor,
@@ -432,7 +432,7 @@ export class ExportService {
         }
       })
 
-      // 捕獲出簡繁頻模式（僅捕獲卡片內容）
+      // 捕獲出簡繁頻模式（僅捕獲卡片内容）
       await switchTabCallback('shortTC')
       const shortTCModeCanvas = await html2canvas(cardContentElement as HTMLElement, {
         backgroundColor,

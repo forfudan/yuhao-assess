@@ -54,9 +54,11 @@ export async function initializeCalculationService(): Promise<void> {
   await loadCJKBlockData()
   if (cjkBlockData) {
     for (const [blockName, block] of Object.entries(cjkBlockData.blocks)) {
-      cjkBlockRanges[blockName] = {
-        start: parseInt(block.start, 16),
-        end: parseInt(block.end, 16),
+      if (typeof block === 'object' && block !== null && 'start' in block && 'end' in block) {
+        cjkBlockRanges[blockName] = {
+          start: parseInt(block.start as string, 16),
+          end: parseInt(block.end as string, 16),
+        }
       }
     }
   }

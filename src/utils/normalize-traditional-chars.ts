@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs'
+import fg from 'fast-glob'
 
 /**
  * 字形映射表
@@ -150,7 +151,7 @@ function getCharMappings(): Map<string, string> {
 }
 
 /**
- * 处理单个文件
+ * 處理單個文件
  */
 function processFile(
   filePath: string,
@@ -166,7 +167,7 @@ function processFile(
 
   for (const [tw, cn] of charMapping) {
     if (content.includes(tw)) {
-      // 使用全局正则进行替换并计数
+      // 使用全局正則進行替換並計數
       const regex = new RegExp(escapeRegExp(tw), 'g')
       const matches = content.match(regex)
       const count = matches ? matches.length : 0
@@ -189,69 +190,80 @@ function processFile(
 }
 
 /**
- * 转义正则表达式特殊字符
+ * 轉義正則表達式特殊字符
  */
 function escapeRegExp(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 /**
- * 主函数
+ * 主函數
  */
 function main(): void {
-  const files = process.argv.slice(2)
+  const patterns = process.argv.slice(2)
 
-  if (files.length === 0) {
+  if (patterns.length === 0) {
     console.log('用法: pnpm exec tsx src/utils/normalize-traditional-chars.ts <文件1> <文件2> ...')
     console.log('')
-    console.log('功能: 将台湾繁体字形统一转换为大陆通规字形')
+    console.log('功能: 將台灣繁體字形統一轉換為大陸通規字形')
     console.log('')
     console.log('示例:')
     console.log('  pnpm exec tsx src/utils/normalize-traditional-chars.ts src/App.vue')
     console.log('  pnpm exec tsx src/utils/normalize-traditional-chars.ts docs/*.md')
     console.log('  pnpm exec tsx src/utils/normalize-traditional-chars.ts src/**/*.ts')
     console.log('')
-    console.log(`支持的映射: ${CHAR_MAPPINGS.length} 组字形转换`)
+    console.log(`支持的映射: ${CHAR_MAPPINGS.length} 組字形轉換`)
     process.exit(0)
   }
 
-  // 加载字形映射表
+  // 使用 fast-glob 展開文件模式，排除 src/utils 目錄
+  const allFiles = fg.sync(patterns, {
+    absolute: false,
+    ignore: ['**/node_modules/**', '**/dist/**', 'src/utils/**'],
+  })
+
+  if (allFiles.length === 0) {
+    console.log('⚠ 未找到匹配的文件')
+    process.exit(0)
+  }
+
+  // 加載字形映射表
   const charMapping = getCharMappings()
-  console.log(`✓ 已加载 ${charMapping.size} 个字形映射`)
+  console.log(`✓ 已加載 ${charMapping.size} 個字形映射`)
   console.log('')
 
-  // 处理所有文件
+  // 處理所有文件
   const results: ProcessResult[] = []
   let totalModified = 0
 
-  for (const file of files) {
+  for (const file of allFiles) {
     try {
       const result = processFile(file, charMapping)
       results.push(result)
 
       if (result.modified) {
         totalModified++
-        console.log(`✓ 字形统一: ${result.filePath}`)
+        console.log(`✓ 字形統一: ${result.filePath}`)
         result.replacements.forEach(({ from, to, count }) => {
           console.log(`  ${from} → ${to} (${count}次)`)
         })
       }
     } catch (error) {
-      console.error(`⚠ 处理失败: ${file}`)
+      console.error(`⚠ 處理失敗: ${file}`)
       if (error instanceof Error) {
         console.error(`  ${error.message}`)
       }
     }
   }
 
-  // 输出总结
+  // 輸出總結
   console.log('')
   if (totalModified > 0) {
-    console.log(`✓ 共处理 ${files.length} 个文件，修改了 ${totalModified} 个`)
+    console.log(`✓ 共處理 ${allFiles.length} 個文件，修改了 ${totalModified} 個`)
   } else {
-    console.log('✓ 无需修改')
+    console.log(`✓ 檢查了 ${allFiles.length} 個文件，無需修改`)
   }
 }
 
-// 执行主函数
+// 執行主函數
 main()

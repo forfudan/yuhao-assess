@@ -111,7 +111,7 @@ export function getDynamicDupRateFromOriginalOrder(
     const freq = charFrequency[char] || 0
     totalFreq += freq
     
-    // 檢查編碼最後一位是否為數字 0-9（表示需要選重）
+    // 檢查編碼最後一位是否爲數字 0-9（表示需要選重）
     const lastChar = code.slice(-1)
     const isSelection = /[0-9]/.test(lastChar)
     
@@ -246,7 +246,7 @@ export function getWordDynamicDupRate(
     const freq = wordFrequency[word] || 0
     totalFreq += freq
     
-    // 檢查編碼最後一位是否為數字 0-9（表示需要選重）
+    // 檢查編碼最後一位是否爲數字 0-9（表示需要選重）
     const lastChar = code.slice(-1)
     const isSelection = /[0-9]/.test(lastChar)
     

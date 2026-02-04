@@ -1,4 +1,4 @@
-# 宇浩·漢字輸入法測評系統 - 重構路線圖
+# 宇浩漢字輸入法測評系統 - 重構路線圖
 
 ## 概述
 
@@ -527,7 +527,7 @@ console.log(data?.duplicateRate) // 0.15 (15% 重碼率)
   <Sidebar />  {/* 側邊欄導航 */}
   <Layout>
     <StyledHeader>
-      <h1>宇浩·漢字輸入法測評系統</h1>
+      <h1>輸入法測評系統</h1>
     </StyledHeader>
     <StyledContent>
       <ContentInner>
@@ -666,6 +666,515 @@ console.log(data?.duplicateRate) // 0.15 (15% 重碼率)
 ### 4.7 方案對比頁面（2-3小時）
 
 **遷移文件**：`src/components/ComparisonCard.vue` → `src/pages/ComparisonPage.tsx`
+
+---
+
+## 階段四點五：方案配置 JSON 系統 ⏳（待完成，8-12小時）
+
+本階段可以與階段四並行進行。
+
+### 🎯 設計目標
+
+構建基於 JSON 的方案配置系統，將輸入法的元數據、參數、測評結果統一存儲，實現：
+
+1. **性能提升**：預計算結果，秒開默認方案對比（重碼分析從 10 秒 → 瞬時加載）
+2. **用户體驗**：不強制上傳碼表，支持方案快照，離線也能對比方案
+3. **可維護性**：數據結構化，支持增量添加測評指標（向後兼容）
+4. **社區友好**：方案作者可提交 JSON，用户可分享測評結果
+
+### 📐 數據結構設計
+
+**文件位置**：`public/schemes/*.json`
+
+```typescript
+interface SchemeConfig {
+  // ========== 方案數據 ==========
+  方案數據: {
+    名稱: string                   // 方案名稱（如「靈明」）
+    鍵名: string                   // 唯一標識（文件名，如「yuling」）
+    作者?: string[]                // 作者（如「朱宇浩」）
+    維護者?: string[]              // 維護者（如「社區維護者」）
+    版本: string                   // 版本號（語義版本，如「1.0.0」）
+    官網?: string                  // 官網（如「https://shurufa.app」）
+    碼表下載鏈接?: string          // 碼表下載鏈接
+    描述?: string                  // 描述
+    標籤?: string[]                // 標籤（如 ['形碼', '前綴碼', '五碼']）
+    創建時間: string               // 創建時間（ISO 8601）
+    更新時間: string               // 更新時間（ISO 8601）
+  }
+  
+  // ========== 方案參數 ==========
+  方案參數: {
+    是否爲前綴碼: boolean          // 是否爲前綴碼方案
+    前綴鍵?: string[]             // 前綴鍵（如 ['a','o','e','i','u','_']）
+    最大碼長: number               // 最大碼長（如 4 或 5）
+    編碼規則?: {
+      單字?: string               // 單字編碼規則描述
+      詞語?: string               // 詞語編碼規則描述
+    }
+  }
+  
+  // ========== 碼表信息（可選） ==========
+  碼表信息?: {
+    分隔符: '空格' | '製表符' | '逗號' | '分號'
+    第一列類型: '字符' | '編碼'
+    總字符數: number              // 總字符數
+    來源: 'file' | 'url' | 'builtin'
+    哈希值?: string                 // 碼表 SHA-256（用於驗證一致性）
+    // 注意：不存儲完整 rawCodeTable（太大，需時從碼表文件生成）
+  }
+  
+  // ========== 測評結果（增量，可選） ==========
+  測評結果?: {
+    // 字集覆蓋
+    // 記録本方案在各個字集中覆蓋字數
+    // 可用來對比本字集理論全部字符數
+    字集覆蓋?: {
+      gb2312?: number
+      通用規範?: number
+      常用國字?: number
+      cjk基本?: number
+      cjk擴A?: number
+      cjk擴B?: number
+      cjk擴F?: number
+      cjk擴J?: number
+      更新時間: string
+    }
+
+    // 重碼分析
+    重碼分析?: {
+      靜態重碼: {
+        gb2312?: { 組數: number, 字數: number }
+        通用規範?: { 組數: number, 字數: number }
+        常用國字?: { 組數: number, 字數: number }
+        cjk基本?: { 組數: number, 字數: number }
+        cjk擴A?: { 組數: number, 字數: number }
+        cjk擴B?: { 組數: number, 字數: number }
+        cjk擴F?: { 組數: number, 字數: number }
+        cjk擴J?: { 組數: number, 字數: number }
+      }
+      更新時間: string
+    }
+    
+    // 動態選重率
+    動態選重?: {
+      知乎字頻?: number
+      簡體字頻?: number
+      繁體字頻?: number
+      古籍字頻?: number
+      混合字頻?: number
+      更新時間: string
+    }
+    
+    // 候選個數
+    候選個數?: {
+      gb2312?: {個數: number, 編碼: string[]}
+      通用規範?: {個數: number, 編碼: string[]}
+      常用國字?: {個數: number, 編碼: string[]}
+      cjk基本?: {個數: number, 編碼: string[]}
+      cjk擴A?: {個數: number, 編碼: string[]}
+      cjk擴B?: {個數: number, 編碼: string[]}
+      cjk擴F?: {個數: number, 編碼: string[]}
+      cjk擴J?: {個數: number, 編碼: string[]}
+      更新時間: string
+    }
+
+    // 速度當量
+    速度當量?: {
+      知乎字頻?: { 全碼: number, 一級簡碼: number, 二級簡碼: number, 全部簡碼: number}
+      簡體字頻?: { 全碼: number, 一級簡碼: number, 二級簡碼: number, 全部簡碼: number}
+      繁體字頻?: { 全碼: number, 一級簡碼: number, 二級簡碼: number, 全部簡碼: number}
+      古籍字頻?: { 全碼: number, 一級簡碼: number, 二級簡碼: number, 全部簡碼: number}
+      混合字頻?: { 全碼: number, 一級簡碼: number, 二級簡碼: number, 全部簡碼: number}
+      更新時間: string
+    }
+        
+    // 簡碼效率
+    簡碼效率?: {
+      知乎字頻?:{
+        簡碼數量對應碼長: Record<number, number>  // { 1: 26, 2: 650, 3: 5000, 4: 20000 }
+        極限碼長: number}  // 取所有簡碼時候的碼長
+      更新時間: string
+    }
+    
+    // 鍵位熱力
+    鍵位熱力?: {
+      按鍵頻率: Record<string, number>  // { 'a': 0.15, 'o': 0.12, ... }
+      手指負擔: Record<string, number>  // { '左手食指': 0.2, '右手中指': 0.3, ... }
+      左右手分佈: { 左手: number, 右手: number }
+      按排分佈: Record<string, number>  // { '上排': 0.4, '中排': 0.5, '下排': 0.1 }
+      更新時間: string
+      是否模擬標點使用頻率: boolean
+    }
+  }
+}
+```
+
+**設計原則**：
+
+1. **增量添加**：`results` 字段完全可選，支持部分結果存儲
+2. **時間戳管理**：每個結果類型獨立記録 `updatedAt`，方便緩存失效判斷
+3. **不存碼表**：完整碼表數據量大，僅存 hash 值用於驗證，需時從碼表文件重新解析
+4. **向後兼容**：新增或修改指標時不影響舊 JSON 讀取，如果某指標缺失則需重新計算即可
+
+### 🚀 實施路線圖
+
+#### Phase 1: 類型定義與基礎服務（2小時）
+
+**創建文件**：
+
+```typescript
+// src/types/scheme.ts
+export interface SchemeConfig { /* 見上 */ }
+export interface SchemeMetadata { /* ... */ }
+export interface SchemeParameters { /* ... */ }
+export interface SchemeResults { /* ... */ }
+
+// src/atoms/scheme.ts
+import { atom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
+
+// 當前方案配置（持久化到 localStorage）
+export const 當前方案原子狀態 = atomWithStorage<SchemeConfig | null>(
+  'currentScheme',
+  null
+)
+
+// 預設方案列表
+export const 方案列表原子狀態 = atom<SchemeConfig[]>([])
+
+// src/services/schemeService.ts
+export class SchemeService {
+  // 加載預設方案
+  async loadScheme(key: string): Promise<SchemeConfig>
+  
+  // 加載所有預設方案列表（僅元數據）
+  async loadSchemeList(): Promise<SchemeMetadata[]>
+  
+  // 導出爲 JSON
+  exportToJSON(scheme: SchemeConfig): string
+  
+  // 從 JSON 導入
+  importFromJSON(json: string): SchemeConfig
+  
+  // 驗證完整性
+  validateScheme(scheme: SchemeConfig): { valid: boolean, missing: string[] }
+  
+  // 計算缺失的結果
+  async computeMissingResults(
+    scheme: SchemeConfig, 
+    codeTable: RawCodeTable
+  ): Promise<SchemeConfig>
+  
+  // 生成碼表 hash
+  async generateCodeTableHash(codeTable: RawCodeTable): Promise<string>
+}
+```
+
+**驗收標準**：
+
+- ✅ TypeScript 編譯通過（0 錯誤）
+- ✅ 所有接口導出正確
+- ✅ Jotai 原子狀態可正常讀寫
+
+#### Phase 2: 首頁改造（2-3小時）
+
+**目標**：將首頁（HomePage.tsx）改造爲方案配置中心
+
+**功能清單**：
+
+1. **方案元數據編輯器**
+   - 輸入：方案名、作者、版本號、官網、描述
+   - 選擇：是否前綴碼、最大碼長、碼表格式
+   - 標籤管理：添加/删除標籤
+
+2. **方案導入/導出**
+   - 導入 JSON 文件（拖拽或選擇）
+   - 導出當前方案爲 JSON（下載）
+   - 加載預設方案（下拉選擇）
+
+3. **方案狀態顯示**
+   - 顯示當前方案名稱和版本
+   - 顯示測評結果完整性（哪些指標已計算）
+   - 顯示最後更新時間
+
+**UI 設計**（參考 Ant Design）：
+
+```tsx
+<Card title="方案配置">
+  <Form layout="vertical">
+    <Form.Item label="方案名稱">
+      <Input />
+    </Form.Item>
+    {/* ... 其他字段 */}
+    
+    <Space>
+      <Button icon={<UploadOutlined />}>導入 JSON</Button>
+      <Button icon={<DownloadOutlined />}>導出 JSON</Button>
+      <Select placeholder="加載預設方案">
+        <Option value="yuhao-ming">日月</Option>
+        <Option value="yuhao-star">星陳</Option>
+        {/* ... */}
+      </Select>
+    </Space>
+  </Form>
+</Card>
+```
+
+**驗收標準**：
+
+- ✅ 可以編輯方案元數據並保存到 Jotai atom
+- ✅ 可以導入/導出 JSON 文件
+- ✅ 可以加載預設方案（從 `public/schemes/` 讀取）
+
+#### Phase 3: 碼表上傳頁面改造（1-2小時）
+
+**目標**：使碼表上傳變爲**可選**（如果 JSON 中已有結果）
+
+**變更點**：
+
+1. **條件渲染**
+
+   ```tsx
+   {!scheme?.results?.duplicate && (
+     <Upload.Dragger>上傳碼表</Upload.Dragger>
+   )}
+   {scheme?.results?.duplicate && (
+     <Alert message="已有測評結果，無需上傳碼表" type="info" />
+   )}
+   ```
+
+2. **從鏈接下載碼表**（新功能）
+
+   ```tsx
+   <Input.Search
+     placeholder="輸入碼表 URL"
+     onSearch={async (url) => {
+       const text = await fetch(url).then(r => r.text())
+       // 解析碼表...
+     }}
+   />
+   ```
+
+3. **解析後自動填充 scheme.codeTable**
+
+   ```typescript
+   const hash = await schemeService.generateCodeTableHash(rawCodeTable)
+   scheme.codeTable = {
+     totalChars: rawCodeTable.size,
+     source: 'url',
+     hash
+   }
+   ```
+
+**驗收標準**：
+
+- ✅ 有結果時不要求上傳碼表
+- ✅ 支持從 URL 下載碼表
+- ✅ 解析後更新 scheme.codeTable 字段
+
+#### Phase 4: 分析頁面改造（2-3小時）
+
+**目標**：優先從 JSON 讀取結果，缺失時才計算
+
+**通用邏輯**（適用所有分析頁面）：
+
+```typescript
+// src/pages/DuplicatePage.tsx
+const [scheme] = useAtom(當前方案原子狀態)
+const [計算中, 設置計算中] = useState(false)
+
+// 1. 檢查 JSON 中是否有結果
+const hasResult = scheme?.results?.duplicate != null
+
+// 2. 如果有結果，直接顯示
+if (hasResult) {
+  return <DuplicateResultsDisplay data={scheme.results.duplicate} />
+}
+
+// 3. 如果没有結果，顯示「計算」按鈕
+return (
+  <>
+    <Alert message="尚無測評結果，請上傳碼表並點擊計算" />
+    <Button 
+      onClick={async () => {
+        設置計算中(true)
+        const results = await calculateDuplicate(rawCodeTable)
+        // 更新 scheme
+        scheme.results = {
+          ...scheme.results,
+          duplicate: { ...results, updatedAt: new Date().toISOString() }
+        }
+        設置當前方案(scheme)
+        設置計算中(false)
+      }}
+      loading={計算中}
+    >
+      計算重碼率
+    </Button>
+  </>
+)
+```
+
+**驗收標準**：
+
+- ✅ 有結果時直接顯示，無需計算
+- ✅ 無結果時顯示計算按鈕
+- ✅ 計算完成後更新 scheme 並提示導出 JSON
+
+#### Phase 5: 預設方案 JSON 生成（2-3小時）
+
+**目標**：爲現有預設方案生成 JSON 配置文件
+
+**方式 A：手動編寫**（推薦初期）
+
+```bash
+public/schemes/
+  ├── yuhao-ming.json      # 手動編寫元數據 + 運行測評獲取結果
+  ├── yuhao-star.json
+  ├── yuhao-light.json
+  ├── yuhao-joy.json
+  └── sky.json
+```
+
+**示例**（`yuhao-ming.json`）：
+
+```json
+{
+  "metadata": {
+    "name": "日月",
+    "key": "yuhao-ming",
+    "author": "forfudan",
+    "version": "1.0.0",
+    "website": "https://shurufa.app/",
+    "codeTableUrl": "https://shurufa.app/mabiao-ming.txt",
+    "description": "宇浩拆分·世上首款純形前綴碼·五碼限長",
+    "tags": ["形碼", "前綴碼", "五碼"],
+    "createdAt": "2026-02-04T00:00:00Z",
+    "updatedAt": "2026-02-04T00:00:00Z"
+  },
+  "parameters": {
+    "isPrefix": true,
+    "prefixKeys": ["a", "o", "e", "i", "u", "_"],
+    "maxCodeLength": 5,
+    "codeTableFormat": "code_first"
+  },
+  "codeTable": {
+    "totalChars": 95000,
+    "source": "url",
+    "hash": "abc123..."
+  },
+  "results": {
+    "duplicate": {
+      "staticRate": {
+        "gb2312": { "rate": 0.15, "duplicateChars": 1050, "totalChars": 7000 }
+        // ... 其他字符集
+      },
+      "updatedAt": "2026-02-04T10:00:00Z"
+    }
+    // ... 其他測評結果（按需添加）
+  }
+}
+```
+
+**方式 B：自動化腳本**（未來優化）
+
+```typescript
+// scripts/generate-scheme-json.ts
+// 從碼表文件自動生成 JSON（運行所有測評並保存結果）
+```
+
+**驗收標準**：
+
+- ✅ 至少 3 個預設方案有完整 JSON（含測評結果）
+- ✅ 可以在首頁加載並顯示
+
+#### Phase 6: 方案對比頁面（1-2小時）
+
+**目標**：支持多方案並排對比（從 JSON 加載）
+
+**功能清單**：
+
+1. **方案選擇**
+
+   ```tsx
+   <Select mode="multiple" placeholder="選擇要對比的方案">
+     <Option value="yuhao-ming">日月</Option>
+     <Option value="yuhao-star">星陳</Option>
+     {/* ... */}
+   </Select>
+   ```
+
+2. **上傳用户 JSON**
+
+   ```tsx
+   <Upload accept=".json" onChange={handleUpload}>
+     上傳自定義方案
+   </Upload>
+   ```
+
+3. **並排顯示**
+
+   ```tsx
+   <Table columns={[
+     { title: '指標', dataIndex: 'metric' },
+     { title: '日月', dataIndex: 'yuhao-ming' },
+     { title: '星陳', dataIndex: 'yuhao-star' }
+   ]} />
+   ```
+
+**驗收標準**：
+
+- ✅ 可以選擇多個預設方案對比
+- ✅ 可以上傳用户 JSON 參與對比
+- ✅ 表格清晰顯示各方案指標差異
+
+### 📂 文件結構
+
+```text
+src/
+├── types/
+│   └── scheme.ts              # SchemeConfig 接口
+├── atoms/
+│   └── scheme.ts              # 方案狀態原子
+├── services/
+│   └── schemeService.ts       # 方案管理服務
+├── pages/
+│   ├── HomePage.tsx           # 方案配置中心（改造）
+│   ├── UploaderPage.tsx       # 碼表上傳（改造爲可選）
+│   ├── DuplicatePage.tsx      # 重碼分析（改造爲讀取 JSON）
+│   └── ComparisonPage.tsx     # 方案對比（新增）
+└── ...
+
+public/
+└── schemes/                   # 預設方案 JSON
+    ├── yuhao-ming.json
+    ├── yuhao-star.json
+    ├── yuhao-light.json
+    ├── yuhao-joy.json
+    └── sky.json
+```
+
+### ⏱️ 時間估算
+
+| Phase    | 任務                   | 時間       |
+| -------- | ---------------------- | ---------- |
+| 1        | 類型定義與基礎服務     | 2h         |
+| 2        | 首頁改造               | 2-3h       |
+| 3        | 碼表上傳頁面改造       | 1-2h       |
+| 4        | 分析頁面改造           | 2-3h       |
+| 5        | 預設方案 JSON 生成     | 2-3h       |
+| 6        | 方案對比頁面           | 1-2h       |
+| **總計** |                        | **10-15h** |
+
+### 🎯 驗收標準
+
+1. ✅ 可以加載預設方案（從 `public/schemes/` 讀取 JSON）
+2. ✅ 可以導入/導出用户方案 JSON
+3. ✅ 分析頁面優先讀取 JSON 結果，缺失時才計算
+4. ✅ 計算完成後可將結果保存回 scheme 並導出
+5. ✅ 方案對比頁面可並排顯示多個方案
+6. ✅ 至少 3 個預設方案有完整測評結果
 
 ---
 
@@ -980,6 +1489,83 @@ export default React.memo(DuplicateAnalysisPage)
 - 實現 CI/CD 自動化部署
 - 優化 ui-vendor 體積（tree-shaking、動態導入）
 - idb-keyval 文檔：<https://github.com/jakearchibald/idb-keyval>（如選擇 IndexedDB 方案）
+
+### 長期計劃
+
+#### YAML 格式兼容性 ⏳（長期目標）
+
+**背景**：當前方案配置系統使用 JSON 格式（階段四點五），未來可考慮兼容 YAML 格式以提升可讀性。
+
+**優勢**：
+
+- ✅ 更友好的手動編輯體驗（支持註釋、多行字符串）
+- ✅ 與 [hanzi-chai](https://github.com/hanzi-chai/hanzi-chai.github.io) 等項目生態對齊
+- ✅ 適合方案作者直接編寫配置
+
+**實施方案**：
+
+1. **内部保持 JSON**
+   - `public/schemes/` 繼續使用 JSON 格式
+   - TypeScript 類型安全、解析速度快
+
+2. **提供 YAML 導入/導出**
+
+   ```typescript
+   // src/services/schemeService.ts
+   import yaml from 'js-yaml'
+   
+   export function exportToYAML(scheme: SchemeConfig): string {
+     return yaml.dump(scheme, { 
+       indent: 2,
+       lineWidth: 100,
+       noRefs: true 
+     })
+   }
+   
+   export function importFromYAML(yamlText: string): SchemeConfig {
+     const data = yaml.load(yamlText)
+     // + Zod 校驗
+     return data as SchemeConfig
+   }
+   ```
+
+3. **用户可選格式**
+   - 導出時選擇 JSON 或 YAML
+   - 導入時自動識别格式（根據文件擴展名或内容）
+
+**預估工時**：2-3 小時（在階段四點五完成後）
+
+**依賴庫**：
+
+- `js-yaml` (45KB gzipped) - 成熟的 YAML 解析器
+- 文檔：<https://github.com/nodeca/js-yaml>
+
+#### 社區方案提交機制 ⏳（長期目標）
+
+**目標**：允許社區貢獻輸入法方案配置
+
+**實施方案**：
+
+1. **GitHub PR 流程**
+   - 方案作者提交 PR 到 `public/schemes/`
+   - 包含完整測評結果的 JSON 文件
+   - CI 自動驗證 JSON 格式和完整性
+
+2. **方案審核標準**
+   - 必填字段完整（metadata、parameters）
+   - 至少包含 1 項測評結果（如重碼率）
+   - 方案名稱和 key 唯一（不與現有方案衝突）
+   - 碼表來源可訪問（codeTableUrl 有效）
+
+3. **自動化工具**
+
+   ```bash
+   # scripts/validate-scheme.ts
+   # 驗證 JSON 格式、檢查必填字段、運行測試
+   pnpm run validate-scheme public/schemes/new-scheme.json
+   ```
+
+**預估工時**：3-4 小時（在階段四點五完成後）
 
 ---
 

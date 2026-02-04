@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx --fix --ignore-path .gitignore",
     "format": "prettier --write \"**/*.{ts,tsx,json,md,css}\"",
-    "normalize-chars": "tsx src/utils/normalize-traditional-chars.ts",
+    "tc": "tsx src/utils/normalize-traditional-chars.ts \"src/**/*.{ts,tsx}\" \"docs/**/*.md\"",
     "prepare": "husky init"
   },
   "lint-staged": {
@@ -50,6 +50,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
+    "fast-glob": "^3.3.3",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "markdownlint-cli2": "^0.20.0",

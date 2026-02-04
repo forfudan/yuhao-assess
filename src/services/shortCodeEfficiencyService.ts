@@ -16,7 +16,7 @@ interface EfficiencyResult {
  * @param codeTable 碼表數據
  * @param charFrequency 字頻數據
  * @param maxLen 最大碼長
- * @param isPrefix 是否為前綴碼方案
+ * @param isPrefix 是否爲前綴碼方案
  */
 export function calculateShortCodeEfficiency(
   codeTable: CodeTableRow[],

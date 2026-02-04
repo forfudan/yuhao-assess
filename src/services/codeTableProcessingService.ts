@@ -103,7 +103,7 @@ export class CodeTableProcessingService {
       
       // 如果新編碼長度嚴格大於當前最大編碼長度
       if (codeLength > currentMaxLength) {
-        // 先刪除，再添加（保持順序）
+        // 先删除，再添加（保持順序）
         full.delete(char)
         fullWithSelection.delete(char)
         full.set(char, [code])
@@ -113,7 +113,7 @@ export class CodeTableProcessingService {
       
       // 如果新編碼長度嚴格小於當前最小編碼長度
       if (codeLength < currentMinLength!) {
-        // 先刪除，再添加（保持順序）
+        // 先删除，再添加（保持順序）
         short.delete(char)
         shortWithSelection.delete(char)
         short.set(char, [code])
@@ -145,7 +145,7 @@ export class CodeTableProcessingService {
   ): string {
     let processedCode = code
     
-    // N選為1的特殊處理
+    // N選爲1的特殊處理
     if (position === 1) {
       // 前綴碼的特殊處理邏輯
       if (isPrefix && prefixKeys && codeLength < maxLength) {
@@ -370,7 +370,7 @@ export class CodeTableProcessingService {
   }
   
   /**
-   * 獲取前綴鍵配置（私有方法，用於內部調用）
+   * 獲取前綴鍵配置（私有方法，用於内部調用）
    */
   private getPrefixKeys(): string[] | undefined {
     return this.processingOptions?.prefixKeys

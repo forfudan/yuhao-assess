@@ -118,7 +118,7 @@ export function calculateEquivDistribution(
     if (equiv !== undefined) {
       // 將當量值四捨五入到最近的0.1檔位
       const roundedEquiv = Math.round(equiv * 10) / 10
-      // 確保在1.0-2.1範圍內
+      // 確保在1.0-2.1範圍内
       const clampedEquiv = Math.max(1.0, Math.min(2.1, roundedEquiv))
       
       if (equivBuckets[clampedEquiv]) {
@@ -128,7 +128,7 @@ export function calculateEquivDistribution(
     }
   }
   
-  // 轉換為數組並降序排序
+  // 轉換爲數組並降序排序
   const result = Object.entries(equivBuckets)
     .map(([equivValue, data]) => ({
       equivValue: parseFloat(equivValue),
@@ -136,7 +136,7 @@ export function calculateEquivDistribution(
       frequencyRatio: overallTotalFrequency > 0 ? data.totalFrequency / overallTotalFrequency : 0,
       description: generateEquivDescription(parseFloat(equivValue), Array.from(data.keyPairs))
     }))
-    .filter(item => item.keyPairs.length > 0) // 過濾掉沒有數據的檔位
+    .filter(item => item.keyPairs.length > 0) // 過濾掉没有數據的檔位
     .sort((a, b) => b.equivValue - a.equivValue) // 降序排序
   
   return result
@@ -151,27 +151,27 @@ export function calculateEquivDistribution(
 function generateEquivDescription(equivValue: number, keyPairs: string[]): string {
   // 根據當量值範圍返回對應的説明
   if (equivValue >= 2.1) {
-    return '多為含小指或無名指的異指大跨排'
+    return '多爲含小指或無名指的異指大跨排'
   } else if (equivValue >= 2.0) {
-    return '多為單手相連二指大跨排'
+    return '多爲單手相連二指大跨排'
   } else if (equivValue >= 1.9) {
-    return '多為單手大小跨排、或同手含小指組合'
+    return '多爲單手大小跨排、或同手含小指組合'
   } else if (equivValue >= 1.8) {
-    return '多為食指跨排、或單手相鄰跨排'
+    return '多爲食指跨排、或單手相鄰跨排'
   } else if (equivValue >= 1.7) {
-    return '多為含無名指小指單手小跨排'
+    return '多爲含無名指小指單手小跨排'
   } else if (equivValue >= 1.6) {
-    return '多為含食指中指單手小跨排'
+    return '多爲含食指中指單手小跨排'
   } else if (equivValue >= 1.5) {
-    return '多為單手小跨排、或同指同排'
+    return '多爲單手小跨排、或同指同排'
   } else if (equivValue >= 1.4) {
-    return '多為含食指同手同排或小跨排'
+    return '多爲含食指同手同排或小跨排'
   } else if (equivValue >= 1.3) {
-    return '多為同指連擊、或非中排的雙手互擊'
+    return '多爲同指連擊、或非中排的雙手互擊'
   } else if (equivValue >= 1.2) {
-    return '多為小跨排、或同排的雙手互擊'
+    return '多爲小跨排、或同排的雙手互擊'
   } else if (equivValue >= 1.1) {
-    return '多為涉及食指和中指的雙手互擊'
+    return '多爲涉及食指和中指的雙手互擊'
   } else {
     return '雙手互擊的特殊組合'
   }
@@ -198,7 +198,7 @@ export function generateFirstShortCodeTable(
     const shortCode = codes[0]
     if (!shortCode) continue
     
-    // 檢查是否為一級簡碼：長度≤2且末尾是空格或上屏鍵
+    // 檢查是否爲一級簡碼：長度≤2且末尾是空格或上屏鍵
     if (shortCode.length <= 2 && validEndingKeys.has(shortCode[shortCode.length - 1])) {
       result.set(char, [shortCode])
     } else {
@@ -234,7 +234,7 @@ export function generateSecondShortCodeTable(
     const shortCode = codes[0]
     if (!shortCode) continue
     
-    // 檢查是否為二級簡碼：長度≤3且末尾是空格或上屏鍵
+    // 檢查是否爲二級簡碼：長度≤3且末尾是空格或上屏鍵
     if (shortCode.length <= 3 && validEndingKeys.has(shortCode[shortCode.length - 1])) {
       result.set(char, [shortCode])
     } else {
