@@ -272,32 +272,21 @@ const ProcessTablePage: React.FC = () => {
         )}
 
         {/* 文件上傳 */}
-        <div>
-          <Upload.Dragger
-            accept=".txt,.csv,.yaml,.yml"
-            beforeUpload={處理文件變化}
-            fileList={
-              選中的文件
-                ? [
-                    {
-                      uid: '-1',
-                      name: 選中的文件.name,
-                      status: 'done',
-                      size: 選中的文件.size,
-                    } as UploadFile,
-                  ]
-                : []
-            }
-            onRemove={移除文件}
-            disabled={加載中 || !當前方案}
-          >
-            <p className="ant-upload-drag-icon">
-              <InboxOutlined />
-            </p>
-            <p className="ant-upload-text">點擊上傳或拖拽文件到此處</p>
-            <p className="ant-upload-hint">支持 .txt、.csv、.yaml 和 .yml 格式</p>
-          </Upload.Dragger>
-        </div>
+        {!選中的文件 && (
+          <div>
+            <Upload.Dragger
+              accept=".txt,.csv,.yaml,.yml"
+              beforeUpload={處理文件變化}
+              disabled={加載中 || !當前方案}
+            >
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">點擊上傳或拖拽文件到此處</p>
+              <p className="ant-upload-hint">支持 .txt、.csv、.yaml 和 .yml 格式</p>
+            </Upload.Dragger>
+          </div>
+        )}
 
         {/* 文件預覽 */}
         {文件預覽數據.length > 0 && (
