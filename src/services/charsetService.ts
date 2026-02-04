@@ -1,82 +1,62 @@
-// 類型定義
-type CharsetRecord = {
-  is_gb2312: boolean
-  is_guozi: boolean
-  is_tonggui: boolean
-}
+// 直接導入 JSON 數據
+import charsetsJSON from '../../public/data/charsets.json'
+import cjkBlocksJSON from '../../public/settings/cjkBlocks.json'
 
-type CharsetData = Record<string, CharsetRecord>
+// 導入 Jotai atom
+import { getDefaultStore } from 'jotai'
+import { 字符集數據原子狀態, CJK區塊數據原子狀態 } from '../atoms/charset'
+import type { CharsetData, CJKBlockData } from '../atoms/charset'
 
-type CJKBlockData = {
-  version: string
-  description: string
-  lastUpdated: string
-  blocks: Record<
-    string,
-    {
-      name: string
-      description: string
-      start: string
-      end: string
-      comment: string
-      note?: string
-    }
-  >
-}
-
-// 字符集數據緩存
-let charsetData: CharsetData | null = null
-let cjkBlockData: CJKBlockData | null = null
-
-// 加載字符集數據
+// 加載字符集數據（使用 atom 全局緩存）
 async function loadCharsetData(): Promise<void> {
-  if (charsetData) return
+  const store = getDefaultStore()
+  const existing = store.get(字符集數據原子狀態)
+  if (existing) return
 
-  try {
-    const response = await fetch('/data/charsets.json')
-    charsetData = (await response.json()) as CharsetData
-  } catch (error) {
-    console.error('Failed to load charset data:', error)
-    // 使用空數據作爲後備
-    charsetData = {}
-  }
+  const data = charsetsJSON as CharsetData
+  store.set(字符集數據原子狀態, data)
 }
 
-// 加載CJK區塊數據
+// 加載CJK區塊數據（使用 atom 全局緩存）
 export async function loadCJKBlockData(): Promise<void> {
-  if (cjkBlockData) return
+  const store = getDefaultStore()
+  const existing = store.get(CJK區塊數據原子狀態)
+  if (existing) return
 
-  try {
-    const response = await fetch('/settings/cjkBlocks.json')
-    cjkBlockData = (await response.json()) as CJKBlockData
-  } catch (error) {
-    console.error('Failed to load CJK block data:', error)
-    // 使用空數據作爲後備
-    cjkBlockData = { version: '', description: '', lastUpdated: '', blocks: {} }
-  }
+  const data = cjkBlocksJSON as CJKBlockData
+  store.set(CJK區塊數據原子狀態, data)
 }
 
 // 字符集檢查函數
 export async function isInGB2312(char: string): Promise<boolean> {
   await loadCharsetData()
+  const store = getDefaultStore()
+  const charsetData = store.get(字符集數據原子狀態)
   return charsetData?.[char]?.is_gb2312 ?? false
 }
 
 export async function isInGuozi(char: string): Promise<boolean> {
   await loadCharsetData()
+  const store = getDefaultStore()
+  const charsetData = store.get(字符集數據原子狀態)
   return charsetData?.[char]?.is_guozi ?? false
 }
 
 export async function isInTonggui(char: string): Promise<boolean> {
   await loadCharsetData()
+  const store = getDefaultStore()
+  const charsetData = store.get(字符集數據原子狀態)
   return charsetData?.[char]?.is_tonggui ?? false
 }
 
-// CJK Unicode範圍檢查函數 - 單個區域
+// CJK Unicode範圍檢查函數 - 使用 atom 獲取數據
 export function isInCJKBasic(char: string): boolean {
+  const store = getDefaultStore()
+  const cjkBlockData = store.get(CJK區塊數據原子狀態)
+  if (!cjkBlockData) return false
+
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  if (!cjkBlockData) return false
   const block = cjkBlockData.blocks.cjk_basic
   if (!block) return false
   const start = parseInt(block.start, 16)
@@ -85,9 +65,12 @@ export function isInCJKBasic(char: string): boolean {
 }
 
 export function isInCJKA(char: string): boolean {
+  const store = getDefaultStore()
+  const cjkBlockData = store.get(CJK區塊數據原子狀態)
+  if (!cjkBlockData) return false
+
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  if (!cjkBlockData) return false
   const block = cjkBlockData.blocks.cjk_a
   if (!block) return false
   const start = parseInt(block.start, 16)
@@ -96,9 +79,12 @@ export function isInCJKA(char: string): boolean {
 }
 
 export function isInCJKB(char: string): boolean {
+  const store = getDefaultStore()
+  const cjkBlockData = store.get(CJK區塊數據原子狀態)
+  if (!cjkBlockData) return false
+
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  if (!cjkBlockData) return false
   const block = cjkBlockData.blocks.cjk_b
   if (!block) return false
   const start = parseInt(block.start, 16)
@@ -107,9 +93,12 @@ export function isInCJKB(char: string): boolean {
 }
 
 export function isInCJKC(char: string): boolean {
+  const store = getDefaultStore()
+  const cjkBlockData = store.get(CJK區塊數據原子狀態)
+  if (!cjkBlockData) return false
+
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  if (!cjkBlockData) return false
   const block = cjkBlockData.blocks.cjk_c
   if (!block) return false
   const start = parseInt(block.start, 16)
@@ -118,9 +107,12 @@ export function isInCJKC(char: string): boolean {
 }
 
 export function isInCJKD(char: string): boolean {
+  const store = getDefaultStore()
+  const cjkBlockData = store.get(CJK區塊數據原子狀態)
+  if (!cjkBlockData) return false
+
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  if (!cjkBlockData) return false
   const block = cjkBlockData.blocks.cjk_d
   if (!block) return false
   const start = parseInt(block.start, 16)
@@ -129,9 +121,12 @@ export function isInCJKD(char: string): boolean {
 }
 
 export function isInCJKE(char: string): boolean {
+  const store = getDefaultStore()
+  const cjkBlockData = store.get(CJK區塊數據原子狀態)
+  if (!cjkBlockData) return false
+
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  if (!cjkBlockData) return false
   const block = cjkBlockData.blocks.cjk_e
   if (!block) return false
   const start = parseInt(block.start, 16)
@@ -140,9 +135,12 @@ export function isInCJKE(char: string): boolean {
 }
 
 export function isInCJKF(char: string): boolean {
+  const store = getDefaultStore()
+  const cjkBlockData = store.get(CJK區塊數據原子狀態)
+  if (!cjkBlockData) return false
+
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  if (!cjkBlockData) return false
   const block = cjkBlockData.blocks.cjk_f
   if (!block) return false
   const start = parseInt(block.start, 16)
@@ -151,9 +149,12 @@ export function isInCJKF(char: string): boolean {
 }
 
 export function isInCJKG(char: string): boolean {
+  const store = getDefaultStore()
+  const cjkBlockData = store.get(CJK區塊數據原子狀態)
+  if (!cjkBlockData) return false
+
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  if (!cjkBlockData) return false
   const block = cjkBlockData.blocks.cjk_g
   if (!block) return false
   const start = parseInt(block.start, 16)
@@ -162,9 +163,12 @@ export function isInCJKG(char: string): boolean {
 }
 
 export function isInCJKH(char: string): boolean {
+  const store = getDefaultStore()
+  const cjkBlockData = store.get(CJK區塊數據原子狀態)
+  if (!cjkBlockData) return false
+
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  if (!cjkBlockData) return false
   const block = cjkBlockData.blocks.cjk_h
   if (!block) return false
   const start = parseInt(block.start, 16)
@@ -173,9 +177,12 @@ export function isInCJKH(char: string): boolean {
 }
 
 export function isInCJKI(char: string): boolean {
+  const store = getDefaultStore()
+  const cjkBlockData = store.get(CJK區塊數據原子狀態)
+  if (!cjkBlockData) return false
+
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  if (!cjkBlockData) return false
   const block = cjkBlockData.blocks.cjk_i
   if (!block) return false
   const start = parseInt(block.start, 16)
@@ -184,9 +191,12 @@ export function isInCJKI(char: string): boolean {
 }
 
 export function isInCJKJ(char: string): boolean {
+  const store = getDefaultStore()
+  const cjkBlockData = store.get(CJK區塊數據原子狀態)
+  if (!cjkBlockData) return false
+
   const codePoint = char.codePointAt(0)
   if (!codePoint) return false
-  if (!cjkBlockData) return false
   const block = cjkBlockData.blocks.cjk_j
   if (!block) return false
   const start = parseInt(block.start, 16)
@@ -359,6 +369,8 @@ export const charsetInfo: Record<CharsetType, { name: string; description: strin
 // 獲取字符集大小的函數
 export async function getCharsetSize(charsetType: CharsetType): Promise<number> {
   await loadCharsetData()
+  const store = getDefaultStore()
+  const charsetData = store.get(字符集數據原子狀態)
   if (!charsetData) return 0
 
   let count = 0
@@ -392,6 +404,8 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
       return await getCharsetSize(charsetType)
 
     case 'cjk_basic': {
+      const store = getDefaultStore()
+      const cjkBlockData = store.get(CJK區塊數據原子狀態)
       if (!cjkBlockData) return 0
       const basicBlock = cjkBlockData.blocks.cjk_basic
       if (!basicBlock) return 0
@@ -399,6 +413,8 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     }
 
     case 'cjk_a': {
+      const store = getDefaultStore()
+      const cjkBlockData = store.get(CJK區塊數據原子狀態)
       if (!cjkBlockData) return 0
       const aBlock = cjkBlockData.blocks.cjk_a
       if (!aBlock) return 0
@@ -406,6 +422,8 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     }
 
     case 'cjk_b': {
+      const store = getDefaultStore()
+      const cjkBlockData = store.get(CJK區塊數據原子狀態)
       if (!cjkBlockData) return 0
       const bBlock = cjkBlockData.blocks.cjk_b
       if (!bBlock) return 0
@@ -413,6 +431,8 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     }
 
     case 'cjk_c': {
+      const store = getDefaultStore()
+      const cjkBlockData = store.get(CJK區塊數據原子狀態)
       if (!cjkBlockData) return 0
       const cBlock = cjkBlockData.blocks.cjk_c
       if (!cBlock) return 0
@@ -420,6 +440,8 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     }
 
     case 'cjk_d': {
+      const store = getDefaultStore()
+      const cjkBlockData = store.get(CJK區塊數據原子狀態)
       if (!cjkBlockData) return 0
       const dBlock = cjkBlockData.blocks.cjk_d
       if (!dBlock) return 0
@@ -427,6 +449,8 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     }
 
     case 'cjk_e': {
+      const store = getDefaultStore()
+      const cjkBlockData = store.get(CJK區塊數據原子狀態)
       if (!cjkBlockData) return 0
       const eBlock = cjkBlockData.blocks.cjk_e
       if (!eBlock) return 0
@@ -434,6 +458,8 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     }
 
     case 'cjk_f': {
+      const store = getDefaultStore()
+      const cjkBlockData = store.get(CJK區塊數據原子狀態)
       if (!cjkBlockData) return 0
       const fBlock = cjkBlockData.blocks.cjk_f
       if (!fBlock) return 0
@@ -441,6 +467,8 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     }
 
     case 'cjk_g': {
+      const store = getDefaultStore()
+      const cjkBlockData = store.get(CJK區塊數據原子狀態)
       if (!cjkBlockData) return 0
       const gBlock = cjkBlockData.blocks.cjk_g
       if (!gBlock) return 0
@@ -448,6 +476,8 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     }
 
     case 'cjk_h': {
+      const store = getDefaultStore()
+      const cjkBlockData = store.get(CJK區塊數據原子狀態)
       if (!cjkBlockData) return 0
       const hBlock = cjkBlockData.blocks.cjk_h
       if (!hBlock) return 0
@@ -455,6 +485,8 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     }
 
     case 'cjk_i': {
+      const store = getDefaultStore()
+      const cjkBlockData = store.get(CJK區塊數據原子狀態)
       if (!cjkBlockData) return 0
       const iBlock = cjkBlockData.blocks.cjk_i
       if (!iBlock) return 0
@@ -462,6 +494,8 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
     }
 
     case 'cjk_j': {
+      const store = getDefaultStore()
+      const cjkBlockData = store.get(CJK區塊數據原子狀態)
       if (!cjkBlockData) return 0
       const jBlock = cjkBlockData.blocks.cjk_j
       if (!jBlock) return 0
@@ -534,6 +568,8 @@ export async function generateCharset(
   // 對於 gb2312、tonggui 和 guozi，直接從字符集數據中過濾
   if (charsetType === 'gb2312' || charsetType === 'tonggui' || charsetType === 'guozi') {
     await loadCharsetData()
+    const store = getDefaultStore()
+    const charsetData = store.get(字符集數據原子狀態)
     if (!charsetData) return charset
 
     for (const char of allChars) {

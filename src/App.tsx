@@ -2,6 +2,7 @@ import { useRoutes } from 'react-router-dom'
 import MainLayout from './components/layout/MainLayout'
 import HomePage from './pages/HomePage'
 import ProcessTablePage from './pages/ProcessTablePage'
+import DuplicateAnalysisPage from './pages/DuplicateAnalysisPage'
 
 const routes = [
   {
@@ -15,6 +16,10 @@ const routes = [
       {
         path: '/process-table',
         element: <ProcessTablePage />,
+      },
+      {
+        path: '/duplicate',
+        element: <DuplicateAnalysisPage />,
       },
     ],
   },

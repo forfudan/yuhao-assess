@@ -30,7 +30,6 @@ dist-ssr
 .env.test.local
 
 # Generated data files
-public/data/charsets.json
 .env.production.local
 
 # TypeScript
