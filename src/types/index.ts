@@ -65,8 +65,14 @@ export interface EquivTable {
   data: Record<string, number>
 }
 
-// 字頻數據
-export type CharFrequency = Record<string, number>
+// 漢字絕對頻數數據（原始數據，未歸一化）
+export type AbsoluteCharFrequency = Record<string, number>
+
+// 漢字相對頻率數據（歸一化後，用於計算）
+export type RelativeCharFrequency = Record<string, number>
+
+// 兼容舊代碼，預設使用相對頻率
+export type CharFrequency = RelativeCharFrequency
 
 // 詞頻數據
 export type WordFrequency = Record<string, number>

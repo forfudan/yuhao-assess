@@ -1,86 +1,105 @@
-import type { CharFrequency } from '@/types'
+import type { AbsoluteCharFrequency, RelativeCharFrequency } from '@/types'
 import { getDefaultStore } from 'jotai'
 import { 字頻表緩存原子狀態 } from '../atoms/charFrequency'
 
-// 直接導入 JSON 文件（使用絶對頻率文件）
-import 簡體字頻數據 from '../../public/data/charAbsoluteFrequencySC.json'
-import 繁體字頻數據 from '../../public/data/charAbsoluteFrequencyTC.json'
-import 知乎字頻數據 from '../../public/data/charAbsoluteFrequencyZhihu.json'
-import 古籍字頻數據 from '../../public/data/charAbsoluteFrequencyGuji.json'
+// 直接導入 JSON 文件（絕對頻數數據）
+import 簡體漢字頻數數據 from '../../public/data/charAbsoluteFrequencySC.json'
+import 繁體漢字頻數數據 from '../../public/data/charAbsoluteFrequencyTC.json'
+import 知乎漢字頻數數據 from '../../public/data/charAbsoluteFrequencyZhihu.json'
+import 古籍漢字頻數數據 from '../../public/data/charAbsoluteFrequencyGuji.json'
+
+/**
+ * 歸一化絕對頻數為相對頻率
+ */
+function 歸一化頻數(頻數數據: AbsoluteCharFrequency): RelativeCharFrequency {
+  const 總頻數 = Object.values(頻數數據).reduce((sum, count) => sum + count, 0)
+  const 頻率數據: RelativeCharFrequency = {}
+  
+  for (const [字符, 頻數] of Object.entries(頻數數據)) {
+    頻率數據[字符] = 頻數 / 總頻數
+  }
+  
+  return 頻率數據
+}
 
 /**
  * 字頻表服務
  * 使用 Jotai atom 進行全局緩存，避免重複加載
+ * 所有返回的字頻數據都是歸一化後的相對頻率
  */
 export class 字頻表服務 {
   /**
-   * 加載簡體字頻表
+   * 加載簡體漢字頻率表
    */
-  static async 加載簡體字頻(): Promise<CharFrequency> {
+  static async 加載簡體字頻(): Promise<RelativeCharFrequency> {
     const store = getDefaultStore()
     const cache = store.get(字頻表緩存原子狀態)
-    const cached = cache.get('简体字频')
+    const cached = cache.get('簡體字頻')
     if (cached) return cached
 
-    const data = 簡體字頻數據 as CharFrequency
-    cache.set('简体字频', data)
+    // 導入絕對頻數數據並歸一化為相對頻率
+    const 簡體漢字頻率數據 = 歸一化頻數(簡體漢字頻數數據 as AbsoluteCharFrequency)
+    cache.set('簡體字頻', 簡體漢字頻率數據)
     store.set(字頻表緩存原子狀態, cache)
-    return data
+    return 簡體漢字頻率數據
   }
 
   /**
-   * 加載繁體字頻表
+   * 加載繁體漢字頻率表
    */
-  static async 加載繁體字頻(): Promise<CharFrequency> {
+  static async 加載繁體字頻(): Promise<RelativeCharFrequency> {
     const store = getDefaultStore()
     const cache = store.get(字頻表緩存原子狀態)
-    const cached = cache.get('繁体字频')
+    const cached = cache.get('繁體字頻')
     if (cached) return cached
 
-    const data = 繁體字頻數據 as CharFrequency
-    cache.set('繁体字频', data)
+    // 導入絕對頻數數據並歸一化為相對頻率
+    const 繁體漢字頻率數據 = 歸一化頻數(繁體漢字頻數數據 as AbsoluteCharFrequency)
+    cache.set('繁體字頻', 繁體漢字頻率數據)
     store.set(字頻表緩存原子狀態, cache)
-    return data
+    return 繁體漢字頻率數據
   }
 
   /**
-   * 加載知乎字頻表
+   * 加載知乎漢字頻率表
    */
-  static async 加載知乎字頻(): Promise<CharFrequency> {
+  static async 加載知乎字頻(): Promise<RelativeCharFrequency> {
     const store = getDefaultStore()
     const cache = store.get(字頻表緩存原子狀態)
-    const cached = cache.get('知乎字频')
+    const cached = cache.get('知乎字頻')
     if (cached) return cached
 
-    const data = 知乎字頻數據 as CharFrequency
-    cache.set('知乎字频', data)
+    // 導入絕對頻數數據並歸一化為相對頻率
+    const 知乎漢字頻率數據 = 歸一化頻數(知乎漢字頻數數據 as AbsoluteCharFrequency)
+    cache.set('知乎字頻', 知乎漢字頻率數據)
     store.set(字頻表緩存原子狀態, cache)
-    return data
+    return 知乎漢字頻率數據
   }
 
   /**
-   * 加載古籍字頻表
+   * 加載古籍漢字頻率表
    */
-  static async 加載古籍字頻(): Promise<CharFrequency> {
+  static async 加載古籍字頻(): Promise<RelativeCharFrequency> {
     const store = getDefaultStore()
     const cache = store.get(字頻表緩存原子狀態)
-    const cached = cache.get('古籍字频')
+    const cached = cache.get('古籍字頻')
     if (cached) return cached
 
-    const data = 古籍字頻數據 as CharFrequency
-    cache.set('古籍字频', data)
+    // 導入絕對頻數數據並歸一化為相對頻率
+    const 古籍漢字頻率數據 = 歸一化頻數(古籍漢字頻數數據 as AbsoluteCharFrequency)
+    cache.set('古籍字頻', 古籍漢字頻率數據)
     store.set(字頻表緩存原子狀態, cache)
-    return data
+    return 古籍漢字頻率數據
   }
 
   /**
-   * 加載繁簡聯合字頻表（合併簡體和繁體）
+   * 加載繁簡聯合漢字頻率表（合併簡體和繁體）
    */
-  static async 加載繁簡聯合字頻(): Promise<CharFrequency> {
+  static async 加載繁簡聯合字頻(): Promise<RelativeCharFrequency> {
     const [簡體字頻, 繁體字頻] = await Promise.all([this.加載簡體字頻(), this.加載繁體字頻()])
 
     // 合併字頻，取較大值
-    const 合併字頻: CharFrequency = { ...簡體字頻 }
+    const 合併字頻: RelativeCharFrequency = { ...簡體字頻 }
     for (const [字符, 頻率] of Object.entries(繁體字頻)) {
       if (!合併字頻[字符] || 合併字頻[字符] < 頻率) {
         合併字頻[字符] = 頻率
@@ -91,21 +110,21 @@ export class 字頻表服務 {
   }
 
   /**
-   * 根據類型加載對應的字頻表
+   * 根據類型加載對應的漢字頻率表
    */
   static async 加載字頻表(
-    類型: '简体字频' | '繁体字频' | '繁简联合' | '知乎字频' | '古籍字频'
-  ): Promise<CharFrequency> {
+    類型: '簡體字頻' | '繁體字頻' | '繁简联合' | '知乎字頻' | '古籍字頻'
+  ): Promise<RelativeCharFrequency> {
     switch (類型) {
-      case '简体字频':
+      case '簡體字頻':
         return this.加載簡體字頻()
-      case '繁体字频':
+      case '繁體字頻':
         return this.加載繁體字頻()
       case '繁简联合':
         return this.加載繁簡聯合字頻()
-      case '知乎字频':
+      case '知乎字頻':
         return this.加載知乎字頻()
-      case '古籍字频':
+      case '古籍字頻':
         return this.加載古籍字頻()
       default:
         throw new Error(`未知的字頻表類型: ${類型}`)

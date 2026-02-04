@@ -127,12 +127,12 @@
   color: var(--primary-color);
 }
 
-[data-theme="dark"] .scheme-name-annotation {
+[data-theme='dark'] .scheme-name-annotation {
   background: rgba(74, 144, 226, 0.15);
   border-left-color: var(--color-accent);
 }
 
-[data-theme="dark"] .scheme-name-annotation span {
+[data-theme='dark'] .scheme-name-annotation span {
   color: var(--color-accent);
 }
 
@@ -156,11 +156,11 @@
   animation: spin 1s linear infinite;
 }
 
-[data-theme="dark"] .loading {
+[data-theme='dark'] .loading {
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .spinner {
+[data-theme='dark'] .spinner {
   border-color: var(--color-border-secondary);
   border-top-color: var(--color-accent);
 }
@@ -207,20 +207,20 @@
   font-size: 0.875rem;
 }
 
-[data-theme="dark"] .metrics-table {
+[data-theme='dark'] .metrics-table {
   border-color: var(--color-border-secondary);
 }
 
-[data-theme="dark"] .metrics-table th {
+[data-theme='dark'] .metrics-table th {
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
 }
 
-[data-theme="dark"] .metrics-table td {
+[data-theme='dark'] .metrics-table td {
   color: var(--color-text-primary);
 }
 
-[data-theme="dark"] .metrics-table tbody tr:hover {
+[data-theme='dark'] .metrics-table tbody tr:hover {
   background: var(--color-bg-hover);
 }
 
@@ -252,7 +252,7 @@
   color: var(--color-text-primary);
 }
 
-[data-theme="dark"] .info-section {
+[data-theme='dark'] .info-section {
   background: var(--color-bg-secondary);
   color: var(--color-text-secondary);
 }

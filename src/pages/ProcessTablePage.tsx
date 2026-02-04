@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useAtom, useSetAtom } from 'jotai'
-import { Upload, Button, Alert, Table, Space, Typography } from 'antd'
+import { Upload, Button, Alert, Table, Space, Typography, Select } from 'antd'
 import {
   DownloadOutlined,
   InboxOutlined,
@@ -15,6 +15,7 @@ import { 碼表處理服務實例 } from '@/services/codeTableService'
 import type { RawCodeTable } from '@/types'
 
 const { Title, Paragraph, Text, Link } = Typography
+const { Option } = Select
 
 interface 編碼預覽項 {
   char: string
@@ -26,7 +27,7 @@ interface 編碼預覽項 {
 
 const ProcessTablePage: React.FC = () => {
   // Jotai 狀態
-  const [當前方案] = useAtom(當前方案原子狀態)
+  const [當前方案, 設置當前方案] = useAtom(當前方案原子狀態)
   const 設置原始碼表 = useSetAtom(原始碼表原子狀態)
   const 設置碼表 = useSetAtom(碼表原子狀態)
   const 設置碼表元數據 = useSetAtom(碼表元數據原子狀態)
@@ -70,9 +71,7 @@ const ProcessTablePage: React.FC = () => {
     // 設置全局狀態
     設置原始碼表('')
     設置碼表元數據({
-      name: 文件名,
       uploadTime: Date.now(),
-      totalChars: 原始碼表.size,
     })
     設置碼表(處理結果 as any)
 
@@ -105,22 +104,16 @@ const ProcessTablePage: React.FC = () => {
     )
   }
 
-  // 抓取並解析碼表
-  const 抓取並解析碼表 = async () => {
+  // 抓取碼表（仅下載不解析）
+  const 抓取碼表 = async () => {
     if (!當前方案?.元數據.碼表下載鏈接) {
       設置錯誤信息('没有碼表下載鏈接')
-      return
-    }
-
-    if (!當前方案.碼表元數據) {
-      設置錯誤信息('請先在首頁添加碼表元數據（分隔符、第一列類型等）')
       return
     }
 
     設置加載中(true)
     設置錯誤信息(null)
     設置成功信息(null)
-    設置編碼預覽數據([])
 
     try {
       // 下載碼表
@@ -131,24 +124,19 @@ const ProcessTablePage: React.FC = () => {
 
       const 文本 = await response.text()
 
-      // 解析原始碼表
-      const 解析結果 = await 碼表處理服務實例.解析原始碼表文本(
-        文本,
-        當前方案.碼表元數據.分隔符,
-        當前方案.碼表元數據.第一列類型
-      )
+      // 生成文件预览
+      const 行數組 = 文本.split('\n').slice(0, 100)
+      設置文件預覽數據(行數組)
 
-      if (!解析結果.rawCodeTable || 解析結果.rawCodeTable.size === 0) {
-        throw new Error('碼表解析爲空，請檢查格式')
-      }
+      // 创建一个虚拟文件对象（用于后续解析）
+      const 虚拟文件 = new File([文本], 當前方案.元數據.標識符 + '.txt', {
+        type: 'text/plain',
+      }) as RcFile
+      設置選中的文件(虚拟文件)
 
-      const 原始碼表 = 解析結果.rawCodeTable
-      const 文件名 = 當前方案.元數據.標識符 + '.txt'
-
-      // 處理碼表
-      await 處理碼表(原始碼表, 文件名)
+      設置成功信息('碼表已抓取，請點擊「開始解析」')
     } catch (error) {
-      設置錯誤信息(error instanceof Error ? error.message : '抓取解析失敗')
+      設置錯誤信息(error instanceof Error ? error.message : '抓取失敗')
     } finally {
       設置加載中(false)
     }
@@ -222,6 +210,7 @@ const ProcessTablePage: React.FC = () => {
     設置編碼預覽數據([])
     設置錯誤信息(null)
     設置成功信息(null)
+
   }
 
   return (
@@ -260,11 +249,11 @@ const ProcessTablePage: React.FC = () => {
                 </Link>
                 <Button
                   icon={<DownloadOutlined />}
-                  onClick={抓取並解析碼表}
+                  onClick={抓取碼表}
                   loading={加載中}
                   disabled={!當前方案.碼表元數據}
                 >
-                  抓取並解析
+                  抓取
                 </Button>
               </Space>
             </div>
@@ -272,8 +261,49 @@ const ProcessTablePage: React.FC = () => {
         )}
 
         {/* 文件上傳 */}
-        {!選中的文件 && (
+        {!選中的文件 && 編碼預覽數據.length === 0 && (
           <div>
+            {/* 碼表解析配置 */}
+            {當前方案?.碼表元數據 && (
+              <div style={{ marginBottom: '16px' }}>
+                <Space size="large">
+                  <div>
+                    <Text type="secondary">分隔符：</Text>
+                    <Select
+                      value={當前方案.碼表元數據.分隔符}
+                      style={{ width: '120px' }}
+                      onChange={值 => {
+                        設置當前方案({
+                          ...當前方案,
+                          碼表元數據: { ...當前方案.碼表元數據!, 分隔符: 值 },
+                        })
+                      }}
+                    >
+                      <Option value="空格">空格</Option>
+                      <Option value="製表符">製表符</Option>
+                      <Option value="逗號">逗號</Option>
+                      <Option value="分號">分號</Option>
+                    </Select>
+                  </div>
+                  <div>
+                    <Text type="secondary">第一列類型：</Text>
+                    <Select
+                      value={當前方案.碼表元數據.第一列類型}
+                      style={{ width: '120px' }}
+                      onChange={值 => {
+                        設置當前方案({
+                          ...當前方案,
+                          碼表元數據: { ...當前方案.碼表元數據!, 第一列類型: 值 },
+                        })
+                      }}
+                    >
+                      <Option value="字符">字符</Option>
+                      <Option value="編碼">編碼</Option>
+                    </Select>
+                  </div>
+                </Space>
+              </div>
+            )}
             <Upload.Dragger
               accept=".txt,.csv,.yaml,.yml"
               beforeUpload={處理文件變化}

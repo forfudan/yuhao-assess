@@ -1,4 +1,5 @@
 # 宇浩漢字輸入法測評系統
+
 一個基於 React + TypeScript 的輸入法性能測評工具，支持重碼率、動態選重、速度當量、簡碼效率等多項指標分析。
 
 ## 📖 重要文檔
@@ -16,6 +17,7 @@
 - 📋 詳見 [docs/NOMENCLATURE.md](./docs/NOMENCLATURE.md)
 
 **示例**：
+
 ```typescript
 // ✅ 正確
 const 當前方案原子狀態 = atom<方案配置 | null>(null)
@@ -43,11 +45,13 @@ pnpm format
 
 # 字形轉換（台灣繁體 → 大陸通規繁體）
 pnpm tc
+```bash
+# 命令示例
 ```
 
 ## 📦 項目結構
 
-```
+```text
 yuhao-assess/
 ├── docs/                  # 文檔
 │   ├── NOMENCLATURE.md    # 命名規範（必讀）

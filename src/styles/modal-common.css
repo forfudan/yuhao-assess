@@ -157,29 +157,29 @@
 }
 
 /* 黑暗模式支持 */
-[data-theme="dark"] .modal-content {
+[data-theme='dark'] .modal-content {
   background: var(--color-bg-primary);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
 
-[data-theme="dark"] .modal-header {
+[data-theme='dark'] .modal-header {
   border-bottom-color: var(--color-border-secondary);
 }
 
-[data-theme="dark"] .modal-header h3 {
+[data-theme='dark'] .modal-header h3 {
   color: var(--color-text-primary);
 }
 
-[data-theme="dark"] .modal-close {
+[data-theme='dark'] .modal-close {
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .modal-close:hover {
+[data-theme='dark'] .modal-close:hover {
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
 }
 
-[data-theme="dark"] .modal-loading {
+[data-theme='dark'] .modal-loading {
   color: var(--color-text-secondary);
 }
 

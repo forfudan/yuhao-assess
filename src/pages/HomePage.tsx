@@ -21,6 +21,7 @@ import {
 import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { 當前方案原子狀態, 方案列表原子狀態 } from '@/atoms/scheme'
+import { 重碼分析原子狀態 } from '@/atoms/duplicate'
 import {
   加載方案,
   列出可用方案,
@@ -38,6 +39,7 @@ const { TextArea } = Input
 function HomePage() {
   const [當前方案, 設置當前方案] = useAtom(當前方案原子狀態)
   const [方案列表, 設置方案列表] = useAtom(方案列表原子狀態)
+  const [重碼分析結果, 設置重碼分析結果] = useAtom(重碼分析原子狀態)
   const [加載中, 設置加載中] = useState(false)
 
   // 初始化：加載可用方案列表
@@ -82,7 +84,14 @@ function HomePage() {
       message.warning('請先選擇或創建方案')
       return
     }
-    const json文本 = 導出JSON(當前方案, true)
+
+    // 直接導出，將 atom 的重碼分析結果附加到方案配置
+    const 導出數據 = {
+      ...當前方案,
+      重碼分析結果: 重碼分析結果, // 直接使用 atom 的結構
+    }
+
+    const json文本 = JSON.stringify(導出數據, null, 2)
     const blob = new Blob([json文本], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -90,7 +99,9 @@ function HomePage() {
     a.download = `${當前方案.元數據.標識符}.json`
     a.click()
     URL.revokeObjectURL(url)
-    message.success('方案配置已導出')
+
+    const 提示 = 重碼分析結果 ? '（包含重碼分析結果）' : ''
+    message.success(`方案配置已導出${提示}`)
   }
 
   // 導入 JSON
@@ -99,9 +110,22 @@ function HomePage() {
     reader.onload = e => {
       try {
         const 文本 = e.target?.result as string
-        const 方案 = 從JSON導入(文本)
+        const 導入數據 = JSON.parse(文本)
+
+        // 分離方案配置和重碼分析結果
+        const { 重碼分析結果, ...方案配置 } = 導入數據
+
+        // 驗證方案配置
+        const 方案 = 從JSON導入(JSON.stringify(方案配置))
         設置當前方案(方案)
-        message.success(`已導入方案「${方案.元數據.方案名}」`)
+
+        // 如果有重碼分析結果，直接寫入 atom
+        if (重碼分析結果) {
+          設置重碼分析結果(重碼分析結果)
+          message.success(`已導入方案「${方案.元數據.方案名}」（包含重碼分析結果）`)
+        } else {
+          message.success(`已導入方案「${方案.元數據.方案名}」`)
+        }
       } catch (錯誤) {
         message.error(錯誤 instanceof Error ? 錯誤.message : '導入失敗')
       }
@@ -195,8 +219,6 @@ function HomePage() {
       碼表元數據: {
         分隔符: '空格',
         第一列類型: '字符',
-        總字符數: 0,
-        數據來源: 'file',
       },
     })
   }
@@ -364,14 +386,6 @@ function HomePage() {
           <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
               <div>
-                <Checkbox
-                  checked={當前方案.方案參數.是否爲前綴碼}
-                  onChange={e => 更新方案參數('是否爲前綴碼', e.target.checked)}
-                >
-                  是否爲前綴碼
-                </Checkbox>
-              </div>
-              <div>
                 <Text type="secondary">最大碼長</Text>
                 <InputNumber
                   value={當前方案.方案參數.最大碼長}
@@ -381,6 +395,14 @@ function HomePage() {
                   onBlur={() => {}}
                   onChange={值 => 更新方案參數('最大碼長', 值 as number)}
                 />
+              </div>
+              <div>
+                <Checkbox
+                  checked={當前方案.方案參數.是否爲前綴碼}
+                  onChange={e => 更新方案參數('是否爲前綴碼', e.target.checked)}
+                >
+                  是否爲前綴碼
+                </Checkbox>
               </div>
               {當前方案.方案參數.是否爲前綴碼 && (
                 <div style={{ gridColumn: 'span 2' }}>
@@ -417,51 +439,6 @@ function HomePage() {
           {當前方案.碼表元數據 && (
             <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-                <div>
-                  <Text type="secondary">分隔符</Text>
-                  <Select
-                    value={當前方案.碼表元數據.分隔符}
-                    style={{ width: '100%' }}
-                    onChange={值 => 更新碼表元數據('分隔符', 值)}
-                  >
-                    <Option value="空格">空格</Option>
-                    <Option value="製表符">製表符</Option>
-                    <Option value="逗號">逗號</Option>
-                    <Option value="分號">分號</Option>
-                  </Select>
-                </div>
-                <div>
-                  <Text type="secondary">第一列類型</Text>
-                  <Select
-                    value={當前方案.碼表元數據.第一列類型}
-                    style={{ width: '100%' }}
-                    onChange={值 => 更新碼表元數據('第一列類型', 值)}
-                  >
-                    <Option value="字符">字符</Option>
-                    <Option value="編碼">編碼</Option>
-                  </Select>
-                </div>
-                <div>
-                  <Text type="secondary">總字符數</Text>
-                  <InputNumber
-                    value={當前方案.碼表元數據.總字符數}
-                    min={0}
-                    style={{ width: '100%' }}
-                    onChange={值 => 更新碼表元數據('總字符數', 值 as number)}
-                  />
-                </div>
-                <div>
-                  <Text type="secondary">數據來源</Text>
-                  <Select
-                    value={當前方案.碼表元數據.數據來源}
-                    style={{ width: '100%' }}
-                    onChange={值 => 更新碼表元數據('數據來源', 值)}
-                  >
-                    <Option value="file">file</Option>
-                    <Option value="url">url</Option>
-                    <Option value="builtin">builtin</Option>
-                  </Select>
-                </div>
                 {當前方案.碼表元數據.哈希值 && (
                   <div style={{ gridColumn: 'span 2' }}>
                     <Text type="secondary">哈希值（只讀）</Text>

@@ -10,9 +10,7 @@ export const 碼表原子狀態 = atom<CodeTable | null>(null)
 
 // 碼表元數據（持久化原子狀態）
 export const 碼表元數據原子狀態 = atomWithStorage('codeTableMeta', {
-  name: '',
   uploadTime: 0,
-  totalChars: 0,
 })
 
 // 碼表狀態（原子狀態）

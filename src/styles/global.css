@@ -17,25 +17,25 @@
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
-  
+
   /* 背景顏色 - 淺色模式 */
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #f8f9fa;
   --color-bg-tertiary: #e9ecef;
   --color-bg-card: #ffffff;
   --color-bg-overlay: rgba(0, 0, 0, 0.05);
-  
+
   /* 文本顏色 - 淺色模式 */
   --color-text-primary: #212529;
   --color-text-secondary: #6c757d;
   --color-text-tertiary: #adb5bd;
   --color-text-inverse: #ffffff;
-  
+
   /* 邊框顏色 - 淺色模式 */
   --color-border-primary: #dee2e6;
   --color-border-secondary: #e9ecef;
   --color-border-focus: #007acc;
-  
+
   /* 熱力圖顏色 - 仿照 genda.shurufa.app */
   --heatmap-bg: #f8f9fa;
   --heatmap-key-bg: #ffffff;
@@ -46,19 +46,19 @@
   --heatmap-medium: #90caf9;
   --heatmap-high: #42a5f5;
   --heatmap-very-high: #1976d2;
-  
+
   /* 陰影 */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
-  
+
   /* 圓角 */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
-  
+
   /* 間距 */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -66,7 +66,7 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
-  
+
   /* 字體大小 */
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -75,12 +75,16 @@
   --font-size-xl: 1.25rem;
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
-  
+
   /* 字體 */
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   --font-mono: 'SF Mono', Monaco, 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
-  --font-numeric: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  
+  --font-numeric:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+
   /* 過渡動畫 */
   --transition-fast: 0.15s ease;
   --transition-base: 0.2s ease;
@@ -88,28 +92,28 @@
 }
 
 /* 深色模式 */
-[data-theme="dark"] {
+[data-theme='dark'] {
   /* 色彩系統 - 深色模式 */
   --color-primary-light: #1e3a5f;
-  
+
   /* 背景顏色 - 深色模式 */
   --color-bg-primary: #1a1a1a;
   --color-bg-secondary: #2d2d2d;
   --color-bg-tertiary: #404040;
   --color-bg-card: #2d2d2d;
   --color-bg-overlay: rgba(255, 255, 255, 0.05);
-  
+
   /* 文本顏色 - 深色模式 */
   --color-text-primary: #f8f9fa;
   --color-text-secondary: #adb5bd;
   --color-text-tertiary: #6c757d;
   --color-text-inverse: #212529;
-  
+
   /* 邊框顏色 - 深色模式 */
   --color-border-primary: #404040;
   --color-border-secondary: #2d2d2d;
   --color-border-focus: #0ea5e9;
-  
+
   /* 熱力圖顏色 - 深色模式 */
   --heatmap-bg: #1a1a1a;
   --heatmap-key-bg: #2d2d2d;
@@ -120,7 +124,7 @@
   --heatmap-medium: #1e293b;
   --heatmap-high: #334155;
   --heatmap-very-high: #0ea5e9;
-  
+
   /* 陰影 - 深色模式 */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
@@ -135,7 +139,9 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color var(--transition-base), color var(--transition-base);
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base);
 }
 
 /* 實用工具類 */
@@ -203,7 +209,9 @@ body {
 }
 
 /* 表單控件 */
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: inherit;
   font-size: var(--font-size-base);
   padding: var(--spacing-sm) var(--spacing-md);
@@ -214,7 +222,9 @@ input, select, textarea {
   transition: all var(--transition-fast);
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   outline: none;
   border-color: var(--color-border-focus);
   box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.1);
@@ -246,11 +256,11 @@ input:focus, select:focus, textarea:focus {
   .container {
     padding: 0 var(--spacing-md);
   }
-  
+
   .card {
     padding: var(--spacing-lg);
   }
-  
+
   .theme-toggle {
     top: var(--spacing-sm);
     right: var(--spacing-sm);
@@ -357,7 +367,7 @@ input:focus, select:focus, textarea:focus {
   .container {
     padding: 0 var(--spacing-md);
   }
-  
+
   .card {
     padding: var(--spacing-lg);
   }
@@ -368,7 +378,7 @@ input:focus, select:focus, textarea:focus {
   * {
     forced-color-adjust: auto;
   }
-  
+
   /* 確保按鈕和交互元素在強制顏色模式下保持可見性 */
   .primary-btn,
   .secondary-btn,
@@ -379,7 +389,7 @@ input:focus, select:focus, textarea:focus {
     background: ButtonFace;
     color: ButtonText;
   }
-  
+
   .primary-btn:hover,
   .secondary-btn:hover,
   .tab-button:hover,
@@ -387,7 +397,7 @@ input:focus, select:focus, textarea:focus {
     background: Highlight;
     color: HighlightText;
   }
-  
+
   /* 確保卡片和邊框在強制顏色模式下可見 */
   .card,
   .comparison-table,
@@ -397,78 +407,78 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* 暗黑模式下的通用表格樣式 */
-[data-theme="dark"] table {
+[data-theme='dark'] table {
   background: var(--color-bg-primary);
   border-color: var(--color-border-primary);
 }
 
-[data-theme="dark"] thead {
+[data-theme='dark'] thead {
   background: var(--color-bg-tertiary);
 }
 
-[data-theme="dark"] th {
+[data-theme='dark'] th {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
   border-bottom-color: var(--color-border-primary);
 }
 
-[data-theme="dark"] td {
+[data-theme='dark'] td {
   color: var(--color-text-primary);
   border-bottom-color: var(--color-border-secondary);
 }
 
-[data-theme="dark"] tbody tr:hover {
+[data-theme='dark'] tbody tr:hover {
   background: var(--color-bg-tertiary);
 }
 
 /* 暗黑模式下的表單控件 */
-[data-theme="dark"] input,
-[data-theme="dark"] select,
-[data-theme="dark"] textarea {
+[data-theme='dark'] input,
+[data-theme='dark'] select,
+[data-theme='dark'] textarea {
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   border-color: var(--color-border-primary);
 }
 
-[data-theme="dark"] input:focus,
-[data-theme="dark"] select:focus,
-[data-theme="dark"] textarea:focus {
+[data-theme='dark'] input:focus,
+[data-theme='dark'] select:focus,
+[data-theme='dark'] textarea:focus {
   border-color: var(--color-border-focus);
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
 
 /* 暗黑模式下的按鈕 */
-[data-theme="dark"] button:not(.btn) {
+[data-theme='dark'] button:not(.btn) {
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   border-color: var(--color-border-primary);
 }
 
-[data-theme="dark"] button:not(.btn):hover {
+[data-theme='dark'] button:not(.btn):hover {
   background: var(--color-bg-tertiary);
   border-color: var(--color-border-secondary);
 }
 
 /* 暗黑模式下的卡片 */
-[data-theme="dark"] .card {
+[data-theme='dark'] .card {
   background: var(--color-bg-card);
   border-color: var(--color-border-primary);
 }
 
 /* 暗黑模式下的說明欄 */
-[data-theme="dark"] .info-section,
-[data-theme="dark"] .scheme-name-annotation {
+[data-theme='dark'] .info-section,
+[data-theme='dark'] .scheme-name-annotation {
   background: var(--color-bg-tertiary);
   border-color: var(--color-border-primary);
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .info-section p,
-[data-theme="dark"] .info-section ul,
-[data-theme="dark"] .info-section li {
+[data-theme='dark'] .info-section p,
+[data-theme='dark'] .info-section ul,
+[data-theme='dark'] .info-section li {
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .info-section strong {
+[data-theme='dark'] .info-section strong {
   color: var(--color-text-primary);
 }

@@ -14,7 +14,7 @@
 6. **核心分離**：將計算邏輯逐步遷移到 `chinese-ime-metrics` 庫
 7. **命名規範**：**所有變量、類型、函數名統一使用繁體中文命名，要求具體、詳細、準確、自顯示**，詳見 **[命名規範文檔](./NOMENCLATURE.md)**（必讀）
 
-> **⚠️ 重要提示**：開發前務必閱讀 [NOMENCLATURE.md](./NOMENCLATURE.md)，了解本倉庫的命名規範。所有代碼提交必須遵循該規範，使用標準名稱而非別名或縮寫。
+> **⚠️ 重要提示**：開發前務必閲讀 [NOMENCLATURE.md](./NOMENCLATURE.md)，了解本倉庫的命名規範。所有代碼提交必須遵循該規範，使用標準名稱而非别名或縮寫。
 
 ### 📦 數據文件管理方案
 
@@ -692,40 +692,40 @@ console.log(data?.duplicateRate) // 0.15 (15% 重碼率)
 interface SchemeConfig {
   // ========== 方案數據 ==========
   方案數據: {
-    名稱: string                   // 方案名稱（如「靈明」）
-    鍵名: string                   // 唯一標識（文件名，如「yuling」）
-    作者?: string[]                // 作者（如「朱宇浩」）
-    維護者?: string[]              // 維護者（如「社區維護者」）
-    版本: string                   // 版本號（語義版本，如「1.0.0」）
-    官網?: string                  // 官網（如「https://shurufa.app」）
-    碼表下載鏈接?: string          // 碼表下載鏈接
-    描述?: string                  // 描述
-    標籤?: string[]                // 標籤（如 ['形碼', '前綴碼', '五碼']）
-    創建時間: string               // 創建時間（ISO 8601）
-    更新時間: string               // 更新時間（ISO 8601）
+    名稱: string // 方案名稱（如「靈明」）
+    鍵名: string // 唯一標識（文件名，如「yuling」）
+    作者?: string[] // 作者（如「朱宇浩」）
+    維護者?: string[] // 維護者（如「社區維護者」）
+    版本: string // 版本號（語義版本，如「1.0.0」）
+    官網?: string // 官網（如「https://shurufa.app」）
+    碼表下載鏈接?: string // 碼表下載鏈接
+    描述?: string // 描述
+    標籤?: string[] // 標籤（如 ['形碼', '前綴碼', '五碼']）
+    創建時間: string // 創建時間（ISO 8601）
+    更新時間: string // 更新時間（ISO 8601）
   }
-  
+
   // ========== 方案參數 ==========
   方案參數: {
-    是否爲前綴碼: boolean          // 是否爲前綴碼方案
-    前綴鍵?: string[]             // 前綴鍵（如 ['a','o','e','i','u','_']）
-    最大碼長: number               // 最大碼長（如 4 或 5）
+    是否爲前綴碼: boolean // 是否爲前綴碼方案
+    前綴鍵?: string[] // 前綴鍵（如 ['a','o','e','i','u','_']）
+    最大碼長: number // 最大碼長（如 4 或 5）
     編碼規則?: {
-      單字?: string               // 單字編碼規則描述
-      詞語?: string               // 詞語編碼規則描述
+      單字?: string // 單字編碼規則描述
+      詞語?: string // 詞語編碼規則描述
     }
   }
-  
+
   // ========== 碼表信息（可選） ==========
   碼表信息?: {
     分隔符: '空格' | '製表符' | '逗號' | '分號'
     第一列類型: '字符' | '編碼'
-    總字符數: number              // 總字符數
+    總字符數: number // 總字符數
     來源: 'file' | 'url' | 'builtin'
-    哈希值?: string                 // 碼表 SHA-256（用於驗證一致性）
+    哈希值?: string // 碼表 SHA-256（用於驗證一致性）
     // 注意：不存儲完整 rawCodeTable（太大，需時從碼表文件生成）
   }
-  
+
   // ========== 測評結果（增量，可選） ==========
   測評結果?: {
     // 字集覆蓋
@@ -746,18 +746,18 @@ interface SchemeConfig {
     // 重碼分析
     重碼分析?: {
       靜態重碼: {
-        gb2312?: { 組數: number, 字數: number }
-        通用規範?: { 組數: number, 字數: number }
-        常用國字?: { 組數: number, 字數: number }
-        cjk基本?: { 組數: number, 字數: number }
-        cjk擴A?: { 組數: number, 字數: number }
-        cjk擴B?: { 組數: number, 字數: number }
-        cjk擴F?: { 組數: number, 字數: number }
-        cjk擴J?: { 組數: number, 字數: number }
+        gb2312?: { 組數: number; 字數: number }
+        通用規範?: { 組數: number; 字數: number }
+        常用國字?: { 組數: number; 字數: number }
+        cjk基本?: { 組數: number; 字數: number }
+        cjk擴A?: { 組數: number; 字數: number }
+        cjk擴B?: { 組數: number; 字數: number }
+        cjk擴F?: { 組數: number; 字數: number }
+        cjk擴J?: { 組數: number; 字數: number }
       }
       更新時間: string
     }
-    
+
     // 動態選重率
     動態選重?: {
       知乎字頻?: number
@@ -767,44 +767,45 @@ interface SchemeConfig {
       混合字頻?: number
       更新時間: string
     }
-    
+
     // 候選個數
     候選個數?: {
-      gb2312?: {個數: number, 編碼: string[]}
-      通用規範?: {個數: number, 編碼: string[]}
-      常用國字?: {個數: number, 編碼: string[]}
-      cjk基本?: {個數: number, 編碼: string[]}
-      cjk擴A?: {個數: number, 編碼: string[]}
-      cjk擴B?: {個數: number, 編碼: string[]}
-      cjk擴F?: {個數: number, 編碼: string[]}
-      cjk擴J?: {個數: number, 編碼: string[]}
+      gb2312?: { 個數: number; 編碼: string[] }
+      通用規範?: { 個數: number; 編碼: string[] }
+      常用國字?: { 個數: number; 編碼: string[] }
+      cjk基本?: { 個數: number; 編碼: string[] }
+      cjk擴A?: { 個數: number; 編碼: string[] }
+      cjk擴B?: { 個數: number; 編碼: string[] }
+      cjk擴F?: { 個數: number; 編碼: string[] }
+      cjk擴J?: { 個數: number; 編碼: string[] }
       更新時間: string
     }
 
     // 速度當量
     速度當量?: {
-      知乎字頻?: { 全碼: number, 一級簡碼: number, 二級簡碼: number, 全部簡碼: number}
-      簡體字頻?: { 全碼: number, 一級簡碼: number, 二級簡碼: number, 全部簡碼: number}
-      繁體字頻?: { 全碼: number, 一級簡碼: number, 二級簡碼: number, 全部簡碼: number}
-      古籍字頻?: { 全碼: number, 一級簡碼: number, 二級簡碼: number, 全部簡碼: number}
-      混合字頻?: { 全碼: number, 一級簡碼: number, 二級簡碼: number, 全部簡碼: number}
+      知乎字頻?: { 全碼: number; 一級簡碼: number; 二級簡碼: number; 全部簡碼: number }
+      簡體字頻?: { 全碼: number; 一級簡碼: number; 二級簡碼: number; 全部簡碼: number }
+      繁體字頻?: { 全碼: number; 一級簡碼: number; 二級簡碼: number; 全部簡碼: number }
+      古籍字頻?: { 全碼: number; 一級簡碼: number; 二級簡碼: number; 全部簡碼: number }
+      混合字頻?: { 全碼: number; 一級簡碼: number; 二級簡碼: number; 全部簡碼: number }
       更新時間: string
     }
-        
+
     // 簡碼效率
     簡碼效率?: {
-      知乎字頻?:{
-        簡碼數量對應碼長: Record<number, number>  // { 1: 26, 2: 650, 3: 5000, 4: 20000 }
-        極限碼長: number}  // 取所有簡碼時候的碼長
+      知乎字頻?: {
+        簡碼數量對應碼長: Record<number, number> // { 1: 26, 2: 650, 3: 5000, 4: 20000 }
+        極限碼長: number
+      } // 取所有簡碼時候的碼長
       更新時間: string
     }
-    
+
     // 鍵位熱力
     鍵位熱力?: {
-      按鍵頻率: Record<string, number>  // { 'a': 0.15, 'o': 0.12, ... }
-      手指負擔: Record<string, number>  // { '左手食指': 0.2, '右手中指': 0.3, ... }
-      左右手分佈: { 左手: number, 右手: number }
-      按排分佈: Record<string, number>  // { '上排': 0.4, '中排': 0.5, '下排': 0.1 }
+      按鍵頻率: Record<string, number> // { 'a': 0.15, 'o': 0.12, ... }
+      手指負擔: Record<string, number> // { '左手食指': 0.2, '右手中指': 0.3, ... }
+      左右手分佈: { 左手: number; 右手: number }
+      按排分佈: Record<string, number> // { '上排': 0.4, '中排': 0.5, '下排': 0.1 }
       更新時間: string
       是否模擬標點使用頻率: boolean
     }
@@ -827,20 +828,25 @@ interface SchemeConfig {
 
 ```typescript
 // src/types/scheme.ts
-export interface SchemeConfig { /* 見上 */ }
-export interface SchemeMetadata { /* ... */ }
-export interface SchemeParameters { /* ... */ }
-export interface SchemeResults { /* ... */ }
+export interface SchemeConfig {
+  /* 見上 */
+}
+export interface SchemeMetadata {
+  /* ... */
+}
+export interface SchemeParameters {
+  /* ... */
+}
+export interface SchemeResults {
+  /* ... */
+}
 
 // src/atoms/scheme.ts
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 
 // 當前方案配置（持久化到 localStorage）
-export const 當前方案原子狀態 = atomWithStorage<SchemeConfig | null>(
-  'currentScheme',
-  null
-)
+export const 當前方案原子狀態 = atomWithStorage<SchemeConfig | null>('currentScheme', null)
 
 // 預設方案列表
 export const 方案列表原子狀態 = atom<SchemeConfig[]>([])
@@ -849,25 +855,22 @@ export const 方案列表原子狀態 = atom<SchemeConfig[]>([])
 export class SchemeService {
   // 加載預設方案
   async loadScheme(key: string): Promise<SchemeConfig>
-  
+
   // 加載所有預設方案列表（僅元數據）
   async loadSchemeList(): Promise<SchemeMetadata[]>
-  
+
   // 導出爲 JSON
   exportToJSON(scheme: SchemeConfig): string
-  
+
   // 從 JSON 導入
   importFromJSON(json: string): SchemeConfig
-  
+
   // 驗證完整性
-  validateScheme(scheme: SchemeConfig): { valid: boolean, missing: string[] }
-  
+  validateScheme(scheme: SchemeConfig): { valid: boolean; missing: string[] }
+
   // 計算缺失的結果
-  async computeMissingResults(
-    scheme: SchemeConfig, 
-    codeTable: RawCodeTable
-  ): Promise<SchemeConfig>
-  
+  async computeMissingResults(scheme: SchemeConfig, codeTable: RawCodeTable): Promise<SchemeConfig>
+
   // 生成碼表 hash
   async generateCodeTableHash(codeTable: RawCodeTable): Promise<string>
 }
@@ -909,7 +912,7 @@ export class SchemeService {
       <Input />
     </Form.Item>
     {/* ... 其他字段 */}
-    
+
     <Space>
       <Button icon={<UploadOutlined />}>導入 JSON</Button>
       <Button icon={<DownloadOutlined />}>導出 JSON</Button>
@@ -938,12 +941,12 @@ export class SchemeService {
 1. **條件渲染**
 
    ```tsx
-   {!scheme?.results?.duplicate && (
-     <Upload.Dragger>上傳碼表</Upload.Dragger>
-   )}
-   {scheme?.results?.duplicate && (
-     <Alert message="已有測評結果，無需上傳碼表" type="info" />
-   )}
+   {
+     !scheme?.results?.duplicate && <Upload.Dragger>上傳碼表</Upload.Dragger>
+   }
+   {
+     scheme?.results?.duplicate && <Alert message="已有測評結果，無需上傳碼表" type="info" />
+   }
    ```
 
 2. **從鏈接下載碼表**（新功能）
@@ -951,7 +954,7 @@ export class SchemeService {
    ```tsx
    <Input.Search
      placeholder="輸入碼表 URL"
-     onSearch={async (url) => {
+     onSearch={async url => {
        const text = await fetch(url).then(r => r.text())
        // 解析碼表...
      }}
@@ -965,7 +968,7 @@ export class SchemeService {
    scheme.codeTable = {
      totalChars: rawCodeTable.size,
      source: 'url',
-     hash
+     hash,
    }
    ```
 
@@ -998,7 +1001,7 @@ if (hasResult) {
 return (
   <>
     <Alert message="尚無測評結果，請上傳碼表並點擊計算" />
-    <Button 
+    <Button
       onClick={async () => {
         設置計算中(true)
         const results = await calculateDuplicate(rawCodeTable)
@@ -1118,11 +1121,13 @@ public/schemes/
 3. **並排顯示**
 
    ```tsx
-   <Table columns={[
-     { title: '指標', dataIndex: 'metric' },
-     { title: '日月', dataIndex: 'yuhao-ming' },
-     { title: '星陳', dataIndex: 'yuhao-star' }
-   ]} />
+   <Table
+     columns={[
+       { title: '指標', dataIndex: 'metric' },
+       { title: '日月', dataIndex: 'yuhao-ming' },
+       { title: '星陳', dataIndex: 'yuhao-star' },
+     ]}
+   />
    ```
 
 **驗收標準**：
@@ -1159,15 +1164,15 @@ public/
 
 ### ⏱️ 時間估算
 
-| Phase    | 任務                   | 時間       |
-| -------- | ---------------------- | ---------- |
-| 1        | 類型定義與基礎服務     | 2h         |
-| 2        | 首頁改造               | 2-3h       |
-| 3        | 碼表上傳頁面改造       | 1-2h       |
-| 4        | 分析頁面改造           | 2-3h       |
-| 5        | 預設方案 JSON 生成     | 2-3h       |
-| 6        | 方案對比頁面           | 1-2h       |
-| **總計** |                        | **10-15h** |
+| Phase    | 任務               | 時間       |
+| -------- | ------------------ | ---------- |
+| 1        | 類型定義與基礎服務 | 2h         |
+| 2        | 首頁改造           | 2-3h       |
+| 3        | 碼表上傳頁面改造   | 1-2h       |
+| 4        | 分析頁面改造       | 2-3h       |
+| 5        | 預設方案 JSON 生成 | 2-3h       |
+| 6        | 方案對比頁面       | 1-2h       |
+| **總計** |                    | **10-15h** |
 
 ### 🎯 驗收標準
 
@@ -1515,15 +1520,15 @@ export default React.memo(DuplicateAnalysisPage)
    ```typescript
    // src/services/schemeService.ts
    import yaml from 'js-yaml'
-   
+
    export function exportToYAML(scheme: SchemeConfig): string {
-     return yaml.dump(scheme, { 
+     return yaml.dump(scheme, {
        indent: 2,
        lineWidth: 100,
-       noRefs: true 
+       noRefs: true,
      })
    }
-   
+
    export function importFromYAML(yamlText: string): SchemeConfig {
      const data = yaml.load(yamlText)
      // + Zod 校驗

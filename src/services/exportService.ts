@@ -15,7 +15,10 @@ export class ExportService {
    * @param watermarkText 水印文字
    * @returns 返回創建的水印元素，用於後續移除
    */
-  static addTemporaryWatermark(cardElement: HTMLElement, watermarkText: string = '宇浩測評網 ceping.shurufa.app'): HTMLElement {
+  static addTemporaryWatermark(
+    cardElement: HTMLElement,
+    watermarkText: string = '宇浩測評網 ceping.shurufa.app'
+  ): HTMLElement {
     const watermarkDiv = document.createElement('div')
     watermarkDiv.className = 'export-watermark'
     watermarkDiv.style.cssText = `
@@ -30,7 +33,7 @@ export class ExportService {
       border-top: 1px solid #e2e8f0;
     `
     watermarkDiv.textContent = watermarkText
-    
+
     // 添加到卡片内容的最底部
     const cardContent = cardElement.querySelector('.card-content')
     if (cardContent) {
@@ -38,7 +41,7 @@ export class ExportService {
     } else {
       cardElement.appendChild(watermarkDiv)
     }
-    
+
     return watermarkDiv
   }
 
@@ -57,7 +60,10 @@ export class ExportService {
    * @param canvas 原始canvas
    * @param watermarkText 水印文字
    */
-  static addWatermark(canvas: HTMLCanvasElement, watermarkText: string = '宇浩測評網 ceping.shurufa.app'): HTMLCanvasElement {
+  static addWatermark(
+    canvas: HTMLCanvasElement,
+    watermarkText: string = '宇浩測評網 ceping.shurufa.app'
+  ): HTMLCanvasElement {
     const ctx = canvas.getContext('2d')
     if (!ctx) return canvas
 
@@ -71,7 +77,7 @@ export class ExportService {
     // 在底部中央添加水印
     const x = canvas.width / 2
     const y = canvas.height - 15 // 距离底部15px
-    
+
     ctx.fillText(watermarkText, x, y)
 
     return canvas
@@ -85,7 +91,7 @@ export class ExportService {
    * @param options 導出選項
    */
   static async exportElementToPNG(
-    element: HTMLElement, 
+    element: HTMLElement,
     cardTitle: string,
     schemeName: string = '未命名方案',
     options: {
@@ -101,7 +107,7 @@ export class ExportService {
       download = true,
       scale = 2,
       backgroundColor = '#ffffff',
-      addWatermark = true
+      addWatermark = true,
     } = options
 
     // 動態添加水印文字
@@ -113,7 +119,7 @@ export class ExportService {
     try {
       // 动态导入html2canvas
       const html2canvas = (await import('html2canvas')).default
-      
+
       const canvas = await html2canvas(element, {
         backgroundColor,
         scale,
@@ -122,9 +128,11 @@ export class ExportService {
         logging: false,
         ignoreElements: (element: any) => {
           // 忽略導出按鈕和折疊按鈕
-          return element.classList.contains('export-btn') || 
-                 element.classList.contains('collapse-button')
-        }
+          return (
+            element.classList.contains('export-btn') ||
+            element.classList.contains('collapse-button')
+          )
+        },
       })
 
       // 獲取圖片數據
@@ -137,20 +145,22 @@ export class ExportService {
       if (copyToClipboard) {
         try {
           // 將canvas轉換爲blob
-          const blob = await new Promise<Blob>((resolve) => {
-            canvas.toBlob((blob) => {
-              if (blob) resolve(blob)
-            }, 'image/png', 1.0)
+          const blob = await new Promise<Blob>(resolve => {
+            canvas.toBlob(
+              blob => {
+                if (blob) resolve(blob)
+              },
+              'image/png',
+              1.0
+            )
           })
 
           // 複製到剪貼板
           await navigator.clipboard.write([
             new ClipboardItem({
-              'image/png': blob
-            })
+              'image/png': blob,
+            }),
           ])
-          
-
         } catch (clipboardError) {
           console.warn('複製到剪貼板失敗，將進行下載:', clipboardError)
         }
@@ -165,7 +175,6 @@ export class ExportService {
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-
       }
 
       return dataUrl
@@ -185,9 +194,7 @@ export class ExportService {
    */
   static isClipboardSupported(): boolean {
     return (
-      typeof navigator !== 'undefined' &&
-      'clipboard' in navigator &&
-      'write' in navigator.clipboard
+      typeof navigator !== 'undefined' && 'clipboard' in navigator && 'write' in navigator.clipboard
     )
   }
 
@@ -217,7 +224,7 @@ export class ExportService {
       scale = 2,
       backgroundColor = '#ffffff',
       addWatermark = true,
-      switchTabCallback
+      switchTabCallback,
     } = options
 
     if (!switchTabCallback) {
@@ -230,7 +237,7 @@ export class ExportService {
 
       // 捕獲全碼模式（包含完整標題欄）
       await switchTabCallback('full')
-      
+
       const fullModeCanvas = await html2canvas(element, {
         backgroundColor,
         scale,
@@ -238,20 +245,22 @@ export class ExportService {
         allowTaint: false,
         logging: false,
         ignoreElements: (element: any) => {
-          return element.classList.contains('export-btn') || 
-                 element.classList.contains('collapse-button')
-        }
+          return (
+            element.classList.contains('export-btn') ||
+            element.classList.contains('collapse-button')
+          )
+        },
       })
 
       // 捕獲簡碼模式（僅捕獲卡片内容，不包含標題欄）
       await switchTabCallback('short')
-      
+
       // 查找卡片内容區域，跳過標題欄
       const cardContentElement = element.querySelector('.card-content')
       if (!cardContentElement) {
         throw new Error('找不到卡片内容區域')
       }
-      
+
       const shortModeCanvas = await html2canvas(cardContentElement as HTMLElement, {
         backgroundColor,
         scale,
@@ -259,9 +268,11 @@ export class ExportService {
         allowTaint: false,
         logging: false,
         ignoreElements: (element: any) => {
-          return element.classList.contains('export-btn') || 
-                 element.classList.contains('collapse-button')
-        }
+          return (
+            element.classList.contains('export-btn') ||
+            element.classList.contains('collapse-button')
+          )
+        },
       })
 
       // 創建合併的canvas
@@ -275,7 +286,8 @@ export class ExportService {
       const spacing = 20 * scale // 兩個圖片之間的間距
       const separatorHeight = 2 * scale // 分隔線高度
       combinedCanvas.width = Math.max(fullModeCanvas.width, shortModeCanvas.width)
-      combinedCanvas.height = fullModeCanvas.height + shortModeCanvas.height + spacing + separatorHeight
+      combinedCanvas.height =
+        fullModeCanvas.height + shortModeCanvas.height + spacing + separatorHeight
 
       // 填充背景色
       ctx.fillStyle = backgroundColor
@@ -303,26 +315,24 @@ export class ExportService {
 
       // 生成文件名
       const filename = this.generateFileName(`${cardTitle}`, schemeName)
-      
+
       // 獲取圖片數據
       const dataUrl = finalCanvas.toDataURL('image/png', 1.0)
-      
+
       // 複製到剪貼板
       if (copyToClipboard && this.isClipboardSupported()) {
         try {
-          const blob = await new Promise<Blob>((resolve) => {
-            finalCanvas.toBlob((blob) => resolve(blob!), 'image/png', 1.0)
+          const blob = await new Promise<Blob>(resolve => {
+            finalCanvas.toBlob(blob => resolve(blob!), 'image/png', 1.0)
           })
-          
+
           await Promise.all([
             navigator.clipboard.write([
               new ClipboardItem({
-                'image/png': blob
-              })
-            ])
+                'image/png': blob,
+              }),
+            ]),
           ])
-          
-
         } catch (clipboardError) {
           console.warn('複製到剪貼板失敗，將進行下載:', clipboardError)
         }
@@ -337,7 +347,6 @@ export class ExportService {
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-
       }
 
       return dataUrl
@@ -373,7 +382,7 @@ export class ExportService {
       scale = 2,
       backgroundColor = '#ffffff',
       addWatermark = true,
-      switchTabCallback
+      switchTabCallback,
     } = options
 
     if (!switchTabCallback) {
@@ -399,9 +408,11 @@ export class ExportService {
         allowTaint: false,
         logging: false,
         ignoreElements: (element: any) => {
-          return element.classList.contains('export-btn') || 
-                 element.classList.contains('collapse-button')
-        }
+          return (
+            element.classList.contains('export-btn') ||
+            element.classList.contains('collapse-button')
+          )
+        },
       })
 
       // 捕獲出簡簡頻模式（僅捕獲卡片内容）
@@ -413,9 +424,11 @@ export class ExportService {
         allowTaint: false,
         logging: false,
         ignoreElements: (element: any) => {
-          return element.classList.contains('export-btn') || 
-                 element.classList.contains('collapse-button')
-        }
+          return (
+            element.classList.contains('export-btn') ||
+            element.classList.contains('collapse-button')
+          )
+        },
       })
 
       // 捕獲全碼繁頻模式（僅捕獲卡片内容）
@@ -427,9 +440,11 @@ export class ExportService {
         allowTaint: false,
         logging: false,
         ignoreElements: (element: any) => {
-          return element.classList.contains('export-btn') || 
-                 element.classList.contains('collapse-button')
-        }
+          return (
+            element.classList.contains('export-btn') ||
+            element.classList.contains('collapse-button')
+          )
+        },
       })
 
       // 捕獲出簡繁頻模式（僅捕獲卡片内容）
@@ -441,9 +456,11 @@ export class ExportService {
         allowTaint: false,
         logging: false,
         ignoreElements: (element: any) => {
-          return element.classList.contains('export-btn') || 
-                 element.classList.contains('collapse-button')
-        }
+          return (
+            element.classList.contains('export-btn') ||
+            element.classList.contains('collapse-button')
+          )
+        },
       })
 
       // 創建合併的canvas
@@ -462,14 +479,14 @@ export class ExportService {
         fullTCModeCanvas.width,
         shortTCModeCanvas.width
       )
-      
+
       combinedCanvas.width = maxWidth
-      combinedCanvas.height = 
-        fullModeCanvas.height + 
-        shortModeCanvas.height + 
-        fullTCModeCanvas.height + 
-        shortTCModeCanvas.height + 
-        spacing * 3 + 
+      combinedCanvas.height =
+        fullModeCanvas.height +
+        shortModeCanvas.height +
+        fullTCModeCanvas.height +
+        shortTCModeCanvas.height +
+        spacing * 3 +
         separatorHeight * 3
 
       // 填充背景色
@@ -523,23 +540,23 @@ export class ExportService {
 
       // 生成文件名
       const filename = this.generateFileName(`${cardTitle}`, schemeName)
-      
+
       // 獲取圖片數據
       const dataUrl = finalCanvas.toDataURL('image/png', 1.0)
-      
+
       // 複製到剪貼板
       if (copyToClipboard && this.isClipboardSupported()) {
         try {
-          const blob = await new Promise<Blob>((resolve) => {
-            finalCanvas.toBlob((blob) => resolve(blob!), 'image/png', 1.0)
+          const blob = await new Promise<Blob>(resolve => {
+            finalCanvas.toBlob(blob => resolve(blob!), 'image/png', 1.0)
           })
-          
+
           await Promise.all([
             navigator.clipboard.write([
               new ClipboardItem({
-                'image/png': blob
-              })
-            ])
+                'image/png': blob,
+              }),
+            ]),
           ])
         } catch (clipboardError) {
           console.warn('複製到剪貼板失敗，將進行下載:', clipboardError)

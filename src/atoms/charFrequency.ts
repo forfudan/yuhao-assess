@@ -5,14 +5,14 @@ import type { CharFrequency } from '@/types'
 /**
  * 字频表類型
  */
-export type 字頻表類型 = '简体字频' | '繁体字频' | '繁简联合' | '知乎字频' | '古籍字频'
+export type 字頻表類型 = '簡體字頻' | '繁體字頻' | '繁简联合' | '知乎字頻' | '古籍字頻'
 
 /**
  * 當前選中的字頻表類型（持久化）
  */
 export const 當前字頻表類型原子狀態 = atomWithStorage<字頻表類型>(
   'current-char-frequency-type',
-  '简体字频'
+  '簡體字頻'
 )
 
 /**

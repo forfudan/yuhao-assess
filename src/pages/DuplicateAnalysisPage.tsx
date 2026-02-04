@@ -312,12 +312,20 @@ const DuplicatePage: React.FC = () => {
               字符: 字符列表[i].字符,
               編碼,
               字頻: 字符列表[i].字頻,
-              重碼字符列表: 字符列表.map(c => `${c.字符}(${c.字頻.toFixed(6)})`).join('、'),
+              重碼字符列表: 字符列表.map(c => `${c.字符}(${(c.字頻 * 10000).toFixed(2)}‱)`).join('、'),
             })
             序號++
           }
         }
       }
+
+      // 按字頻降序排列詳情列表
+      詳情列表.sort((a, b) => b.字頻 - a.字頻)
+
+      // 重新編號
+      詳情列表.forEach((item, index) => {
+        item.序號 = index + 1
+      })
 
       設置重碼詳情列表(詳情列表)
     } catch (error) {
@@ -615,7 +623,6 @@ const DuplicatePage: React.FC = () => {
         title: '單字指標',
         dataIndex: '指標',
         key: '指標',
-        width: 180,
         render: (text, record) =>
           record.提示 ? (
             <Tooltip title={record.提示}>
@@ -629,7 +636,6 @@ const DuplicatePage: React.FC = () => {
         title: '全碼',
         dataIndex: '全碼',
         key: '全碼',
-        width: 120,
         align: 'right',
         render: (text, record) =>
           record.可點擊 ? (
@@ -688,11 +694,20 @@ const DuplicatePage: React.FC = () => {
    * 重碼詳情表格列定義
    */
   const 詳情列定義: ColumnsType<any> = [
-    { title: '#', dataIndex: '序號', key: '序號', width: 60 },
-    { title: '重碼字', dataIndex: '字符', key: '字符', width: 80 },
-    { title: '編碼', dataIndex: '編碼', key: '編碼', width: 100 },
-    { title: '字頻', dataIndex: '字頻', key: '字頻', width: 120, render: v => v.toFixed(6) },
-    { title: '該編碼上的字符（字頻降序）', dataIndex: '重碼字符列表', key: '重碼字符列表' },
+    { title: '#', dataIndex: '序號', key: '序號' },
+    { title: '重碼字', dataIndex: '字符', key: '字符' },
+    { title: '編碼', dataIndex: '編碼', key: '編碼' },
+    { 
+      title: '字頻（‱）', 
+      dataIndex: '字頻', 
+      key: '字頻', 
+      render: (v: number) => (v * 10000).toFixed(2) 
+    },
+    { 
+      title: '該編碼上的字符（字頻降序）', 
+      dataIndex: '重碼字符列表', 
+      key: '重碼字符列表' 
+    },
   ]
 
   return (

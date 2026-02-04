@@ -140,23 +140,20 @@ const CHAR_MAPPINGS: readonly CharMapping[] = [
  */
 function getCharMappings(): Map<string, string> {
   const charMapping = new Map<string, string>()
-  
+
   for (const { tw, cn } of CHAR_MAPPINGS) {
     if (tw !== cn) {
       charMapping.set(tw, cn)
     }
   }
-  
+
   return charMapping
 }
 
 /**
  * 處理單個文件
  */
-function processFile(
-  filePath: string,
-  charMapping: Map<string, string>
-): ProcessResult {
+function processFile(filePath: string, charMapping: Map<string, string>): ProcessResult {
   if (!existsSync(filePath)) {
     throw new Error(`文件不存在: ${filePath}`)
   }

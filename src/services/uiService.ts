@@ -62,7 +62,7 @@ export function createTooltipManager() {
     position: 'fixed' as const,
     left: '0px',
     top: '0px',
-    zIndex: 9999
+    zIndex: 9999,
   })
 
   /**
@@ -73,16 +73,16 @@ export function createTooltipManager() {
   const showTooltip = (event: MouseEvent, text: string) => {
     tooltipText.value = text
     tooltipVisible.value = true
-    
+
     const rect = (event.target as HTMLElement).getBoundingClientRect()
     const tooltipLeft = Math.min(rect.left, window.innerWidth - 320)
     const tooltipTop = rect.bottom + 8
-    
+
     tooltipStyle.value = {
       position: 'fixed' as const,
       left: `${tooltipLeft}px`,
       top: `${tooltipTop}px`,
-      zIndex: 9999
+      zIndex: 9999,
     }
   }
 
@@ -98,7 +98,7 @@ export function createTooltipManager() {
     tooltipText,
     tooltipStyle,
     showTooltip,
-    hideTooltip
+    hideTooltip,
   }
 }
 

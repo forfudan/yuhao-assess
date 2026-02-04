@@ -16,20 +16,20 @@ export function calculateCodePairFrequencies(
   charFrequency: Record<string, number>
 ): Record<string, number> {
   const pairFrequencies: Record<string, number> = {}
-  
+
   for (const [char, codes] of codeTable.entries()) {
     const frequency = charFrequency[char] || 0
     if (frequency === 0 || codes.length === 0) continue
-    
+
     const code = codes[0] // 使用第一個編碼
-    
+
     // 生成所有相鄰的編碼對
     for (let i = 0; i < code.length - 1; i++) {
       const pair = code.substring(i, i + 2)
       pairFrequencies[pair] = (pairFrequencies[pair] || 0) + frequency
     }
   }
-  
+
   return pairFrequencies
 }
 
@@ -45,7 +45,7 @@ export function calculateSpeedEquiv(
 ): number {
   let totalWeightedEquiv = 0
   let totalFrequency = 0
-  
+
   for (const [pair, frequency] of Object.entries(pairFrequencies)) {
     const equiv = equivTable[pair]
     if (equiv !== undefined) {
@@ -53,7 +53,7 @@ export function calculateSpeedEquiv(
       totalFrequency += frequency
     }
   }
-  
+
   return totalFrequency > 0 ? totalWeightedEquiv / totalFrequency : 0
 }
 
@@ -79,8 +79,8 @@ export function calculateSpeedEquivFromCodeTable(
 export interface EquivDistributionItem {
   equivValue: number
   keyPairs: string[]
-  frequencyRatio: number  // 頻率比例（0-1之間）
-  description: string  // 按鍵組合特點説明
+  frequencyRatio: number // 頻率比例（0-1之間）
+  description: string // 按鍵組合特點説明
 }
 
 /**
@@ -96,22 +96,22 @@ export function calculateEquivDistribution(
 ): EquivDistributionItem[] {
   // 創建當量值檔位映射 (1.0 到 2.1，每 0.1 一檔)
   const equivBuckets: Record<number, { keyPairs: Set<string>; totalFrequency: number }> = {}
-  
+
   // 初始化檔位（1.0 到 2.1）
   for (let i = 10; i <= 21; i++) {
     const equivValue = i / 10
     equivBuckets[equivValue] = {
       keyPairs: new Set<string>(),
-      totalFrequency: 0
+      totalFrequency: 0,
     }
   }
-  
+
   // 計算總頻率
   let overallTotalFrequency = 0
   for (const frequency of Object.values(pairFrequencies)) {
     overallTotalFrequency += frequency
   }
-  
+
   // 將每個按鍵組合歸入相應檔位
   for (const [pair, frequency] of Object.entries(pairFrequencies)) {
     const equiv = equivTable[pair]
@@ -120,25 +120,25 @@ export function calculateEquivDistribution(
       const roundedEquiv = Math.round(equiv * 10) / 10
       // 確保在1.0-2.1範圍内
       const clampedEquiv = Math.max(1.0, Math.min(2.1, roundedEquiv))
-      
+
       if (equivBuckets[clampedEquiv]) {
         equivBuckets[clampedEquiv].keyPairs.add(pair)
         equivBuckets[clampedEquiv].totalFrequency += frequency
       }
     }
   }
-  
+
   // 轉換爲數組並降序排序
   const result = Object.entries(equivBuckets)
     .map(([equivValue, data]) => ({
       equivValue: parseFloat(equivValue),
       keyPairs: Array.from(data.keyPairs).sort(),
       frequencyRatio: overallTotalFrequency > 0 ? data.totalFrequency / overallTotalFrequency : 0,
-      description: generateEquivDescription(parseFloat(equivValue), Array.from(data.keyPairs))
+      description: generateEquivDescription(parseFloat(equivValue), Array.from(data.keyPairs)),
     }))
     .filter(item => item.keyPairs.length > 0) // 過濾掉没有數據的檔位
     .sort((a, b) => b.equivValue - a.equivValue) // 降序排序
-  
+
   return result
 }
 
@@ -185,19 +185,19 @@ function generateEquivDescription(equivValue: number, keyPairs: string[]): strin
  * @returns 一級簡碼表
  */
 export function generateFirstShortCodeTable(
-  shortWithSelection: CodeTable, 
+  shortWithSelection: CodeTable,
   fullWithSelection: CodeTable,
   prefixKeys: string[] = []
 ): CodeTable {
   const result: CodeTable = new Map()
-  
+
   // 创建上屏键集合，包含空格(_)和用户设置的上屏键
   const validEndingKeys = new Set(['_', ...prefixKeys])
-  
+
   for (const [char, codes] of shortWithSelection) {
     const shortCode = codes[0]
     if (!shortCode) continue
-    
+
     // 檢查是否爲一級簡碼：長度≤2且末尾是空格或上屏鍵
     if (shortCode.length <= 2 && validEndingKeys.has(shortCode[shortCode.length - 1])) {
       result.set(char, [shortCode])
@@ -209,7 +209,7 @@ export function generateFirstShortCodeTable(
       }
     }
   }
-  
+
   return result
 }
 
@@ -221,19 +221,19 @@ export function generateFirstShortCodeTable(
  * @returns 二級簡碼表
  */
 export function generateSecondShortCodeTable(
-  shortWithSelection: CodeTable, 
+  shortWithSelection: CodeTable,
   fullWithSelection: CodeTable,
   prefixKeys: string[] = []
 ): CodeTable {
   const result: CodeTable = new Map()
-  
+
   // 创建上屏键集合，包含空格(_)和用户设置的上屏键
   const validEndingKeys = new Set(['_', ...prefixKeys])
-  
+
   for (const [char, codes] of shortWithSelection) {
     const shortCode = codes[0]
     if (!shortCode) continue
-    
+
     // 檢查是否爲二級簡碼：長度≤3且末尾是空格或上屏鍵
     if (shortCode.length <= 3 && validEndingKeys.has(shortCode[shortCode.length - 1])) {
       result.set(char, [shortCode])
@@ -245,7 +245,7 @@ export function generateSecondShortCodeTable(
       }
     }
   }
-  
+
   return result
 }
 
@@ -260,14 +260,14 @@ export function generateWordFirstShortCodeTable(
   wordFullCodeTable: CodeTable
 ): CodeTable {
   const result: CodeTable = new Map()
-  
+
   for (const [word, codes] of wordShortCodeTable) {
     const shortCode = codes[0]
     if (!shortCode) continue
-    
+
     // 移除選重鍵和空格，計算實際碼長
     const cleanCode = shortCode.replace(/[0-9_]/g, '')
-    
+
     // 如果實際碼長≤1，使用簡碼；否則使用全碼
     if (cleanCode.length <= 1) {
       result.set(word, [shortCode])
@@ -278,7 +278,7 @@ export function generateWordFirstShortCodeTable(
       }
     }
   }
-  
+
   return result
 }
 
@@ -293,14 +293,14 @@ export function generateWordSecondShortCodeTable(
   wordFullCodeTable: CodeTable
 ): CodeTable {
   const result: CodeTable = new Map()
-  
+
   for (const [word, codes] of wordShortCodeTable) {
     const shortCode = codes[0]
     if (!shortCode) continue
-    
+
     // 移除選重鍵和空格，計算實際碼長
     const cleanCode = shortCode.replace(/[0-9_]/g, '')
-    
+
     // 如果實際碼長≤2，使用簡碼；否則使用全碼
     if (cleanCode.length <= 2) {
       result.set(word, [shortCode])
@@ -311,6 +311,6 @@ export function generateWordSecondShortCodeTable(
       }
     }
   }
-  
+
   return result
 }

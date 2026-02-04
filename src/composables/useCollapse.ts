@@ -25,6 +25,6 @@ export function useCollapse(initialState = false) {
     toggleCollapsed,
     collapse,
     expand,
-    getCollapsedState
+    getCollapsedState,
   }
 }

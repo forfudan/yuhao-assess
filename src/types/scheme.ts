@@ -37,8 +37,6 @@ export interface 方案參數 {
 export interface 方案碼表元數據 {
   分隔符: '空格' | '製表符' | '逗號' | '分號' // 碼表分隔符
   第一列類型: '字符' | '編碼' // 第一列類型
-  總字符數: number // 總字符數
-  數據來源: 'file' | 'url' | 'builtin'
   哈希值?: string // 碼表 SHA-256（用於驗證一致性）
 }
 

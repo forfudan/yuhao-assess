@@ -344,12 +344,12 @@ const jiazaizhong = true // ❌
 5. ✅ 現代編輯器對中文輸入有良好支持
 
 // ⚠️ 簡體中文（需漸進遷移）
-const 码表 = new Map<string, string>() // 舊代碼
-const 字频数据 = await loadCharFrequency() // 舊代碼
+const 碼表 = new Map<string, string>() // 舊代碼
+const 字頻數據 = await loadCharFrequency() // 舊代碼
 
 ````typescript
 
-### Pre-commit 检查
+### Pre-commit 檢查
 
 ```json
 "lint-staged": {
@@ -480,29 +480,90 @@ describe('DuplicatePage', () => {
 
 ### 避免的反模式
 
-❌ 不要在根目录创建 `scripts/` 文件夹  
-✅ 工具函数放在 `src/utils/`
+❌ 不要在根目錄創建 `scripts/` 文件夾  
+✅ 工具函數放在 `src/utils/`
 
-❌ 不要使用已废弃的 `Hybrid` API  
-✅ 使用纯 WASM API（`calculateDuplicateStats`）
+❌ 不要使用已廢棄的 `Hybrid` API  
+✅ 使用純 WASM API（`calculateDuplicateStats`）
 
-❌ 不要将大数据文件直接提交到 Git  
+❌ 不要將大數據文件直接提交到 Git  
 ✅ 使用 Git LFS 管理 `public/data/`
 
-❌ 不要在组件中直接写复杂计算逻辑  
-✅ 抽取到 `services/` 或迁移到 `chinese-ime-metrics`
+❌ 不要在組件中直接寫複雜計算邏輯  
+✅ 抽取到 `services/` 或遷移到 `chinese-ime-metrics`
 
-### 迁移时的特殊处理
+### 遷移時的特殊處理
 
-1. **字频数据加载**：从 `public/data/` 改为 `public/data/`（注意路径变化）
-2. **配置文件加载**：从 `public/data/` 改为 `public/settings/`
-3. **导入语句**：Vue 的 `@/` 别名在 React 中保持一致
-4. **组件生命周期**：
+1. **字頻數據加載**：从 `public/data/` 改為 `public/data/`（注意路徑變化）
+2. **配置文件加載**：从 `public/data/` 改為 `public/settings/`
+3. **導入語句**：Vue 的 `@/` 别名在 React 中保持一致
+4. **組件生命週期**：
    - Vue `onMounted` → React `useEffect`
-   - Vue `computed` → React `useMemo` 或 Jotai 计算原子
-   - Vue `watch` → React `useEffect` 依赖数组
+   - Vue `computed` → React `useMemo` 或 Jotai 計算原子
+   - Vue `watch` → React `useEffect` 依賴數組
 
-## 📊 项目关键指标
+## � 數據持久化原則
+
+### Atom 為標準的設計
+
+**核心原則**：所有計算結果的持久化，**以 atom 的類型定義為準**。
+
+#### 為什麼這樣設計？
+
+1. **atom 是當前系統的計算結果**：atom 中存儲的結構代表網站當前版本的計算結果
+2. **簡化類型系統**：不需要在 atom 類型和 scheme 類型之間維護複雜的映射
+3. **易於演進**：atom 結構改變時，只需改 atom 定義，不需改導入導出邏輯
+4. **版本兼容不重要**：舊 JSON 不兼容新系統時，重新計算即可
+
+#### 實施細節
+
+**導出 JSON**：
+
+```typescript
+// ✅ 正確：直接導出 atom 的完整結構
+const 導出數據 = {
+  ...方案配置,
+  重碼分析結果: 重碼分析Atom, // 直接使用 atom 的結構
+}
+
+// ❌ 錯誤：嘗試映射到 scheme 類型
+const 導出數據 = {
+  測評結果: {
+    重碼分析: { gb2312: atom.GB2312靜態重碼 }, // 不需要
+  },
+}
+```
+
+**導入 JSON**：
+
+```typescript
+// ✅ 正確：直接讀取並寫入 atom
+if (導入數據.重碼分析結果) {
+  設置重碼分析Atom(導入數據.重碼分析結果)
+}
+```
+
+**版本兼容性處理**：
+
+- 如果導入的 JSON 中 `重碼分析結果` 的結構與當前 atom 不匹配：
+  - ✅ **不用擔心**：直接忽略，讓用戶重新計算
+  - ✅ **提示用戶**：「數據版本不匹配，請重新計算」
+  - ❌ **不要**：嘗試轉換或調整類型
+
+#### 其他 Atom 的處理
+
+此原則適用於所有計算結果的 atom：
+
+- `重碼分析原子狀態` → 直接導出/導入
+- 未來的 `速度當量Atom`、`鍵位熱力Atom` 等 → 同樣直接處理
+
+#### 注意事項
+
+1. **atom 的類型定義是 API**：改變 atom 類型定義就是改變 JSON 格式
+2. **避免頻繁改動 atom 結構**：每次改動都會導致舊 JSON 不兼容
+3. **增加棧位時使用可選**：新增棧位用 `?` 標記，保持向下兼容
+
+## �� 項目關鍵指標
 
 - **代码行数**：约 10,000 行（目标：减少 20%）
 - **CSS 大小**：目标减少 50%

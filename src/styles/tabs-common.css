@@ -41,16 +41,16 @@
   .tabs-container {
     margin-bottom: 2px; /* 移動端極小間距 */
   }
-  
+
   .tab-list {
     margin-bottom: 2px; /* 移動端極小間距 */
   }
-  
+
   /* 移動端KeyboardHeatmapCard保持極小間距 */
   .keyboard-heatmap .tabs-container {
     margin-bottom: 2px;
   }
-  
+
   .keyboard-heatmap .tab-list {
     margin-bottom: 2px;
   }
@@ -66,21 +66,21 @@
 }
 
 /* 黑暗模式下的Tab樣式 */
-[data-theme="dark"] .tab-button {
+[data-theme='dark'] .tab-button {
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .tab-button:hover {
+[data-theme='dark'] .tab-button:hover {
   color: var(--color-text-primary);
   background-color: var(--color-bg-secondary);
 }
 
-[data-theme="dark"] .tab-button.active {
+[data-theme='dark'] .tab-button.active {
   color: var(--color-accent);
   border-bottom-color: var(--color-accent);
   background-color: var(--color-accent-bg);
 }
 
-[data-theme="dark"] .tab-list {
+[data-theme='dark'] .tab-list {
   border-bottom-color: var(--color-border-secondary);
 }

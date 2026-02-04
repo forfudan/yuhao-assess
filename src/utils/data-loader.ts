@@ -1,6 +1,6 @@
 /**
  * 數據加載工具
- * 
+ *
  * 開發環境：從本地 public/data/ 加載
  * 生產環境：從 GitHub Pages CDN 加載
  */
@@ -9,9 +9,9 @@
 const DATA_CDN_URL = 'https://forfudan.github.io/yuhao-assess-data/'
 
 // 根據環境決定數據源
-const DATA_BASE_URL = import.meta.env.DEV 
-  ? '/data/'              // 開發：本地文件
-  : DATA_CDN_URL          // 生產：CDN
+const DATA_BASE_URL = import.meta.env.DEV
+  ? '/data/' // 開發：本地文件
+  : DATA_CDN_URL // 生產：CDN
 
 /**
  * 加載 JSON 數據文件
@@ -19,14 +19,14 @@ const DATA_BASE_URL = import.meta.env.DEV
  */
 export async function loadDataJSON<T = any>(filename: string): Promise<T> {
   const url = DATA_BASE_URL + filename
-  
+
   try {
     const response = await fetch(url)
-    
+
     if (!response.ok) {
       throw new Error(`加載失敗: ${response.status} ${response.statusText}`)
     }
-    
+
     return await response.json()
   } catch (error) {
     console.error(`無法加載數據文件: ${filename}`, error)
@@ -46,11 +46,11 @@ export async function loadDataJSONWithCache<T = any>(
   ttl: number = 7 * 24 * 60 * 60 * 1000
 ): Promise<T> {
   const cacheEntry = localStorage.getItem(cacheKey)
-  
+
   if (cacheEntry) {
     try {
       const { data, timestamp } = JSON.parse(cacheEntry)
-      
+
       // 檢查緩存是否過期
       if (Date.now() - timestamp < ttl) {
         console.log(`[緩存命中] ${filename}`)
@@ -60,10 +60,10 @@ export async function loadDataJSONWithCache<T = any>(
       console.warn('緩存解析失敗，重新加載', e)
     }
   }
-  
+
   // 加載新數據
   const data = await loadDataJSON<T>(filename)
-  
+
   // 保存到緩存
   localStorage.setItem(
     cacheKey,
@@ -72,7 +72,7 @@ export async function loadDataJSONWithCache<T = any>(
       timestamp: Date.now(),
     })
   )
-  
+
   return data
 }
 
@@ -81,40 +81,36 @@ export async function loadDataJSONWithCache<T = any>(
  */
 export const dataLoaders = {
   /** 知乎字頻數 */
-  charAbsoluteFrequencyZhihu: () => 
+  charAbsoluteFrequencyZhihu: () =>
     loadDataJSONWithCache('charAbsoluteFrequencyZhihu.json', 'charAbsFreq-zhihu'),
-  
+
   /** 北語簡體字頻數 */
-  charAbsoluteFrequencySC: () => 
+  charAbsoluteFrequencySC: () =>
     loadDataJSONWithCache('charAbsoluteFrequencySC.json', 'charAbsFreq-sc'),
-  
+
   /** 臺灣繁體字頻數 */
-  charAbsoluteFrequencyTC: () => 
+  charAbsoluteFrequencyTC: () =>
     loadDataJSONWithCache('charAbsoluteFrequencyTC.json', 'charAbsFreq-tc'),
-  
+
   /** 古籍字頻數 */
-  charAbsoluteFrequencyGuji: () => 
+  charAbsoluteFrequencyGuji: () =>
     loadDataJSONWithCache('charAbsoluteFrequencyGuji.json', 'charAbsFreq-guji'),
-  
+
   /** 簡體詞頻數 */
-  wordAbsoluteFrequencySC: () => 
+  wordAbsoluteFrequencySC: () =>
     loadDataJSONWithCache('wordAbsoluteFrequencySC.json', 'wordAbsFreq-sc'),
-  
+
   /** 字符集 */
-  charsets: () => 
-    loadDataJSONWithCache('charsets.json', 'charsets'),
-  
+  charsets: () => loadDataJSONWithCache('charsets.json', 'charsets'),
+
   /** CJK 區塊 */
-  cjkBlocks: () => 
-    loadDataJSON('cjkBlocks.json'),
-  
+  cjkBlocks: () => loadDataJSON('cjkBlocks.json'),
+
   /** 碼表配置 */
-  codeTableConfig: () => 
-    loadDataJSON('codeTableConfig.json'),
-  
+  codeTableConfig: () => loadDataJSON('codeTableConfig.json'),
+
   /** 等價字表 */
-  equivTable: () => 
-    loadDataJSON('equivTable.json'),
+  equivTable: () => loadDataJSON('equivTable.json'),
 }
 
 /**
@@ -129,7 +125,7 @@ export function clearDataCache(): void {
     'wordFreq-sc',
     'charsets',
   ]
-  
+
   keys.forEach(key => localStorage.removeItem(key))
   console.log('數據緩存已清除')
 }
