@@ -6,18 +6,15 @@ export type CodeTable = Map<string, string[]>
 
 // 處理後的四個輔助碼表
 export interface ProcessedCodeTables {
-  full: CodeTable                    // 全碼表
-  short: CodeTable                   // 簡碼表
-  fullWithSelection: CodeTable       // 全碼加選重表
-  shortWithSelection: CodeTable      // 簡碼加選重表
-  wordFullCodeWithSelection?: CodeTable  // 詞語全碼加選重表（可選）
+  full: CodeTable // 全碼表
+  short: CodeTable // 簡碼表
+  fullWithSelection: CodeTable // 全碼加選重表
+  shortWithSelection: CodeTable // 簡碼加選重表
+  wordFullCodeWithSelection?: CodeTable // 詞語全碼加選重表（可選）
 }
 
 // 方案配置相關類型
 export * from './scheme'
-
-// 碼表格式類型
-export type CodeTableFormat = 'char_first' | 'code_first'
 
 // 上傳狀態類型
 export interface UploadStatus {
@@ -30,7 +27,6 @@ export interface ParseResult {
   codeTable: CodeTable
   totalChars: number
   totalCodes: number
-  format: CodeTableFormat
 }
 
 // 預設碼表配置
@@ -38,14 +34,13 @@ export interface BuiltinCodeTable {
   key: string
   name: string
   url: string
-  format: CodeTableFormat
   description: string
   website: string
   category: string
   tags: string[]
   enabled: boolean
-  isPrefix?: boolean  // 前缀码标记
-  prefixKeys?: string[]  // 前缀码上屏键
+  isPrefix?: boolean // 前缀码标记
+  prefixKeys?: string[] // 前缀码上屏键
 }
 
 // 碼表配置文件
@@ -93,23 +88,31 @@ export interface AnalysisParams {
 // 碼表指標結果
 export interface CodeTableMetrics {
   // 重碼指標
-  staticDupCount: number        // 靜態重碼字符數
+  staticDupCount: number // 靜態重碼字符數
   dynamicDupRate: number | null // 動態重碼率（需要字頻數據）
-  
+
   // 基本統計
-  totalChars: number            // 總字符數
-  
+  totalChars: number // 總字符數
+
   // 編碼統計
   codeStats: {
-    totalCodes: number          // 總編碼數
-    avgCodeLength: number       // 平均編碼長度
-    minCodeLength: number       // 最短編碼長度
-    maxCodeLength: number       // 最長編碼長度
+    totalCodes: number // 總編碼數
+    avgCodeLength: number // 平均編碼長度
+    minCodeLength: number // 最短編碼長度
+    maxCodeLength: number // 最長編碼長度
   }
 }
 
 // 字符集類型
-export type CharsetType = 'gb2312' | 'common' | 'gbk' | 'cjk-basic' | 'cjk-a' | 'cjk-b' | 'cjk-d' | 'cjk-f'
+export type CharsetType =
+  | 'gb2312'
+  | 'common'
+  | 'gbk'
+  | 'cjk-basic'
+  | 'cjk-a'
+  | 'cjk-b'
+  | 'cjk-d'
+  | 'cjk-f'
 
 // 重碼統計結果
 export interface DuplicateStats {
@@ -149,18 +152,19 @@ export interface CleanResult {
 export interface CodeTableAnalysis {
   totalChars: number
   totalCodes: number
-  regularChars: number  // 通規漢字數量
-  gbkChars: number      // GBK漢字數量
-  cjkChars: {           // CJK區塊統計
-    A: number           // CJK基本漢字
-    B: number           // CJK擴展A
-    C: number           // CJK擴展B
-    D: number           // CJK擴展C
-    E: number           // CJK擴展D
-    F: number           // CJK擴展E
-    G: number           // CJK擴展F
-    H: number           // CJK擴展G
-    I: number           // CJK擴展I
+  regularChars: number // 通規漢字數量
+  gbkChars: number // GBK漢字數量
+  cjkChars: {
+    // CJK區塊統計
+    A: number // CJK基本漢字
+    B: number // CJK擴展A
+    C: number // CJK擴展B
+    D: number // CJK擴展C
+    E: number // CJK擴展D
+    F: number // CJK擴展E
+    G: number // CJK擴展F
+    H: number // CJK擴展G
+    I: number // CJK擴展I
   }
   topEntries: Array<{
     char: string

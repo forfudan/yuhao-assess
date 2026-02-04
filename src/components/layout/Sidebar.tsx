@@ -70,9 +70,9 @@ export function Sidebar({ collapsed = false, onCollapse }: SidebarProps) {
       label: '首頁',
     },
     {
-      key: '/uploader',
+      key: '/process-table',
       icon: <UploadOutlined />,
-      label: '碼表上傳',
+      label: '碼表解析',
     },
     {
       key: '/duplicate',

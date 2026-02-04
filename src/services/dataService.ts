@@ -5,13 +5,14 @@
  */
 
 import type { CharFrequency } from '../types'
-import { BuiltinCodeTableService } from './builtinCodeTableService'
+import { 内置碼表服務 } from './builtinCodeTableService'
+import { 字頻表服務 } from './charFrequencyService'
 
 // =============================================================================
 // 字頻數據加載
 // =============================================================================
 
-const builtinService = new BuiltinCodeTableService()
+const builtinService = new 内置碼表服務()
 
 // 字頻表字符並集緩存（用於優化碼表生成）
 let frequencyCharsCache: Set<string> | null = null
@@ -115,7 +116,7 @@ export function clearFrequencyCharsCache(): void {
  */
 export async function loadCharFrequency(): Promise<CharFrequency> {
   try {
-    return await builtinService.loadCharFrequency()
+    return await 字頻表服務.加載知乎字頻()
   } catch (error) {
     console.error('加載知乎字頻數據失敗:', error)
     throw error
@@ -127,7 +128,7 @@ export async function loadCharFrequency(): Promise<CharFrequency> {
  */
 export async function loadCharFrequencySC(): Promise<CharFrequency> {
   try {
-    return await builtinService.loadCharFrequencySC()
+    return await 字頻表服務.加載簡體字頻()
   } catch (error) {
     console.error('加載簡體字頻數據失敗:', error)
     throw error
@@ -139,7 +140,7 @@ export async function loadCharFrequencySC(): Promise<CharFrequency> {
  */
 export async function loadCharFrequencyTC(): Promise<CharFrequency> {
   try {
-    return await builtinService.loadCharFrequencyTC()
+    return await 字頻表服務.加載繁體字頻()
   } catch (error) {
     console.error('加載繁體字頻數據失敗:', error)
     throw error
@@ -151,7 +152,7 @@ export async function loadCharFrequencyTC(): Promise<CharFrequency> {
  */
 export async function loadCharFrequencyGuji(): Promise<CharFrequency> {
   try {
-    return await builtinService.loadCharFrequencyGuji()
+    return await 字頻表服務.加載古籍字頻()
   } catch (error) {
     console.error('加載古籍字頻數據失敗:', error)
     throw error
@@ -163,7 +164,7 @@ export async function loadCharFrequencyGuji(): Promise<CharFrequency> {
  */
 export async function loadCharFrequencyUnified(): Promise<CharFrequency> {
   try {
-    return await builtinService.loadCharFrequencyUnified()
+    return await 字頻表服務.加載繁簡聯合字頻()
   } catch (error) {
     console.error('加載統一字頻數據失敗:', error)
     throw error

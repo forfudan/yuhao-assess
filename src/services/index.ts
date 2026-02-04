@@ -8,25 +8,21 @@ export {
   getDynamicDupRate,
   getDynamicDupRateFromOriginalOrder,
   calculateCharsetDuplicates,
-  type DuplicateStats
+  type DuplicateStats,
 } from './duplicateAnalysisService'
 
 // 速度分析服務
 export {
   calculateCodePairFrequencies,
   calculateSpeedEquiv,
-  calculateSpeedEquivFromCodeTable
+  calculateSpeedEquivFromCodeTable,
 } from './speedAnalysisService'
 
 // 導出服務
 export { ExportService } from './exportService'
 
 // 導出碼表處理服務
-export {
-  cleanCodeTable,
-  validateCodeTable,
-  getCodeTableStats
-} from './codeTableCleanService'
+export { cleanCodeTable, validateCodeTable, getCodeTableStats } from './codeTableCleanService'
 
 // 導出數據服務
 export {
@@ -37,7 +33,7 @@ export {
   loadAllCharFrequencies,
   loadEquivTable,
   getFrequencyCharsUnion,
-  clearFrequencyCharsCache
+  clearFrequencyCharsCache,
 } from './dataService'
 
 // 導出UI服務
@@ -46,7 +42,7 @@ export {
   formatNumber,
   formatEquiv,
   createTooltipManager,
-  getCharacterTooltip
+  getCharacterTooltip,
 } from './uiService'
 
 // 導出字符集服務
@@ -67,21 +63,18 @@ export {
   charsetInfo,
   getCharsetSize,
   getTheoreticalCharsetSize,
-  generateCharset
+  generateCharset,
 } from './charsetService'
 
 // 導出最大候選數服務
 export {
   getMaximumCandidates,
   getAllMaximumCandidates,
-  type MaximumCandidatesResult
+  type MaximumCandidatesResult,
 } from './maximumCandidatesService'
 
 // 導出預設碼表服務
-export {
-  BuiltinCodeTableService,
-  builtinCodeTableService
-} from './builtinCodeTableService'
+export { 内置碼表服務, 内置碼表服務實例 } from './builtinCodeTableService'
 
 // 導出碼表處理服務
 export { codeTableProcessingService } from './codeTableProcessingService'
@@ -90,7 +83,7 @@ export { codeTableProcessingService } from './codeTableProcessingService'
 export {
   calculateShortCodeEfficiency,
   calculateFullCodeAverageLength,
-  calculateShortCodeAverageLength
+  calculateShortCodeAverageLength,
 } from './shortCodeEfficiencyService'
 
 // 導出類型
@@ -99,5 +92,5 @@ export type {
   CodeTableMetrics,
   CharsetType,
   CodeTableCleanOptions,
-  CleanResult
+  CleanResult,
 } from '../types/index'

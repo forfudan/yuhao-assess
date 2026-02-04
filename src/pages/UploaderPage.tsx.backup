@@ -10,9 +10,9 @@ import {
 import type { UploadFile, RadioChangeEvent } from 'antd'
 import type { RcFile } from 'antd/es/upload'
 import { 原始碼表原子狀態, 碼表原子狀態, 碼表元數據原子狀態, 碼表加載中原子狀態 } from '@/atoms'
-import { BuiltinCodeTableService } from '@/services/builtinCodeTableService'
+import { 內置碼表服務 } from '@/services/builtinCodeTableService'
 import { CodeTableProcessingService } from '@/services/codeTableProcessingService'
-import type { CodeTableFormat, RawCodeTable } from '@/types'
+import type { RawCodeTable } from '@/types'
 
 interface EncodingPreviewItem {
   char: string

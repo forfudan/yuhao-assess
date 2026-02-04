@@ -28,6 +28,9 @@ dist-ssr
 .env.local
 .env.development.local
 .env.test.local
+
+# Generated data files
+public/data/charsets.json
 .env.production.local
 
 # TypeScript

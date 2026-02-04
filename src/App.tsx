@@ -1,7 +1,7 @@
 import { useRoutes } from 'react-router-dom'
 import MainLayout from './components/layout/MainLayout'
 import HomePage from './pages/HomePage'
-import UploaderPage from './pages/UploaderPage'
+import ProcessTablePage from './pages/ProcessTablePage'
 
 const routes = [
   {
@@ -13,8 +13,8 @@ const routes = [
         element: <HomePage />,
       },
       {
-        path: '/uploader',
-        element: <UploaderPage />,
+        path: '/process-table',
+        element: <ProcessTablePage />,
       },
     ],
   },
