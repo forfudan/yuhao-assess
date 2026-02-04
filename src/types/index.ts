@@ -65,7 +65,7 @@ export interface EquivTable {
   data: Record<string, number>
 }
 
-// 漢字絕對頻數數據（原始數據，未歸一化）
+// 漢字絶對頻數數據（原始數據，未歸一化）
 export type AbsoluteCharFrequency = Record<string, number>
 
 // 漢字相對頻率數據（歸一化後，用於計算）

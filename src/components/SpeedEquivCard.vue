@@ -723,7 +723,7 @@ onMounted(async () => {
 
 .metrics-table th:nth-child(6),
 .metrics-table td:nth-child(6) {
-  width: 45%; /* 说明列 */
+  width: 45%; /* 說明列 */
 }
 
 .metrics-table th {

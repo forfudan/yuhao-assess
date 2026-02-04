@@ -1251,7 +1251,7 @@ onMounted(() => {
 
 .metrics-table th:nth-child(4),
 .metrics-table td:nth-child(4) {
-  width: 50%; /* 说明列 */
+  width: 50%; /* 說明列 */
 }
 
 .metrics-table tbody tr:hover {

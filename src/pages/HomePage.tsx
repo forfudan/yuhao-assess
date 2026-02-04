@@ -22,13 +22,7 @@ import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { 當前方案原子狀態, 方案列表原子狀態 } from '@/atoms/scheme'
 import { 重碼分析原子狀態 } from '@/atoms/duplicate'
-import {
-  加載方案,
-  列出可用方案,
-  導出JSON,
-  從JSON導入,
-  創建空白方案,
-} from '@/services/schemeService'
+import { 加載方案, 列出可用方案, 從JSON導入, 創建空白方案 } from '@/services/schemeService'
 import type { 方案配置 } from '@/types/scheme'
 import type { UploadFile } from 'antd'
 
@@ -41,6 +35,33 @@ function HomePage() {
   const [方案列表, 設置方案列表] = useAtom(方案列表原子狀態)
   const [重碼分析結果, 設置重碼分析結果] = useAtom(重碼分析原子狀態)
   const [加載中, 設置加載中] = useState(false)
+
+  // 共用：處理方案數據（從JSON導入或加載預設方案）
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const 處理方案數據 = (導入數據: any, 來源: string) => {
+    console.log(`[HomePage] 從${來源}獲取的原始數據:`, 導入數據)
+
+    // 分離方案配置和重碼分析結果
+    const { 重碼分析結果: 數據中的重碼結果, ...方案配置 } = 導入數據
+
+    console.log(`[HomePage] ${來源}的重碼分析結果:`, 數據中的重碼結果)
+    console.log(`[HomePage] ${來源}的方案配置:`, 方案配置)
+
+    // 驗證方案配置
+    const 方案 = 從JSON導入(JSON.stringify(方案配置))
+    設置當前方案(方案)
+
+    // 如果有重碼分析結果，寫入 atom
+    if (數據中的重碼結果) {
+      console.log(`[HomePage] 設置${來源}的重碼分析結果到 atom:`, 數據中的重碼結果)
+      設置重碼分析結果(數據中的重碼結果)
+      message.success(`已加載方案「${方案.元數據.方案名}」（包含重碼分析結果）`)
+    } else {
+      console.log(`[HomePage] ${來源}無重碼分析結果`)
+      設置重碼分析結果(null)
+      message.success(`已加載方案「${方案.元數據.方案名}」`)
+    }
+  }
 
   // 初始化：加載可用方案列表
   useEffect(() => {
@@ -68,10 +89,10 @@ function HomePage() {
   const 處理選擇方案 = async (方案鍵名: string) => {
     設置加載中(true)
     try {
-      const 方案 = await 加載方案(方案鍵名)
-      設置當前方案(方案)
-      message.success(`已加載方案「${方案.元數據.方案名}」`)
+      const 加載的數據 = await 加載方案(方案鍵名)
+      處理方案數據(加載的數據, 'schemes')
     } catch (錯誤) {
+      console.error('[HomePage] 加載方案失敗:', 錯誤)
       message.error(錯誤 instanceof Error ? 錯誤.message : '加載方案失敗')
     } finally {
       設置加載中(false)
@@ -96,7 +117,12 @@ function HomePage() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${當前方案.元數據.標識符}.json`
+
+    // 文件名格式：標識符-作者名-版本號.json
+    const 作者 = 當前方案.元數據.作者 || 'unknown'
+    const 版本 = 當前方案.元數據.版本 || '1.0.0'
+    a.download = `${當前方案.元數據.標識符}-${作者}-${版本}.json`
+
     a.click()
     URL.revokeObjectURL(url)
 
@@ -111,22 +137,9 @@ function HomePage() {
       try {
         const 文本 = e.target?.result as string
         const 導入數據 = JSON.parse(文本)
-
-        // 分離方案配置和重碼分析結果
-        const { 重碼分析結果, ...方案配置 } = 導入數據
-
-        // 驗證方案配置
-        const 方案 = 從JSON導入(JSON.stringify(方案配置))
-        設置當前方案(方案)
-
-        // 如果有重碼分析結果，直接寫入 atom
-        if (重碼分析結果) {
-          設置重碼分析結果(重碼分析結果)
-          message.success(`已導入方案「${方案.元數據.方案名}」（包含重碼分析結果）`)
-        } else {
-          message.success(`已導入方案「${方案.元數據.方案名}」`)
-        }
+        處理方案數據(導入數據, '導入JSON')
       } catch (錯誤) {
+        console.error('[HomePage] 導入失敗:', 錯誤)
         message.error(錯誤 instanceof Error ? 錯誤.message : '導入失敗')
       }
     }
@@ -164,25 +177,6 @@ function HomePage() {
       ...當前方案,
       方案參數: {
         ...當前方案.方案參數,
-        [字段名]: 值,
-      },
-      元數據: {
-        ...當前方案.元數據,
-        更新時間: new Date().toISOString(),
-      },
-    })
-  }
-
-  // 更新碼表元數據字段
-  const 更新碼表元數據 = <K extends keyof NonNullable<方案配置['碼表元數據']>>(
-    字段名: K,
-    值: NonNullable<方案配置['碼表元數據']>[K]
-  ) => {
-    if (!當前方案) return
-    設置當前方案({
-      ...當前方案,
-      碼表元數據: {
-        ...當前方案.碼表元數據!,
         [字段名]: 值,
       },
       元數據: {

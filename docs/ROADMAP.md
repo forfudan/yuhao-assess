@@ -408,7 +408,7 @@ const { data: 字頻數據, loading: 字頻加載中, error: 字頻錯誤 } = us
 const { data: 字符集數據, loading: 字符集加載中 } = useCharsets()
 
 if (字頻加載中) return <Spin />
-if (字頻錯誤) return <Alert message={字頻錯誤} type="error" />
+if (字頻錯誤) return <Alert title={字頻錯誤} type="error" />
 
 // 使用數據
 const 總字符數 = Object.keys(字頻數據).length
@@ -945,7 +945,7 @@ export class SchemeService {
      !scheme?.results?.duplicate && <Upload.Dragger>上傳碼表</Upload.Dragger>
    }
    {
-     scheme?.results?.duplicate && <Alert message="已有測評結果，無需上傳碼表" type="info" />
+     scheme?.results?.duplicate && <Alert title="已有測評結果，無需上傳碼表" type="info" />
    }
    ```
 
@@ -1000,7 +1000,7 @@ if (hasResult) {
 // 3. 如果没有結果，顯示「計算」按鈕
 return (
   <>
-    <Alert message="尚無測評結果，請上傳碼表並點擊計算" />
+    <Alert title="尚無測評結果，請上傳碼表並點擊計算" />
     <Button
       onClick={async () => {
         設置計算中(true)

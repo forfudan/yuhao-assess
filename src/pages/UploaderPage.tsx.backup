@@ -267,7 +267,7 @@ const UploaderPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Space direction="vertical" style={{ width: '100%' }} size="large">
+      <Space orientation="vertical" style={{ width: '100%' }} size="large">
         {/* 預設方案選擇 */}
         <div>
           <label style={{ marginRight: 8 }}>預設方案：</label>
@@ -293,7 +293,7 @@ const UploaderPage: React.FC = () => {
         <div>
           <label style={{ marginRight: 8 }}>碼表格式：</label>
           <Radio.Group value={格式} onChange={(e: RadioChangeEvent) => 設置格式(e.target.value)}>
-            <Space direction="vertical">
+            <Space orientation="vertical">
               <Radio value="char_first">
                 字符-編碼 <span style={{ color: '#999', marginLeft: 8 }}>例：的 de</span>
               </Radio>
@@ -370,7 +370,7 @@ const UploaderPage: React.FC = () => {
         {/* 狀態提示 */}
         {錯誤信息 && (
           <Alert
-            message="錯誤"
+            title="錯誤"
             description={錯誤信息}
             type="error"
             closable
@@ -379,7 +379,7 @@ const UploaderPage: React.FC = () => {
         )}
         {成功信息 && (
           <Alert
-            message="成功"
+            title="成功"
             description={成功信息}
             type="success"
             closable
@@ -421,7 +421,7 @@ const UploaderPage: React.FC = () => {
           </Button>,
         ]}
       >
-        <Space direction="vertical">
+        <Space orientation="vertical">
           <p>
             <a
               href="https://shurufa.app/docs/concepts.html"

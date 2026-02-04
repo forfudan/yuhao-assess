@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useAtom, useAtomValue } from 'jotai'
+import { useAtom } from 'jotai'
 import { Button, Space, Typography, Alert, Spin, Tooltip, Modal, Table } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
@@ -9,14 +9,13 @@ import type { 重碼分析結果 } from '../atoms/duplicate'
 import {
   getDynamicDupRate,
   getDynamicDupRateFromOriginalOrder,
-  getStaticDupRate,
   calculateCharsetDuplicates,
 } from '../services/duplicateAnalysisService'
 import { 字頻表服務 } from '../services/charFrequencyService'
 import type { CodeTable } from '../types'
 import type { 處理後的碼表結果 } from '../services/codeTableService'
 
-const { Title, Paragraph, Text, Link } = Typography
+const { Paragraph, Text, Link } = Typography
 
 /**
  * 重碼分析頁面
@@ -31,7 +30,15 @@ const DuplicatePage: React.FC = () => {
   // 重碼詳情 Modal
   const [顯示詳情, 設置顯示詳情] = useState(false)
   const [詳情標題, 設置詳情標題] = useState('')
-  const [重碼詳情列表, 設置重碼詳情列表] = useState<any[]>([])
+  const [重碼詳情列表, 設置重碼詳情列表] = useState<
+    Array<{
+      序號: number
+      字符: string
+      編碼: string
+      字頻: number
+      重碼字符列表: string
+    }>
+  >([])
   const [詳情計算中, 設置詳情計算中] = useState(false)
 
   // 類型斷言：碼表數據實際上是 處理後的碼表結果
@@ -41,7 +48,10 @@ const DuplicatePage: React.FC = () => {
    * 檢查數據是否完整
    */
   const 檢查數據完整性 = (): boolean => {
-    if (!分析結果) return false
+    if (!分析結果) {
+      console.log('[DuplicateAnalysisPage] 檢查完整性: 無分析結果')
+      return false
+    }
 
     const 必需字段 = [
       '知乎簡體動態選重率',
@@ -55,7 +65,16 @@ const DuplicatePage: React.FC = () => {
       '常用國字靜態重碼',
     ]
 
-    return 必需字段.every(字段 => 字段 in 分析結果)
+    const 完整 = 必需字段.every(字段 => 字段 in 分析結果)
+
+    if (!完整) {
+      const 缺少字段 = 必需字段.filter(字段 => !(字段 in 分析結果))
+      console.log('[DuplicateAnalysisPage] 檢查完整性: 數據不完整，缺少字段:', 缺少字段)
+    } else {
+      console.log('[DuplicateAnalysisPage] 檢查完整性: 數據完整')
+    }
+
+    return 完整
   }
 
   /**
@@ -147,7 +166,13 @@ const DuplicatePage: React.FC = () => {
         CJK基本數據,
         CJKA數據,
         CJKB數據,
+        CJKC數據,
+        CJKD數據,
+        CJKE數據,
         CJKF數據,
+        CJKG數據,
+        CJKH數據,
+        CJKI數據,
         CJKJ數據,
       ] = await Promise.all([
         calculateCharsetDuplicates(全碼表, 'gb2312'),
@@ -156,7 +181,13 @@ const DuplicatePage: React.FC = () => {
         calculateCharsetDuplicates(全碼表, 'cjk_basic'),
         calculateCharsetDuplicates(全碼表, 'cjk_to_a'),
         calculateCharsetDuplicates(全碼表, 'cjk_to_b'),
+        calculateCharsetDuplicates(全碼表, 'cjk_to_c'),
+        calculateCharsetDuplicates(全碼表, 'cjk_to_d'),
+        calculateCharsetDuplicates(全碼表, 'cjk_to_e'),
         calculateCharsetDuplicates(全碼表, 'cjk_to_f'),
+        calculateCharsetDuplicates(全碼表, 'cjk_to_g'),
+        calculateCharsetDuplicates(全碼表, 'cjk_to_h'),
+        calculateCharsetDuplicates(全碼表, 'cjk_to_i'),
         calculateCharsetDuplicates(全碼表, 'cjk_to_j'),
       ])
 
@@ -207,11 +238,47 @@ const DuplicatePage: React.FC = () => {
           總字符數: CJKB數據.totalChars,
           重碼率: CJKB數據.duplicateRate,
         },
+        CJK擴C靜態重碼: {
+          重碼組數: CJKC數據.duplicateGroupCount,
+          重碼字數: CJKC數據.duplicateCount,
+          總字符數: CJKC數據.totalChars,
+          重碼率: CJKC數據.duplicateRate,
+        },
+        CJK擴D靜態重碼: {
+          重碼組數: CJKD數據.duplicateGroupCount,
+          重碼字數: CJKD數據.duplicateCount,
+          總字符數: CJKD數據.totalChars,
+          重碼率: CJKD數據.duplicateRate,
+        },
+        CJK擴E靜態重碼: {
+          重碼組數: CJKE數據.duplicateGroupCount,
+          重碼字數: CJKE數據.duplicateCount,
+          總字符數: CJKE數據.totalChars,
+          重碼率: CJKE數據.duplicateRate,
+        },
         CJK擴F靜態重碼: {
           重碼組數: CJKF數據.duplicateGroupCount,
           重碼字數: CJKF數據.duplicateCount,
           總字符數: CJKF數據.totalChars,
           重碼率: CJKF數據.duplicateRate,
+        },
+        CJK擴G靜態重碼: {
+          重碼組數: CJKG數據.duplicateGroupCount,
+          重碼字數: CJKG數據.duplicateCount,
+          總字符數: CJKG數據.totalChars,
+          重碼率: CJKG數據.duplicateRate,
+        },
+        CJK擴H靜態重碼: {
+          重碼組數: CJKH數據.duplicateGroupCount,
+          重碼字數: CJKH數據.duplicateCount,
+          總字符數: CJKH數據.totalChars,
+          重碼率: CJKH數據.duplicateRate,
+        },
+        CJK擴I靜態重碼: {
+          重碼組數: CJKI數據.duplicateGroupCount,
+          重碼字數: CJKI數據.duplicateCount,
+          總字符數: CJKI數據.totalChars,
+          重碼率: CJKI數據.duplicateRate,
         },
         CJK擴J靜態重碼: {
           重碼組數: CJKJ數據.duplicateGroupCount,
@@ -233,12 +300,23 @@ const DuplicatePage: React.FC = () => {
   /**
    * 組件掛載時檢查數據
    */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    console.log('[DuplicateAnalysisPage] 組件掛載，檢查數據完整性')
+    console.log('[DuplicateAnalysisPage] 分析結果:', 分析結果)
+    console.log('[DuplicateAnalysisPage] 數據完整性:', 檢查數據完整性())
+
     if (!分析結果 || !檢查數據完整性()) {
+      console.log('[DuplicateAnalysisPage] 數據不完整，檢查是否需要重新計算')
       // 數據不完整，自動觸發計算
       if (處理後碼表) {
+        console.log('[DuplicateAnalysisPage] 有碼表數據，觸發重新計算')
         重新計算()
+      } else {
+        console.log('[DuplicateAnalysisPage] 無碼表數據，跳過計算')
       }
+    } else {
+      console.log('[DuplicateAnalysisPage] 數據完整，直接顯示')
     }
   }, [])
 
@@ -295,7 +373,13 @@ const DuplicatePage: React.FC = () => {
       }
 
       // 生成詳情列表（只包含重碼）
-      const 詳情列表: any[] = []
+      const 詳情列表: Array<{
+        序號: number
+        字符: string
+        編碼: string
+        字頻: number
+        重碼字符列表: string
+      }> = []
       let 序號 = 1
 
       for (const [編碼, 字符列表] of 編碼映射.entries()) {
@@ -312,7 +396,9 @@ const DuplicatePage: React.FC = () => {
               字符: 字符列表[i].字符,
               編碼,
               字頻: 字符列表[i].字頻,
-              重碼字符列表: 字符列表.map(c => `${c.字符}(${(c.字頻 * 10000).toFixed(2)}‱)`).join('、'),
+              重碼字符列表: 字符列表
+                .map(c => `${c.字符}(${(c.字頻 * 10000).toFixed(2)}‱)`)
+                .join('、'),
             })
             序號++
           }
@@ -341,7 +427,18 @@ const DuplicatePage: React.FC = () => {
   const 渲染表格 = () => {
     if (!分析結果) return null
 
-    const 動態選重率數據 = [
+    type 表格數據項 = {
+      key: string
+      指標: string
+      全碼: string
+      簡碼: string
+      説明: React.ReactNode
+      提示?: string
+      可點擊?: boolean
+      點擊處理?: (碼表類型: '全碼' | '簡碼') => void
+    }
+
+    const 動態選重率數據: 表格數據項[] = [
       {
         key: '1',
         指標: '知乎簡體動態選重率',
@@ -598,6 +695,36 @@ const DuplicatePage: React.FC = () => {
       },
       {
         key: '20',
+        指標: '到CJK-C重碼字數',
+        全碼: 分析結果.CJK擴C靜態重碼 ? 分析結果.CJK擴C靜態重碼.重碼字數.toLocaleString() : '-',
+        簡碼: 分析結果.CJK擴C靜態重碼 ? 分析結果.CJK擴C靜態重碼.重碼字數.toLocaleString() : '-',
+        説明: 分析結果.CJK擴C靜態重碼
+          ? `${分析結果.CJK擴C靜態重碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴C靜態重碼.總字符數.toLocaleString()} 有編碼`
+          : '-',
+        可點擊: false,
+      },
+      {
+        key: '21',
+        指標: '到CJK-D重碼字數',
+        全碼: 分析結果.CJK擴D靜態重碼 ? 分析結果.CJK擴D靜態重碼.重碼字數.toLocaleString() : '-',
+        簡碼: 分析結果.CJK擴D靜態重碼 ? 分析結果.CJK擴D靜態重碼.重碼字數.toLocaleString() : '-',
+        説明: 分析結果.CJK擴D靜態重碼
+          ? `${分析結果.CJK擴D靜態重碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴D靜態重碼.總字符數.toLocaleString()} 有編碼`
+          : '-',
+        可點擊: false,
+      },
+      {
+        key: '22',
+        指標: '到CJK-E重碼字數',
+        全碼: 分析結果.CJK擴E靜態重碼 ? 分析結果.CJK擴E靜態重碼.重碼字數.toLocaleString() : '-',
+        簡碼: 分析結果.CJK擴E靜態重碼 ? 分析結果.CJK擴E靜態重碼.重碼字數.toLocaleString() : '-',
+        説明: 分析結果.CJK擴E靜態重碼
+          ? `${分析結果.CJK擴E靜態重碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴E靜態重碼.總字符數.toLocaleString()} 有編碼`
+          : '-',
+        可點擊: false,
+      },
+      {
+        key: '23',
         指標: '到CJK-F重碼字數',
         全碼: 分析結果.CJK擴F靜態重碼 ? 分析結果.CJK擴F靜態重碼.重碼字數.toLocaleString() : '-',
         簡碼: 分析結果.CJK擴F靜態重碼 ? 分析結果.CJK擴F靜態重碼.重碼字數.toLocaleString() : '-',
@@ -607,7 +734,37 @@ const DuplicatePage: React.FC = () => {
         可點擊: false,
       },
       {
-        key: '21',
+        key: '24',
+        指標: '到CJK-G重碼字數',
+        全碼: 分析結果.CJK擴G靜態重碼 ? 分析結果.CJK擴G靜態重碼.重碼字數.toLocaleString() : '-',
+        簡碼: 分析結果.CJK擴G靜態重碼 ? 分析結果.CJK擴G靜態重碼.重碼字數.toLocaleString() : '-',
+        説明: 分析結果.CJK擴G靜態重碼
+          ? `${分析結果.CJK擴G靜態重碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴G靜態重碼.總字符數.toLocaleString()} 有編碼`
+          : '-',
+        可點擊: false,
+      },
+      {
+        key: '25',
+        指標: '到CJK-H重碼字數',
+        全碼: 分析結果.CJK擴H靜態重碼 ? 分析結果.CJK擴H靜態重碼.重碼字數.toLocaleString() : '-',
+        簡碼: 分析結果.CJK擴H靜態重碼 ? 分析結果.CJK擴H靜態重碼.重碼字數.toLocaleString() : '-',
+        説明: 分析結果.CJK擴H靜態重碼
+          ? `${分析結果.CJK擴H靜態重碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴H靜態重碼.總字符數.toLocaleString()} 有編碼`
+          : '-',
+        可點擊: false,
+      },
+      {
+        key: '26',
+        指標: '到CJK-I重碼字數',
+        全碼: 分析結果.CJK擴I靜態重碼 ? 分析結果.CJK擴I靜態重碼.重碼字數.toLocaleString() : '-',
+        簡碼: 分析結果.CJK擴I靜態重碼 ? 分析結果.CJK擴I靜態重碼.重碼字數.toLocaleString() : '-',
+        説明: 分析結果.CJK擴I靜態重碼
+          ? `${分析結果.CJK擴I靜態重碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴I靜態重碼.總字符數.toLocaleString()} 有編碼`
+          : '-',
+        可點擊: false,
+      },
+      {
+        key: '27',
         指標: '到CJK-J重碼字數',
         全碼: 分析結果.CJK擴J靜態重碼 ? 分析結果.CJK擴J靜態重碼.重碼字數.toLocaleString() : '-',
         簡碼: 分析結果.CJK擴J靜態重碼 ? 分析結果.CJK擴J靜態重碼.重碼字數.toLocaleString() : '-',
@@ -618,7 +775,7 @@ const DuplicatePage: React.FC = () => {
       },
     ]
 
-    const 列定義: ColumnsType<any> = [
+    const 列定義: ColumnsType<表格數據項> = [
       {
         title: '單字指標',
         dataIndex: '指標',
@@ -641,7 +798,7 @@ const DuplicatePage: React.FC = () => {
           record.可點擊 ? (
             <Text
               style={{ cursor: 'pointer', color: '#1890ff' }}
-              onClick={() => record.點擊處理('全碼')}
+              onClick={() => record.點擊處理?.('全碼')}
             >
               {text}
             </Text>
@@ -663,7 +820,7 @@ const DuplicatePage: React.FC = () => {
           record.可點擊 ? (
             <Text
               style={{ cursor: 'pointer', color: '#1890ff' }}
-              onClick={() => record.點擊處理('簡碼')}
+              onClick={() => record.點擊處理?.('簡碼')}
             >
               {text}
             </Text>
@@ -693,20 +850,30 @@ const DuplicatePage: React.FC = () => {
   /**
    * 重碼詳情表格列定義
    */
-  const 詳情列定義: ColumnsType<any> = [
-    { title: '#', dataIndex: '序號', key: '序號' },
-    { title: '重碼字', dataIndex: '字符', key: '字符' },
-    { title: '編碼', dataIndex: '編碼', key: '編碼' },
-    { 
-      title: '字頻（‱）', 
-      dataIndex: '字頻', 
-      key: '字頻', 
-      render: (v: number) => (v * 10000).toFixed(2) 
+  type 詳情表格數據項 = {
+    序號: number
+    字符: string
+    編碼: string
+    字頻: number
+    重碼字符列表: string
+  }
+
+  const 詳情列定義: ColumnsType<詳情表格數據項> = [
+    { title: '#', dataIndex: '序號', key: '序號', width: 60 },
+    { title: '重碼字', dataIndex: '字符', key: '字符', width: 80 },
+    { title: '編碼', dataIndex: '編碼', key: '編碼', width: 100 },
+    {
+      title: '字頻（‱）',
+      dataIndex: '字頻',
+      key: '字頻',
+      width: 100,
+      render: (v: number) => (v * 10000).toFixed(2),
     },
-    { 
-      title: '該編碼上的字符（字頻降序）', 
-      dataIndex: '重碼字符列表', 
-      key: '重碼字符列表' 
+    {
+      title: '該編碼上的字符（字頻降序）',
+      dataIndex: '重碼字符列表',
+      key: '重碼字符列表',
+      ellipsis: true,
     },
   ]
 
@@ -756,7 +923,7 @@ const DuplicatePage: React.FC = () => {
         {/* 無數據提示 */}
         {!計算中 && !分析結果 && !錯誤信息 && (
           <Alert
-            message="請點擊「重新計算」來查看分析結果"
+            title="請點擊「重新計算」來查看分析結果"
             type="info"
             showIcon
             style={{ marginTop: 16 }}
@@ -766,7 +933,7 @@ const DuplicatePage: React.FC = () => {
         {/* 提示信息 */}
         {分析結果 && (
           <Alert
-            message="💡 提示"
+            title="💡 提示"
             description="點擊動態選重率的數值，可查看具體需要選重的字符及其編碼詳情。"
             type="info"
             showIcon

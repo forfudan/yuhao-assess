@@ -2,23 +2,23 @@ import type { AbsoluteCharFrequency, RelativeCharFrequency } from '@/types'
 import { getDefaultStore } from 'jotai'
 import { 字頻表緩存原子狀態 } from '../atoms/charFrequency'
 
-// 直接導入 JSON 文件（絕對頻數數據）
+// 直接導入 JSON 文件（絶對頻數數據）
 import 簡體漢字頻數數據 from '../../public/data/charAbsoluteFrequencySC.json'
 import 繁體漢字頻數數據 from '../../public/data/charAbsoluteFrequencyTC.json'
 import 知乎漢字頻數數據 from '../../public/data/charAbsoluteFrequencyZhihu.json'
 import 古籍漢字頻數數據 from '../../public/data/charAbsoluteFrequencyGuji.json'
 
 /**
- * 歸一化絕對頻數為相對頻率
+ * 歸一化絶對頻數爲相對頻率
  */
 function 歸一化頻數(頻數數據: AbsoluteCharFrequency): RelativeCharFrequency {
   const 總頻數 = Object.values(頻數數據).reduce((sum, count) => sum + count, 0)
   const 頻率數據: RelativeCharFrequency = {}
-  
+
   for (const [字符, 頻數] of Object.entries(頻數數據)) {
     頻率數據[字符] = 頻數 / 總頻數
   }
-  
+
   return 頻率數據
 }
 
@@ -37,7 +37,7 @@ export class 字頻表服務 {
     const cached = cache.get('簡體字頻')
     if (cached) return cached
 
-    // 導入絕對頻數數據並歸一化為相對頻率
+    // 導入絶對頻數數據並歸一化爲相對頻率
     const 簡體漢字頻率數據 = 歸一化頻數(簡體漢字頻數數據 as AbsoluteCharFrequency)
     cache.set('簡體字頻', 簡體漢字頻率數據)
     store.set(字頻表緩存原子狀態, cache)
@@ -53,7 +53,7 @@ export class 字頻表服務 {
     const cached = cache.get('繁體字頻')
     if (cached) return cached
 
-    // 導入絕對頻數數據並歸一化為相對頻率
+    // 導入絶對頻數數據並歸一化爲相對頻率
     const 繁體漢字頻率數據 = 歸一化頻數(繁體漢字頻數數據 as AbsoluteCharFrequency)
     cache.set('繁體字頻', 繁體漢字頻率數據)
     store.set(字頻表緩存原子狀態, cache)
@@ -69,7 +69,7 @@ export class 字頻表服務 {
     const cached = cache.get('知乎字頻')
     if (cached) return cached
 
-    // 導入絕對頻數數據並歸一化為相對頻率
+    // 導入絶對頻數數據並歸一化爲相對頻率
     const 知乎漢字頻率數據 = 歸一化頻數(知乎漢字頻數數據 as AbsoluteCharFrequency)
     cache.set('知乎字頻', 知乎漢字頻率數據)
     store.set(字頻表緩存原子狀態, cache)
@@ -85,7 +85,7 @@ export class 字頻表服務 {
     const cached = cache.get('古籍字頻')
     if (cached) return cached
 
-    // 導入絕對頻數數據並歸一化為相對頻率
+    // 導入絶對頻數數據並歸一化爲相對頻率
     const 古籍漢字頻率數據 = 歸一化頻數(古籍漢字頻數數據 as AbsoluteCharFrequency)
     cache.set('古籍字頻', 古籍漢字頻率數據)
     store.set(字頻表緩存原子狀態, cache)

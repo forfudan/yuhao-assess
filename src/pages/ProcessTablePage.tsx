@@ -1,3 +1,4 @@
+/* eslint-env browser */
 import React, { useState } from 'react'
 import { useAtom, useSetAtom } from 'jotai'
 import { Upload, Button, Alert, Table, Space, Typography, Select } from 'antd'
@@ -7,7 +8,6 @@ import {
   ThunderboltOutlined,
   ReloadOutlined,
 } from '@ant-design/icons'
-import type { UploadFile } from 'antd'
 import type { RcFile } from 'antd/es/upload'
 import { 當前方案原子狀態 } from '@/atoms/scheme'
 import { 原始碼表原子狀態, 碼表原子狀態, 碼表元數據原子狀態, 碼表加載中原子狀態 } from '@/atoms'
@@ -55,7 +55,7 @@ const ProcessTablePage: React.FC = () => {
   }
 
   // 處理碼表（共用邏輯）
-  const 處理碼表 = async (原始碼表: RawCodeTable, 文件名: string) => {
+  const 處理碼表 = async (原始碼表: RawCodeTable, _文件名: string) => {
     // 處理前綴按鍵
     const 前綴按鍵數組 =
       當前方案!.方案參數.是否爲前綴碼 && 當前方案!.方案參數.前綴鍵
@@ -73,6 +73,7 @@ const ProcessTablePage: React.FC = () => {
     設置碼表元數據({
       uploadTime: Date.now(),
     })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     設置碼表(處理結果 as any)
 
     // 生成編碼預覽
@@ -129,7 +130,7 @@ const ProcessTablePage: React.FC = () => {
       設置文件預覽數據(行數組)
 
       // 创建一个虚拟文件对象（用于后续解析）
-      const 虚拟文件 = new File([文本], 當前方案.元數據.標識符 + '.txt', {
+      const 虚拟文件 = new window.File([文本], 當前方案.元數據.標識符 + '.txt', {
         type: 'text/plain',
       }) as RcFile
       設置選中的文件(虚拟文件)
@@ -210,12 +211,11 @@ const ProcessTablePage: React.FC = () => {
     設置編碼預覽數據([])
     設置錯誤信息(null)
     設置成功信息(null)
-
   }
 
   return (
     <div style={{ padding: '24px' }}>
-      <Space direction="vertical" style={{ width: '100%' }} size="large">
+      <Space orientation="vertical" style={{ width: '100%' }} size="large">
         <div>
           {當前方案 ? (
             <Paragraph>
@@ -230,7 +230,7 @@ const ProcessTablePage: React.FC = () => {
             </Paragraph>
           ) : (
             <Alert
-              message="未選擇方案"
+              title="未選擇方案"
               description="請先在首頁選擇或創建方案"
               type="warning"
               showIcon
@@ -365,7 +365,7 @@ const ProcessTablePage: React.FC = () => {
         {/* 狀態提示 */}
         {錯誤信息 && (
           <Alert
-            message="錯誤"
+            title="錯誤"
             description={錯誤信息}
             type="error"
             closable
@@ -374,7 +374,7 @@ const ProcessTablePage: React.FC = () => {
         )}
         {成功信息 && (
           <Alert
-            message="成功"
+            title="成功"
             description={成功信息}
             type="success"
             closable
