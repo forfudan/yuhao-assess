@@ -52,6 +52,32 @@ export default [
       },
     },
   },
+  // Node.js 環境配置（用於CLI工具）
+  {
+    files: ['src/utils/normalize-traditional-chars.ts', 'scripts/**/*.js'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        Buffer: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
+    rules: {
+      ...tsPlugin.configs.recommended.rules,
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    },
+  },
   {
     ignores: ['dist/**', 'node_modules/**', '*.config.ts', '*.config.js', 'vite.config.ts'],
   },
