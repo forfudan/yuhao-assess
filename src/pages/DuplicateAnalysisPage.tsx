@@ -14,7 +14,7 @@ import {
 import { 字頻表服務 } from '../services/charFrequencyService'
 import type { CodeTable, 處理後的碼表結果 } from '../types'
 
-const { Paragraph, Text, Link } = Typography
+const { Paragraph, Link } = Typography
 
 /**
  * 重碼分析頁面
@@ -565,11 +565,14 @@ const DuplicatePage: React.FC = () => {
 
           // 爲每個需要選重的字符（除首選外）添加一行
           for (let i = 1; i < 字符列表.length; i++) {
+            const 當前字符 = 字符列表[i]
+            if (!當前字符) continue // 類型守衛
+
             詳情列表.push({
               序號,
-              字符: 字符列表[i].字符,
+              字符: 當前字符.字符,
               編碼,
-              字頻: 字符列表[i].字頻,
+              字頻: 當前字符.字頻,
               重碼字符列表: 字符列表
                 .map(c => `${c.字符}(${(c.字頻 * 10000).toFixed(2)}‱)`)
                 .join('、'),

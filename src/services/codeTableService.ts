@@ -4,7 +4,7 @@
  */
 
 import { isInCJKToJ, loadCJKBlockData } from './charsetService'
-import type { CodeTable, RawCodeTable, WordFrequency, 處理後的碼表結果 } from '../types'
+import type { CodeTable, RawCodeTable, 頻率數據型别, 處理後的碼表結果 } from '../types'
 
 // =============================================================================
 // 類型定義
@@ -249,7 +249,7 @@ export class 碼表處理服務 {
    * @param fullCodeTable 單字全碼表
    * @returns 詞語碼表 Map<詞語, [編碼+選重鍵]>
    */
-  生成詞語全碼表(wordFreq: WordFrequency, fullCodeTable: CodeTable): CodeTable {
+  生成詞語全碼表(wordFreq: 頻率數據型别, fullCodeTable: CodeTable): CodeTable {
     const 詞語全碼加選重鍵表: CodeTable = new Map()
 
     // 獲取處理選項
@@ -300,7 +300,7 @@ export class 碼表處理服務 {
    * @returns 詞語碼表 Map<詞語, [編碼+選重鍵]>
    */
   生成詞語簡碼表(
-    wordFreq: WordFrequency,
+    wordFreq: 頻率數據型别,
     fullCodeTable: CodeTable,
     shortCodeTable: CodeTable
   ): CodeTable {

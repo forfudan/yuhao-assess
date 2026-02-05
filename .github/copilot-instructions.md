@@ -329,7 +329,7 @@ Ant Design 5.x 中部分屬性已廢棄，使用時會産生 console warning：
 - **變量/函數名**：**必須使用繁體中文**（TypeScript 完全支持 Unicode 標識符）
 - **組件文件名**：PascalCase（`HomePage.tsx`、`MainLayout.tsx`）
 - **工具文件名**：camelCase（`useDataLoaders.ts`）
-- **類型名**：PascalCase 英文（`CodeTable`、`CharFrequency`）- 因爲需要導出給其他項目使用
+- **類型名**：英文 PascalCase（`CodeTable`、`CharFrequency`），中文加「類型」後綴（`字頻數據類型`）
 
 **✅ 推薦的繁體中文命名**：
 

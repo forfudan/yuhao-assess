@@ -4,7 +4,7 @@
  */
 
 import { generateCharset, type CharsetType, charsetInfo } from './charsetService'
-import type { CodeTable, CharFrequency, WordFrequency } from '../types/index'
+import type { CodeTable, 頻率數據型别, 頻數數據型别 } from '../types/index'
 
 /**
  * 計算某個字符集下的靜態重碼數
@@ -51,7 +51,7 @@ export function getStaticDupRate(
  */
 export function getDynamicDupRate(
   codeTable: CodeTable,
-  charFrequency: CharFrequency,
+  charFrequency: 頻率數據型别,
   sortByFrequency: boolean = true
 ): number {
   const codeToCharFreqs = new Map<string, Array<{ char: string; freq: number }>>()
@@ -99,7 +99,7 @@ export function getDynamicDupRate(
  */
 export function getDynamicDupRateFromOriginalOrder(
   codeTableWithSelection: CodeTable,
-  charFrequency: CharFrequency
+  charFrequency: 頻率數據型别
 ): number {
   let totalDupFreq = 0
   let totalFreq = 0
@@ -166,7 +166,7 @@ export interface NonFirstWordDuplicateDetail {
  */
 export function getNonFirstDuplicateDetails(
   codeTable: CodeTable,
-  charFrequency: CharFrequency,
+  charFrequency: 頻率數據型别,
   sortByFrequency: boolean = true
 ): NonFirstDuplicateDetail[] {
   const codeToCharFreqs = new Map<string, Array<{ char: string; freq: number }>>()
@@ -235,7 +235,7 @@ export function getNonFirstDuplicateDetails(
  */
 export function getWordDynamicDupRate(
   wordCodeTableWithSelection: CodeTable,
-  wordFrequency: WordFrequency
+  wordFrequency: 頻數數據型别
 ): number {
   let totalDupFreq = 0
   let totalFreq = 0
@@ -268,7 +268,7 @@ export function getWordDynamicDupRate(
  */
 export function getNonFirstWordDuplicateDetails(
   wordCodeTableWithSelection: CodeTable,
-  wordFrequency: WordFrequency
+  wordFrequency: 頻數數據型别
 ): NonFirstWordDuplicateDetail[] {
   // 第一步：按去掉選重鍵的編碼分組所有詞語
   const baseCodeToWords = new Map<

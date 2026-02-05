@@ -14,8 +14,8 @@ export {
 // 速度分析服務
 export {
   計算編碼對頻率,
-  calculateSpeedEquiv,
-  calculateSpeedEquivFromCodeTable,
+  從編碼對頻率計算加權速度當量,
+  從碼表計算加權速度當量,
 } from './speedEquivalentService'
 
 // 導出服務

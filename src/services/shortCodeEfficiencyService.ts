@@ -1,4 +1,4 @@
-import type { CodeTable, CharFrequency } from '../types'
+import type { CodeTable, 頻率數據型别 } from '../types'
 
 interface CodeTableRow {
   char: string
@@ -20,7 +20,7 @@ interface EfficiencyResult {
  */
 export function calculateShortCodeEfficiency(
   codeTable: CodeTableRow[],
-  charFrequency: CharFrequency,
+  charFrequency: 頻率數據型别,
   maxLen: number = 4,
   isPrefix: boolean = false
 ): EfficiencyResult[] {
@@ -50,7 +50,7 @@ interface ProcessedChar {
 
 function preprocessCodeTable(
   codeTable: CodeTableRow[],
-  charFrequency: CharFrequency,
+  charFrequency: 頻率數據型别,
   maxLen: number,
   isPrefix: boolean
 ): ProcessedChar[] {
@@ -61,7 +61,10 @@ function preprocessCodeTable(
     // 過濾條件：
     // 1. 必須是單字- 使用 Array.from 正確處理 Unicode Codepoint
     // 2. 必須在字频表中存在
-    if (Array.from(row.char).length === 1 && charFrequency.hasOwnProperty(row.char)) {
+    if (
+      Array.from(row.char).length === 1 &&
+      Object.prototype.hasOwnProperty.call(charFrequency, row.char)
+    ) {
       if (!charMap.has(row.char)) {
         charMap.set(row.char, [])
       }
@@ -181,7 +184,7 @@ function calculateEfficiencyForN(
  */
 export function calculateFullCodeAverageLength(
   codeTable: CodeTableRow[],
-  charFrequency: CharFrequency,
+  charFrequency: 頻率數據型别,
   maxLen: number = 4,
   isPrefix: boolean = false
 ): number {
@@ -194,7 +197,7 @@ export function calculateFullCodeAverageLength(
  */
 export function calculateShortCodeAverageLength(
   codeTable: CodeTableRow[],
-  charFrequency: CharFrequency,
+  charFrequency: 頻率數據型别,
   maxLen: number = 4,
   isPrefix: boolean = false
 ): number {

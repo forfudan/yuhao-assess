@@ -91,9 +91,11 @@ export async function generateCharset(
       const basicRange = cjkBlockRanges['cjk_basic']
       if (basicRange) {
         for (let i = 0; i < chars.length; i++) {
-          const codePoint = chars[i].codePointAt(0)
+          const char = chars[i]
+          if (!char) continue
+          const codePoint = char.codePointAt(0)
           if (codePoint && codePoint >= basicRange.start && codePoint <= basicRange.end) {
-            charset.add(chars[i])
+            charset.add(char)
           }
         }
       }
@@ -106,13 +108,15 @@ export async function generateCharset(
       const aRange = cjkBlockRanges['cjk_a']
       if (basicRangeA && aRange) {
         for (let i = 0; i < chars.length; i++) {
-          const codePoint = chars[i].codePointAt(0)
+          const char = chars[i]
+          if (!char) continue
+          const codePoint = char.codePointAt(0)
           if (
             codePoint &&
             ((codePoint >= basicRangeA.start && codePoint <= basicRangeA.end) ||
               (codePoint >= aRange.start && codePoint <= aRange.end))
           ) {
-            charset.add(chars[i])
+            charset.add(char)
           }
         }
       }
@@ -125,14 +129,16 @@ export async function generateCharset(
       const bRange = cjkBlockRanges['cjk_b']
       if (basicRangeB && aRangeB && bRange) {
         for (let i = 0; i < chars.length; i++) {
-          const codePoint = chars[i].codePointAt(0)
+          const char = chars[i]
+          if (!char) continue
+          const codePoint = char.codePointAt(0)
           if (
             codePoint &&
             ((codePoint >= basicRangeB.start && codePoint <= basicRangeB.end) ||
               (codePoint >= aRangeB.start && codePoint <= aRangeB.end) ||
               (codePoint >= bRange.start && codePoint <= bRange.end))
           ) {
-            charset.add(chars[i])
+            charset.add(char)
           }
         }
       }
@@ -142,12 +148,14 @@ export async function generateCharset(
     case 'cjk_to_f': {
       const ranges = ['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c', 'cjk_d', 'cjk_e', 'cjk_f']
       for (let i = 0; i < chars.length; i++) {
-        const codePoint = chars[i].codePointAt(0)
+        const char = chars[i]
+        if (!char) continue
+        const codePoint = char.codePointAt(0)
         if (codePoint) {
           for (const rangeName of ranges) {
             const range = cjkBlockRanges[rangeName]
             if (range && codePoint >= range.start && codePoint <= range.end) {
-              charset.add(chars[i])
+              charset.add(char)
               break
             }
           }
@@ -171,12 +179,14 @@ export async function generateCharset(
         'cjk_j',
       ]
       for (let i = 0; i < chars.length; i++) {
-        const codePoint = chars[i].codePointAt(0)
+        const char = chars[i]
+        if (!char) continue
+        const codePoint = char.codePointAt(0)
         if (codePoint) {
           for (const rangeName of allRanges) {
             const range = cjkBlockRanges[rangeName]
             if (range && codePoint >= range.start && codePoint <= range.end) {
-              charset.add(chars[i])
+              charset.add(char)
               break
             }
           }
@@ -204,6 +214,7 @@ export function calculateAllMaxCandidates(
   for (const [char, codes] of fullCodeTable.entries()) {
     if (codes && codes.length > 0) {
       const firstCode = codes[0]
+      if (!firstCode) continue
       if (!codeToCharsGlobal.has(firstCode)) {
         codeToCharsGlobal.set(firstCode, [])
       }
@@ -265,11 +276,12 @@ export function calculateStaticDuplicates(
   const codeToChars = new Map<string, string[]>()
   for (const [char, codes] of fullCodeTable.entries()) {
     if (codes && codes.length > 0) {
-      const code = codes[0]
-      if (!codeToChars.has(code)) {
-        codeToChars.set(code, [])
+      const firstCode = codes[0]
+      if (!firstCode) continue
+      if (!codeToChars.has(firstCode)) {
+        codeToChars.set(firstCode, [])
       }
-      codeToChars.get(code)!.push(char)
+      codeToChars.get(firstCode)!.push(char)
     }
   }
 
@@ -446,6 +458,7 @@ export async function preprocessCodeTable(codeTable: CodeTable): Promise<{
   for (const [char, codes] of fullCodeTable.entries()) {
     if (codes && codes.length > 0) {
       const code = codes[0]
+      if (!code) continue
       if (!codeToCharsMap.has(code)) {
         codeToCharsMap.set(code, [])
       }

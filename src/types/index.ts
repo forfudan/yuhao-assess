@@ -66,17 +66,11 @@ export interface EquivTable {
   data: Record<string, number>
 }
 
-// 漢字絶對頻數數據（原始數據，未歸一化）
-export type AbsoluteCharFrequency = Record<string, number>
+// 絶對頻數數據（原始數據，未歸一化）
+export type 頻數數據型别 = Record<string, number>
 
-// 漢字相對頻率數據（歸一化後，用於計算）
-export type RelativeCharFrequency = Record<string, number>
-
-// 兼容舊代碼，預設使用相對頻率
-export type CharFrequency = RelativeCharFrequency
-
-// 詞頻數據
-export type WordFrequency = Record<string, number>
+// 相對頻率數據（歸一化後，用於計算）
+export type 頻率數據型别 = Record<string, number>
 
 // 碼表條目
 export interface CodeTableEntry {
@@ -88,7 +82,7 @@ export interface CodeTableEntry {
 // 分析參數
 export interface AnalysisParams {
   codeTable: CodeTable
-  charFrequency?: CharFrequency
+  charFrequency?: 頻率數據型别
   charset?: Set<string> | 'all'
 }
 

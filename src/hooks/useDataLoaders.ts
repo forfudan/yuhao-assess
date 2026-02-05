@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { 加載JSON數據文件 } from '@/utils/data-loader'
 
 /**
- * 字符頻數數據類型（Absolute Frequency）
+ * 字符頻數數據型别（Absolute Frequency）
  *
  * 鍵：單個字符
  * 值：該字符在語料庫中的出現次數（整數）
@@ -76,7 +76,7 @@ export function useCharAbsoluteFrequency(文件名: string): UseDataResult<CharA
 }
 
 /**
- * 詞語頻數數據類型（Absolute Frequency）
+ * 詞語頻數數據型别（Absolute Frequency）
  *
  * 鍵：詞語字符串
  * 值：該詞語在語料庫中的出現次數（整數）

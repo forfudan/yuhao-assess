@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "build-cf": "node scripts/build-cf.js",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx --fix --ignore-path .gitignore",
     "format": "prettier --write \"**/*.{ts,tsx,json,md,css}\"",

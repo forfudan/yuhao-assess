@@ -3,7 +3,7 @@
  * 處理打字速度相關的計算和分析
  */
 
-import type { CodeTable, CharFrequency } from '../types'
+import type { CodeTable, 頻率數據型别 } from '../types'
 
 /**
  * 計算編碼對頻率
@@ -34,12 +34,12 @@ export function 計算編碼對頻率(
 }
 
 /**
- * 計算速度當量值（基礎版本）
+ * 從編碼對頻率計算加權速度當量（基礎版本）
  * @param pairFrequencies 碼對頻率數據
  * @param equivTable 當量表
  * @returns 計算出的速度當量值
  */
-export function calculateSpeedEquiv(
+export function 從編碼對頻率計算加權速度當量(
   pairFrequencies: Record<string, number>,
   equivTable: Record<string, number>
 ): number {
@@ -64,13 +64,13 @@ export function calculateSpeedEquiv(
  * @param equivTable 當量表
  * @returns 計算出的速度當量值
  */
-export function calculateSpeedEquivFromCodeTable(
+export function 從碼表計算加權速度當量(
   codeTable: CodeTable,
   charFrequency: Record<string, number>,
   equivTable: Record<string, number>
 ): number {
   const pairFrequencies = 計算編碼對頻率(codeTable, charFrequency)
-  return calculateSpeedEquiv(pairFrequencies, equivTable)
+  return 從編碼對頻率計算加權速度當量(pairFrequencies, equivTable)
 }
 
 /**

@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react'
-import type { CodeTable, CharFrequency, WordFrequency } from '@/types'
+import type { CodeTable, 頻率數據型别 } from '@/types'
 import {
   getStaticDupRate,
   getDynamicDupRate,
@@ -49,7 +49,7 @@ export function useDuplicateStats(): UseStatisticsResult<DuplicateStats> {
       碼表: CodeTable,
       選項?: {
         字符集?: Set<string> | 'all'
-        字頻數據?: CharFrequency
+        字頻數據?: 頻率數據型别
         排序依字頻?: boolean
         字符集類型?: string
       }

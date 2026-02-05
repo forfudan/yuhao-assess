@@ -4,7 +4,7 @@
  * 負責加載各種數據文件，包括字頻數據、當量表等
  */
 
-import type { CharFrequency } from '../types'
+import type { 頻率數據型别 } from '../types'
 import { 字頻表服務 } from './charFrequencyService'
 
 // =============================================================================
@@ -111,7 +111,7 @@ export function clearFrequencyCharsCache(): void {
 /**
  * 加載知乎字頻數據
  */
-export async function loadCharFrequency(): Promise<CharFrequency> {
+export async function loadCharFrequency(): Promise<頻率數據型别> {
   try {
     return await 字頻表服務.加載知乎字頻()
   } catch (error) {
@@ -123,7 +123,7 @@ export async function loadCharFrequency(): Promise<CharFrequency> {
 /**
  * 加載簡體字頻數據
  */
-export async function loadCharFrequencySC(): Promise<CharFrequency> {
+export async function loadCharFrequencySC(): Promise<頻率數據型别> {
   try {
     return await 字頻表服務.加載簡體字頻()
   } catch (error) {
@@ -135,7 +135,7 @@ export async function loadCharFrequencySC(): Promise<CharFrequency> {
 /**
  * 加載繁體字頻數據
  */
-export async function loadCharFrequencyTC(): Promise<CharFrequency> {
+export async function loadCharFrequencyTC(): Promise<頻率數據型别> {
   try {
     return await 字頻表服務.加載繁體字頻()
   } catch (error) {
@@ -147,7 +147,7 @@ export async function loadCharFrequencyTC(): Promise<CharFrequency> {
 /**
  * 加載古籍字頻數據
  */
-export async function loadCharFrequencyGuji(): Promise<CharFrequency> {
+export async function loadCharFrequencyGuji(): Promise<頻率數據型别> {
   try {
     return await 字頻表服務.加載古籍字頻()
   } catch (error) {
@@ -159,7 +159,7 @@ export async function loadCharFrequencyGuji(): Promise<CharFrequency> {
 /**
  * 加載統一字頻數據
  */
-export async function loadCharFrequencyUnified(): Promise<CharFrequency> {
+export async function loadCharFrequencyUnified(): Promise<頻率數據型别> {
   try {
     return await 字頻表服務.加載繁簡聯合字頻()
   } catch (error) {

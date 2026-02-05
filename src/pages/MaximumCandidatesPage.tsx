@@ -103,14 +103,14 @@ const MaximumCandidatesPage: React.FC = () => {
       const 總字符數 = 全碼表.size
 
       const 新結果: 最大候選個數分析結果 = {
-        gb2312: 結果.gb2312,
-        tonggui: 結果.tonggui,
-        guozi: 結果.guozi,
-        cjk_basic: 結果.cjk_basic,
-        cjk_to_a: 結果.cjk_to_a,
-        cjk_to_b: 結果.cjk_to_b,
-        cjk_to_f: 結果.cjk_to_f,
-        cjk_to_j: 結果.cjk_to_j,
+        gb2312: 結果['gb2312'],
+        tonggui: 結果['tonggui'],
+        guozi: 結果['guozi'],
+        cjk_basic: 結果['cjk_basic'],
+        cjk_to_a: 結果['cjk_to_a'],
+        cjk_to_b: 結果['cjk_to_b'],
+        cjk_to_f: 結果['cjk_to_f'],
+        cjk_to_j: 結果['cjk_to_j'],
         字符數: 總字符數,
         更新時間: new Date().toISOString(),
       }
