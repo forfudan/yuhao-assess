@@ -141,10 +141,12 @@ export function AppHeader() {
       const a = document.createElement('a')
       a.href = url
 
-      // 文件名格式：標識符-作者名-版本號.json
+      // 文件名格式：標識符-方案名-作者-版本號.json
+      const 標識符 = 當前方案.元數據.標識符
+      const 方案名 = 當前方案.元數據.方案名
       const 作者 = 當前方案.元數據.作者 || 'unknown'
       const 版本 = 當前方案.元數據.版本 || '1.0.0'
-      a.download = `${當前方案.元數據.標識符}-${作者}-${版本}.json`
+      a.download = `${標識符}-${方案名}-${作者}-${版本}.json`
 
       a.click()
       URL.revokeObjectURL(url)

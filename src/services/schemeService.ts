@@ -35,7 +35,7 @@ export async function 加載方案(方案鍵名: string): Promise<方案配置> 
  */
 export async function 列出可用方案(): Promise<string[]> {
   // 預設方案列表（未來可以從 manifest.json 動態加載）
-  return ['yuhao-ming', 'yuhao-star', 'yuhao-ling']
+  return ['yuhao-ming', 'yuhao-star', 'yuhao-ling', 'snow-qingyun']
 }
 
 /**
