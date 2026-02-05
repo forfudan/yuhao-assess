@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAtom } from 'jotai'
-import { Button, Space, Typography, Alert, Spin, Tooltip, Modal, Table } from 'antd'
+import { Button, Space, Typography, Alert, Spin, Tooltip, Modal, Table, Input } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 碼表原子狀態 } from '../atoms/codeTable'
@@ -29,6 +29,7 @@ const DuplicatePage: React.FC = () => {
   // 重碼詳情 Modal
   const [顯示詳情, 設置顯示詳情] = useState(false)
   const [詳情標題, 設置詳情標題] = useState('')
+  const [詳情搜索關鍵詞, 設置詳情搜索關鍵詞] = useState('')
   const [重碼詳情列表, 設置重碼詳情列表] = useState<
     Array<{
       序號: number
@@ -1121,10 +1122,19 @@ const DuplicatePage: React.FC = () => {
       <Modal
         title={詳情標題}
         open={顯示詳情}
-        onCancel={() => 設置顯示詳情(false)}
+        onCancel={() => {
+          設置顯示詳情(false)
+          設置詳情搜索關鍵詞('')
+        }}
         width={1200}
         footer={[
-          <Button key="close" onClick={() => 設置顯示詳情(false)}>
+          <Button
+            key="close"
+            onClick={() => {
+              設置顯示詳情(false)
+              設置詳情搜索關鍵詞('')
+            }}
+          >
             關閉
           </Button>,
         ]}
@@ -1135,18 +1145,38 @@ const DuplicatePage: React.FC = () => {
             <p style={{ marginTop: 16 }}>正在計算重碼詳情...</p>
           </div>
         ) : (
-          <Table
-            columns={詳情列定義}
-            dataSource={重碼詳情列表}
-            pagination={{
-              pageSize: 20,
-              showSizeChanger: true,
-              showTotal: total => `共 ${total} 條`,
-            }}
-            bordered
-            size="small"
-            scroll={{ y: 500 }}
-          />
+          <>
+            <div style={{ marginBottom: 16 }}>
+              <Input.Search
+                placeholder="搜索字符、編碼或重碼字符列表..."
+                value={詳情搜索關鍵詞}
+                onChange={e => 設置詳情搜索關鍵詞(e.target.value)}
+                allowClear
+                style={{ width: 400 }}
+              />
+            </div>
+            <Table
+              columns={詳情列定義}
+              dataSource={重碼詳情列表.filter(item => {
+                if (!詳情搜索關鍵詞) return true
+                const keyword = 詳情搜索關鍵詞.toLowerCase()
+                return (
+                  item.字符.includes(詳情搜索關鍵詞) ||
+                  item.編碼.toLowerCase().includes(keyword) ||
+                  item.重碼字符列表.includes(詳情搜索關鍵詞)
+                )
+              })}
+              pagination={{
+                defaultPageSize: 50,
+                pageSizeOptions: ['20', '50', '100', '200'],
+                showSizeChanger: true,
+                showTotal: (total, range) => `顯示 ${range[0]}-${range[1]} 條，共 ${total} 條`,
+              }}
+              bordered
+              size="small"
+              scroll={{ y: 500 }}
+            />
+          </>
         )}
       </Modal>
     </div>

@@ -1,4 +1,5 @@
 /* eslint-env node */
+/* eslint-disable no-undef */
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import fg from 'fast-glob'
 
@@ -198,13 +199,12 @@ function escapeRegExp(str: string): string {
  * 主函數
  */
 function main(): void {
-  // eslint-disable-next-line no-undef
   const patterns = process.argv.slice(2)
 
   if (patterns.length === 0) {
     console.log('用法: pnpm exec tsx src/utils/normalize-traditional-chars.ts <文件1> <文件2> ...')
     console.log('')
-    console.log('功能: 將台灣繁體字形統一轉換爲大陸通規字形')
+    console.log('功能: 將臺灣繁體字形統一轉換爲大陸通規字形')
     console.log('')
     console.log('示例:')
     console.log('  pnpm exec tsx src/utils/normalize-traditional-chars.ts src/App.vue')
@@ -212,7 +212,6 @@ function main(): void {
     console.log('  pnpm exec tsx src/utils/normalize-traditional-chars.ts src/**/*.ts')
     console.log('')
     console.log(`支持的映射: ${CHAR_MAPPINGS.length} 組字形轉換`)
-    // eslint-disable-next-line no-undef
     process.exit(0)
   }
 
@@ -224,7 +223,6 @@ function main(): void {
 
   if (allFiles.length === 0) {
     console.log('⚠ 未找到匹配的文件')
-    // eslint-disable-next-line no-undef
     process.exit(0)
   }
 

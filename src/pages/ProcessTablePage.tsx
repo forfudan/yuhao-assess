@@ -1,7 +1,7 @@
 /* eslint-env browser */
 import React, { useState } from 'react'
 import { useAtom, useSetAtom } from 'jotai'
-import { Upload, Button, Alert, Table, Space, Typography, Select } from 'antd'
+import { Upload, Button, Alert, Table, Space, Typography, Select, Input } from 'antd'
 import {
   DownloadOutlined,
   InboxOutlined,
@@ -39,6 +39,8 @@ const ProcessTablePage: React.FC = () => {
   const [編碼預覽數據, 設置編碼預覽數據] = useState<編碼預覽項[]>([])
   const [錯誤信息, 設置錯誤信息] = useState<string | null>(null)
   const [成功信息, 設置成功信息] = useState<string | null>(null)
+  const [文件搜索關鍵詞, 設置文件搜索關鍵詞] = useState('')
+  const [編碼搜索關鍵詞, 設置編碼搜索關鍵詞] = useState('')
 
   // 服務實例（不再需要 useRef，直接使用單例）
 
@@ -320,13 +322,27 @@ const ProcessTablePage: React.FC = () => {
         {文件預覽數據.length > 0 && (
           <div>
             <Title level={4}>文件預覽（共 {文件預覽數據.length} 行）</Title>
+            <div style={{ marginBottom: 16 }}>
+              <Input.Search
+                placeholder="搜索行内容..."
+                value={文件搜索關鍵詞}
+                onChange={e => 設置文件搜索關鍵詞(e.target.value)}
+                allowClear
+                style={{ width: 400 }}
+              />
+            </div>
             <Table
-              dataSource={文件預覽數據.map((行, 索引) => ({ key: 索引, 行號: 索引 + 1, 内容: 行 }))}
+              dataSource={文件預覽數據
+                .map((行, 索引) => ({ key: 索引, 行號: 索引 + 1, 内容: 行 }))
+                .filter(item => {
+                  if (!文件搜索關鍵詞) return true
+                  return item.内容.includes(文件搜索關鍵詞)
+                })}
               pagination={{
-                pageSize: 10,
+                defaultPageSize: 10,
+                pageSizeOptions: ['10', '20', '50', '100', '200'],
                 showSizeChanger: true,
-                pageSizeOptions: ['10', '20', '50', '100'],
-                showTotal: total => `共 ${total} 行`,
+                showTotal: (total, range) => `顯示 ${range[0]}-${range[1]} 行，共 ${total} 行`,
               }}
               columns={[
                 { title: '行號', dataIndex: '行號', width: 80 },
@@ -383,14 +399,33 @@ const ProcessTablePage: React.FC = () => {
         {編碼預覽數據.length > 0 && (
           <div>
             <Title level={4}>單字編碼預覽（共 {編碼預覽數據.length} 個）</Title>
+            <div style={{ marginBottom: 16 }}>
+              <Input.Search
+                placeholder="搜索字符或編碼..."
+                value={編碼搜索關鍵詞}
+                onChange={e => 設置編碼搜索關鍵詞(e.target.value)}
+                allowClear
+                style={{ width: 400 }}
+              />
+            </div>
             <Table
-              dataSource={編碼預覽數據}
+              dataSource={編碼預覽數據.filter(item => {
+                if (!編碼搜索關鍵詞) return true
+                const keyword = 編碼搜索關鍵詞.toLowerCase()
+                return (
+                  item.char.includes(編碼搜索關鍵詞) ||
+                  item.fullCode.toLowerCase().includes(keyword) ||
+                  item.shortCode.toLowerCase().includes(keyword) ||
+                  item.全碼加選重鍵表.toLowerCase().includes(keyword) ||
+                  item.簡碼加選重鍵表.toLowerCase().includes(keyword)
+                )
+              })}
               rowKey="char"
               pagination={{
-                pageSize: 10,
+                defaultPageSize: 10,
+                pageSizeOptions: ['10', '20', '50', '100', '200'],
                 showSizeChanger: true,
-                pageSizeOptions: ['10', '20', '50', '100'],
-                showTotal: total => `共 ${total} 個字符`,
+                showTotal: (total, range) => `顯示 ${range[0]}-${range[1]} 個，共 ${total} 個字符`,
               }}
               columns={[
                 { title: '行號', render: (_: any, __: any, index: number) => index + 1, width: 60 },
