@@ -60,11 +60,54 @@ const SpeedEquivalentPage: React.FC = () => {
     設置錯誤信息(null)
 
     try {
+      // 加載字頻數據（如果緩存爲空）
+      const 字頻服務 = await import('../services/charFrequencyService')
+      if (字頻表緩存.size === 0) {
+        await Promise.all([
+          字頻服務.字頻表服務.加載知乎字頻(),
+          字頻服務.字頻表服務.加載簡體字頻(),
+          字頻服務.字頻表服務.加載繁體字頻(),
+          字頻服務.字頻表服務.加載古籍字頻(),
+          字頻服務.字頻表服務.加載繁簡聯合字頻(),
+        ])
+      }
+
       // 加載當量表
       const 當量表數據 = Object.keys(當量表).length > 0 ? 當量表 : await 加載當量表()
 
       const 全碼加選重鍵表 = 處理後碼表.全碼加選重鍵表
       const 簡碼加選重鍵表 = 處理後碼表.簡碼加選重鍵表
+
+      // ===== 調試輸出 =====
+      console.group('速度當量計算調試數據')
+
+      // 1. 全碼加選重鍵表 前10個
+      console.log('📋 全碼加選重鍵表 (前10個):')
+      const 全碼條目 = Array.from(全碼加選重鍵表.entries()).slice(0, 10)
+      全碼條目.forEach(([字符, 編碼數組]) => {
+        console.log(`  "${字符}" -> [${編碼數組.map(c => `"${c}"`).join(', ')}]`)
+      })
+      console.log(`  (總計 ${全碼加選重鍵表.size} 個字符)`)
+
+      // 2. 知乎簡體字頻 前10個
+      const 知乎簡體字頻 = 字頻表緩存.get('知乎字頻') || {}
+      console.log('\n知乎簡體字頻 (前10個):')
+      const 字頻條目 = Object.entries(知乎簡體字頻).slice(0, 10)
+      字頻條目.forEach(([字符, 頻率]) => {
+        console.log(`  "${字符}" -> ${頻率} (${(頻率 * 10000).toFixed(2)}‱)`)
+      })
+      console.log(`  (總計 ${Object.keys(知乎簡體字頻).length} 個字符)`)
+
+      // 3. 當量表數據 前10個
+      console.log('\n當量表數據 (前10個):')
+      const 當量條目 = Object.entries(當量表數據).slice(0, 10)
+      當量條目.forEach(([碼對, 當量值]) => {
+        console.log(`  "${碼對}" -> ${當量值}`)
+      })
+      console.log(`  (總計 ${Object.keys(當量表數據).length} 個碼對)`)
+
+      console.groupEnd()
+      // ===== 調試輸出結束 =====
 
       // 計算全碼當量
       const 知乎簡體字頻全碼速度當量 = calculateSpeedEquivFromCodeTable(

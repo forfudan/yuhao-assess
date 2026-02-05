@@ -103,6 +103,11 @@ export class 字頻表服務 {
    * 加載繁簡聯合漢字頻率表（合併簡體和繁體）
    */
   static async 加載繁簡聯合字頻(): Promise<RelativeCharFrequency> {
+    const store = getDefaultStore()
+    const cache = store.get(字頻表緩存原子狀態)
+    const cached = cache.get('繁简联合')
+    if (cached) return cached
+
     const [簡體字頻, 繁體字頻] = await Promise.all([this.加載簡體字頻(), this.加載繁體字頻()])
 
     // 合併字頻，取較大值
@@ -112,6 +117,10 @@ export class 字頻表服務 {
         合併字頻[字符] = 頻率
       }
     }
+
+    // 緩存合併後的字頻數據
+    cache.set('繁简联合', 合併字頻)
+    store.set(字頻表緩存原子狀態, cache)
 
     return 合併字頻
   }
