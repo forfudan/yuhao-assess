@@ -11,8 +11,8 @@ import {
   getDynamicDupRateFromOriginalOrder,
   calculateCharsetDuplicates,
 } from '../services/duplicateAnalysisService'
-import { 字頻表服務類別 } from '../services/charFrequencyService'
-import type { CodeTable, 處理後的碼表結果 } from '../types'
+import { 字頻表服務類别 } from '../services/charFrequencyService'
+import type { 碼表型别, 處理後的碼表結果介面 } from '../types'
 
 const { Paragraph, Link } = Typography
 
@@ -41,7 +41,7 @@ const DuplicatePage: React.FC = () => {
   const [詳情計算中, 設置詳情計算中] = useState(false)
 
   // 類型斷言：碼表數據實際上是 處理後的碼表結果
-  const 處理後碼表 = 碼表數據 as 處理後的碼表結果 | null
+  const 處理後碼表 = 碼表數據 as 處理後的碼表結果介面 | null
 
   /**
    * 檢查數據是否完整
@@ -125,14 +125,14 @@ const DuplicatePage: React.FC = () => {
 
       // 加載字頻數據
       const [知乎字頻, 北語字頻, 臺標字頻, 古籍字頻] = await Promise.all([
-        字頻表服務類別.加載知乎簡體字頻(),
-        字頻表服務類別.加載北語簡體字頻(),
-        字頻表服務類別.加載臺標繁體字頻(),
-        字頻表服務類別.加載古籍繁體字頻(),
+        字頻表服務類别.加載知乎簡體字頻(),
+        字頻表服務類别.加載北語簡體字頻(),
+        字頻表服務類别.加載臺標繁體字頻(),
+        字頻表服務類别.加載古籍繁體字頻(),
       ])
 
       // 計算繁簡聯合字頻（北語 + 臺標）
-      const 繁簡聯合字頻 = await 字頻表服務類別.計算繁簡聯合字頻()
+      const 繁簡聯合字頻 = await 字頻表服務類别.計算繁簡聯合字頻()
 
       // ========== 動態選重率（按字頻重排） ==========
       const 知乎簡體動態選重率 = {
@@ -508,24 +508,24 @@ const DuplicatePage: React.FC = () => {
     設置顯示詳情(true)
 
     try {
-      const 使用碼表: CodeTable = 碼表類型 === '全碼' ? 處理後碼表.全碼表 : 處理後碼表.簡碼表
+      const 使用碼表: 碼表型别 = 碼表類型 === '全碼' ? 處理後碼表.全碼表 : 處理後碼表.簡碼表
 
       // 加載對應字頻
       let 字頻數據: Record<string, number>
       if (字頻類型 === 'zhihu') {
-        字頻數據 = await 字頻表服務類別.加載知乎簡體字頻()
+        字頻數據 = await 字頻表服務類别.加載知乎簡體字頻()
         設置詳情標題(`知乎簡體${碼表類型}動態選重詳情${是否按字頻排序 ? '' : '（原序）'}`)
       } else if (字頻類型 === 'sc') {
-        字頻數據 = await 字頻表服務類別.加載北語簡體字頻()
+        字頻數據 = await 字頻表服務類别.加載北語簡體字頻()
         設置詳情標題(`北語簡體${碼表類型}動態選重詳情${是否按字頻排序 ? '' : '（原序）'}`)
       } else if (字頻類型 === 'tc') {
-        字頻數據 = await 字頻表服務類別.加載臺標繁體字頻()
+        字頻數據 = await 字頻表服務類别.加載臺標繁體字頻()
         設置詳情標題(`臺標繁體${碼表類型}動態選重詳情${是否按字頻排序 ? '' : '（原序）'}`)
       } else if (字頻類型 === 'guji') {
-        字頻數據 = await 字頻表服務類別.加載古籍繁體字頻()
+        字頻數據 = await 字頻表服務類别.加載古籍繁體字頻()
         設置詳情標題(`古籍繁體${碼表類型}動態選重詳情${是否按字頻排序 ? '' : '（原序）'}`)
       } else if (字頻類型 === 'unified') {
-        字頻數據 = await 字頻表服務類別.計算繁簡聯合字頻()
+        字頻數據 = await 字頻表服務類别.計算繁簡聯合字頻()
         設置詳情標題(`繁簡聯合${碼表類型}動態選重詳情${是否按字頻排序 ? '' : '（原序）'}`)
       } else {
         throw new Error('未知的字頻類型')

@@ -5,7 +5,7 @@
  */
 
 import type { 頻率數據型别 } from '../types'
-import { 字頻表服務類別 } from './charFrequencyService'
+import { 字頻表服務類别 } from './charFrequencyService'
 
 // =============================================================================
 // 字頻數據加載
@@ -117,7 +117,7 @@ export function clearFrequencyCharsCache(): void {
  */
 export async function 加載知乎簡體字頻(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務類別.加載知乎簡體字頻()
+    return await 字頻表服務類别.加載知乎簡體字頻()
   } catch (error) {
     console.error('加載知乎字頻數據失敗:', error)
     throw error
@@ -129,7 +129,7 @@ export async function 加載知乎簡體字頻(): Promise<頻率數據型别> {
  */
 export async function 加載北語簡體字頻(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務類別.加載北語簡體字頻()
+    return await 字頻表服務類别.加載北語簡體字頻()
   } catch (error) {
     console.error('加載北語簡體字頻數據失敗:', error)
     throw error
@@ -141,7 +141,7 @@ export async function 加載北語簡體字頻(): Promise<頻率數據型别> {
  */
 export async function 加載臺標繁體字頻(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務類別.加載臺標繁體字頻()
+    return await 字頻表服務類别.加載臺標繁體字頻()
   } catch (error) {
     console.error('加載臺標繁體字頻數據失敗:', error)
     throw error
@@ -153,7 +153,7 @@ export async function 加載臺標繁體字頻(): Promise<頻率數據型别> {
  */
 export async function 加載古籍繁體字頻(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務類別.加載古籍繁體字頻()
+    return await 字頻表服務類别.加載古籍繁體字頻()
   } catch (error) {
     console.error('加載古籍繁體字頻數據失敗:', error)
     throw error
@@ -165,7 +165,7 @@ export async function 加載古籍繁體字頻(): Promise<頻率數據型别> {
  */
 export async function 計算繁簡聯合字頻(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務類別.計算繁簡聯合字頻()
+    return await 字頻表服務類别.計算繁簡聯合字頻()
   } catch (error) {
     console.error('加載統一字頻數據失敗:', error)
     throw error

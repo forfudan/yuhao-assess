@@ -3,8 +3,8 @@
  * 處理重碼率計算、重碼統計和重碼報告生成
  */
 
-import { generateCharset, type CharsetType, charsetInfo } from './charsetService'
-import type { CodeTable, 頻率數據型别, 頻數數據型别 } from '../types/index'
+import { generateCharset, type 字符集型别, charsetInfo } from './charsetService'
+import type { 碼表型别, 頻率數據型别, 頻數數據型别 } from '../types/index'
 
 /**
  * 計算某個字符集下的靜態重碼數
@@ -13,7 +13,7 @@ import type { CodeTable, 頻率數據型别, 頻數數據型别 } from '../types
  * @returns 靜態重碼的字符數量
  */
 export function getStaticDupRate(
-  codeTable: CodeTable,
+  codeTable: 碼表型别,
   charset: Set<string> | 'all' = 'all'
 ): number {
   const codeToChars = new Map<string, string[]>()
@@ -50,7 +50,7 @@ export function getStaticDupRate(
  * @returns 動態重碼率（0-1之間的小數）
  */
 export function getDynamicDupRate(
-  codeTable: CodeTable,
+  codeTable: 碼表型别,
   charFrequency: 頻率數據型别,
   sortByFrequency: boolean = true
 ): number {
@@ -100,7 +100,7 @@ export function getDynamicDupRate(
  * @returns 動態重碼率（0-1之間的小數）
  */
 export function getDynamicDupRateFromOriginalOrder(
-  codeTableWithSelection: CodeTable,
+  codeTableWithSelection: 碼表型别,
   charFrequency: 頻率數據型别
 ): number {
   let totalDupFreq = 0
@@ -126,7 +126,7 @@ export function getDynamicDupRateFromOriginalOrder(
 }
 
 export interface DuplicateStats {
-  charset: CharsetType
+  charset: 字符集型别
   charsetName: string
   description: string
   totalChars: number
@@ -167,7 +167,7 @@ export interface NonFirstWordDuplicateDetail {
  * @returns 非一選重碼字的詳細信息列表，按字頻降序排列
  */
 export function getNonFirstDuplicateDetails(
-  codeTable: CodeTable,
+  codeTable: 碼表型别,
   charFrequency: 頻率數據型别,
   sortByFrequency: boolean = true
 ): NonFirstDuplicateDetail[] {
@@ -238,7 +238,7 @@ export function getNonFirstDuplicateDetails(
  * @returns 動態重碼率（0-1之間的小數）
  */
 export function getWordDynamicDupRate(
-  wordCodeTableWithSelection: CodeTable,
+  wordCodeTableWithSelection: 碼表型别,
   wordFrequency: 頻數數據型别
 ): number {
   let totalDupFreq = 0
@@ -271,7 +271,7 @@ export function getWordDynamicDupRate(
  * @returns 需要選重的詞語詳細信息列表，按詞頻降序排列
  */
 export function getNonFirstWordDuplicateDetails(
-  wordCodeTableWithSelection: CodeTable,
+  wordCodeTableWithSelection: 碼表型别,
   wordFrequency: 頻數數據型别
 ): NonFirstWordDuplicateDetail[] {
   // 第一步：按去掉選重鍵的編碼分組所有詞語
@@ -341,20 +341,18 @@ export function getNonFirstWordDuplicateDetails(
 
 /**
  * 計算指定字符集的重碼統計
- * @param fullCodeTable 單字全碼表
- * @param charsetType 字符集類型
+ * @param 全碼表 單字全碼表
+ * @param 字符集 字符集類型
  * @returns 重碼統計結果
  */
 export async function calculateCharsetDuplicates(
-  fullCodeTable: CodeTable,
-  charsetType: CharsetType
+  全碼表: 碼表型别,
+  字符集: 字符集型别
 ): Promise<DuplicateStats> {
-  const allChars = new Set(fullCodeTable.keys())
-  console.log(
-    `[calculateCharsetDuplicates] charsetType: ${charsetType}, 碼表總字數: ${allChars.size}`
-  )
+  const allChars = new Set(全碼表.keys())
+  console.log(`[calculateCharsetDuplicates] charsetType: ${字符集}, 碼表總字數: ${allChars.size}`)
 
-  const charset = await generateCharset(charsetType, allChars)
+  const charset = await generateCharset(字符集, allChars)
   console.log(
     `[calculateCharsetDuplicates] 生成字符集大小: ${charset.size}, 前10個字符:`,
     Array.from(charset).slice(0, 10)
@@ -363,7 +361,7 @@ export async function calculateCharsetDuplicates(
   // 計算重碼字數和重碼組數
   const codeToChars = new Map<string, string[]>()
   for (const char of charset) {
-    const codes = fullCodeTable.get(char)
+    const codes = 全碼表.get(char)
     if (codes && codes.length > 0) {
       const code = codes[0]
       if (!code) continue
@@ -385,14 +383,13 @@ export async function calculateCharsetDuplicates(
 
   const totalChars = charset.size
   console.log(
-    `[calculateCharsetDuplicates] ${charsetType} - 重碼字數: ${duplicateCount}, 重碼組數: ${duplicateGroupCount}, 總字數: ${totalChars}`
+    `[calculateCharsetDuplicates] ${字符集} - 重碼字數: ${duplicateCount}, 重碼組數: ${duplicateGroupCount}, 總字數: ${totalChars}`
   )
 
   const uniqueCodes = codeToChars.size
-  const info = charsetInfo[charsetType]
-
+  const info = charsetInfo[字符集]
   return {
-    charset: charsetType,
+    charset: 字符集,
     charsetName: info.name,
     description: info.description,
     totalChars,

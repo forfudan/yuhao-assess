@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+/* eslint-env node */
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import fg from 'fast-glob'
 
@@ -75,7 +75,6 @@ const CHAR_MAPPINGS: readonly CharMapping[] = [
   { tw: '擡', cn: '擡', note: '異體' },
   { tw: '奬', cn: '奬', note: '異體' },
   { tw: '咏', cn: '咏', note: '異體' },
-  { tw: '啓', cn: '啓', note: '異體' },
 
   // 立部文部
   { tw: '彦', cn: '彦', note: '立/文' },
@@ -199,6 +198,7 @@ function escapeRegExp(str: string): string {
  * 主函數
  */
 function main(): void {
+  // eslint-disable-next-line no-undef
   const patterns = process.argv.slice(2)
 
   if (patterns.length === 0) {
@@ -212,6 +212,7 @@ function main(): void {
     console.log('  pnpm exec tsx src/utils/normalize-traditional-chars.ts src/**/*.ts')
     console.log('')
     console.log(`支持的映射: ${CHAR_MAPPINGS.length} 組字形轉換`)
+    // eslint-disable-next-line no-undef
     process.exit(0)
   }
 

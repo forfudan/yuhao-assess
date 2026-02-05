@@ -33,13 +33,13 @@ export {
   type 清理結果,
 } from './codeTableService'
 // 處理後的碼表結果類型從 types 導入
-export type { 處理後的碼表結果 } from '../types'
+export type { 處理後的碼表結果介面 } from '../types'
 
 // 導出當量表服務
 export { 當量表服務, 當量表服務實例 } from './equivTableService'
 
 // 導出字頻表服務
-export { 字頻表服務類別 } from './charFrequencyService'
+export { 字頻表服務類别 } from './charFrequencyService'
 
 // 導出數據服務
 export {
@@ -92,4 +92,4 @@ export {
 } from './shortCodeEfficiencyService'
 
 // 導出類型
-export type { 分析參數介面, CodeTableMetrics, CharsetType } from '../types/index'
+export type { 分析參數介面, CodeTableMetrics, 字符集型别 } from '../types/index'

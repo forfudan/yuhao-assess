@@ -1,6 +1,6 @@
-import { generateCharset, type CharsetType } from './charsetService'
+import { generateCharset, type 字符集型别 } from './charsetService'
 import { 碼表處理服務實例 } from './codeTableService'
-import type { CodeTable } from '../types/index'
+import type { 碼表型别 } from '../types/index'
 
 // 定義返回數據的接口
 export interface 最大候選個數結果 {
@@ -12,8 +12,8 @@ export interface 最大候選個數結果 {
  * 計算指定字符集中每個編碼的最大候選項個數
  */
 export async function getMaximumCandidates(
-  codeTable: CodeTable,
-  charsetType: CharsetType
+  codeTable: 碼表型别,
+  charsetType: 字符集型别
 ): Promise<最大候選個數結果> {
   // 從碼表鍵中提取所有單個字符
   const allUniqueChars = new Set<string>()
@@ -74,8 +74,8 @@ export async function getMaximumCandidates(
 /**
  * 計算所有字符集的最大候選項個數
  */
-export async function getAllMaximumCandidates(codeTable: CodeTable) {
-  const charsetTypes: CharsetType[] = [
+export async function getAllMaximumCandidates(codeTable: 碼表型别) {
+  const charsetTypes: 字符集型别[] = [
     'gb2312',
     'tonggui',
     'guozi',

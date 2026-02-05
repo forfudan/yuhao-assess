@@ -2,16 +2,16 @@
 export type RawCodeTable = Map<number, [string, string, number]> // number: 行號, [汉字, 編碼, N選]
 
 // 碼表類型定義
-export type CodeTable = Map<string, string[]>
+export type 碼表型别 = Map<string, string[]>
 
 // 處理後的碼表結果接口
-export interface 處理後的碼表結果 {
-  全碼表: CodeTable // 全碼表（每個字符只保留最長編碼，保持原始順序）
-  簡碼表: CodeTable // 簡碼表（每個字符只保留最短編碼，保持原始順序）
-  全碼加選重鍵表: CodeTable // 全碼加選重按鍵表（用於當量計算等，保持原始順序）
-  簡碼加選重鍵表: CodeTable // 簡碼加選重按鍵表（補空格+選重鍵，保持原始順序）
-  詞語全碼加選重鍵表?: CodeTable // 詞語全碼加選重按鍵表（詞語編碼使用單字全碼）
-  詞語簡碼加選重鍵表?: CodeTable // 詞語簡碼加選重按鍵表（單字詞使用簡碼，多字詞用全碼截取）
+export interface 處理後的碼表結果介面 {
+  全碼表: 碼表型别 // 全碼表（每個字符只保留最長編碼，保持原始順序）
+  簡碼表: 碼表型别 // 簡碼表（每個字符只保留最短編碼，保持原始順序）
+  全碼加選重鍵表: 碼表型别 // 全碼加選重按鍵表（用於當量計算等，保持原始順序）
+  簡碼加選重鍵表: 碼表型别 // 簡碼加選重按鍵表（補空格+選重鍵，保持原始順序）
+  詞語全碼加選重鍵表?: 碼表型别 // 詞語全碼加選重按鍵表（詞語編碼使用單字全碼）
+  詞語簡碼加選重鍵表?: 碼表型别 // 詞語簡碼加選重按鍵表（單字詞使用簡碼，多字詞用全碼截取）
 }
 
 // 方案配置相關類型
@@ -25,7 +25,7 @@ export interface UploadStatus {
 
 // 码表解析结果
 export interface ParseResult {
-  codeTable: CodeTable
+  codeTable: 碼表型别
   totalChars: number
   totalCodes: number
 }
@@ -81,7 +81,7 @@ export interface 碼表條目介面 {
 
 // 分析參數
 export interface 分析參數介面 {
-  碼表: CodeTable
+  碼表: 碼表型别
   字頻?: 頻率數據型别
   字符集?: Set<string> | 'all'
 }
@@ -105,7 +105,7 @@ export interface CodeTableMetrics {
 }
 
 // 字符集類型
-export type CharsetType =
+export type 字符集型别 =
   | 'gb2312'
   | 'common'
   | 'gbk'
@@ -117,7 +117,7 @@ export type CharsetType =
 
 // 重碼統計結果
 export interface DuplicateStats {
-  charset: CharsetType
+  charset: 字符集型别
   charsetName: string
   description: string
   totalChars: number
@@ -138,7 +138,7 @@ export interface CodeTableCleanOptions {
 
 // 清理結果
 export interface CleanResult {
-  codeTable: CodeTable
+  codeTable: 碼表型别
   stats: {
     originalChars: number
     cleanedChars: number

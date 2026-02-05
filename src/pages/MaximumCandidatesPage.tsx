@@ -7,7 +7,7 @@ import { 碼表原子狀態 } from '../atoms/codeTable'
 import { 候選個數分析原子狀態 } from '../atoms/maximumCandidates'
 import type { 最大候選個數分析結果, 最大候選個數結果 } from '../atoms/maximumCandidates'
 import { getAllMaximumCandidates } from '../services/maximumCandidatesService'
-import type { 處理後的碼表結果 } from '../types'
+import type { 處理後的碼表結果介面 } from '../types'
 
 const { Paragraph, Text, Link } = Typography
 
@@ -32,7 +32,7 @@ const MaximumCandidatesPage: React.FC = () => {
   const [展開狀態, 設置展開狀態] = useState<Set<string>>(new Set())
 
   // 類型斷言：碼表數據實際上是 處理後的碼表結果
-  const 處理後碼表 = 碼表數據 as 處理後的碼表結果 | null
+  const 處理後碼表 = 碼表數據 as 處理後的碼表結果介面 | null
 
   /**
    * 字符集信息映射

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useAtom } from 'jotai'
-import { Button, Space, Typography, Alert, Spin, Modal, Table } from 'antd'
+import { Button, Space, Typography, Alert, Spin, Modal, Table, Input } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 碼表原子狀態 } from '../atoms/codeTable'
 import { 速度當量分析原子狀態, 當量詳情原子狀態 } from '../atoms/speedEquivalent'
-import type { 速度當量分析結果, 當量例字信息 } from '../atoms/speedEquivalent'
+import type { 速度當量分析結果介面, 當量例字信息介面 } from '../atoms/speedEquivalent'
 import { 字頻表緩存原子狀態 } from '../atoms/charFrequency'
 import { 當量表原子狀態 } from '../atoms/equivTable'
 import {
@@ -14,8 +14,8 @@ import {
   生成二級簡碼加選重鍵表,
 } from '../services/speedEquivalentService'
 import { 當量表服務實例 } from '../services/equivTableService'
-import { 字頻表服務類別 } from '../services/charFrequencyService'
-import type { 處理後的碼表結果, CodeTable } from '../types'
+import { 字頻表服務類别 } from '../services/charFrequencyService'
+import type { 處理後的碼表結果介面 } from '../types'
 
 const { Paragraph, Link } = Typography
 
@@ -33,13 +33,10 @@ const SpeedEquivalentPage: React.FC = () => {
   const [錯誤信息, 設置錯誤信息] = useState<string | null>(null)
   const [顯示詳情, 設置顯示詳情] = useState(false)
   const [詳情計算中, 設置詳情計算中] = useState(false)
-
-  // 保存一級和二級簡碼表，用於詳情顯示
-  const [一級簡碼加選重鍵表, 設置一級簡碼加選重鍵表] = useState<CodeTable | null>(null)
-  const [二級簡碼加選重鍵表, 設置二級簡碼加選重鍵表] = useState<CodeTable | null>(null)
+  const [搜索关键词, 設置搜索关键词] = useState('')
 
   // 類型斷言：碼表數據實際上是 處理後的碼表結果
-  const 處理後碼表 = 碼表數據 as 處理後的碼表結果 | null
+  const 處理後碼表 = 碼表數據 as 處理後的碼表結果介面 | null
 
   /**
    * 加載當量表（使用服务）
@@ -69,11 +66,11 @@ const SpeedEquivalentPage: React.FC = () => {
       // 確保所有字頻數據已加載（如果緩存爲空）
       if (字頻表緩存.size === 0) {
         await Promise.all([
-          字頻表服務類別.加載知乎簡體字頻(),
-          字頻表服務類別.加載北語簡體字頻(),
-          字頻表服務類別.加載臺標繁體字頻(),
-          字頻表服務類別.加載古籍繁體字頻(),
-          字頻表服務類別.計算繁簡聯合字頻(),
+          字頻表服務類别.加載知乎簡體字頻(),
+          字頻表服務類别.加載北語簡體字頻(),
+          字頻表服務類别.加載臺標繁體字頻(),
+          字頻表服務類别.加載古籍繁體字頻(),
+          字頻表服務類别.計算繁簡聯合字頻(),
         ])
       }
 
@@ -180,10 +177,6 @@ const SpeedEquivalentPage: React.FC = () => {
         [] // 如果有上屏鍵配置，可以從方案配置中讀取
       )
 
-      // 保存到 state 以便詳情顯示使用
-      設置一級簡碼加選重鍵表(一級簡碼加選重鍵表)
-      設置二級簡碼加選重鍵表(二級簡碼加選重鍵表)
-
       // 計算一級簡碼當量
       const 知乎簡體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
         一級簡碼加選重鍵表,
@@ -238,7 +231,7 @@ const SpeedEquivalentPage: React.FC = () => {
         當量表數據
       )
 
-      const 新結果: 速度當量分析結果 = {
+      const 新結果: 速度當量分析結果介面 = {
         知乎簡體字頻全碼速度當量,
         北語簡體字頻全碼速度當量,
         臺標繁體字頻全碼速度當量,
@@ -271,44 +264,26 @@ const SpeedEquivalentPage: React.FC = () => {
   }
 
   /**
-   * 顯示當量詳情（點擊表格單元格）
+   * 顯示當量詳情（點擊字頻來源）
    */
-  const 顯示當量例字 = async (
-    字頻類型: string,
-    碼表類型: '全碼' | '一級簡碼' | '二級簡碼' | '簡碼'
-  ) => {
+  const 顯示當量例字 = async (字頻類型: string) => {
     if (!處理後碼表 || !字頻表緩存) return
 
     設置詳情計算中(true)
     設置顯示詳情(true)
 
     try {
-      // 根據碼表類型選擇對應的碼表
-      let 碼表: CodeTable
-      if (碼表類型 === '全碼') {
-        碼表 = 處理後碼表.全碼加選重鍵表
-      } else if (碼表類型 === '一級簡碼') {
-        if (!一級簡碼加選重鍵表) {
-          throw new Error('一級簡碼表尚未生成')
-        }
-        碼表 = 一級簡碼加選重鍵表
-      } else if (碼表類型 === '二級簡碼') {
-        if (!二級簡碼加選重鍵表) {
-          throw new Error('二級簡碼表尚未生成')
-        }
-        碼表 = 二級簡碼加選重鍵表
-      } else {
-        碼表 = 處理後碼表.簡碼加選重鍵表
-      }
+      const 全碼表 = 處理後碼表.全碼加選重鍵表
+      const 簡碼表 = 處理後碼表.簡碼加選重鍵表
 
       // 使用更嚴格的類型定義
-      type 字頻類型鍵 =
+      type 字頻來源型别 =
         | '知乎簡體字頻'
         | '北語簡體字頻'
         | '臺標繁體字頻'
         | '古籍繁體字頻'
         | '繁簡聯合字頻'
-      const 字頻映射: Record<字頻類型鍵, Record<string, number>> = {
+      const 字頻映射: Record<字頻來源型别, Record<string, number>> = {
         知乎簡體字頻: 字頻表緩存.get('知乎簡體字頻') || {},
         北語簡體字頻: 字頻表緩存.get('北語簡體字頻') || {},
         臺標繁體字頻: 字頻表緩存.get('臺標繁體字頻') || {},
@@ -320,52 +295,78 @@ const SpeedEquivalentPage: React.FC = () => {
       if (!(字頻類型 in 字頻映射)) {
         throw new Error(`無效的字頻類型: ${字頻類型}`)
       }
-      const 字頻 = 字頻映射[字頻類型 as 字頻類型鍵]
+      const 字頻 = 字頻映射[字頻類型 as 字頻來源型别]
 
       // 計算碼對頻率（不使用，但保留以備將來使用）
-      // const 碼對頻率 = 計算編碼對頻率(碼表, 字頻)
       const 當量表數據 = Object.keys(當量表).length > 0 ? 當量表 : await 加載當量表()
 
-      // 計算每個字符的當量值並排序
-      const 例字列表: 當量例字信息[] = []
-      for (const [字符, 編碼數組] of 碼表.entries()) {
-        if (編碼數組.length === 0) continue
-        const 編碼 = 編碼數組[0]
-        if (!編碼) continue // 防止 undefined
+      // 計算每個字符的全碼和簡碼當量
+      const 例字列表: 當量例字信息介面[] = []
 
+      // 獲取所有字符（從全碼表和簡碼表的並集）
+      const 所有字符 = new Set([...全碼表.keys(), ...簡碼表.keys()])
+
+      for (const 字符 of 所有字符) {
         const 字頻值 = 字頻[字符] || 0
         if (字頻值 === 0) continue
 
-        // 計算該字符的當量值
-        let 總當量 = 0
-        let 碼對數 = 0
-        for (let i = 0; i < 編碼.length - 1; i++) {
-          const 碼對 = 編碼.substring(i, i + 2)
+        // 獲取全碼和簡碼
+        const 全碼編碼數組 = 全碼表.get(字符)
+        const 簡碼編碼數組 = 簡碼表.get(字符)
+
+        if (!全碼編碼數組 || !簡碼編碼數組) continue
+
+        const 全碼 = 全碼編碼數組[0]
+        const 簡碼 = 簡碼編碼數組[0]
+
+        if (!全碼 || !簡碼) continue
+
+        // 計算全碼當量
+        let 全碼總當量 = 0
+        let 全碼碼對數 = 0
+        for (let i = 0; i < 全碼.length - 1; i++) {
+          const 碼對 = 全碼.substring(i, i + 2)
           const 當量值 = 當量表數據[碼對]
           if (當量值 !== undefined) {
-            總當量 += 當量值
-            碼對數++
+            全碼總當量 += 當量值
+            全碼碼對數++
           }
         }
-        const 平均當量 = 碼對數 > 0 ? 總當量 / 碼對數 : 0
+        const 全碼平均當量 = 全碼碼對數 > 0 ? 全碼總當量 / 全碼碼對數 : 0
+
+        // 計算簡碼當量
+        let 簡碼總當量 = 0
+        let 簡碼碼對數 = 0
+        for (let i = 0; i < 簡碼.length - 1; i++) {
+          const 碼對 = 簡碼.substring(i, i + 2)
+          const 當量值 = 當量表數據[碼對]
+          if (當量值 !== undefined) {
+            簡碼總當量 += 當量值
+            簡碼碼對數++
+          }
+        }
+        const 簡碼平均當量 = 簡碼碼對數 > 0 ? 簡碼總當量 / 簡碼碼對數 : 0
+
+        // 計算加權當量差
+        const 加權當量差 = (簡碼平均當量 - 全碼平均當量) * 字頻值
 
         例字列表.push({
           字符,
-          編碼,
-          按鍵組合: 編碼,
-          當量值: 平均當量,
+          全碼,
+          簡碼,
+          全碼當量: 全碼平均當量,
+          簡碼當量: 簡碼平均當量,
           字頻: 字頻值,
+          加權當量差,
         })
       }
 
-      // 按當量值降序排序，取前100個
-      例字列表.sort((a, b) => b.當量值 - a.當量值)
-      const 顯示列表 = 例字列表.slice(0, 100)
+      // 按加權當量差降序排列
+      例字列表.sort((a, b) => Math.abs(b.加權當量差) - Math.abs(a.加權當量差))
 
       設置當量詳情({
         字頻類型,
-        碼表類型,
-        例字列表: 顯示列表,
+        例字列表,
       })
     } catch (error) {
       console.error('計算當量詳情失敗:', error)
@@ -391,7 +392,7 @@ const SpeedEquivalentPage: React.FC = () => {
   const 渲染表格 = () => {
     if (!分析結果) return null
 
-    type 表格數據項 = {
+    type 表格數據項型别 = {
       key: string
       字頻來源: string
       全碼當量: number
@@ -401,7 +402,7 @@ const SpeedEquivalentPage: React.FC = () => {
       説明: React.ReactNode
     }
 
-    const 表格數據: 表格數據項[] = [
+    const 表格數據: 表格數據項型别[] = [
       {
         key: '知乎簡體字頻',
         字頻來源: '知乎簡體字頻',
@@ -476,13 +477,21 @@ const SpeedEquivalentPage: React.FC = () => {
       },
     ]
 
-    const 列定義: ColumnsType<表格數據項> = [
+    const 列定義: ColumnsType<表格數據項型别> = [
       {
         title: '字頻來源',
         dataIndex: '字頻來源',
         key: '字頻來源',
         fixed: 'left',
         width: 140,
+        render: (value: string, record) => (
+          <span
+            style={{ cursor: 'pointer', color: '#1890ff', textDecoration: 'underline' }}
+            onClick={() => 顯示當量例字(record.key)}
+          >
+            {value}
+          </span>
+        ),
       },
       {
         title: '全碼當量',
@@ -490,14 +499,7 @@ const SpeedEquivalentPage: React.FC = () => {
         key: '全碼當量',
         align: 'right',
         width: 110,
-        render: (value: number, record) => (
-          <span
-            style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() => 顯示當量例字(record.key, '全碼')}
-          >
-            {value.toFixed(4)}
-          </span>
-        ),
+        render: (value: number) => value.toFixed(4),
       },
       {
         title: '一級簡碼',
@@ -505,14 +507,7 @@ const SpeedEquivalentPage: React.FC = () => {
         key: '一級簡碼當量',
         align: 'right',
         width: 110,
-        render: (value: number, record) => (
-          <span
-            style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() => 顯示當量例字(record.key, '一級簡碼')}
-          >
-            {value.toFixed(4)}
-          </span>
-        ),
+        render: (value: number) => value.toFixed(4),
       },
       {
         title: '二級簡碼',
@@ -520,14 +515,7 @@ const SpeedEquivalentPage: React.FC = () => {
         key: '二級簡碼當量',
         align: 'right',
         width: 110,
-        render: (value: number, record) => (
-          <span
-            style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() => 顯示當量例字(record.key, '二級簡碼')}
-          >
-            {value.toFixed(4)}
-          </span>
-        ),
+        render: (value: number) => value.toFixed(4),
       },
       {
         title: '全部簡碼',
@@ -535,14 +523,7 @@ const SpeedEquivalentPage: React.FC = () => {
         key: '簡碼當量',
         align: 'right',
         width: 110,
-        render: (value: number, record) => (
-          <span
-            style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() => 顯示當量例字(record.key, '簡碼')}
-          >
-            {value.toFixed(4)}
-          </span>
-        ),
+        render: (value: number) => value.toFixed(4),
       },
       {
         title: '説明',
@@ -566,21 +547,42 @@ const SpeedEquivalentPage: React.FC = () => {
   /**
    * 詳情表格列定義
    */
-  const 詳情列定義: ColumnsType<當量例字信息> = [
+  const 詳情列定義: ColumnsType<當量例字信息介面> = [
     { title: '#', render: (_: any, __: any, index: number) => index + 1, width: 60 },
     { title: '字符', dataIndex: '字符', width: 80 },
-    { title: '編碼', dataIndex: '編碼', width: 120 },
+    { title: '全碼', dataIndex: '全碼', width: 100 },
+    { title: '簡碼', dataIndex: '簡碼', width: 100 },
     {
-      title: '當量值',
-      dataIndex: '當量值',
+      title: '全碼當量',
+      dataIndex: '全碼當量',
       width: 100,
+      align: 'right',
+      render: (v: number) => v.toFixed(4),
+    },
+    {
+      title: '簡碼當量',
+      dataIndex: '簡碼當量',
+      width: 100,
+      align: 'right',
       render: (v: number) => v.toFixed(4),
     },
     {
       title: '字頻（‱）',
       dataIndex: '字頻',
       width: 100,
+      align: 'right',
       render: (v: number) => (v * 10000).toFixed(2),
+    },
+    {
+      title: '加權當量差',
+      dataIndex: '加權當量差',
+      width: 120,
+      align: 'right',
+      render: (v: number) => (
+        <span style={{ color: v < 0 ? '#52c41a' : v > 0 ? '#ff4d4f' : undefined }}>
+          {v.toFixed(6)}
+        </span>
+      ),
     },
   ]
 
@@ -641,7 +643,7 @@ const SpeedEquivalentPage: React.FC = () => {
         {分析結果 && (
           <Alert
             title="💡 提示"
-            description="點擊當量值，可查看該字頻類型下當量最高的100個字符及其編碼。"
+            description="點擊字頻來源，可查看該字頻類型下全碼與簡碼的當量對比。"
             type="info"
             showIcon
           />
@@ -650,12 +652,21 @@ const SpeedEquivalentPage: React.FC = () => {
 
       {/* 當量詳情 Modal */}
       <Modal
-        title={當量詳情 ? `${當量詳情.字頻類型} - ${當量詳情.碼表類型}當量最高的字符` : '當量詳情'}
+        title={當量詳情 ? `${當量詳情.字頻類型} - 簡碼與全碼當量對比` : '當量詳情'}
         open={顯示詳情}
-        onCancel={() => 設置顯示詳情(false)}
-        width={1000}
+        onCancel={() => {
+          設置顯示詳情(false)
+          設置搜索关键词('')
+        }}
+        width={1200}
         footer={[
-          <Button key="close" onClick={() => 設置顯示詳情(false)}>
+          <Button
+            key="close"
+            onClick={() => {
+              設置顯示詳情(false)
+              設置搜索关键词('')
+            }}
+          >
             關閉
           </Button>,
         ]}
@@ -666,18 +677,39 @@ const SpeedEquivalentPage: React.FC = () => {
             <p style={{ marginTop: 16 }}>正在計算當量詳情...</p>
           </div>
         ) : 當量詳情 ? (
-          <Table
-            columns={詳情列定義}
-            dataSource={當量詳情.例字列表}
-            rowKey="字符"
-            pagination={{
-              pageSize: 20,
-              showSizeChanger: true,
-              showTotal: total => `共 ${total} 個字符`,
-            }}
-            bordered
-            scroll={{ y: 500 }}
-          />
+          <>
+            <div style={{ marginBottom: 16 }}>
+              <Input.Search
+                placeholder="搜索字符或編碼..."
+                value={搜索关键词}
+                onChange={e => 設置搜索关键词(e.target.value)}
+                onSearch={value => 設置搜索关键词(value)}
+                allowClear
+                style={{ width: 300 }}
+              />
+            </div>
+            <Table
+              columns={詳情列定義}
+              dataSource={當量詳情.例字列表.filter(item => {
+                if (!搜索关键词) return true
+                const keyword = 搜索关键词.toLowerCase()
+                return (
+                  item.字符.includes(搜索关键词) ||
+                  item.全碼.toLowerCase().includes(keyword) ||
+                  item.簡碼.toLowerCase().includes(keyword)
+                )
+              })}
+              rowKey="字符"
+              pagination={{
+                defaultPageSize: 50,
+                pageSizeOptions: ['20', '50', '100', '200'],
+                showSizeChanger: true,
+                showTotal: (total, range) => `第 ${range[0]}-${range[1]} 項，共 ${total} 個字符`,
+              }}
+              bordered
+              scroll={{ y: 500 }}
+            />
+          </>
         ) : null}
       </Modal>
     </div>

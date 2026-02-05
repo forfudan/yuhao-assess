@@ -4,7 +4,7 @@
  */
 
 import { isInCJKToJ, loadCJKBlockData } from './charsetService'
-import type { CodeTable, RawCodeTable, 頻率數據型别, 處理後的碼表結果 } from '../types'
+import type { 碼表型别, RawCodeTable, 頻率數據型别, 處理後的碼表結果介面 } from '../types'
 
 // =============================================================================
 // 類型定義
@@ -29,7 +29,7 @@ export interface 碼表處理選項 {
  */
 export class 碼表處理服務 {
   private static 實例: 碼表處理服務
-  private 已處理碼表: 處理後的碼表結果 | null = null
+  private 已處理碼表: 處理後的碼表結果介面 | null = null
   private 處理選項: 碼表處理選項 | null = null
 
   private constructor() {}
@@ -155,15 +155,15 @@ export class 碼表處理服務 {
   async 處理原始碼表(
     rawCodeTable: RawCodeTable,
     options?: 碼表處理選項
-  ): Promise<處理後的碼表結果> {
+  ): Promise<處理後的碼表結果介面> {
     const 是否爲前綴碼 = options?.是否爲前綴碼 || false
     const prefixKeys = options?.前綴鍵列表
 
     // 初始化四個輔助碼表
-    const full: CodeTable = new Map()
-    const short: CodeTable = new Map()
-    const 全碼加選重鍵表: CodeTable = new Map()
-    const 簡碼加選重鍵表: CodeTable = new Map()
+    const full: 碼表型别 = new Map()
+    const short: 碼表型别 = new Map()
+    const 全碼加選重鍵表: 碼表型别 = new Map()
+    const 簡碼加選重鍵表: 碼表型别 = new Map()
 
     // 追蹤每個字符的最大和最小編碼長度
     const maxCodeLengthMap = new Map<string, number>()
@@ -253,8 +253,8 @@ export class 碼表處理服務 {
    * @param fullCodeTable 單字全碼表
    * @returns 詞語碼表 Map<詞語, [編碼+選重鍵]>
    */
-  生成詞語全碼表(wordFreq: 頻率數據型别, fullCodeTable: CodeTable): CodeTable {
-    const 詞語全碼加選重鍵表: CodeTable = new Map()
+  生成詞語全碼表(wordFreq: 頻率數據型别, fullCodeTable: 碼表型别): 碼表型别 {
+    const 詞語全碼加選重鍵表: 碼表型别 = new Map()
 
     // 獲取處理選項
     const options = this.處理選項
@@ -305,10 +305,10 @@ export class 碼表處理服務 {
    */
   生成詞語簡碼表(
     wordFreq: 頻率數據型别,
-    fullCodeTable: CodeTable,
-    shortCodeTable: CodeTable
-  ): CodeTable {
-    const 詞語簡碼加選重鍵表: CodeTable = new Map()
+    fullCodeTable: 碼表型别,
+    shortCodeTable: 碼表型别
+  ): 碼表型别 {
+    const 詞語簡碼加選重鍵表: 碼表型别 = new Map()
 
     // 獲取處理選項
     const options = this.處理選項
@@ -398,8 +398,8 @@ export class 碼表處理服務 {
    */
   private 生成詞語編碼(
     word: string,
-    fullCodeTable: CodeTable,
-    shortCodeTable?: CodeTable,
+    fullCodeTable: 碼表型别,
+    shortCodeTable?: 碼表型别,
     useShortCode: boolean = false
   ): string {
     try {
@@ -458,7 +458,7 @@ export class 碼表處理服務 {
   /**
    * 獲取已處理的碼表
    */
-  獲取已處理碼表(): 處理後的碼表結果 | null {
+  獲取已處理碼表(): 處理後的碼表結果介面 | null {
     return this.已處理碼表
   }
 
@@ -472,7 +472,7 @@ export class 碼表處理服務 {
   /**
    * 獲取特定類型的碼表
    */
-  獲取碼表(type: '全碼表' | '簡碼表' | '全碼加選重鍵表' | '簡碼加選重鍵表'): CodeTable | null {
+  獲取碼表(type: '全碼表' | '簡碼表' | '全碼加選重鍵表' | '簡碼加選重鍵表'): 碼表型别 | null {
     if (!this.已處理碼表) {
       return null
     }
@@ -518,7 +518,7 @@ export interface 碼表清理選項 {
  * 清理結果
  */
 export interface 清理結果 {
-  codeTable: CodeTable // 清理後的碼表
+  codeTable: 碼表型别 // 清理後的碼表
   stats: {
     originalChars: number // 原始字符數
     cleanedChars: number // 清理後字符數
@@ -542,7 +542,7 @@ function isSingleChar(char: string): boolean {
  * @param options 清理選項
  * @returns 清理結果
  */
-export function 清理碼表(rawCodeTable: CodeTable, options: 碼表清理選項): 清理結果 {
+export function 清理碼表(rawCodeTable: 碼表型别, options: 碼表清理選項): 清理結果 {
   const {
     singleCharOnly = true,
     codeStrategy,
@@ -634,7 +634,7 @@ export function 清理碼表(rawCodeTable: CodeTable, options: 碼表清理選�
  * @param codeTable 要驗證的碼表
  * @returns 驗證結果
  */
-export function 驗證碼表(codeTable: CodeTable): {
+export function 驗證碼表(codeTable: 碼表型别): {
   isValid: boolean
   errors: string[]
   warnings: string[]
@@ -674,7 +674,7 @@ export function 驗證碼表(codeTable: CodeTable): {
  * @param codeTable 碼表
  * @returns 統計信息
  */
-export function 獲取碼表統計(codeTable: CodeTable): {
+export function 獲取碼表統計(codeTable: 碼表型别): {
   totalChars: number
   totalCodes: number
   avgCodesPerChar: number

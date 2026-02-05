@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react'
-import type { CodeTable, 頻率數據型别 } from '@/types'
+import type { 碼表型别, 頻率數據型别 } from '@/types'
 import {
   getStaticDupRate,
   getDynamicDupRate,
@@ -46,7 +46,7 @@ export function useDuplicateStats(): UseStatisticsResult<DuplicateStats> {
   const 計算 = useCallback(
     async (
       類型: 'static' | 'dynamic' | 'charset',
-      碼表: CodeTable,
+      碼表: 碼表型别,
       選項?: {
         字符集?: Set<string> | 'all'
         字頻數據?: 頻率數據型别
@@ -105,7 +105,7 @@ export function useCodeLengthDistribution() {
   const [加載中, 設置加載中] = useState(false)
   const [錯誤, 設置錯誤] = useState<string | null>(null)
 
-  const 計算 = useCallback(async (碼表: CodeTable) => {
+  const 計算 = useCallback(async (碼表: 碼表型别) => {
     try {
       設置加載中(true)
       設置錯誤(null)

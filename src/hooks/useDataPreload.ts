@@ -1,8 +1,8 @@
 import { useAtomValue } from 'jotai'
 import { useEffect, useState } from 'react'
 import { 數據預加載狀態介面, 數據預加載狀態原子 } from '../atoms/dataPreload'
-import { 字頻表服務類別 } from '../services/charFrequencyService'
-import { 數據預加載服務類別 } from '../services/dataPreloadService'
+import { 字頻表服務類别 } from '../services/charFrequencyService'
+import { 數據預加載服務類别 } from '../services/dataPreloadService'
 
 /**
  * 使用數據預加載狀態的 Hook
@@ -65,17 +65,17 @@ export function useEnsureDataLoaded(requiredData: Array<keyof 數據預加載狀
           needsLoading.map(key => {
             switch (key) {
               case '北語簡體字頻':
-                return 字頻表服務類別.加載北語簡體字頻()
+                return 字頻表服務類别.加載北語簡體字頻()
               case '臺標繁體字頻':
-                return 字頻表服務類別.加載臺標繁體字頻()
+                return 字頻表服務類别.加載臺標繁體字頻()
               case '知乎簡體字頻':
-                return 字頻表服務類別.加載知乎簡體字頻()
+                return 字頻表服務類别.加載知乎簡體字頻()
               case '古籍繁體字頻':
-                return 字頻表服務類別.加載古籍繁體字頻()
+                return 字頻表服務類别.加載古籍繁體字頻()
               case '繁簡聯合字頻':
-                return 字頻表服務類別.計算繁簡聯合字頻()
+                return 字頻表服務類别.計算繁簡聯合字頻()
               case '字符集數據':
-                return 數據預加載服務類別.加載字符集數據()
+                return 數據預加載服務類别.加載字符集數據()
               default:
                 return Promise.resolve()
             }

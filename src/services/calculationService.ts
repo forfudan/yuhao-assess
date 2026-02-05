@@ -3,8 +3,8 @@
  * 提供碼表分析的核心計算功能
  */
 
-import type { CodeTable, RawCodeTable } from '../types/index'
-import type { CharsetType } from './charsetService'
+import type { 碼表型别, RawCodeTable } from '../types/index'
+import type { 字符集型别 } from './charsetService'
 
 // CJK塊數據類型定義
 type CJKBlockData = {
@@ -69,7 +69,7 @@ export async function initializeCalculationService(): Promise<void> {
  * 使用位運算和緩存來提高性能
  */
 export async function generateCharset(
-  charsetType: CharsetType,
+  charsetType: 字符集型别,
   allChars: Set<string>
 ): Promise<Set<string>> {
   // 確保數據已加載
@@ -205,8 +205,8 @@ export async function generateCharset(
  * 一次性處理所有字符集，避免重復遍歷
  */
 export function calculateAllMaxCandidates(
-  fullCodeTable: CodeTable,
-  charsetMap: Map<CharsetType, Set<string>>
+  fullCodeTable: 碼表型别,
+  charsetMap: Map<字符集型别, Set<string>>
 ): Record<string, number> {
   // 預先構建編碼到字符的映射，只遍歷一次
   const codeToCharsGlobal = new Map<string, string[]>()
@@ -225,7 +225,7 @@ export function calculateAllMaxCandidates(
   const results: Record<string, number> = {}
 
   // 爲每個字符集計算最大候選數
-  const charsetTypes: CharsetType[] = [
+  const charsetTypes: 字符集型别[] = [
     'gb2312',
     'guozi',
     'cjk_basic',
@@ -267,8 +267,8 @@ export function calculateAllMaxCandidates(
  * 使用更高效的數據結構和算法
  */
 export function calculateStaticDuplicates(
-  fullCodeTable: CodeTable,
-  charsetMap: Map<CharsetType, Set<string>>
+  fullCodeTable: 碼表型别,
+  charsetMap: Map<字符集型别, Set<string>>
 ): Record<string, number> {
   const results: Record<string, number> = {}
 
@@ -286,7 +286,7 @@ export function calculateStaticDuplicates(
   }
 
   // 爲每個字符集計算重碼
-  const charsetTypes: CharsetType[] = [
+  const charsetTypes: 字符集型别[] = [
     'gb2312',
     'tonggui',
     'guozi',
@@ -359,7 +359,7 @@ function isInCJKToJ(codePoint: number): boolean {
  * 修正的字符計數函數
  * 計算碼表中在CJK基本區到CJK-J範圍内的唯一字符數量
  */
-export async function calculateCharCount(codeTable: CodeTable): Promise<number> {
+export async function calculateCharCount(codeTable: 碼表型别): Promise<number> {
   // 確保數據已加載
   await initializeCalculationService()
 
@@ -417,10 +417,10 @@ export async function calculateCharCountFromRaw(rawCodeTable: RawCodeTable): Pro
  * 批量預處理函數
  * 一次性完成所有字符集生成和映射構建
  */
-export async function preprocessCodeTable(codeTable: CodeTable): Promise<{
+export async function preprocessCodeTable(codeTable: 碼表型别): Promise<{
   allUniqueChars: Set<string>
-  charsetMap: Map<CharsetType, Set<string>>
-  fullCodeTable: CodeTable
+  charsetMap: Map<字符集型别, Set<string>>
+  fullCodeTable: 碼表型别
   codeToCharsMap: Map<string, string[]>
 }> {
   // 確保數據已加載
@@ -438,8 +438,8 @@ export async function preprocessCodeTable(codeTable: CodeTable): Promise<{
   const fullCodeTable = new Map<string, string[]>(codeTable)
 
   // 3. 批量生成所有需要的字符集
-  const charsetMap = new Map<CharsetType, Set<string>>()
-  const charsetTypes: CharsetType[] = [
+  const charsetMap = new Map<字符集型别, Set<string>>()
+  const charsetTypes: 字符集型别[] = [
     'gb2312',
     'guozi',
     'cjk_basic',
@@ -480,8 +480,8 @@ export async function preprocessCodeTable(codeTable: CodeTable): Promise<{
  */
 export async function calculateAllMetrics(preprocessedData: {
   allUniqueChars: Set<string>
-  charsetMap: Map<CharsetType, Set<string>>
-  fullCodeTable: CodeTable
+  charsetMap: Map<字符集型别, Set<string>>
+  fullCodeTable: 碼表型别
   codeToCharsMap: Map<string, string[]>
 }): Promise<{
   staticDuplicates: Record<string, number>

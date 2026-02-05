@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 import { getDefaultStore } from 'jotai'
 import { 數據預加載狀態原子 } from '../atoms/dataPreload'
-import { 字頻表服務類別 } from './charFrequencyService'
+import { 字頻表服務類别 } from './charFrequencyService'
 import { 加載JSON數據文件 } from '../utils/data-loader'
 import { 字符集數據原子狀態 } from '../atoms/charset'
 import type { CharsetData } from '../atoms/charset'
@@ -10,7 +10,7 @@ import type { CharsetData } from '../atoms/charset'
  * 數據預加載服務
  * 在應用啓動時預加載常用數據，提升後續頁面加載速度
  */
-export class 數據預加載服務類別 {
+export class 數據預加載服務類别 {
   /**
    * 預加載核心數據（簡體+繁體字頻+字符集）
    * 這是最常用的數據，在應用啓動時立即加載
@@ -30,8 +30,8 @@ export class 數據預加載服務類別 {
     try {
       // 並行加載簡體字頻、繁體字頻和字符集
       await Promise.all([
-        字頻表服務類別.加載北語簡體字頻(),
-        字頻表服務類別.加載臺標繁體字頻(),
+        字頻表服務類别.加載北語簡體字頻(),
+        字頻表服務類别.加載臺標繁體字頻(),
         this.加載字符集數據(),
       ])
 
@@ -82,7 +82,7 @@ export class 數據預加載服務類別 {
         知乎簡體字頻: { 狀態: 'loading' },
       })
 
-      await 字頻表服務類別.加載知乎簡體字頻()
+      await 字頻表服務類别.加載知乎簡體字頻()
 
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
@@ -104,7 +104,7 @@ export class 數據預加載服務類別 {
         古籍繁體字頻: { 狀態: 'loading' },
       })
 
-      await 字頻表服務類別.加載古籍繁體字頻()
+      await 字頻表服務類别.加載古籍繁體字頻()
 
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
@@ -126,7 +126,7 @@ export class 數據預加載服務類別 {
         繁簡聯合字頻: { 狀態: 'loading' },
       })
 
-      await 字頻表服務類別.計算繁簡聯合字頻()
+      await 字頻表服務類别.計算繁簡聯合字頻()
 
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),

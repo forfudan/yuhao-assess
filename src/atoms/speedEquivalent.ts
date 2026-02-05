@@ -6,7 +6,7 @@ import { atom } from 'jotai'
 /**
  * 速度當量分析結果數據結構
  */
-export interface 速度當量分析結果 {
+export interface 速度當量分析結果介面 {
   // 單字全碼當量
   知乎簡體字頻全碼速度當量: number
   北語簡體字頻全碼速度當量: number
@@ -52,28 +52,29 @@ export interface 速度當量分析結果 {
 /**
  * 當量例字信息
  */
-export interface 當量例字信息 {
+export interface 當量例字信息介面 {
   字符: string
-  編碼: string
-  按鍵組合: string
-  當量值: number
+  全碼: string
+  簡碼: string
+  全碼當量: number
+  簡碼當量: number
   字頻: number
+  加權當量差: number // (簡碼當量 - 全碼當量) * 字頻
 }
 
 /**
  * 當量詳情數據介面（點擊表格單元格時顯示）
  */
 export interface 當量詳情數據介面 {
-  字頻類型: string // 'zhihu' | 'sc' | 'tc' | 'guji' | 'unified'
-  碼表類型: string // 'full' | 'firstShort' | 'secondShort' | 'short'
-  例字列表: 當量例字信息[]
+  字頻類型: string
+  例字列表: 當量例字信息介面[]
 }
 
 /**
  * 速度當量分析結果
  * 存儲所有字頻類型和碼表類型的當量計算結果
  */
-export const 速度當量分析原子狀態 = atom<速度當量分析結果 | null>(null)
+export const 速度當量分析原子狀態 = atom<速度當量分析結果介面 | null>(null)
 
 /**
  * 當量詳情數據介面（用於 Modal 展示）

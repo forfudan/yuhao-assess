@@ -6,7 +6,7 @@ import ProcessTablePage from './pages/ProcessTablePage'
 import DuplicateAnalysisPage from './pages/DuplicateAnalysisPage'
 import MaximumCandidatesPage from './pages/MaximumCandidatesPage'
 import SpeedEquivalentPage from './pages/SpeedEquivalentPage'
-import { 數據預加載服務類別 } from './services/dataPreloadService'
+import { 數據預加載服務類别 } from './services/dataPreloadService'
 
 const routes = [
   {
@@ -42,7 +42,7 @@ function App() {
 
   // 應用啓動時預加載數據
   useEffect(() => {
-    數據預加載服務類別.啓動預加載()
+    數據預加載服務類别.啓動預加載()
   }, [])
 
   return element

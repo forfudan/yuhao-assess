@@ -334,10 +334,10 @@ export const charsetCheckers = {
   cjk_to_j: isInCJKToJ,
 }
 
-export type CharsetType = keyof typeof charsetCheckers
+export type 字符集型别 = keyof typeof charsetCheckers
 
 // 字符集信息
-export const charsetInfo: Record<CharsetType, { name: string; description: string }> = {
+export const charsetInfo: Record<字符集型别, { name: string; description: string }> = {
   gb2312: { name: 'GB2312', description: 'GB2312 簡體中文字符集' },
   tonggui: { name: '通用規範漢字表', description: '通用規範漢字表' },
   guozi: { name: '常用國字', description: '常用國字標準字體表' },
@@ -366,7 +366,7 @@ export const charsetInfo: Record<CharsetType, { name: string; description: strin
 }
 
 // 獲取字符集大小的函數
-export async function getCharsetSize(charsetType: CharsetType): Promise<number> {
+export async function getCharsetSize(charsetType: 字符集型别): Promise<number> {
   await loadCharsetData()
   const store = getDefaultStore()
   const charsetData = store.get(字符集數據原子狀態)
@@ -392,7 +392,7 @@ export async function getCharsetSize(charsetType: CharsetType): Promise<number> 
 }
 
 // 獲取理論字符集大小
-export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promise<number> {
+export async function getTheoreticalCharsetSize(charsetType: 字符集型别): Promise<number> {
   await loadCJKBlockData()
 
   switch (charsetType) {
@@ -559,7 +559,7 @@ export async function getTheoreticalCharsetSize(charsetType: CharsetType): Promi
 }
 
 export async function generateCharset(
-  charsetType: CharsetType,
+  charsetType: 字符集型别,
   allChars: Set<string>
 ): Promise<Set<string>> {
   const charset = new Set<string>()

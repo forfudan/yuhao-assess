@@ -1,4 +1,4 @@
-import type { CodeTable, 頻率數據型别 } from '../types'
+import type { 頻率數據型别 } from '../types'
 
 interface CodeTableRow {
   char: string

@@ -3,7 +3,7 @@
  * 處理打字速度相關的計算和分析
  */
 
-import type { CodeTable, 頻率數據型别 } from '../types'
+import type { 碼表型别, 頻率數據型别 } from '../types'
 
 /**
  * 計算編碼對頻率
@@ -12,7 +12,7 @@ import type { CodeTable, 頻率數據型别 } from '../types'
  * @returns 碼對頻率數據
  */
 export function 計算編碼對頻率(
-  codeTable: CodeTable,
+  codeTable: 碼表型别,
   charFrequency: Record<string, number>
 ): Record<string, number> {
   const pairFrequencies: Record<string, number> = {}
@@ -66,7 +66,7 @@ export function 從編碼對頻率計算加權速度當量(
  * @returns 計算出的速度當量值
  */
 export function 從碼表計算加權速度當量(
-  codeTable: CodeTable,
+  codeTable: 碼表型别,
   charFrequency: Record<string, number>,
   equivTable: Record<string, number>
 ): number {
@@ -181,17 +181,17 @@ function generateEquivDescription(equivValue: number, keyPairs: string[]): strin
 
 /**
  * 生成一級簡碼表（長度≤2且末尾是空格或上屏鍵）
- * @param 簡碼加選重鍵表 簡碼表（最後為選重鍵）
- * @param 全碼加選重鍵表 全碼表（最後為選重鍵）
+ * @param 簡碼加選重鍵表 簡碼表（最後爲選重鍵）
+ * @param 全碼加選重鍵表 全碼表（最後爲選重鍵）
  * @param 上屏鍵列表 上屏鍵列表
  * @returns 一級簡碼表
  */
 export function 生成一級簡碼加選重鍵表(
-  簡碼加選重鍵表: CodeTable,
-  全碼加選重鍵表: CodeTable,
+  簡碼加選重鍵表: 碼表型别,
+  全碼加選重鍵表: 碼表型别,
   上屏鍵列表: string[] = []
-): CodeTable {
-  const result: CodeTable = new Map()
+): 碼表型别 {
+  const result: 碼表型别 = new Map()
 
   // 创建上屏键集合，包含空格(_)和用户设置的上屏键
   const validEndingKeys = new Set(['_', ...上屏鍵列表])
@@ -221,17 +221,17 @@ export function 生成一級簡碼加選重鍵表(
 
 /**
  * 生成二級簡碼表（長度≤3且末尾是空格或上屏鍵）
- * @param 簡碼加選重鍵表 簡碼表（最後為選重鍵）
- * @param 全碼加選重鍵表 全碼表（最後為選重鍵）
+ * @param 簡碼加選重鍵表 簡碼表（最後爲選重鍵）
+ * @param 全碼加選重鍵表 全碼表（最後爲選重鍵）
  * @param 上屏鍵列表 上屏鍵列表
  * @returns 二級簡碼表
  */
 export function 生成二級簡碼加選重鍵表(
-  簡碼加選重鍵表: CodeTable,
-  全碼加選重鍵表: CodeTable,
+  簡碼加選重鍵表: 碼表型别,
+  全碼加選重鍵表: 碼表型别,
   上屏鍵列表: string[] = []
-): CodeTable {
-  const result: CodeTable = new Map()
+): 碼表型别 {
+  const result: 碼表型别 = new Map()
 
   // 创建上屏键集合，包含空格(_)和用户设置的上屏键
   const validEndingKeys = new Set(['_', ...上屏鍵列表])
@@ -266,10 +266,10 @@ export function 生成二級簡碼加選重鍵表(
  * @returns 詞語一簡碼表
  */
 export function generateWordFirstShortCodeTable(
-  wordShortCodeTable: CodeTable,
-  wordFullCodeTable: CodeTable
-): CodeTable {
-  const result: CodeTable = new Map()
+  wordShortCodeTable: 碼表型别,
+  wordFullCodeTable: 碼表型别
+): 碼表型别 {
+  const result: 碼表型别 = new Map()
 
   for (const [word, codes] of wordShortCodeTable) {
     const shortCode = codes[0]
@@ -302,10 +302,10 @@ export function generateWordFirstShortCodeTable(
  * @returns 詞語二簡碼表
  */
 export function generateWordSecondShortCodeTable(
-  wordShortCodeTable: CodeTable,
-  wordFullCodeTable: CodeTable
-): CodeTable {
-  const result: CodeTable = new Map()
+  wordShortCodeTable: 碼表型别,
+  wordFullCodeTable: 碼表型别
+): 碼表型别 {
+  const result: 碼表型别 = new Map()
 
   for (const [word, codes] of wordShortCodeTable) {
     const shortCode = codes[0]

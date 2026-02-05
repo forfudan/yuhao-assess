@@ -3,13 +3,13 @@ import { atom } from 'jotai'
 /**
  * 數據加載狀態類型
  */
-export type 加載狀態型別 = 'idle' | 'loading' | 'loaded' | 'error'
+export type 加載狀態型别 = 'idle' | 'loading' | 'loaded' | 'error'
 
 /**
  * 單個數據項的加載狀態
  */
 export interface 數據加載狀態介面 {
-  狀態: 加載狀態型別
+  狀態: 加載狀態型别
   錯誤?: Error
   加載完成時間戳?: number // 加載完成時間戳
 }

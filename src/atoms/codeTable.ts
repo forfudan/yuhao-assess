@@ -1,12 +1,12 @@
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
-import type { CodeTable } from '@/types'
+import type { 碼表型别 } from '@/types'
 
 // 原始碼表數據（原子狀態）
 export const 原始碼表原子狀態 = atom<string>('')
 
 // 解析後的碼表數據（原子狀態）
-export const 碼表原子狀態 = atom<CodeTable | null>(null)
+export const 碼表原子狀態 = atom<碼表型别 | null>(null)
 
 // 碼表元數據（持久化原子狀態）
 export const 碼表元數據原子狀態 = atomWithStorage('codeTableMeta', {
