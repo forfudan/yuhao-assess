@@ -117,7 +117,7 @@ export function clearFrequencyCharsCache(): void {
  */
 export async function loadCharFrequency(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務.加載知乎字頻()
+    return await 字頻表服務.加載知乎簡體字頻()
   } catch (error) {
     console.error('加載知乎字頻數據失敗:', error)
     throw error
@@ -129,9 +129,9 @@ export async function loadCharFrequency(): Promise<頻率數據型别> {
  */
 export async function loadCharFrequencySC(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務.加載簡體字頻()
+    return await 字頻表服務.加載北語簡體字頻()
   } catch (error) {
-    console.error('加載簡體字頻數據失敗:', error)
+    console.error('加載北語簡體字頻數據失敗:', error)
     throw error
   }
 }
@@ -141,9 +141,9 @@ export async function loadCharFrequencySC(): Promise<頻率數據型别> {
  */
 export async function loadCharFrequencyTC(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務.加載繁體字頻()
+    return await 字頻表服務.加載臺標繁體字頻()
   } catch (error) {
-    console.error('加載繁體字頻數據失敗:', error)
+    console.error('加載臺標繁體字頻數據失敗:', error)
     throw error
   }
 }
@@ -153,9 +153,9 @@ export async function loadCharFrequencyTC(): Promise<頻率數據型别> {
  */
 export async function loadCharFrequencyGuji(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務.加載古籍字頻()
+    return await 字頻表服務.加載古籍繁體字頻()
   } catch (error) {
-    console.error('加載古籍字頻數據失敗:', error)
+    console.error('加載古籍繁體字頻數據失敗:', error)
     throw error
   }
 }
@@ -165,7 +165,7 @@ export async function loadCharFrequencyGuji(): Promise<頻率數據型别> {
  */
 export async function loadCharFrequencyUnified(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務.加載繁簡聯合字頻()
+    return await 字頻表服務.計算繁簡聯合字頻()
   } catch (error) {
     console.error('加載統一字頻數據失敗:', error)
     throw error

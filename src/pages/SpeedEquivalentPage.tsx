@@ -8,8 +8,10 @@ import { 速度當量分析原子狀態, 當量詳情原子狀態 } from '../ato
 import type { 速度當量分析結果, 當量例字信息 } from '../atoms/speedEquivalent'
 import { 字頻表緩存原子狀態 } from '../atoms/charFrequency'
 import { 當量表原子狀態 } from '../atoms/equivTable'
-import { 從碼表計算加權速度當量, 計算編碼對頻率 } from '../services/speedEquivalentService'
+import { 從碼表計算加權速度當量 } from '../services/speedEquivalentService'
 import { 當量表服務實例 } from '../services/equivTableService'
+import { 字頻表服務 } from '../services/charFrequencyService'
+import { useDataPreload } from '../hooks/useDataPreload'
 import type { 處理後的碼表結果 } from '../types'
 
 const { Paragraph, Link } = Typography
@@ -57,15 +59,14 @@ const SpeedEquivalentPage: React.FC = () => {
     設置錯誤信息(null)
 
     try {
-      // 加載字頻數據（如果緩存爲空）
-      const 字頻服務 = await import('../services/charFrequencyService')
+      // 確保所有字頻數據已加載（如果緩存爲空）
       if (字頻表緩存.size === 0) {
         await Promise.all([
-          字頻服務.字頻表服務.加載知乎字頻(),
-          字頻服務.字頻表服務.加載簡體字頻(),
-          字頻服務.字頻表服務.加載繁體字頻(),
-          字頻服務.字頻表服務.加載古籍字頻(),
-          字頻服務.字頻表服務.加載繁簡聯合字頻(),
+          字頻表服務.加載知乎簡體字頻(),
+          字頻表服務.加載北語簡體字頻(),
+          字頻表服務.加載臺標繁體字頻(),
+          字頻表服務.加載古籍繁體字頻(),
+          字頻表服務.計算繁簡聯合字頻(),
         ])
       }
 

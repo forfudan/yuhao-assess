@@ -26,7 +26,7 @@ export class 字頻表服務 {
   /**
    * 加載簡體漢字頻率表
    */
-  static async 加載簡體字頻(): Promise<頻率數據型别> {
+  static async 加載北語簡體字頻(): Promise<頻率數據型别> {
     const store = getDefaultStore()
     const cache = store.get(字頻表緩存原子狀態)
     const cached = cache.get('北語簡體字頻')
@@ -43,7 +43,7 @@ export class 字頻表服務 {
   /**
    * 加載繁體漢字頻率表
    */
-  static async 加載繁體字頻(): Promise<頻率數據型别> {
+  static async 加載臺標繁體字頻(): Promise<頻率數據型别> {
     const store = getDefaultStore()
     const cache = store.get(字頻表緩存原子狀態)
     const cached = cache.get('臺標繁體字頻')
@@ -60,7 +60,7 @@ export class 字頻表服務 {
   /**
    * 加載知乎漢字頻率表
    */
-  static async 加載知乎字頻(): Promise<頻率數據型别> {
+  static async 加載知乎簡體字頻(): Promise<頻率數據型别> {
     const store = getDefaultStore()
     const cache = store.get(字頻表緩存原子狀態)
     const cached = cache.get('知乎簡體字頻')
@@ -77,7 +77,7 @@ export class 字頻表服務 {
   /**
    * 加載古籍漢字頻率表
    */
-  static async 加載古籍字頻(): Promise<頻率數據型别> {
+  static async 加載古籍繁體字頻(): Promise<頻率數據型别> {
     const store = getDefaultStore()
     const cache = store.get(字頻表緩存原子狀態)
     const cached = cache.get('古籍繁體字頻')
@@ -92,15 +92,18 @@ export class 字頻表服務 {
   }
 
   /**
-   * 加載繁簡聯合漢字頻率表（合併簡體和繁體）
+   * 計算繁簡聯合漢字頻率表（合併簡體和繁體）
    */
-  static async 加載繁簡聯合字頻(): Promise<頻率數據型别> {
+  static async 計算繁簡聯合字頻(): Promise<頻率數據型别> {
     const store = getDefaultStore()
     const cache = store.get(字頻表緩存原子狀態)
     const cached = cache.get('繁簡聯合字頻')
     if (cached) return cached
 
-    const [簡體字頻, 繁體字頻] = await Promise.all([this.加載簡體字頻(), this.加載繁體字頻()])
+    const [簡體字頻, 繁體字頻] = await Promise.all([
+      this.加載北語簡體字頻(),
+      this.加載臺標繁體字頻(),
+    ])
 
     // 合併字頻，取較大值
     const 合併字頻: 頻率數據型别 = { ...簡體字頻 }
@@ -126,15 +129,15 @@ export class 字頻表服務 {
   ): Promise<頻率數據型别> {
     switch (類型) {
       case '北語簡體字頻':
-        return this.加載簡體字頻()
+        return this.加載北語簡體字頻()
       case '臺標繁體字頻':
-        return this.加載繁體字頻()
+        return this.加載臺標繁體字頻()
       case '繁簡聯合字頻':
-        return this.加載繁簡聯合字頻()
+        return this.計算繁簡聯合字頻()
       case '知乎簡體字頻':
-        return this.加載知乎字頻()
+        return this.加載知乎簡體字頻()
       case '古籍繁體字頻':
-        return this.加載古籍字頻()
+        return this.加載古籍繁體字頻()
       default:
         throw new Error(`未知的字頻表類型: ${類型}`)
     }

@@ -10,6 +10,7 @@ import {
   message,
   Upload,
   Tag,
+  Alert,
 } from 'antd'
 import {
   DownloadOutlined,
@@ -25,6 +26,7 @@ import { 重碼分析原子狀態 } from '@/atoms/duplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 加載方案, 列出可用方案, 從JSON導入, 創建空白方案 } from '@/services/schemeService'
+import { useDataPreload } from '@/hooks/useDataPreload'
 import type { 方案配置 } from '@/types/scheme'
 import type { UploadFile } from 'antd'
 
@@ -39,6 +41,13 @@ function HomePage() {
   const [候選個數分析結果, 設置候選個數分析結果] = useAtom(候選個數分析原子狀態)
   const [速度當量分析結果, 設置速度當量分析結果] = useAtom(速度當量分析原子狀態)
   const [加載中, 設置加載中] = useState(false)
+
+  // 使用數據預加載狀態
+  const {
+    isLoading: 數據加載中,
+    isReady: 核心數據已加載,
+    allLoaded: 所有數據已加載,
+  } = useDataPreload()
 
   // 共用：處理方案數據（從JSON導入或加載預設方案）
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -504,6 +513,34 @@ function HomePage() {
 
       {/* 提示信息 */}
       {!當前方案 && <Paragraph type="secondary">請選擇或創建方案以開始測評</Paragraph>}
+
+      {/* 數據加載狀態提示 */}
+      {數據加載中 && (
+        <Alert
+          title="正在加載字頻數據..."
+          description="首次訪問需要從CDN下載數據文件，請稍候。後續訪問會使用瀏覽器緩存，速度更快。"
+          type="info"
+          showIcon
+        />
+      )}
+      {核心數據已加載 && !所有數據已加載 && (
+        <Alert
+          title="正在後台加載擴展數據..."
+          description="核心功能已可用，擴展數據（字頻）正在後台加載。"
+          type="info"
+          showIcon
+          closable
+        />
+      )}
+      {所有數據已加載 && (
+        <Alert
+          title="✅ 所有數據加載完畢！"
+          description="系統已就緒，所有字頻數據和字符集已成功加載。您可以開始使用所有功能。"
+          type="success"
+          showIcon
+          closable
+        />
+      )}
     </Space>
   )
 }

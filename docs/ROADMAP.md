@@ -179,13 +179,13 @@
 **前提條件**：
 
 - yuhao-assess-data 已推送到 GitHub
-- GitHub Pages 已啟用（Settings → Pages → Deploy from main branch）
+- GitHub Pages 已啓用（Settings → Pages → Deploy from main branch）
 
 **使用方式**：
 
 ```bash
 pnpm run fetch   # 同步數據文件
-pnpm run dev     # 啟動開發服務器
+pnpm run dev     # 啓動開發服務器
 pnpm run build   # 構建生産版本
 pnpm run preview # 測試生産構建（從 CDN 讀取）
 ```
@@ -260,7 +260,7 @@ pnpm run preview # 測試生産構建（從 CDN 讀取）
   - `react-vendor`：React 核心庫（45.48 kB）
   - `ui-vendor`：Ant Design + styled-components（640.62 kB，gzip 後 ~197 kB）
   - `state-vendor`：Jotai（0.04 kB）
-- ✅ 保持端口 3000，開啟自動打開瀏覽器
+- ✅ 保持端口 3000，開啓自動打開瀏覽器
 
 **[tsconfig.json](../tsconfig.json)**：
 
@@ -360,7 +360,7 @@ src/
 
 - ✅ **TypeScript 編譯**：`tsc --noEmit` 通過（0 錯誤）
 - ✅ **Vite 構建**：`pnpm run build` 成功（1.44-1.52秒）
-- ✅ **開發服務器**：`pnpm run dev` 啟動在 <http://localhost:3000>
+- ✅ **開發服務器**：`pnpm run dev` 啓動在 <http://localhost:3000>
 - ✅ **代碼分割**（生産構建）：
   - `index.js`：7.72 kB（應用主邏輯）
   - `react-vendor.js`：45.48 kB（React 核心）
@@ -1234,10 +1234,82 @@ export const 主題配置 = {
 - React.lazy + Suspense 延遲加載頁面
 - 按需加載 Ant Design 圖標
 
-### 6.2 數據緩存
+### 6.2 數據預加載與緩存 ✅（已完成，2026-02-05）
 
-- 使用 Jotai 持久化緩存字頻/詞頻數據
-- IndexedDB 存儲大型數據
+**問題**：字頻表、字符集等數據文件（約 1.5MB）在每個頁面分别加載，導致重複網絡請求和計算延遲。
+
+**解決方案**：智能預加載系統
+
+**實施細節**：
+
+1. **核心架構**：
+   - `src/atoms/dataPreload.ts`：數據預加載狀態管理
+   - `src/services/dataPreloadService.ts`：預加載服務實現
+   - `src/hooks/useDataPreload.ts`：React Hooks 封裝
+
+2. **預加載策略**：
+   - **核心數據**（簡體字頻 + 繁體字頻 + 字符集，約 1.2MB）：應用啓動時立即加載
+   - **擴展數據**（知乎字頻 + 古籍字頻，約 300KB）：瀏覽器空閒時後台加載（`requestIdleCallback`）
+   - 降級支持：不支持 `requestIdleCallback` 的瀏覽器使用 `setTimeout(2000)`
+
+3. **緩存層次**：
+
+   ```txt
+   Level 1: Jotai Atom 内存緩存（會話内共享）
+       ↓ 刷新頁面清空
+   Level 2: 瀏覽器 HTTP 緩存（10 分鐘）
+       ↓ 10 分鐘後過期
+   Level 3: CDN 緩存
+       ↓ 遠程獲取
+   Level 4: GitHub Pages 源文件
+   ```
+
+4. **狀態管理**：
+
+   ```typescript
+   // 數據加載狀態類型
+   type 加載狀態 = 'idle' | 'loading' | 'loaded' | 'error'
+
+   // 所有數據的預加載狀態
+   interface 數據預加載狀態介面 {
+     北語簡體字頻: 數據加載狀態
+     臺標繁體字頻: 數據加載狀態
+     知乎簡體字頻: 數據加載狀態
+     古籍繁體字頻: 數據加載狀態
+     繁簡聯合字頻: 數據加載狀態
+     字符集數據: 數據加載狀態
+   }
+   ```
+
+5. **使用方式**：
+
+   ```typescript
+   // App.tsx 啓動預加載
+   useEffect(() => {
+     DataPreloadService.啓動預加載()
+   }, [])
+
+   // 頁面組件檢查狀態
+   const { isReady, isLoading } = useDataPreload()
+   ```
+
+**效果**：
+
+- ✅ 首次訪問：核心數據 1-2 秒完成，擴展數據後台加載
+- ✅ 後續訪問：HTTP 緩存，幾乎零延遲
+- ✅ 頁面切換：共享内存緩存，即時響應
+- ✅ 用户體驗：首頁有明確的加載狀態提示
+
+**與 charFrequency.ts 的關係**：
+
+- `charFrequency.ts`：字頻表數據緩存和當前選中類型（業務邏輯）
+- `dataPreload.ts`：數據加載狀態跟蹤（基礎設施）
+- 兩者協同工作，職責分離
+
+**未來優化方向**（可選）：
+
+- **階段 2**：Service Worker + PWA（7 天本地緩存 + 離線支持）
+- **階段 3**：IndexedDB 持久化（跨會話緩存，帶版本控制）
 
 ### 6.3 計算優化
 
