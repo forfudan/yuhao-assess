@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { loadDataJSON } from '@/utils/data-loader'
+import { 加載JSON數據文件 } from '@/utils/data-loader'
 
 /**
  * 字符頻數數據類型（Absolute Frequency）
@@ -43,7 +43,7 @@ export function useCharAbsoluteFrequency(文件名: string): UseDataResult<CharA
         設置加載中(true)
         設置錯誤(null)
 
-        const 結果 = await loadDataJSON<CharAbsoluteFrequencyData>(`${文件名}.json`)
+        const 結果 = await 加載JSON數據文件<CharAbsoluteFrequencyData>(`${文件名}.json`)
 
         if (!已取消) {
           設置數據(結果)
@@ -101,7 +101,7 @@ export function useWordAbsoluteFrequency(文件名: string): UseDataResult<WordA
         設置加載中(true)
         設置錯誤(null)
 
-        const 結果 = await loadDataJSON<WordAbsoluteFrequencyData>(`${文件名}.json`)
+        const 結果 = await 加載JSON數據文件<WordAbsoluteFrequencyData>(`${文件名}.json`)
 
         if (!已取消) {
           設置數據(結果)
@@ -167,7 +167,7 @@ export function useCharsets(): UseDataResult<CharsetsData> {
         設置加載中(true)
         設置錯誤(null)
 
-        const 結果 = await loadDataJSON<CharsetsData>('charsets.json')
+        const 結果 = await 加載JSON數據文件<CharsetsData>('charsets.json')
 
         if (!已取消) {
           設置數據(結果)

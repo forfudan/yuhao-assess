@@ -1,11 +1,8 @@
-// 直接導入 JSON 數據
-import charsetsJSON from '../../public/data/charsets.json'
-import cjkBlocksJSON from '../../public/settings/cjkBlocks.json'
-
 // 導入 Jotai atom
 import { getDefaultStore } from 'jotai'
 import { 字符集數據原子狀態, CJK區塊數據原子狀態 } from '../atoms/charset'
 import type { CharsetData, CJKBlockData } from '../atoms/charset'
+import { 加載JSON數據文件 } from '../utils/data-loader'
 
 // 加載字符集數據（使用 atom 全局緩存）
 async function loadCharsetData(): Promise<void> {
@@ -13,7 +10,7 @@ async function loadCharsetData(): Promise<void> {
   const existing = store.get(字符集數據原子狀態)
   if (existing) return
 
-  const data = charsetsJSON as CharsetData
+  const data = await 加載JSON數據文件<CharsetData>('charsets.json')
   store.set(字符集數據原子狀態, data)
 }
 
@@ -23,7 +20,9 @@ export async function loadCJKBlockData(): Promise<void> {
   const existing = store.get(CJK區塊數據原子狀態)
   if (existing) return
 
-  const data = cjkBlocksJSON as CJKBlockData
+  // cjkBlocks.json 在 settings 文件夹，不在 data 文件夹
+  const response = await fetch('/settings/cjkBlocks.json')
+  const data = (await response.json()) as CJKBlockData
   store.set(CJK區塊數據原子狀態, data)
 }
 

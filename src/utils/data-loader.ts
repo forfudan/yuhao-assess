@@ -2,7 +2,7 @@
  * 數據加載工具
  *
  * 開發環境：從本地 public/data/ 加載
- * 生產環境：從 GitHub Pages CDN 加載
+ * 生産環境：從 GitHub Pages CDN 加載
  */
 
 // 數據倉庫 CDN 地址
@@ -11,13 +11,13 @@ const DATA_CDN_URL = 'https://forfudan.github.io/yuhao-assess-data/'
 // 根據環境決定數據源
 const DATA_BASE_URL = import.meta.env.DEV
   ? '/data/' // 開發：本地文件
-  : DATA_CDN_URL // 生產：CDN
+  : DATA_CDN_URL // 生産：CDN
 
 /**
  * 加載 JSON 數據文件
  * @param filename 文件名（如 'charFrequencySC.json'）
  */
-export async function loadDataJSON<T = any>(filename: string): Promise<T> {
+export async function 加載JSON數據文件<T = any>(filename: string): Promise<T> {
   const url = DATA_BASE_URL + filename
 
   try {
@@ -40,7 +40,7 @@ export async function loadDataJSON<T = any>(filename: string): Promise<T> {
  * @param cacheKey 緩存鍵名
  * @param ttl 緩存時間（毫秒），默認 7 天
  */
-export async function loadDataJSONWithCache<T = any>(
+export async function 帶緩存地加載JSON數據文件<T = any>(
   filename: string,
   cacheKey: string,
   ttl: number = 7 * 24 * 60 * 60 * 1000
@@ -62,7 +62,7 @@ export async function loadDataJSONWithCache<T = any>(
   }
 
   // 加載新數據
-  const data = await loadDataJSON<T>(filename)
+  const data = await 加載JSON數據文件<T>(filename)
 
   // 保存到緩存
   localStorage.setItem(
@@ -82,35 +82,35 @@ export async function loadDataJSONWithCache<T = any>(
 export const dataLoaders = {
   /** 知乎字頻數 */
   charAbsoluteFrequencyZhihu: () =>
-    loadDataJSONWithCache('charAbsoluteFrequencyZhihu.json', 'charAbsFreq-zhihu'),
+    帶緩存地加載JSON數據文件('charAbsoluteFrequencyZhihu.json', 'charAbsFreq-zhihu'),
 
   /** 北語簡體字頻數 */
   charAbsoluteFrequencySC: () =>
-    loadDataJSONWithCache('charAbsoluteFrequencySC.json', 'charAbsFreq-sc'),
+    帶緩存地加載JSON數據文件('charAbsoluteFrequencySC.json', 'charAbsFreq-sc'),
 
   /** 臺灣繁體字頻數 */
   charAbsoluteFrequencyTC: () =>
-    loadDataJSONWithCache('charAbsoluteFrequencyTC.json', 'charAbsFreq-tc'),
+    帶緩存地加載JSON數據文件('charAbsoluteFrequencyTC.json', 'charAbsFreq-tc'),
 
   /** 古籍字頻數 */
   charAbsoluteFrequencyGuji: () =>
-    loadDataJSONWithCache('charAbsoluteFrequencyGuji.json', 'charAbsFreq-guji'),
+    帶緩存地加載JSON數據文件('charAbsoluteFrequencyGuji.json', 'charAbsFreq-guji'),
 
   /** 簡體詞頻數 */
   wordAbsoluteFrequencySC: () =>
-    loadDataJSONWithCache('wordAbsoluteFrequencySC.json', 'wordAbsFreq-sc'),
+    帶緩存地加載JSON數據文件('wordAbsoluteFrequencySC.json', 'wordAbsFreq-sc'),
 
   /** 字符集 */
-  charsets: () => loadDataJSONWithCache('charsets.json', 'charsets'),
+  charsets: () => 帶緩存地加載JSON數據文件('charsets.json', 'charsets'),
 
   /** CJK 區塊 */
-  cjkBlocks: () => loadDataJSON('cjkBlocks.json'),
+  cjkBlocks: () => 加載JSON數據文件('cjkBlocks.json'),
 
   /** 碼表配置 */
-  codeTableConfig: () => loadDataJSON('codeTableConfig.json'),
+  codeTableConfig: () => 加載JSON數據文件('codeTableConfig.json'),
 
   /** 等價字表 */
-  equivTable: () => loadDataJSON('equivTable.json'),
+  equivTable: () => 加載JSON數據文件('equivTable.json'),
 }
 
 /**
