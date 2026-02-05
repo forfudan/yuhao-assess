@@ -72,9 +72,7 @@ export function 驗證方案(配置: 方案配置): void {
     throw new Error('缺少「方案參數」字段')
   }
 
-  if (typeof 配置.方案參數.是否爲前綴碼 !== 'boolean') {
-    throw new Error('「方案參數.是否爲前綴碼」必須是布爾值')
-  }
+  // 編碼終止指示符列表是可選的，無需驗證
 
   if (typeof 配置.方案參數.最大碼長 !== 'number' || 配置.方案參數.最大碼長 <= 0) {
     throw new Error('「方案參數.最大碼長」必須是正整數')
@@ -132,7 +130,6 @@ export function 創建空白方案(): 方案配置 {
       更新時間: 當前時間,
     },
     方案參數: {
-      是否爲前綴碼: false,
       最大碼長: 4,
     },
   }

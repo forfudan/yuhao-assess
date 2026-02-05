@@ -40,8 +40,7 @@ export interface BuiltinCodeTable {
   category: string
   tags: string[]
   enabled: boolean
-  isPrefix?: boolean // 前缀码标记
-  prefixKeys?: string[] // 前缀码上屏键
+  編碼終止指示符列表?: string[] // 編碼終止指示符列表
 }
 
 // 碼表配置文件

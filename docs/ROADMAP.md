@@ -1059,8 +1059,7 @@ public/schemes/
     "updatedAt": "2026-02-04T00:00:00Z"
   },
   "parameters": {
-    "isPrefix": true,
-    "prefixKeys": ["a", "o", "e", "i", "u", "_"],
+    "編碼終止指示符列表": ["a", "o", "e", "i", "u", "_"],
     "maxCodeLength": 5,
     "codeTableFormat": "code_first"
   },

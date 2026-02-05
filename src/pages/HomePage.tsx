@@ -258,18 +258,6 @@ function HomePage() {
     更新元數據('標籤', 新標籤 as never)
   }
 
-  // 初始化碼表元數據（如果不存在）
-  const 初始化碼表元數據 = () => {
-    if (!當前方案 || 當前方案.碼表元數據) return
-    設置當前方案({
-      ...當前方案,
-      碼表元數據: {
-        分隔符: '空格',
-        第一列類型: '字符',
-      },
-    })
-  }
-
   return (
     <Space orientation="vertical" size="large" style={{ width: '100%', padding: '24px' }}>
       {/* 方案選擇 */}
@@ -423,6 +411,26 @@ function HomePage() {
           {/* 方案參數 */}
           <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <Text type="secondary">編碼終止指示符（直接連寫，可選）</Text>
+                <Input
+                  value={(當前方案.方案參數.編碼終止指示符列表 || []).join('')}
+                  placeholder="例如：aoeiu_"
+                  onBlur={e => {
+                    const 指示符 = e.target.value.trim().split('')
+                    更新方案參數('編碼終止指示符列表', 指示符.length > 0 ? 指示符 : undefined)
+                  }}
+                  onChange={e =>
+                    設置當前方案({
+                      ...當前方案,
+                      方案參數: {
+                        ...當前方案.方案參數,
+                        編碼終止指示符列表: e.target.value.trim().split(''),
+                      },
+                    })
+                  }
+                />
+              </div>
               <div>
                 <Text type="secondary">最大碼長</Text>
                 <InputNumber
@@ -434,42 +442,6 @@ function HomePage() {
                   onChange={值 => 更新方案參數('最大碼長', 值 as number)}
                 />
               </div>
-              <div>
-                <Checkbox
-                  checked={當前方案.方案參數.是否爲前綴碼}
-                  onChange={e => 更新方案參數('是否爲前綴碼', e.target.checked)}
-                >
-                  是否爲前綴碼
-                </Checkbox>
-              </div>
-              {當前方案.方案參數.是否爲前綴碼 && (
-                <div style={{ gridColumn: 'span 2' }}>
-                  <Text type="secondary">前綴鍵（逗號分隔）</Text>
-                  <Input
-                    value={(當前方案.方案參數.前綴鍵 || []).join(', ')}
-                    placeholder="例如：a, o, e, i, u, _"
-                    onBlur={e => {
-                      const 鍵 = e.target.value
-                        .split(',')
-                        .map(k => k.trim())
-                        .filter(k => k)
-                      更新方案參數('前綴鍵', 鍵.length > 0 ? 鍵 : undefined)
-                    }}
-                    onChange={e =>
-                      設置當前方案({
-                        ...當前方案,
-                        方案參數: {
-                          ...當前方案.方案參數,
-                          前綴鍵: e.target.value
-                            .split(',')
-                            .map(k => k.trim())
-                            .filter(k => k),
-                        },
-                      })
-                    }
-                  />
-                </div>
-              )}
             </div>
           </div>
 
@@ -486,7 +458,6 @@ function HomePage() {
               </div>
             </div>
           )}
-          {!當前方案.碼表元數據 && <Button onClick={初始化碼表元數據}>添加碼表元數據</Button>}
 
           {/* 時間戳（只讀） */}
           <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px' }}>
@@ -525,7 +496,7 @@ function HomePage() {
       )}
       {所有數據已加載 && (
         <Alert
-          title="✅ 所有數據加載完畢！"
+          title="✅ 所有輔助數據加載完畢！"
           description="系統已就緒，所有字頻數據和字符集已成功加載。您可以開始使用所有功能。"
           type="success"
           showIcon

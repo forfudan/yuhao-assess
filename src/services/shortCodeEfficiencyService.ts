@@ -27,15 +27,20 @@ interface 簡碼效率結果介面 {
  * @param codeTable 碼表數據
  * @param charFrequency 字頻數據
  * @param maxLen 最大碼長
- * @param isPrefix 是否爲前綴碼方案
+ * @param 是否存在編碼終止指示符 是否爲前綴碼方案
  */
 export function calculateShortCodeEfficiency(
   codeTable: 碼表條目介面[],
   charFrequency: 頻率數據型别,
   maxLen: number = 4,
-  isPrefix: boolean = false
+  是否存在編碼終止指示符: boolean = false
 ): 簡碼效率結果介面[] {
-  const processedData = preprocessCodeTable(codeTable, charFrequency, maxLen, isPrefix)
+  const processedData = preprocessCodeTable(
+    codeTable,
+    charFrequency,
+    maxLen,
+    是否存在編碼終止指示符
+  )
 
   const 最有效率的簡碼個數列表 = [0, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
   const 結果: 簡碼效率結果介面[] = []
@@ -67,7 +72,7 @@ function preprocessCodeTable(
   codeTable: 碼表條目介面[],
   charFrequency: 頻率數據型别,
   maxLen: number,
-  isPrefix: boolean
+  是否存在編碼終止指示符: boolean
 ): ProcessedChar[] {
   // 按漢字分組，處理簡碼和全碼
   const charMap = new Map<string, 碼表條目介面[]>()
@@ -96,7 +101,7 @@ function preprocessCodeTable(
     // 計算碼長（考慮前綴碼邏輯）
     const codesWithLen = codes.map(row => ({
       ...row,
-      actualLen: calculateActualLength(row.code, maxLen, isPrefix),
+      actualLen: calculateActualLength(row.code, maxLen, 是否存在編碼終止指示符),
     }))
 
     // 處理選重（同码长的非首选字符+1）
@@ -148,10 +153,14 @@ function preprocessCodeTable(
   return processedChars
 }
 
-function calculateActualLength(code: string, maxLen: number, isPrefix: boolean): number {
+function calculateActualLength(
+  code: string,
+  maxLen: number,
+  是否存在編碼終止指示符: boolean
+): number {
   let len = code.length
 
-  if (isPrefix) {
+  if (是否存在編碼終止指示符) {
     // 前綴碼邏輯：不以韻母結尾且長度小於最大長度時+1
     const vowels = ['a', 'e', 'i', 'o', 'u']
     const notEndsWithVowel = !vowels.includes(code.charAt(code.length - 1))
@@ -205,9 +214,14 @@ export function calculateFullCodeAverageLength(
   codeTable: 碼表條目介面[],
   charFrequency: 頻率數據型别,
   maxLen: number = 4,
-  isPrefix: boolean = false
+  是否存在編碼終止指示符: boolean = false
 ): number {
-  const processedData = preprocessCodeTable(codeTable, charFrequency, maxLen, isPrefix)
+  const processedData = preprocessCodeTable(
+    codeTable,
+    charFrequency,
+    maxLen,
+    是否存在編碼終止指示符
+  )
   return calculateEfficiencyForN(processedData, 0, maxLen).efficiency
 }
 
@@ -218,9 +232,14 @@ export function calculateShortCodeAverageLength(
   codeTable: 碼表條目介面[],
   charFrequency: 頻率數據型别,
   maxLen: number = 4,
-  isPrefix: boolean = false
+  是否存在編碼終止指示符: boolean = false
 ): number {
-  const processedData = preprocessCodeTable(codeTable, charFrequency, maxLen, isPrefix)
+  const processedData = preprocessCodeTable(
+    codeTable,
+    charFrequency,
+    maxLen,
+    是否存在編碼終止指示符
+  )
 
   // 全部使用簡碼
   let totalFreqLen = 0

@@ -13,15 +13,12 @@ import type { 碼表型别, 原始碼表型别, 頻率數據型别, 處理後的
 /**
  * 碼表處理選項介面
  *
- * @property 是否爲前綴碼 是否將碼表處理爲前綴碼
  * @property 最大碼長 最大碼長
- * @property 前綴鍵列表 前綴碼專用的前綴鍵列表
+ * @property 編碼終止指示符列表 編碼終止指示符列表
  */
 export interface 碼表處理選項介面 {
-  /** 是否爲前綴碼 */
-  是否爲前綴碼?: boolean // 是否爲前綴碼
-  最大碼長?: number // 最大碼長
-  前綴鍵列表?: string[] // 前綴碼專用的前綴鍵列表
+  最大碼長?: number // 預設爲 4
+  編碼終止指示符列表?: string[] // 編碼終止指示符列表
 }
 
 // =============================================================================
@@ -161,8 +158,9 @@ export class 碼表處理服務 {
     原始碼表: 原始碼表型别,
     options?: 碼表處理選項介面
   ): Promise<處理後的碼表結果介面> {
-    const 是否爲前綴碼 = options?.是否爲前綴碼 || false
-    const prefixKeys = options?.前綴鍵列表
+    const maxLength = options?.最大碼長 || 4
+    const 編碼終止指示符列表 = options?.編碼終止指示符列表
+    const 是否存在編碼終止指示符 = !!(編碼終止指示符列表 && 編碼終止指示符列表.length > 0)
 
     // 初始化四個輔助碼表
     const full: 碼表型别 = new Map()
@@ -179,10 +177,9 @@ export class 碼表處理服務 {
     for (const [, [, code]] of 原始碼表) {
       globalMaxLength = Math.max(globalMaxLength, code.length)
     }
-    const maxLength = options?.最大碼長 || globalMaxLength || 4
 
     // 保存處理選項
-    this.處理選項 = { 是否爲前綴碼, 最大碼長: maxLength, 前綴鍵列表: prefixKeys }
+    this.處理選項 = { 最大碼長: maxLength, 編碼終止指示符列表 }
 
     // 按行號順序遍歷 原始碼表
     const sortedEntries = Array.from(原始碼表.entries()).sort((a, b) => a[0] - b[0])
@@ -203,8 +200,8 @@ export class 碼表處理服務 {
         position,
         codeLength,
         maxLength,
-        是否爲前綴碼,
-        prefixKeys
+        是否存在編碼終止指示符,
+        編碼終止指示符列表
       )
 
       // 首次遇到該字符
@@ -268,7 +265,8 @@ export class 碼表處理服務 {
       return 詞語全碼加選重鍵表
     }
 
-    const { 最大碼長: maxLength = 4, 是否爲前綴碼 = false, 前綴鍵列表: prefixKeys } = options
+    const { 最大碼長: maxLength = 4, 編碼終止指示符列表 } = options
+    const 是否存在編碼終止指示符 = !!(編碼終止指示符列表 && 編碼終止指示符列表.length > 0)
 
     // 用於追蹤每個編碼的出現次數（選重位置）
     const codePositionMap = new Map<string, number>()
@@ -289,8 +287,8 @@ export class 碼表處理服務 {
         position,
         code.length,
         maxLength,
-        是否爲前綴碼,
-        prefixKeys
+        是否存在編碼終止指示符,
+        編碼終止指示符列表
       )
 
       詞語全碼加選重鍵表.set(word, [codeWithSelection])
@@ -322,7 +320,8 @@ export class 碼表處理服務 {
       return 詞語簡碼加選重鍵表
     }
 
-    const { 最大碼長: maxLength = 4, 是否爲前綴碼 = false, 前綴鍵列表: prefixKeys } = options
+    const { 最大碼長: maxLength = 4, 編碼終止指示符列表 } = options
+    const 是否存在編碼終止指示符 = !!(編碼終止指示符列表 && 編碼終止指示符列表.length > 0)
 
     // 用於追蹤每個編碼的出現次數（選重位置）
     const codePositionMap = new Map<string, number>()
@@ -343,8 +342,8 @@ export class 碼表處理服務 {
         position,
         code.length,
         maxLength,
-        是否爲前綴碼,
-        prefixKeys
+        是否存在編碼終止指示符,
+        編碼終止指示符列表
       )
 
       詞語簡碼加選重鍵表.set(word, [codeWithSelection])
@@ -366,22 +365,22 @@ export class 碼表處理服務 {
     position: number,
     codeLength: number,
     maxLength: number,
-    是否爲前綴碼: boolean,
-    prefixKeys?: string[]
+    是否存在編碼終止指示符: boolean,
+    編碼終止指示符列表?: string[]
   ): string {
     let processedCode = code
 
     // N選爲1的特殊處理
     if (position === 1) {
-      // 前綴碼的特殊處理邏輯
-      if (是否爲前綴碼 && prefixKeys && codeLength < maxLength) {
+      // 存在編碼終止指示符的特殊處理邏輯
+      if (是否存在編碼終止指示符 && 編碼終止指示符列表 && codeLength < maxLength) {
         const lastChar = code.slice(-1)
-        const needsUnderscore = !prefixKeys.includes(lastChar) && lastChar !== '_'
+        const needsUnderscore = !編碼終止指示符列表.includes(lastChar) && lastChar !== '_'
         if (needsUnderscore) {
           processedCode = code + '_'
         }
-      } else if (!是否爲前綴碼 && codeLength < maxLength) {
-        // 非前綴碼：首選且未達到最大碼長時補充下劃線
+      } else if (!是否存在編碼終止指示符 && codeLength < maxLength) {
+        // 不存在編碼終止指示符：首選且未達到最大碼長時補充下劃線
         processedCode = code + '_'
       }
     }
