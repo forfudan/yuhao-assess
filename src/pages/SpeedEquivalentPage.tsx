@@ -5,13 +5,13 @@ import { ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 碼表原子狀態 } from '../atoms/codeTable'
 import { 速度當量分析原子狀態, 當量詳情原子狀態 } from '../atoms/speedEquivalent'
-import type { 速度当量分析结果, 當量例字信息 } from '../atoms/speedEquivalent'
+import type { 速度當量分析結果, 當量例字信息 } from '../atoms/speedEquivalent'
 import { 字頻表緩存原子狀態 } from '../atoms/charFrequency'
 import { 當量表原子狀態 } from '../atoms/equivTable'
 import {
   calculateSpeedEquivFromCodeTable,
-  calculateCodePairFrequencies,
-} from '../services/speedAnalysisService'
+  計算編碼對頻率,
+} from '../services/speedEquivalentService'
 import { 當量表服務實例 } from '../services/equivTableService'
 import type { 處理後的碼表結果 } from '../types'
 
@@ -63,85 +63,85 @@ const SpeedEquivalentPage: React.FC = () => {
       // 加載當量表
       const 當量表數據 = Object.keys(當量表).length > 0 ? 當量表 : await 加載當量表()
 
-      const 全碼表 = 處理後碼表.全碼加選重鍵表
-      const 簡碼表 = 處理後碼表.簡碼加選重鍵表
+      const 全碼加選重鍵表 = 處理後碼表.全碼加選重鍵表
+      const 簡碼加選重鍵表 = 處理後碼表.簡碼加選重鍵表
 
       // 計算全碼當量
-      const zhihuEquiv = calculateSpeedEquivFromCodeTable(
-        全碼表,
+      const 知乎簡體字頻全碼速度當量 = calculateSpeedEquivFromCodeTable(
+        全碼加選重鍵表,
         字頻表緩存.get('知乎字頻') || {},
         當量表數據
       )
-      const scEquiv = calculateSpeedEquivFromCodeTable(
-        全碼表,
+      const 北語簡體字頻全碼速度當量 = calculateSpeedEquivFromCodeTable(
+        全碼加選重鍵表,
         字頻表緩存.get('簡體字頻') || {},
         當量表數據
       )
-      const tcEquiv = calculateSpeedEquivFromCodeTable(
-        全碼表,
+      const 臺標繁體字頻全碼速度當量 = calculateSpeedEquivFromCodeTable(
+        全碼加選重鍵表,
         字頻表緩存.get('繁體字頻') || {},
         當量表數據
       )
-      const gujiEquiv = calculateSpeedEquivFromCodeTable(
-        全碼表,
+      const 古籍繁體字頻全碼速度當量 = calculateSpeedEquivFromCodeTable(
+        全碼加選重鍵表,
         字頻表緩存.get('古籍字頻') || {},
         當量表數據
       )
-      const unifiedEquiv = calculateSpeedEquivFromCodeTable(
-        全碼表,
+      const 繁简联合字頻全碼速度當量 = calculateSpeedEquivFromCodeTable(
+        全碼加選重鍵表,
         字頻表緩存.get('繁简联合') || {},
         當量表數據
       )
 
       // 計算簡碼當量
-      const zhihuShortEquiv = calculateSpeedEquivFromCodeTable(
-        簡碼表,
+      const 知乎簡體字頻全部簡碼速度當量 = calculateSpeedEquivFromCodeTable(
+        簡碼加選重鍵表,
         字頻表緩存.get('知乎字頻') || {},
         當量表數據
       )
-      const scShortEquiv = calculateSpeedEquivFromCodeTable(
-        簡碼表,
+      const 北語簡體字頻全部簡碼速度當量 = calculateSpeedEquivFromCodeTable(
+        簡碼加選重鍵表,
         字頻表緩存.get('簡體字頻') || {},
         當量表數據
       )
-      const tcShortEquiv = calculateSpeedEquivFromCodeTable(
-        簡碼表,
+      const 臺標繁體字頻全部簡碼速度當量 = calculateSpeedEquivFromCodeTable(
+        簡碼加選重鍵表,
         字頻表緩存.get('繁體字頻') || {},
         當量表數據
       )
-      const gujiShortEquiv = calculateSpeedEquivFromCodeTable(
-        簡碼表,
+      const 古籍繁體字頻全部簡碼速度當量 = calculateSpeedEquivFromCodeTable(
+        簡碼加選重鍵表,
         字頻表緩存.get('古籍字頻') || {},
         當量表數據
       )
-      const unifiedShortEquiv = calculateSpeedEquivFromCodeTable(
-        簡碼表,
+      const 繁简联合字頻全部簡碼速度當量 = calculateSpeedEquivFromCodeTable(
+        簡碼加選重鍵表,
         字頻表緩存.get('繁简联合') || {},
         當量表數據
       )
 
       // 簡化版本：不計算一簡、二簡當量（需要額外的邏輯生成一簡/二簡碼表）
-      const 新結果: 速度当量分析结果 = {
-        zhihuEquiv,
-        scEquiv,
-        tcEquiv,
-        gujiEquiv,
-        unifiedEquiv,
-        zhihuFirstShortEquiv: 0, // 暫不實現
-        scFirstShortEquiv: 0,
-        tcFirstShortEquiv: 0,
-        gujiFirstShortEquiv: 0,
-        unifiedFirstShortEquiv: 0,
-        zhihuSecondShortEquiv: 0, // 暫不實現
-        scSecondShortEquiv: 0,
-        tcSecondShortEquiv: 0,
-        gujiSecondShortEquiv: 0,
-        unifiedSecondShortEquiv: 0,
-        zhihuShortEquiv,
-        scShortEquiv,
-        tcShortEquiv,
-        gujiShortEquiv,
-        unifiedShortEquiv,
+      const 新結果: 速度當量分析結果 = {
+        知乎簡體字頻全碼速度當量,
+        北語簡體字頻全碼速度當量,
+        臺標繁體字頻全碼速度當量,
+        古籍繁體字頻全碼速度當量,
+        繁简联合字頻全碼速度當量,
+        知乎簡體字頻一級簡碼速度當量: 0, // 暫不實現
+        北語簡體字頻一級簡碼速度當量: 0,
+        臺標繁體字頻一級簡碼速度當量: 0,
+        古籍繁體字頻一級簡碼速度當量: 0,
+        繁简联合字頻一級簡碼速度當量: 0,
+        知乎簡體字頻二級簡碼速度當量: 0, // 暫不實現
+        北語簡體字頻二級簡碼速度當量: 0,
+        臺標繁體字頻二級簡碼速度當量: 0,
+        古籍繁體字頻二級簡碼速度當量: 0,
+        繁简联合字頻二級簡碼速度當量: 0,
+        知乎簡體字頻全部簡碼速度當量,
+        北語簡體字頻全部簡碼速度當量,
+        臺標繁體字頻全部簡碼速度當量,
+        古籍繁體字頻全部簡碼速度當量,
+        繁简联合字頻全部簡碼速度當量,
         更新時間: new Date().toISOString(),
       }
 
@@ -174,7 +174,7 @@ const SpeedEquivalentPage: React.FC = () => {
       const 字頻 = 字頻映射[字頻類型]
 
       // 計算碼對頻率
-      const 碼對頻率 = calculateCodePairFrequencies(碼表, 字頻)
+      const 碼對頻率 = 計算編碼對頻率(碼表, 字頻)
       const 當量表數據 = Object.keys(當量表).length > 0 ? 當量表 : await 加載當量表()
 
       // 計算每個字符的當量值並排序
@@ -252,8 +252,8 @@ const SpeedEquivalentPage: React.FC = () => {
       {
         key: 'zhihu',
         字頻來源: '知乎簡體字頻',
-        全碼當量: 分析結果.zhihuEquiv,
-        簡碼當量: 分析結果.zhihuShortEquiv,
+        全碼當量: 分析結果.知乎簡體字頻全碼速度當量,
+        簡碼當量: 分析結果.知乎簡體字頻全部簡碼速度當量,
         説明: (
           <>
             基於
@@ -266,8 +266,8 @@ const SpeedEquivalentPage: React.FC = () => {
       {
         key: 'sc',
         字頻來源: '北語簡體字頻',
-        全碼當量: 分析結果.scEquiv,
-        簡碼當量: 分析結果.scShortEquiv,
+        全碼當量: 分析結果.北語簡體字頻全碼速度當量,
+        簡碼當量: 分析結果.北語簡體字頻全部簡碼速度當量,
         説明: (
           <>
             基於
@@ -283,8 +283,8 @@ const SpeedEquivalentPage: React.FC = () => {
       {
         key: 'tc',
         字頻來源: '臺標繁體字頻',
-        全碼當量: 分析結果.tcEquiv,
-        簡碼當量: 分析結果.tcShortEquiv,
+        全碼當量: 分析結果.臺標繁體字頻全碼速度當量,
+        簡碼當量: 分析結果.臺標繁體字頻全部簡碼速度當量,
         説明: (
           <>
             基於
@@ -300,15 +300,15 @@ const SpeedEquivalentPage: React.FC = () => {
       {
         key: 'guji',
         字頻來源: '古籍繁體字頻',
-        全碼當量: 分析結果.gujiEquiv,
-        簡碼當量: 分析結果.gujiShortEquiv,
+        全碼當量: 分析結果.古籍繁體字頻全碼速度當量,
+        簡碼當量: 分析結果.古籍繁體字頻全部簡碼速度當量,
         説明: '基於古籍字頻',
       },
       {
         key: 'unified',
         字頻來源: '繁簡聯合字頻',
-        全碼當量: 分析結果.unifiedEquiv,
-        簡碼當量: 分析結果.unifiedShortEquiv,
+        全碼當量: 分析結果.繁简联合字頻全碼速度當量,
+        簡碼當量: 分析結果.繁简联合字頻全部簡碼速度當量,
         説明: '基於繁簡聯合字頻表',
       },
     ]

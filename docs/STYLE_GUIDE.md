@@ -68,7 +68,7 @@ import { Table } from 'antd'
 
 ```tsx
 <Table
-  size="middle"  // 或 "large"
+  size="middle" // 或 "large"
   dataSource={data}
   columns={columns}
 />

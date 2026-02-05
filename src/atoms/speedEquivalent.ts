@@ -1,39 +1,39 @@
 /**
- * 速度当量分析结果的 Atom 状态管理
+ * 速度當量分析結果的 Atom 狀態管理
  */
 import { atom } from 'jotai'
 
 /**
- * 速度当量分析结果数据结构
+ * 速度當量分析結果數據結構
  */
-export interface 速度当量分析结果 {
+export interface 速度當量分析結果 {
   // 單字全碼當量
-  zhihuEquiv: number
-  scEquiv: number
-  tcEquiv: number
-  gujiEquiv: number
-  unifiedEquiv: number
+  知乎簡體字頻全碼速度當量: number
+  北語簡體字頻全碼速度當量: number
+  臺標繁體字頻全碼速度當量: number
+  古籍繁體字頻全碼速度當量: number
+  繁简联合字頻全碼速度當量: number
 
-  // 單字一簡當量
-  zhihuFirstShortEquiv: number
-  scFirstShortEquiv: number
-  tcFirstShortEquiv: number
-  gujiFirstShortEquiv: number
-  unifiedFirstShortEquiv: number
+  // 單字一級簡碼當量
+  知乎簡體字頻一級簡碼速度當量: number
+  北語簡體字頻一級簡碼速度當量: number
+  臺標繁體字頻一級簡碼速度當量: number
+  古籍繁體字頻一級簡碼速度當量: number
+  繁简联合字頻一級簡碼速度當量: number
 
-  // 單字二簡當量
-  zhihuSecondShortEquiv: number
-  scSecondShortEquiv: number
-  tcSecondShortEquiv: number
-  gujiSecondShortEquiv: number
-  unifiedSecondShortEquiv: number
+  // 單字二級簡碼當量
+  知乎簡體字頻二級簡碼速度當量: number
+  北語簡體字頻二級簡碼速度當量: number
+  臺標繁體字頻二級簡碼速度當量: number
+  古籍繁體字頻二級簡碼速度當量: number
+  繁简联合字頻二級簡碼速度當量: number
 
   // 單字全簡當量
-  zhihuShortEquiv: number
-  scShortEquiv: number
-  tcShortEquiv: number
-  gujiShortEquiv: number
-  unifiedShortEquiv: number
+  知乎簡體字頻全部簡碼速度當量: number
+  北語簡體字頻全部簡碼速度當量: number
+  臺標繁體字頻全部簡碼速度當量: number
+  古籍繁體字頻全部簡碼速度當量: number
+  繁简联合字頻全部簡碼速度當量: number
 
   // 詞語全碼當量（可選）
   scWordEquiv?: number
@@ -73,7 +73,7 @@ export interface 當量詳情數據 {
  * 速度當量分析結果
  * 存儲所有字頻類型和碼表類型的當量計算結果
  */
-export const 速度當量分析原子狀態 = atom<速度当量分析结果 | null>(null)
+export const 速度當量分析原子狀態 = atom<速度當量分析結果 | null>(null)
 
 /**
  * 當量詳情數據（用於 Modal 展示）

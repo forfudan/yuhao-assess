@@ -22,11 +22,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             Table: {
               // 表格字體大小（可單獨設置，留空則使用全局 fontSize）
               fontSize: 13,
-              
+
               // 表格單元格 padding（上下、左右）
               cellPaddingBlock: 4,
               cellPaddingInline: 8,
-              
+
               // 表頭樣式
               headerBg: '#f8f9fa',
               headerColor: '#212529',

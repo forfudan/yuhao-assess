@@ -13,10 +13,10 @@ export {
 
 // 速度分析服務
 export {
-  calculateCodePairFrequencies,
+  計算編碼對頻率,
   calculateSpeedEquiv,
   calculateSpeedEquivFromCodeTable,
-} from './speedAnalysisService'
+} from './speedEquivalentService'
 
 // 導出服務
 export { ExportService } from './exportService'
@@ -54,13 +54,7 @@ export {
 } from './dataService'
 
 // 導出UI服務
-export {
-  formatRate,
-  formatNumber,
-  formatEquiv,
-  createTooltipManager,
-  getCharacterTooltip,
-} from './uiService'
+export { formatRate, formatNumber, formatEquiv, getCharacterTooltip } from './uiService'
 
 // 導出字符集服務
 export {

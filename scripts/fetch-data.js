@@ -23,9 +23,6 @@ const FILES = [
   'charAbsoluteFrequencyGuji.json',
   'wordAbsoluteFrequencySC.json',
   'charsets.json',
-  'cjkBlocks.json',
-  'codeTableConfig.json',
-  'equivTable.json',
 ]
 
 /**
@@ -110,6 +107,7 @@ async function main() {
     console.log('')
     console.log('🎉 所有文件下載完成！')
     console.log('💡 現在可以運行 pnpm run dev 啟動開發服務器')
+    process.exit(0) // 顯式退出，避免卡住
   } catch (error) {
     console.error('')
     console.error('❌ 下載失敗:', error.message)

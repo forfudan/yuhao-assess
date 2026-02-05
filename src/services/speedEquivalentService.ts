@@ -6,12 +6,12 @@
 import type { CodeTable, CharFrequency } from '../types'
 
 /**
- * 計算碼對頻率
+ * 計算編碼對頻率
  * @param codeTable 碼表
  * @param charFrequency 字頻數據
  * @returns 碼對頻率數據
  */
-export function calculateCodePairFrequencies(
+export function 計算編碼對頻率(
   codeTable: CodeTable,
   charFrequency: Record<string, number>
 ): Record<string, number> {
@@ -69,7 +69,7 @@ export function calculateSpeedEquivFromCodeTable(
   charFrequency: Record<string, number>,
   equivTable: Record<string, number>
 ): number {
-  const pairFrequencies = calculateCodePairFrequencies(codeTable, charFrequency)
+  const pairFrequencies = 計算編碼對頻率(codeTable, charFrequency)
   return calculateSpeedEquiv(pairFrequencies, equivTable)
 }
 

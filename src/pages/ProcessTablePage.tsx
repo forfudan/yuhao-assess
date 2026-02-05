@@ -246,6 +246,7 @@ const ProcessTablePage: React.FC = () => {
                 </Link>
                 <Button
                   icon={<DownloadOutlined />}
+                  size="middle"
                   onClick={抓取碼表}
                   loading={加載中}
                   disabled={!當前方案.碼表元數據}
@@ -320,21 +321,19 @@ const ProcessTablePage: React.FC = () => {
           <div>
             <Title level={4}>文件預覽（共 {文件預覽數據.length} 行）</Title>
             <Table
-              dataSource={文件預覽數據.map((行, 索引) => ({ key: 索引, 行號: 索引 + 1, 內容: 行 }))}
+              dataSource={文件預覽數據.map((行, 索引) => ({ key: 索引, 行號: 索引 + 1, 内容: 行 }))}
               pagination={{
                 pageSize: 10,
                 showSizeChanger: true,
                 pageSizeOptions: ['10', '20', '50', '100'],
-                showTotal: (total) => `共 ${total} 行`,
+                showTotal: total => `共 ${total} 行`,
               }}
               columns={[
                 { title: '行號', dataIndex: '行號', width: 80 },
-                { 
-                  title: '內容', 
-                  dataIndex: '內容',
-                  render: (text: string) => (
-                    <span className="monospace-cell">{text}</span>
-                  ),
+                {
+                  title: '内容',
+                  dataIndex: '内容',
+                  render: (text: string) => <span className="monospace-cell">{text}</span>,
                 },
               ]}
             />
@@ -345,7 +344,7 @@ const ProcessTablePage: React.FC = () => {
         <Space>
           <Button
             type="primary"
-            size="large"
+            size="middle"
             icon={<ThunderboltOutlined />}
             onClick={開始解析}
             disabled={!當前方案 || !當前方案.碼表元數據 || !選中的文件 || 加載中}
@@ -354,7 +353,7 @@ const ProcessTablePage: React.FC = () => {
             {加載中 ? '解析中...' : '開始解析'}
           </Button>
           {(選中的文件 || 編碼預覽數據.length > 0) && (
-            <Button size="large" icon={<ReloadOutlined />} onClick={移除文件} disabled={加載中}>
+            <Button size="middle" icon={<ReloadOutlined />} onClick={移除文件} disabled={加載中}>
               重新選擇
             </Button>
           )}
@@ -391,7 +390,7 @@ const ProcessTablePage: React.FC = () => {
                 pageSize: 10,
                 showSizeChanger: true,
                 pageSizeOptions: ['10', '20', '50', '100'],
-                showTotal: (total) => `共 ${total} 個字符`,
+                showTotal: total => `共 ${total} 個字符`,
               }}
               columns={[
                 { title: '行號', render: (_: any, __: any, index: number) => index + 1, width: 60 },
