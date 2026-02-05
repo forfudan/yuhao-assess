@@ -12,7 +12,7 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const CDN_BASE = 'https://forfudan.github.io/yuhao-assess-data/'
+const CDN_BASE = 'https://zhuyuhao.com/yuhao-assess-data/'
 const TARGET_DIR = path.resolve(__dirname, '../public/data')
 
 // 需要下載的文件列表

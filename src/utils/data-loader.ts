@@ -6,7 +6,7 @@
  */
 
 // 數據倉庫 CDN 地址
-const DATA_CDN_URL = 'https://forfudan.github.io/yuhao-assess-data/'
+const DATA_CDN_URL = 'https://zhuyuhao.com/yuhao-assess-data/'
 
 // 根據環境決定數據源
 const DATA_BASE_URL = import.meta.env.DEV
