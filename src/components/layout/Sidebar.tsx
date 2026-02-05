@@ -29,44 +29,33 @@ const StyledSider = styled(Sider)`
 `
 
 const LogoContainer = styled.div<{ collapsed: boolean }>`
-  padding: ${props => (props.collapsed ? '16px 8px' : '16px')};
+  padding: ${props => (props.collapsed ? '16px 8px' : '20px 16px')};
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
   background: #001529;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
   img {
-    width: ${props => (props.collapsed ? '32px' : '40px')};
-    height: ${props => (props.collapsed ? '32px' : '40px')};
+    width: ${props => (props.collapsed ? '32px' : '48px')};
+    height: ${props => (props.collapsed ? '32px' : '48px')};
     transition: all 0.2s;
   }
 `
 
-const LogoTitle = styled.div<{ collapsed: boolean }>`
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  opacity: ${props => (props.collapsed ? '0' : '1')};
-  width: ${props => (props.collapsed ? '0' : 'auto')};
-  transition: all 0.2s;
-`
+// const CollapseTrigger = styled.div`
+//   padding: 16px;
+//   cursor: pointer;
+//   text-align: center;
+//   color: rgba(255, 255, 255, 0.65);
+//   background: #002140;
+//   transition: all 0.2s;
 
-const CollapseTrigger = styled.div`
-  padding: 16px;
-  cursor: pointer;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.65);
-  background: #002140;
-  transition: all 0.2s;
-
-  &:hover {
-    color: #fff;
-    background: #003366;
-  }
-`
+//   &:hover {
+//     color: #fff;
+//     background: #003366;
+//   }
+// `
 
 export interface SidebarProps {
   collapsed?: boolean
@@ -139,16 +128,18 @@ export function Sidebar({ collapsed = false, onCollapse }: SidebarProps) {
 
   const 當前路徑 = location.pathname
 
+  /**
+   * 朱按：摺疊功能暫時不考慮，故而把相關按鈕和狀態都註釋掉
+   */
   return (
-    <StyledSider collapsible collapsed={折疊狀態} trigger={null} width={180} theme="dark">
+    <StyledSider collapsible collapsed={折疊狀態} trigger={null} width={150} theme="dark">
       <LogoContainer collapsed={折疊狀態}>
         <img src="/logo_blue.png" alt="宇浩輸入法" />
-        <LogoTitle collapsed={折疊狀態}>輸入法測評系統</LogoTitle>
       </LogoContainer>
 
-      <CollapseTrigger onClick={切換折疊}>
+      {/* <CollapseTrigger onClick={切換折疊}>
         {折疊狀態 ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-      </CollapseTrigger>
+      </CollapseTrigger> */}
 
       <Menu
         theme="dark"

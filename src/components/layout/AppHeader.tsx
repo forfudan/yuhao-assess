@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom'
 import { Button, Space, Upload, message } from 'antd'
 import { DownloadOutlined, UploadOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons'
-import { useAtom, useSetAtom } from 'jotai'
+import { useAtom, useSetAtom, useAtomValue } from 'jotai'
 import styled from 'styled-components'
 import { 當前方案原子狀態 } from '@/atoms/scheme'
 import { 重碼分析原子狀態 } from '@/atoms/duplicate'
@@ -43,7 +43,13 @@ export function AppHeader() {
   const 設置候選個數分析結果 = useSetAtom(候選個數分析原子狀態)
   const 設置速度當量分析結果 = useSetAtom(速度當量分析原子狀態)
 
+  // 讀取分析結果用於導出
+  const 重碼分析結果 = useAtomValue(重碼分析原子狀態)
+  const 候選個數分析結果 = useAtomValue(候選個數分析原子狀態)
+  const 速度當量分析結果 = useAtomValue(速度當量分析原子狀態)
+
   const 當前頁面標題 = 頁面標題映射[location.pathname] || '未知頁面'
+  const 顯示標題 = 當前方案 ? 當前方案.元數據.方案名 : '未選擇方案'
 
   // 導入配置
   const 處理導入JSON = (file: RcFile): boolean => {
@@ -110,21 +116,35 @@ export function AppHeader() {
     }
 
     try {
-      // 合併方案配置和分析結果
+      // 直接導出，將 atom 的分析結果附加到方案配置
       const 導出數據 = {
         ...當前方案,
-        // 注意：這裏没有直接訪問分析結果的 atom，如果需要導出分析結果
-        // 需要在父組件傳入或使用 useAtomValue
+        重碼分析結果: 重碼分析結果, // 直接使用 atom 的結構
+        候選個數分析結果: 候選個數分析結果,
+        速度當量分析結果: 速度當量分析結果,
       }
 
-      const blob = new Blob([JSON.stringify(導出數據, null, 2)], { type: 'application/json' })
+      const json文本 = JSON.stringify(導出數據, null, 2)
+      const blob = new Blob([json文本], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${當前方案.元數據.方案名 || '方案配置'}.json`
+
+      // 文件名格式：標識符-作者名-版本號.json
+      const 作者 = 當前方案.元數據.作者 || 'unknown'
+      const 版本 = 當前方案.元數據.版本 || '1.0.0'
+      a.download = `${當前方案.元數據.標識符}-${作者}-${版本}.json`
+
       a.click()
       URL.revokeObjectURL(url)
-      message.success('配置已導出')
+
+      const 結果列表 = [
+        重碼分析結果 && '重碼分析',
+        候選個數分析結果 && '候選個數分析',
+        速度當量分析結果 && '速度當量分析',
+      ].filter(Boolean)
+      const 提示 = 結果列表.length > 0 ? `（包含${結果列表.join('、')}結果）` : ''
+      message.success(`方案配置已導出${提示}`)
     } catch (錯誤) {
       console.error('[AppHeader] 導出配置失敗:', 錯誤)
       message.error('導出配置失敗')
@@ -152,11 +172,11 @@ export function AppHeader() {
 
   return (
     <HeaderContainer>
-      <PageTitle>{當前頁面標題}</PageTitle>
+      <PageTitle>{顯示標題}</PageTitle>
       <Space>
-        <Upload beforeUpload={處理導入JSON} showUploadList={false} accept=".json">
+        <Upload beforeUpload={處理導入JSON} showUploadList={false} accept="application/json">
           <Button icon={<UploadOutlined />} size="small">
-            導入配置
+            導入
           </Button>
         </Upload>
         <Button
@@ -165,13 +185,13 @@ export function AppHeader() {
           disabled={!當前方案}
           size="small"
         >
-          導出配置
+          導出
         </Button>
         <Button icon={<PlusOutlined />} onClick={處理創建新方案} size="small">
-          創建方案
+          創建
         </Button>
         <Button icon={<DeleteOutlined />} onClick={處理清除所有} danger size="small">
-          清除所有
+          清除
         </Button>
       </Space>
     </HeaderContainer>
