@@ -1,5 +1,5 @@
 // 原始碼表類型定義 - 保持行順序
-export type RawCodeTable = Map<number, [string, string, number]> // number: 行號, [汉字, 編碼, N選]
+export type 原始碼表型别 = Map<number, [string, string, number]> // number: 行號, [汉字, 編碼, N選]
 
 // 碼表類型定義
 export type 碼表型别 = Map<string, string[]>
@@ -58,7 +58,7 @@ export interface CodeTableConfig {
 }
 
 // 當量表數據
-export interface EquivTable {
+export interface 當量表介面 {
   name: string
   description: string
   source: string
@@ -86,7 +86,10 @@ export interface 分析參數介面 {
   字符集?: Set<string> | 'all'
 }
 
-// 碼表指標結果
+/** 碼表指標結果
+ *
+ * 朱按：這個函數可以考慮移除
+ */
 export interface CodeTableMetrics {
   // 重碼指標
   staticDupCount: number // 靜態重碼字符數
@@ -102,29 +105,6 @@ export interface CodeTableMetrics {
     minCodeLength: number // 最短編碼長度
     maxCodeLength: number // 最長編碼長度
   }
-}
-
-// 字符集類型
-export type 字符集型别 =
-  | 'gb2312'
-  | 'common'
-  | 'gbk'
-  | 'cjk-basic'
-  | 'cjk-a'
-  | 'cjk-b'
-  | 'cjk-d'
-  | 'cjk-f'
-
-// 重碼統計結果
-export interface DuplicateStats {
-  charset: 字符集型别
-  charsetName: string
-  description: string
-  totalChars: number
-  duplicateCount: number
-  duplicateRate: number
-  uniqueCodes: number
-  codeEfficiency: number
 }
 
 // 碼表清理選項

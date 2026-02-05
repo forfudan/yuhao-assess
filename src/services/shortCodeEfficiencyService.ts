@@ -1,14 +1,25 @@
 import type { 頻率數據型别 } from '../types'
 
-interface CodeTableRow {
+/**
+ * 碼表條目介面
+ *
+ * 表示碼表中的一行數據，包含漢字和對應的編碼
+ */
+interface 碼表條目介面 {
   char: string
   code: string
 }
 
-interface EfficiencyResult {
-  N: number
-  efficiency: number
-  selectedChars: string[]
+/**
+ * 簡碼效率結果介面
+ *
+ * 表示簡碼效率分析的結果，包括最有效率簡碼個數、簡碼效率數值和對應的字符列表
+ */
+
+interface 簡碼效率結果介面 {
+  最有效率的簡碼個數: number
+  簡碼效率值: number
+  對應字符列表: string[]
 }
 
 /**
@@ -19,22 +30,26 @@ interface EfficiencyResult {
  * @param isPrefix 是否爲前綴碼方案
  */
 export function calculateShortCodeEfficiency(
-  codeTable: CodeTableRow[],
+  codeTable: 碼表條目介面[],
   charFrequency: 頻率數據型别,
   maxLen: number = 4,
   isPrefix: boolean = false
-): EfficiencyResult[] {
+): 簡碼效率結果介面[] {
   const processedData = preprocessCodeTable(codeTable, charFrequency, maxLen, isPrefix)
 
-  const nValues = [0, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
-  const results: EfficiencyResult[] = []
+  const 最有效率的簡碼個數列表 = [0, 25, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+  const 結果: 簡碼效率結果介面[] = []
 
-  for (const N of nValues) {
-    const result = calculateEfficiencyForN(processedData, N, maxLen)
-    results.push({ N, efficiency: result.efficiency, selectedChars: result.selectedChars })
+  for (const 最有效率的簡碼個數 of 最有效率的簡碼個數列表) {
+    const 簡碼效率結果 = calculateEfficiencyForN(processedData, 最有效率的簡碼個數, maxLen)
+    結果.push({
+      最有效率的簡碼個數,
+      簡碼效率值: 簡碼效率結果.efficiency,
+      對應字符列表: 簡碼效率結果.selectedChars,
+    })
   }
 
-  return results
+  return 結果
 }
 
 interface ProcessedChar {
@@ -49,13 +64,13 @@ interface ProcessedChar {
 }
 
 function preprocessCodeTable(
-  codeTable: CodeTableRow[],
+  codeTable: 碼表條目介面[],
   charFrequency: 頻率數據型别,
   maxLen: number,
   isPrefix: boolean
 ): ProcessedChar[] {
   // 按漢字分組，處理簡碼和全碼
-  const charMap = new Map<string, CodeTableRow[]>()
+  const charMap = new Map<string, 碼表條目介面[]>()
 
   for (const row of codeTable) {
     // 過濾條件：
@@ -187,7 +202,7 @@ function calculateEfficiencyForN(
  * 計算全碼平均長度（N=0時的基準）
  */
 export function calculateFullCodeAverageLength(
-  codeTable: CodeTableRow[],
+  codeTable: 碼表條目介面[],
   charFrequency: 頻率數據型别,
   maxLen: number = 4,
   isPrefix: boolean = false
@@ -200,7 +215,7 @@ export function calculateFullCodeAverageLength(
  * 計算簡碼平均長度（全部使用簡碼）
  */
 export function calculateShortCodeAverageLength(
-  codeTable: CodeTableRow[],
+  codeTable: 碼表條目介面[],
   charFrequency: 頻率數據型别,
   maxLen: number = 4,
   isPrefix: boolean = false

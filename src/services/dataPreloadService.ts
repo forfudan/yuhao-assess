@@ -4,7 +4,7 @@ import { 數據預加載狀態原子 } from '../atoms/dataPreload'
 import { 字頻表服務類别 } from './charFrequencyService'
 import { 加載JSON數據文件 } from '../utils/data-loader'
 import { 字符集數據原子狀態 } from '../atoms/charset'
-import type { CharsetData } from '../atoms/charset'
+import type { 字符集數據型别 } from '../atoms/charset'
 
 /**
  * 數據預加載服務
@@ -64,7 +64,7 @@ export class 數據預加載服務類别 {
     const existing = store.get(字符集數據原子狀態)
     if (existing) return
 
-    const data = await 加載JSON數據文件<CharsetData>('charsets.json')
+    const data = await 加載JSON數據文件<字符集數據型别>('charsets.json')
     store.set(字符集數據原子狀態, data)
   }
 

@@ -28,7 +28,7 @@ export type { 字頻表類型 } from './charFrequency'
 
 // 字符集原子狀態
 export { 字符集數據原子狀態, CJK區塊數據原子狀態 } from './charset'
-export type { CharsetData, CharsetRecord, CJKBlockData } from './charset'
+export type { 字符集數據型别, 字符集記録型别, CJK區塊數據型别 } from './charset'
 
 // 速度當量分析原子狀態
 export { 速度當量分析原子狀態, 當量詳情原子狀態 } from './speedEquivalent'

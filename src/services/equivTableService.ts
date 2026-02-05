@@ -5,21 +5,21 @@
 
 import { getDefaultStore } from 'jotai'
 import { 當量表原子狀態, 當量表加載中原子狀態, 當量表錯誤原子狀態 } from '../atoms/equivTable'
-import type { EquivTable } from '../types'
+import type { 當量表介面 } from '../types'
 
 /**
  * 當量表服務類
  */
-export class 當量表服務 {
-  private static instance: 當量表服務
+export class 當量表服務類 {
+  private static instance: 當量表服務類
 
   private constructor() {}
 
-  static getInstance(): 當量表服務 {
-    if (!當量表服務.instance) {
-      當量表服務.instance = new 當量表服務()
+  static getInstance(): 當量表服務類 {
+    if (!當量表服務類.instance) {
+      當量表服務類.instance = new 當量表服務類()
     }
-    return 當量表服務.instance
+    return 當量表服務類.instance
   }
 
   /**
@@ -42,7 +42,7 @@ export class 當量表服務 {
       if (!響應.ok) {
         throw new Error(`HTTP error! status: ${響應.status}`)
       }
-      const result: EquivTable = await 響應.json()
+      const result: 當量表介面 = await 響應.json()
       const 當量表數據 = result.data || {}
 
       store.set(當量表原子狀態, 當量表數據)
@@ -75,4 +75,4 @@ export class 當量表服務 {
 }
 
 // 導出單例實例
-export const 當量表服務實例 = 當量表服務.getInstance()
+export const 當量表服務實例 = 當量表服務類.getInstance()

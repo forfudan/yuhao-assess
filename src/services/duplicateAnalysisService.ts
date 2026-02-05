@@ -3,23 +3,20 @@
  * 處理重碼率計算、重碼統計和重碼報告生成
  */
 
-import { generateCharset, type 字符集型别, charsetInfo } from './charsetService'
+import { 過濾自定義字符集, type 預設字符集名稱型别, charsetInfo } from './charsetService'
 import type { 碼表型别, 頻率數據型别, 頻數數據型别 } from '../types/index'
 
 /**
  * 計算某個字符集下的靜態重碼數
- * @param codeTable 碼表（每個字符對應唯一編碼）
- * @param charset 字符集，可以是字符集合或 'all' 表示全部字符
+ * @param 碼表 碼表（每個字符對應唯一編碼）
+ * @param 字符集 字符集，可以是字符集合或 'all' 表示全部字符
  * @returns 靜態重碼的字符數量
  */
-export function getStaticDupRate(
-  codeTable: 碼表型别,
-  charset: Set<string> | 'all' = 'all'
-): number {
+export function 計算靜態重碼數(碼表: 碼表型别, 字符集: Set<string> | 'all' = 'all'): number {
   const codeToChars = new Map<string, string[]>()
 
-  for (const [char, codes] of codeTable.entries()) {
-    if (charset !== 'all' && !charset.has(char)) {
+  for (const [char, codes] of 碼表.entries()) {
+    if (字符集 !== 'all' && !字符集.has(char)) {
       continue
     }
 
@@ -44,22 +41,22 @@ export function getStaticDupRate(
 
 /**
  * 計算某個字頻數據下的動態選重率
- * @param codeTable 碼表（每個字符對應唯一編碼）
- * @param charFrequency 字頻數據
- * @param sortByFrequency 是否按字頻重新排序，false 表示保持原始碼表排序
+ * @param 碼表 碼表（每個字符對應唯一編碼）
+ * @param 字頻數據 字頻數據
+ * @param 是否按字頻排序 是否按字頻重新排序，false 表示保持原始碼表排序
  * @returns 動態重碼率（0-1之間的小數）
  */
-export function getDynamicDupRate(
-  codeTable: 碼表型别,
-  charFrequency: 頻率數據型别,
-  sortByFrequency: boolean = true
+export function 計算動態選重率(
+  碼表: 碼表型别,
+  字頻數據: 頻率數據型别,
+  是否按字頻排序: boolean = true
 ): number {
   const codeToCharFreqs = new Map<string, Array<{ char: string; freq: number }>>()
 
-  for (const [char, codes] of codeTable.entries()) {
+  for (const [char, codes] of 碼表.entries()) {
     const code = codes[0]
     if (code) {
-      const freq = charFrequency[char] || 0
+      const freq = 字頻數據[char] || 0
 
       if (!codeToCharFreqs.has(code)) {
         codeToCharFreqs.set(code, [])
@@ -72,7 +69,7 @@ export function getDynamicDupRate(
 
   for (const charFreqs of codeToCharFreqs.values()) {
     if (charFreqs.length > 1) {
-      if (sortByFrequency) {
+      if (是否按字頻排序) {
         charFreqs.sort((a, b) => b.freq - a.freq)
       }
 
@@ -85,32 +82,29 @@ export function getDynamicDupRate(
   }
 
   let totalFreq = 0
-  for (const [char] of codeTable.entries()) {
-    totalFreq += charFrequency[char] || 0
+  for (const [char] of 碼表.entries()) {
+    totalFreq += 字頻數據[char] || 0
   }
 
   return totalFreq > 0 ? totalDupFreq / totalFreq : 0
 }
 
 /**
- * 從原始順序的碼表（帶選重鍵）計算動態選重率
+ * 從原始碼表（爲經過排序，帶選重鍵）計算動態選重率
  * 適用於 fullWithSelection 和 shortWithSelection 碼表
- * @param codeTableWithSelection 帶選重鍵的碼表（編碼末尾包含選重數字 2-9）
- * @param charFrequency 字頻數據
+ * @param 全碼加選重鍵表 帶選重鍵的碼表（編碼末尾包含選重數字 2-9）
+ * @param 字頻數據 字頻數據
  * @returns 動態重碼率（0-1之間的小數）
  */
-export function getDynamicDupRateFromOriginalOrder(
-  codeTableWithSelection: 碼表型别,
-  charFrequency: 頻率數據型别
-): number {
+export function 計算原始碼表的動態選重率(全碼加選重鍵表: 碼表型别, 字頻數據: 頻率數據型别): number {
   let totalDupFreq = 0
   let totalFreq = 0
 
-  for (const [char, codes] of codeTableWithSelection.entries()) {
+  for (const [char, codes] of 全碼加選重鍵表.entries()) {
     const code = codes[0]
     if (!code) continue
 
-    const freq = charFrequency[char] || 0
+    const freq = 字頻數據[char] || 0
     totalFreq += freq
 
     // 檢查編碼最後一位是否爲數字 0-9（表示需要選重）
@@ -124,15 +118,23 @@ export function getDynamicDupRateFromOriginalOrder(
 
   return totalFreq > 0 ? totalDupFreq / totalFreq : 0
 }
-
-export interface DuplicateStats {
-  charset: 字符集型别
+/**
+ * 某字符集的重碼數據介面
+ */
+export interface 某字符集的重碼數據介面 {
+  /** 指定的字符集 */
+  charset: 預設字符集名稱型别
+  /** 字符集名稱 */
   charsetName: string
   description: string
   totalChars: number
-  duplicateCount: number // 重碼字數（所有重碼字符的總數）
-  duplicateGroupCount: number // 重碼組數（有多少個編碼存在重碼）
+  /** 重碼字數（所有重碼字符的總數） */
+  duplicateCount: number
+  /** 重碼組數（有多少個編碼存在重碼） */
+  duplicateGroupCount: number
+  /** 重碼字佔全部字符數量的比例 */
   duplicateRate: number
+  /** 唯一編碼數量 */
   uniqueCodes: number
   codeEfficiency: number
 }
@@ -340,21 +342,21 @@ export function getNonFirstWordDuplicateDetails(
 }
 
 /**
- * 計算指定字符集的重碼統計
+ * 計算某字符集的重碼數據
  * @param 全碼表 單字全碼表
  * @param 字符集 字符集類型
  * @returns 重碼統計結果
  */
-export async function calculateCharsetDuplicates(
+export async function 計算某字符集的重碼數據(
   全碼表: 碼表型别,
-  字符集: 字符集型别
-): Promise<DuplicateStats> {
+  字符集: 預設字符集名稱型别
+): Promise<某字符集的重碼數據介面> {
   const allChars = new Set(全碼表.keys())
-  console.log(`[calculateCharsetDuplicates] charsetType: ${字符集}, 碼表總字數: ${allChars.size}`)
+  console.log(`[某字符集的重碼數據介面] charsetType: ${字符集}, 碼表總字數: ${allChars.size}`)
 
-  const charset = await generateCharset(字符集, allChars)
+  const charset = await 過濾自定義字符集(字符集, allChars)
   console.log(
-    `[calculateCharsetDuplicates] 生成字符集大小: ${charset.size}, 前10個字符:`,
+    `[某字符集的重碼數據介面] 生成字符集大小: ${charset.size}, 前10個字符:`,
     Array.from(charset).slice(0, 10)
   )
 

@@ -4,19 +4,24 @@
  */
 
 import { isInCJKToJ, loadCJKBlockData } from './charsetService'
-import type { 碼表型别, RawCodeTable, 頻率數據型别, 處理後的碼表結果介面 } from '../types'
+import type { 碼表型别, 原始碼表型别, 頻率數據型别, 處理後的碼表結果介面 } from '../types'
 
 // =============================================================================
 // 類型定義
 // =============================================================================
 
 /**
- * 碼表處理選項
+ * 碼表處理選項介面
+ *
+ * @property 是否爲前綴碼 是否將碼表處理爲前綴碼
+ * @property 最大碼長 最大碼長
+ * @property 前綴鍵列表 前綴碼專用的前綴鍵列表
  */
-export interface 碼表處理選項 {
+export interface 碼表處理選項介面 {
+  /** 是否爲前綴碼 */
   是否爲前綴碼?: boolean // 是否爲前綴碼
   最大碼長?: number // 最大碼長
-  前綴鍵列表?: string[] // 前綴鍵列表
+  前綴鍵列表?: string[] // 前綴碼專用的前綴鍵列表
 }
 
 // =============================================================================
@@ -30,7 +35,7 @@ export interface 碼表處理選項 {
 export class 碼表處理服務 {
   private static 實例: 碼表處理服務
   private 已處理碼表: 處理後的碼表結果介面 | null = null
-  private 處理選項: 碼表處理選項 | null = null
+  private 處理選項: 碼表處理選項介面 | null = null
 
   private constructor() {}
 
@@ -55,11 +60,11 @@ export class 碼表處理服務 {
     文本: string,
     分隔符: '空格' | '製表符' | '逗號' | '分號',
     第一列類型: '字符' | '編碼'
-  ): Promise<{ rawCodeTable: RawCodeTable }> {
+  ): Promise<{ rawCodeTable: 原始碼表型别 }> {
     // 先加載 CJK 區塊數據，確保 isInCJKToJ 可以正常工作
     await loadCJKBlockData()
 
-    const rawCodeTable: RawCodeTable = new Map()
+    const rawCodeTable: 原始碼表型别 = new Map()
     const 行數組 = 文本.split('\n')
     let 行索引 = 0
 
@@ -149,12 +154,12 @@ export class 碼表處理服務 {
 
   /**
    * 處理原始碼表，生成四個輔助碼表
-   * @param rawCodeTable 原始碼表（行號 -> [字符, 編碼, N選]）
+   * @param 原始碼表 原始碼表（行號 -> [字符, 編碼, N選]）
    * @param options 處理選項
    */
   async 處理原始碼表(
-    rawCodeTable: RawCodeTable,
-    options?: 碼表處理選項
+    原始碼表: 原始碼表型别,
+    options?: 碼表處理選項介面
   ): Promise<處理後的碼表結果介面> {
     const 是否爲前綴碼 = options?.是否爲前綴碼 || false
     const prefixKeys = options?.前綴鍵列表
@@ -171,7 +176,7 @@ export class 碼表處理服務 {
 
     // 計算全局最大碼長
     let globalMaxLength = 0
-    for (const [, [, code]] of rawCodeTable) {
+    for (const [, [, code]] of 原始碼表) {
       globalMaxLength = Math.max(globalMaxLength, code.length)
     }
     const maxLength = options?.最大碼長 || globalMaxLength || 4
@@ -179,8 +184,8 @@ export class 碼表處理服務 {
     // 保存處理選項
     this.處理選項 = { 是否爲前綴碼, 最大碼長: maxLength, 前綴鍵列表: prefixKeys }
 
-    // 按行號順序遍歷 rawCodeTable
-    const sortedEntries = Array.from(rawCodeTable.entries()).sort((a, b) => a[0] - b[0])
+    // 按行號順序遍歷 原始碼表
+    const sortedEntries = Array.from(原始碼表.entries()).sort((a, b) => a[0] - b[0])
 
     for (const [, [char, code, position]] of sortedEntries) {
       // 只處理單個 CJK 漢字
@@ -465,7 +470,7 @@ export class 碼表處理服務 {
   /**
    * 獲取處理選項
    */
-  獲取處理選項(): 碼表處理選項 | null {
+  獲取處理選項(): 碼表處理選項介面 | null {
     return this.處理選項
   }
 

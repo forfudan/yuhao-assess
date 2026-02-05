@@ -1,7 +1,7 @@
 // 導入 Jotai atom
 import { getDefaultStore } from 'jotai'
 import { 字符集數據原子狀態, CJK區塊數據原子狀態 } from '../atoms/charset'
-import type { CharsetData, CJKBlockData } from '../atoms/charset'
+import type { 字符集數據型别, CJK區塊數據型别 } from '../atoms/charset'
 import { 加載JSON數據文件 } from '../utils/data-loader'
 
 // 加載字符集數據（使用 atom 全局緩存）
@@ -10,7 +10,7 @@ async function loadCharsetData(): Promise<void> {
   const existing = store.get(字符集數據原子狀態)
   if (existing) return
 
-  const data = await 加載JSON數據文件<CharsetData>('charsets.json')
+  const data = await 加載JSON數據文件<字符集數據型别>('charsets.json')
   store.set(字符集數據原子狀態, data)
 }
 
@@ -22,8 +22,8 @@ export async function loadCJKBlockData(): Promise<void> {
 
   // cjkBlocks.json 在 settings 文件夹，不在 data 文件夹
   const response = await fetch('/settings/cjkBlocks.json')
-  const data = (await response.json()) as CJKBlockData
-  store.set(CJK區塊數據原子狀態, data)
+  const CJK區塊數據 = (await response.json()) as CJK區塊數據型别
+  store.set(CJK區塊數據原子狀態, CJK區塊數據)
 }
 
 // 字符集檢查函數
@@ -306,7 +306,7 @@ export function isInCJKToJ(char: string): boolean {
 }
 
 // 字符集檢查器映射
-export const charsetCheckers = {
+export const 預設字符集檢查器映射 = {
   gb2312: isInGB2312,
   tonggui: isInTonggui,
   guozi: isInGuozi,
@@ -334,10 +334,10 @@ export const charsetCheckers = {
   cjk_to_j: isInCJKToJ,
 }
 
-export type 字符集型别 = keyof typeof charsetCheckers
+export type 預設字符集名稱型别 = keyof typeof 預設字符集檢查器映射
 
 // 字符集信息
-export const charsetInfo: Record<字符集型别, { name: string; description: string }> = {
+export const charsetInfo: Record<預設字符集名稱型别, { name: string; description: string }> = {
   gb2312: { name: 'GB2312', description: 'GB2312 簡體中文字符集' },
   tonggui: { name: '通用規範漢字表', description: '通用規範漢字表' },
   guozi: { name: '常用國字', description: '常用國字標準字體表' },
@@ -366,7 +366,7 @@ export const charsetInfo: Record<字符集型别, { name: string; description: s
 }
 
 // 獲取字符集大小的函數
-export async function getCharsetSize(charsetType: 字符集型别): Promise<number> {
+export async function getCharsetSize(charsetType: 預設字符集名稱型别): Promise<number> {
   await loadCharsetData()
   const store = getDefaultStore()
   const charsetData = store.get(字符集數據原子狀態)
@@ -392,7 +392,7 @@ export async function getCharsetSize(charsetType: 字符集型别): Promise<numb
 }
 
 // 獲取理論字符集大小
-export async function getTheoreticalCharsetSize(charsetType: 字符集型别): Promise<number> {
+export async function getTheoreticalCharsetSize(charsetType: 預設字符集名稱型别): Promise<number> {
   await loadCJKBlockData()
 
   switch (charsetType) {
@@ -558,15 +558,24 @@ export async function getTheoreticalCharsetSize(charsetType: 字符集型别): P
   }
 }
 
-export async function generateCharset(
-  charsetType: 字符集型别,
-  allChars: Set<string>
+/**
+ * 過濾自定義字符集
+ * 從一個自定義字符集合中，過濾出存在於預設字符集中的字符。
+ * @param 預設字符集，可以是 "gb2312"、"tonggui"、"guozi" 或 CJK 區塊類型
+ * @param 自定義字符集
+ * @returns 過濾後的字符集
+ */
+export async function 過濾自定義字符集(
+  預設字符集: 預設字符集名稱型别,
+  自定義字符集: Set<string>
 ): Promise<Set<string>> {
   const charset = new Set<string>()
-  console.log(`[generateCharset] charsetType: ${charsetType}, allChars.size: ${allChars.size}`)
+  console.log(
+    `[過濾自定義字符集] 預設字符集: ${預設字符集}, 自定義字符集大小: ${自定義字符集.size}`
+  )
 
   // 對於 gb2312、tonggui 和 guozi，直接從字符集數據中過濾
-  if (charsetType === 'gb2312' || charsetType === 'tonggui' || charsetType === 'guozi') {
+  if (預設字符集 === 'gb2312' || 預設字符集 === 'tonggui' || 預設字符集 === 'guozi') {
     await loadCharsetData()
     const store = getDefaultStore()
     const charsetData = store.get(字符集數據原子狀態)
@@ -575,34 +584,34 @@ export async function generateCharset(
     )
     if (!charsetData) return charset
 
-    for (const char of allChars) {
+    for (const char of 自定義字符集) {
       const record = charsetData[char]
       if (record) {
-        if (charsetType === 'gb2312' && record.is_gb2312) {
+        if (預設字符集 === 'gb2312' && record.is_gb2312) {
           charset.add(char)
-        } else if (charsetType === 'tonggui' && record.is_tonggui) {
+        } else if (預設字符集 === 'tonggui' && record.is_tonggui) {
           charset.add(char)
-        } else if (charsetType === 'guozi' && record.is_guozi) {
+        } else if (預設字符集 === 'guozi' && record.is_guozi) {
           charset.add(char)
         }
       }
     }
-    console.log(`[generateCharset] ${charsetType} 過濾後字符集大小: ${charset.size}`)
+    console.log(`[過濾自定義字符集] ${預設字符集} 過濾後字符集大小: ${charset.size}`)
   } else {
     // 對於其他字符集，加載CJK塊數據並使用Unicode範圍檢查
     await loadCJKBlockData()
-    const checker = charsetCheckers[charsetType]
+    const checker = 預設字符集檢查器映射[預設字符集]
     if (!checker) {
-      console.error(`找不到字符集檢查器: ${charsetType}`)
+      console.error(`找不到字符集檢查器: ${預設字符集}`)
       return charset
     }
 
-    for (const char of allChars) {
+    for (const char of 自定義字符集) {
       if (checker(char)) {
         charset.add(char)
       }
     }
-    console.log(`[generateCharset] ${charsetType} CJK區塊過濾後字符集大小: ${charset.size}`)
+    console.log(`[過濾自定義字符集] ${預設字符集} CJK區塊過濾後字符集大小: ${charset.size}`)
   }
 
   return charset

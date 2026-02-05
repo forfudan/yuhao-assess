@@ -4,11 +4,11 @@
 
 // 重碼分析服務
 export {
-  getStaticDupRate,
-  getDynamicDupRate,
-  getDynamicDupRateFromOriginalOrder,
-  calculateCharsetDuplicates,
-  type DuplicateStats,
+  計算靜態重碼數,
+  計算動態選重率,
+  計算原始碼表的動態選重率,
+  計算某字符集的重碼數據,
+  type 某字符集的重碼數據介面,
 } from './duplicateAnalysisService'
 
 // 速度分析服務
@@ -28,7 +28,7 @@ export {
   清理碼表,
   驗證碼表,
   獲取碼表統計,
-  type 碼表處理選項,
+  type 碼表處理選項介面,
   type 碼表清理選項,
   type 清理結果,
 } from './codeTableService'
@@ -36,7 +36,7 @@ export {
 export type { 處理後的碼表結果介面 } from '../types'
 
 // 導出當量表服務
-export { 當量表服務, 當量表服務實例 } from './equivTableService'
+export { 當量表服務類, 當量表服務實例 } from './equivTableService'
 
 // 導出字頻表服務
 export { 字頻表服務類别 } from './charFrequencyService'
@@ -70,11 +70,11 @@ export {
   isInCJKToG,
   isInCJKToH,
   isInCJKToI,
-  charsetCheckers,
+  預設字符集檢查器映射,
   charsetInfo,
   getCharsetSize,
   getTheoreticalCharsetSize,
-  generateCharset,
+  過濾自定義字符集,
 } from './charsetService'
 
 // 導出最大候選數服務
@@ -92,4 +92,4 @@ export {
 } from './shortCodeEfficiencyService'
 
 // 導出類型
-export type { 分析參數介面, CodeTableMetrics, 字符集型别 } from '../types/index'
+export type { 分析參數介面 } from '../types/index'

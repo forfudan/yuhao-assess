@@ -12,7 +12,7 @@ import type { RcFile } from 'antd/es/upload'
 import { 當前方案原子狀態 } from '@/atoms/scheme'
 import { 原始碼表原子狀態, 碼表原子狀態, 碼表元數據原子狀態, 碼表加載中原子狀態 } from '@/atoms'
 import { 碼表處理服務實例 } from '@/services/codeTableService'
-import type { RawCodeTable } from '@/types'
+import type { 原始碼表型别 } from '@/types'
 
 const { Title, Paragraph, Text, Link } = Typography
 const { Option } = Select
@@ -57,7 +57,7 @@ const ProcessTablePage: React.FC = () => {
   }
 
   // 處理碼表（共用邏輯）
-  const 處理碼表 = async (原始碼表: RawCodeTable, _文件名: string) => {
+  const 處理碼表 = async (原始碼表: 原始碼表型别, _文件名: string) => {
     // 處理前綴按鍵
     const 前綴按鍵數組 =
       當前方案!.方案參數.是否爲前綴碼 && 當前方案!.方案參數.前綴鍵

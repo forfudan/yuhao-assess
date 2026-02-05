@@ -7,9 +7,9 @@ import { 碼表原子狀態 } from '../atoms/codeTable'
 import { 重碼分析原子狀態 } from '../atoms/duplicate'
 import type { 重碼分析結果 } from '../atoms/duplicate'
 import {
-  getDynamicDupRate,
-  getDynamicDupRateFromOriginalOrder,
-  calculateCharsetDuplicates,
+  計算動態選重率,
+  計算原始碼表的動態選重率,
+  計算某字符集的重碼數據,
 } from '../services/duplicateAnalysisService'
 import { 字頻表服務類别 } from '../services/charFrequencyService'
 import type { 碼表型别, 處理後的碼表結果介面 } from '../types'
@@ -137,54 +137,54 @@ const DuplicatePage: React.FC = () => {
 
       // ========== 動態選重率（按字頻重排） ==========
       const 知乎簡體動態選重率 = {
-        全碼: getDynamicDupRate(全碼表, 知乎字頻, true),
-        簡碼: getDynamicDupRate(簡碼表, 知乎字頻, true),
+        全碼: 計算動態選重率(全碼表, 知乎字頻, true),
+        簡碼: 計算動態選重率(簡碼表, 知乎字頻, true),
       }
 
       const 北語簡體動態選重率 = {
-        全碼: getDynamicDupRate(全碼表, 北語字頻, true),
-        簡碼: getDynamicDupRate(簡碼表, 北語字頻, true),
+        全碼: 計算動態選重率(全碼表, 北語字頻, true),
+        簡碼: 計算動態選重率(簡碼表, 北語字頻, true),
       }
 
       const 臺標繁體動態選重率 = {
-        全碼: getDynamicDupRate(全碼表, 臺標字頻, true),
-        簡碼: getDynamicDupRate(簡碼表, 臺標字頻, true),
+        全碼: 計算動態選重率(全碼表, 臺標字頻, true),
+        簡碼: 計算動態選重率(簡碼表, 臺標字頻, true),
       }
 
       const 古籍繁體動態選重率 = {
-        全碼: getDynamicDupRate(全碼表, 古籍字頻, true),
-        簡碼: getDynamicDupRate(簡碼表, 古籍字頻, true),
+        全碼: 計算動態選重率(全碼表, 古籍字頻, true),
+        簡碼: 計算動態選重率(簡碼表, 古籍字頻, true),
       }
 
       const 繁簡聯合動態選重率 = {
-        全碼: getDynamicDupRate(全碼表, 繁簡聯合字頻, true),
-        簡碼: getDynamicDupRate(簡碼表, 繁簡聯合字頻, true),
+        全碼: 計算動態選重率(全碼表, 繁簡聯合字頻, true),
+        簡碼: 計算動態選重率(簡碼表, 繁簡聯合字頻, true),
       }
 
       // ========== 動態選重率（保持原序） ==========
       const 知乎簡體動態選重率原序 = {
-        全碼: getDynamicDupRateFromOriginalOrder(全碼加選重鍵表, 知乎字頻),
-        簡碼: getDynamicDupRateFromOriginalOrder(簡碼加選重鍵表, 知乎字頻),
+        全碼: 計算原始碼表的動態選重率(全碼加選重鍵表, 知乎字頻),
+        簡碼: 計算原始碼表的動態選重率(簡碼加選重鍵表, 知乎字頻),
       }
 
       const 北語簡體動態選重率原序 = {
-        全碼: getDynamicDupRateFromOriginalOrder(全碼加選重鍵表, 北語字頻),
-        簡碼: getDynamicDupRateFromOriginalOrder(簡碼加選重鍵表, 北語字頻),
+        全碼: 計算原始碼表的動態選重率(全碼加選重鍵表, 北語字頻),
+        簡碼: 計算原始碼表的動態選重率(簡碼加選重鍵表, 北語字頻),
       }
 
       const 臺標繁體動態選重率原序 = {
-        全碼: getDynamicDupRateFromOriginalOrder(全碼加選重鍵表, 臺標字頻),
-        簡碼: getDynamicDupRateFromOriginalOrder(簡碼加選重鍵表, 臺標字頻),
+        全碼: 計算原始碼表的動態選重率(全碼加選重鍵表, 臺標字頻),
+        簡碼: 計算原始碼表的動態選重率(簡碼加選重鍵表, 臺標字頻),
       }
 
       const 古籍繁體動態選重率原序 = {
-        全碼: getDynamicDupRateFromOriginalOrder(全碼加選重鍵表, 古籍字頻),
-        簡碼: getDynamicDupRateFromOriginalOrder(簡碼加選重鍵表, 古籍字頻),
+        全碼: 計算原始碼表的動態選重率(全碼加選重鍵表, 古籍字頻),
+        簡碼: 計算原始碼表的動態選重率(簡碼加選重鍵表, 古籍字頻),
       }
 
       const 繁簡聯合動態選重率原序 = {
-        全碼: getDynamicDupRateFromOriginalOrder(全碼加選重鍵表, 繁簡聯合字頻),
-        簡碼: getDynamicDupRateFromOriginalOrder(簡碼加選重鍵表, 繁簡聯合字頻),
+        全碼: 計算原始碼表的動態選重率(全碼加選重鍵表, 繁簡聯合字頻),
+        簡碼: 計算原始碼表的動態選重率(簡碼加選重鍵表, 繁簡聯合字頻),
       }
 
       // ========== 靜態重碼 ==========
@@ -205,20 +205,20 @@ const DuplicatePage: React.FC = () => {
         CJKI數據全碼,
         CJKJ數據全碼,
       ] = await Promise.all([
-        calculateCharsetDuplicates(全碼表, 'gb2312'),
-        calculateCharsetDuplicates(全碼表, 'tonggui'),
-        calculateCharsetDuplicates(全碼表, 'guozi'),
-        calculateCharsetDuplicates(全碼表, 'cjk_basic'),
-        calculateCharsetDuplicates(全碼表, 'cjk_to_a'),
-        calculateCharsetDuplicates(全碼表, 'cjk_to_b'),
-        calculateCharsetDuplicates(全碼表, 'cjk_to_c'),
-        calculateCharsetDuplicates(全碼表, 'cjk_to_d'),
-        calculateCharsetDuplicates(全碼表, 'cjk_to_e'),
-        calculateCharsetDuplicates(全碼表, 'cjk_to_f'),
-        calculateCharsetDuplicates(全碼表, 'cjk_to_g'),
-        calculateCharsetDuplicates(全碼表, 'cjk_to_h'),
-        calculateCharsetDuplicates(全碼表, 'cjk_to_i'),
-        calculateCharsetDuplicates(全碼表, 'cjk_to_j'),
+        計算某字符集的重碼數據(全碼表, 'gb2312'),
+        計算某字符集的重碼數據(全碼表, 'tonggui'),
+        計算某字符集的重碼數據(全碼表, 'guozi'),
+        計算某字符集的重碼數據(全碼表, 'cjk_basic'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_a'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_b'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_c'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_d'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_e'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_f'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_g'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_h'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_i'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_j'),
       ])
 
       // 簡碼表計算
@@ -238,20 +238,20 @@ const DuplicatePage: React.FC = () => {
         CJKI數據簡碼,
         CJKJ數據簡碼,
       ] = await Promise.all([
-        calculateCharsetDuplicates(簡碼表, 'gb2312'),
-        calculateCharsetDuplicates(簡碼表, 'tonggui'),
-        calculateCharsetDuplicates(簡碼表, 'guozi'),
-        calculateCharsetDuplicates(簡碼表, 'cjk_basic'),
-        calculateCharsetDuplicates(簡碼表, 'cjk_to_a'),
-        calculateCharsetDuplicates(簡碼表, 'cjk_to_b'),
-        calculateCharsetDuplicates(簡碼表, 'cjk_to_c'),
-        calculateCharsetDuplicates(簡碼表, 'cjk_to_d'),
-        calculateCharsetDuplicates(簡碼表, 'cjk_to_e'),
-        calculateCharsetDuplicates(簡碼表, 'cjk_to_f'),
-        calculateCharsetDuplicates(簡碼表, 'cjk_to_g'),
-        calculateCharsetDuplicates(簡碼表, 'cjk_to_h'),
-        calculateCharsetDuplicates(簡碼表, 'cjk_to_i'),
-        calculateCharsetDuplicates(簡碼表, 'cjk_to_j'),
+        計算某字符集的重碼數據(簡碼表, 'gb2312'),
+        計算某字符集的重碼數據(簡碼表, 'tonggui'),
+        計算某字符集的重碼數據(簡碼表, 'guozi'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_basic'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_a'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_b'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_c'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_d'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_e'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_f'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_g'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_h'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_i'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_j'),
       ])
 
       const 新結果: 重碼分析結果 = {

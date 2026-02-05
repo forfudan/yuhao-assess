@@ -6,11 +6,11 @@
 import { useState, useCallback } from 'react'
 import type { 碼表型别, 頻率數據型别 } from '@/types'
 import {
-  getStaticDupRate,
-  getDynamicDupRate,
-  getDynamicDupRateFromOriginalOrder,
-  calculateCharsetDuplicates,
-  type DuplicateStats,
+  計算靜態重碼數,
+  計算動態選重率,
+  計算原始碼表的動態選重率,
+  計算某字符集的重碼數據,
+  type 某字符集的重碼數據介面,
 } from '@/services'
 
 /**
@@ -38,8 +38,8 @@ interface UseStatisticsResult<T> {
  * await calculate('dynamic', codeTable, charFrequency)
  * ```
  */
-export function useDuplicateStats(): UseStatisticsResult<DuplicateStats> {
-  const [數據, 設置數據] = useState<DuplicateStats | null>(null)
+export function useDuplicateStats(): UseStatisticsResult<某字符集的重碼數據介面> {
+  const [數據, 設置數據] = useState<某字符集的重碼數據介面 | null>(null)
   const [加載中, 設置加載中] = useState(false)
   const [錯誤, 設置錯誤] = useState<string | null>(null)
 
@@ -58,15 +58,15 @@ export function useDuplicateStats(): UseStatisticsResult<DuplicateStats> {
         設置加載中(true)
         設置錯誤(null)
 
-        let 結果: DuplicateStats
+        let 結果: 某字符集的重碼數據介面
 
         if (類型 === 'charset') {
           if (!選項?.字符集類型) {
             throw new Error('字符集重碼統計需要指定字符集類型')
           }
-          結果 = await calculateCharsetDuplicates(碼表, 選項.字符集類型 as any)
+          結果 = await 計算某字符集的重碼數據(碼表, 選項.字符集類型 as any)
         } else {
-          // static 和 dynamic 類型需要手動構造 DuplicateStats
+          // static 和 dynamic 類型需要手動構造 某字符集的重碼數據介面
           throw new Error('請使用 charset 類型，或使用專門的靜態/動態重碼計算函數')
         }
 
