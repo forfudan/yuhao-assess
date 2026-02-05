@@ -272,10 +272,13 @@ function HomePage() {
 
   return (
     <Space orientation="vertical" size="large" style={{ width: '100%', padding: '24px' }}>
-      {/* 方案選擇與操作 */}
-      <Space wrap>
+      {/* 方案選擇 */}
+      <div>
+        <Text type="secondary" style={{ marginRight: 12 }}>
+          選擇預設方案：
+        </Text>
         <Select
-          style={{ width: 200 }}
+          style={{ width: 300 }}
           placeholder="選擇預設方案"
           loading={加載中}
           onChange={處理選擇方案}
@@ -287,19 +290,7 @@ function HomePage() {
             </Option>
           ))}
         </Select>
-        <Upload beforeUpload={處理導入JSON} showUploadList={false} accept=".json">
-          <Button icon={<UploadOutlined />}>導入 JSON</Button>
-        </Upload>
-        <Button icon={<PlusOutlined />} onClick={處理創建新方案}>
-          創建新方案
-        </Button>
-        <Button icon={<DownloadOutlined />} onClick={處理導出JSON} disabled={!當前方案}>
-          導出 JSON
-        </Button>
-        <Button icon={<ReloadOutlined />} onClick={() => 設置當前方案(null)}>
-          清除
-        </Button>
-      </Space>
+      </div>
 
       {/* 當前方案配置（可編輯） */}
       {當前方案 && (

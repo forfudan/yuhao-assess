@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { Layout } from 'antd'
 import styled from 'styled-components'
 import { Sidebar } from './Sidebar'
+import { AppHeader } from './AppHeader'
 
 const { Header, Content, Footer } = Layout
 
@@ -15,13 +16,8 @@ const StyledHeader = styled(Header)`
   padding: 0 24px;
   display: flex;
   align-items: center;
-
-  h1 {
-    margin: 0;
-    color: white;
-    font-size: 20px;
-    font-weight: 500;
-  }
+  height: 56px;
+  line-height: 56px;
 `
 
 const StyledContent = styled(Content)`
@@ -51,7 +47,7 @@ function MainLayout() {
       <Sidebar />
       <Layout>
         <StyledHeader>
-          <h1>輸入法測評系統</h1>
+          <AppHeader />
         </StyledHeader>
         <StyledContent>
           <ContentInner>
