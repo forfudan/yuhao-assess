@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 import { getDefaultStore } from 'jotai'
 import { 數據預加載狀態原子 } from '../atoms/dataPreload'
-import { 字頻表服務 } from './charFrequencyService'
+import { 字頻表服務類別 } from './charFrequencyService'
 import { 加載JSON數據文件 } from '../utils/data-loader'
 import { 字符集數據原子狀態 } from '../atoms/charset'
 import type { CharsetData } from '../atoms/charset'
@@ -10,7 +10,7 @@ import type { CharsetData } from '../atoms/charset'
  * 數據預加載服務
  * 在應用啓動時預加載常用數據，提升後續頁面加載速度
  */
-export class DataPreloadService {
+export class 數據預加載服務類別 {
   /**
    * 預加載核心數據（簡體+繁體字頻+字符集）
    * 這是最常用的數據，在應用啓動時立即加載
@@ -22,34 +22,34 @@ export class DataPreloadService {
     // 更新狀態爲 loading
     store.set(數據預加載狀態原子, {
       ...state,
-      北語簡體字頻: { status: 'loading' },
-      臺標繁體字頻: { status: 'loading' },
-      字符集數據: { status: 'loading' },
+      北語簡體字頻: { 狀態: 'loading' },
+      臺標繁體字頻: { 狀態: 'loading' },
+      字符集數據: { 狀態: 'loading' },
     })
 
     try {
       // 並行加載簡體字頻、繁體字頻和字符集
       await Promise.all([
-        字頻表服務.加載北語簡體字頻(),
-        字頻表服務.加載臺標繁體字頻(),
+        字頻表服務類別.加載北語簡體字頻(),
+        字頻表服務類別.加載臺標繁體字頻(),
         this.加載字符集數據(),
       ])
 
       // 更新狀態爲 loaded
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
-        北語簡體字頻: { status: 'loaded', loadedAt: Date.now() },
-        臺標繁體字頻: { status: 'loaded', loadedAt: Date.now() },
-        字符集數據: { status: 'loaded', loadedAt: Date.now() },
+        北語簡體字頻: { 狀態: 'loaded', 加載完成時間戳: Date.now() },
+        臺標繁體字頻: { 狀態: 'loaded', 加載完成時間戳: Date.now() },
+        字符集數據: { 狀態: 'loaded', 加載完成時間戳: Date.now() },
       })
     } catch (error) {
       // 更新狀態爲 error
       const err = error instanceof Error ? error : new Error(String(error))
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
-        北語簡體字頻: { status: 'error', error: err },
-        臺標繁體字頻: { status: 'error', error: err },
-        字符集數據: { status: 'error', error: err },
+        北語簡體字頻: { 狀態: 'error', 錯誤: err },
+        臺標繁體字頻: { 狀態: 'error', 錯誤: err },
+        字符集數據: { 狀態: 'error', 錯誤: err },
       })
       console.error('❌ 核心數據加載失敗:', error)
     }
@@ -79,20 +79,20 @@ export class DataPreloadService {
     try {
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
-        知乎簡體字頻: { status: 'loading' },
+        知乎簡體字頻: { 狀態: 'loading' },
       })
 
-      await 字頻表服務.加載知乎簡體字頻()
+      await 字頻表服務類別.加載知乎簡體字頻()
 
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
-        知乎簡體字頻: { status: 'loaded', loadedAt: Date.now() },
+        知乎簡體字頻: { 狀態: 'loaded', 加載完成時間戳: Date.now() },
       })
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
-        知乎簡體字頻: { status: 'error', error: err },
+        知乎簡體字頻: { 狀態: 'error', 錯誤: err },
       })
       console.error('⚠️ 知乎簡體字頻加載失敗:', error)
     }
@@ -101,20 +101,20 @@ export class DataPreloadService {
     try {
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
-        古籍繁體字頻: { status: 'loading' },
+        古籍繁體字頻: { 狀態: 'loading' },
       })
 
-      await 字頻表服務.加載古籍繁體字頻()
+      await 字頻表服務類別.加載古籍繁體字頻()
 
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
-        古籍繁體字頻: { status: 'loaded', loadedAt: Date.now() },
+        古籍繁體字頻: { 狀態: 'loaded', 加載完成時間戳: Date.now() },
       })
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
-        古籍繁體字頻: { status: 'error', error: err },
+        古籍繁體字頻: { 狀態: 'error', 錯誤: err },
       })
       console.error('⚠️ 古籍繁體字頻加載失敗:', error)
     }
@@ -123,20 +123,20 @@ export class DataPreloadService {
     try {
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
-        繁簡聯合字頻: { status: 'loading' },
+        繁簡聯合字頻: { 狀態: 'loading' },
       })
 
-      await 字頻表服務.計算繁簡聯合字頻()
+      await 字頻表服務類別.計算繁簡聯合字頻()
 
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
-        繁簡聯合字頻: { status: 'loaded', loadedAt: Date.now() },
+        繁簡聯合字頻: { 狀態: 'loaded', 加載完成時間戳: Date.now() },
       })
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
       store.set(數據預加載狀態原子, {
         ...store.get(數據預加載狀態原子),
-        繁簡聯合字頻: { status: 'error', error: err },
+        繁簡聯合字頻: { 狀態: 'error', 錯誤: err },
       })
       console.error('⚠️ 繁簡聯合字頻加載失敗:', error)
     }
@@ -188,7 +188,7 @@ export class DataPreloadService {
     return new Promise((resolve, reject) => {
       const checkStatus = () => {
         const state = store.get(數據預加載狀態原子)
-        const status = state[dataKey as keyof typeof state]?.status
+        const status = state[dataKey as keyof typeof state]?.狀態
 
         if (status === 'loaded') {
           resolve()

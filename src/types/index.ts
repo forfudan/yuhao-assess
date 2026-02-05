@@ -73,17 +73,17 @@ export type 頻數數據型别 = Record<string, number>
 export type 頻率數據型别 = Record<string, number>
 
 // 碼表條目
-export interface CodeTableEntry {
-  char: string
-  code: string
-  frequency?: number
+export interface 碼表條目介面 {
+  字符: string
+  編碼: string
+  頻率?: number
 }
 
 // 分析參數
-export interface AnalysisParams {
-  codeTable: CodeTable
-  charFrequency?: 頻率數據型别
-  charset?: Set<string> | 'all'
+export interface 分析參數介面 {
+  碼表: CodeTable
+  字頻?: 頻率數據型别
+  字符集?: Set<string> | 'all'
 }
 
 // 碼表指標結果

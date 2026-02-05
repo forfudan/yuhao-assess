@@ -20,7 +20,7 @@ export type { 重碼分析結果, 動態選重率結果, 靜態重碼結果 } fr
 
 // 數據預加載原子狀態
 export { 數據預加載狀態原子, 是否正在預加載, 核心數據已加載, 所有數據已加載 } from './dataPreload'
-export type { 數據加載狀態介面, 數據預加載狀態介面, 加載狀態 } from './dataPreload'
+export type { 數據加載狀態介面, 數據預加載狀態介面, 加載狀態型別 } from './dataPreload'
 
 // 字頻表原子狀態
 export { 字頻表緩存原子狀態, 當前字頻表類型原子狀態 } from './charFrequency'

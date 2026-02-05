@@ -5,7 +5,7 @@
  */
 
 import type { 頻率數據型别 } from '../types'
-import { 字頻表服務 } from './charFrequencyService'
+import { 字頻表服務類別 } from './charFrequencyService'
 
 // =============================================================================
 // 字頻數據加載
@@ -53,10 +53,10 @@ async function loadFrequencyCharsUnion(): Promise<Set<string>> {
   try {
     // 並行加載四個字頻表（不包含 unified，因爲它是合成的）
     const [zhihuFreq, scFreq, tcFreq, gujiFreq] = await Promise.all([
-      loadCharFrequency(), // charFrequencyZhihu.json
-      loadCharFrequencySC(), // charFrequencySC.json
-      loadCharFrequencyTC(), // charFrequencyTC.json
-      loadCharFrequencyGuji(), // charFrequencyGuji.json
+      加載知乎簡體字頻(), // charAbsoluteFrequencyZhihu.json
+      加載北語簡體字頻(), // charAbsoluteFrequencySC.json
+      加載臺標繁體字頻(), // charAbsoluteFrequencyTC.json
+      加載古籍繁體字頻(), // charAbsoluteFrequencyGuji.json
     ])
 
     // 使用Set進行高性能去重和並集運算
@@ -115,9 +115,9 @@ export function clearFrequencyCharsCache(): void {
 /**
  * 加載知乎字頻數據
  */
-export async function loadCharFrequency(): Promise<頻率數據型别> {
+export async function 加載知乎簡體字頻(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務.加載知乎簡體字頻()
+    return await 字頻表服務類別.加載知乎簡體字頻()
   } catch (error) {
     console.error('加載知乎字頻數據失敗:', error)
     throw error
@@ -127,9 +127,9 @@ export async function loadCharFrequency(): Promise<頻率數據型别> {
 /**
  * 加載簡體字頻數據
  */
-export async function loadCharFrequencySC(): Promise<頻率數據型别> {
+export async function 加載北語簡體字頻(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務.加載北語簡體字頻()
+    return await 字頻表服務類別.加載北語簡體字頻()
   } catch (error) {
     console.error('加載北語簡體字頻數據失敗:', error)
     throw error
@@ -139,9 +139,9 @@ export async function loadCharFrequencySC(): Promise<頻率數據型别> {
 /**
  * 加載繁體字頻數據
  */
-export async function loadCharFrequencyTC(): Promise<頻率數據型别> {
+export async function 加載臺標繁體字頻(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務.加載臺標繁體字頻()
+    return await 字頻表服務類別.加載臺標繁體字頻()
   } catch (error) {
     console.error('加載臺標繁體字頻數據失敗:', error)
     throw error
@@ -151,9 +151,9 @@ export async function loadCharFrequencyTC(): Promise<頻率數據型别> {
 /**
  * 加載古籍字頻數據
  */
-export async function loadCharFrequencyGuji(): Promise<頻率數據型别> {
+export async function 加載古籍繁體字頻(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務.加載古籍繁體字頻()
+    return await 字頻表服務類別.加載古籍繁體字頻()
   } catch (error) {
     console.error('加載古籍繁體字頻數據失敗:', error)
     throw error
@@ -163,9 +163,9 @@ export async function loadCharFrequencyGuji(): Promise<頻率數據型别> {
 /**
  * 加載統一字頻數據
  */
-export async function loadCharFrequencyUnified(): Promise<頻率數據型别> {
+export async function 計算繁簡聯合字頻(): Promise<頻率數據型别> {
   try {
-    return await 字頻表服務.計算繁簡聯合字頻()
+    return await 字頻表服務類別.計算繁簡聯合字頻()
   } catch (error) {
     console.error('加載統一字頻數據失敗:', error)
     throw error
@@ -176,21 +176,21 @@ export async function loadCharFrequencyUnified(): Promise<頻率數據型别> {
  * 並行加載所有字頻數據
  * @returns 包含所有字頻數據的對象
  */
-export async function loadAllCharFrequencies() {
-  const [zhihuFreq, scFreq, tcFreq, gujiFreq, unifiedFreq] = await Promise.all([
-    loadCharFrequency(),
-    loadCharFrequencySC(),
-    loadCharFrequencyTC(),
-    loadCharFrequencyGuji(),
-    loadCharFrequencyUnified(),
+export async function 加載所有字頻數據() {
+  const [知乎簡體字頻, 北語簡體字頻, 臺標繁體字頻, 古籍繁體字頻, 繁簡聯合字頻] = await Promise.all([
+    加載知乎簡體字頻(),
+    加載北語簡體字頻(),
+    加載臺標繁體字頻(),
+    加載古籍繁體字頻(),
+    計算繁簡聯合字頻(),
   ])
 
   return {
-    zhihuFreq,
-    scFreq,
-    tcFreq,
-    gujiFreq,
-    unifiedFreq,
+    知乎簡體字頻,
+    北語簡體字頻,
+    臺標繁體字頻,
+    古籍繁體字頻,
+    繁簡聯合字頻,
   }
 }
 
@@ -201,7 +201,7 @@ export async function loadAllCharFrequencies() {
 /**
  * 加載當量表數據
  */
-export async function loadEquivTable(): Promise<Record<string, number>> {
+export async function 加載當量表(): Promise<Record<string, number>> {
   try {
     const response = await fetch('/settings/equivTable.json')
     if (!response.ok) {
@@ -210,7 +210,7 @@ export async function loadEquivTable(): Promise<Record<string, number>> {
     const equivTableData = await response.json()
     return equivTableData.data || {}
   } catch (error) {
-    console.error('加载当量表失败:', error)
-    throw new Error('加载当量表失败')
+    console.error('加載當量表失敗:', error)
+    throw new Error('加載當量表失敗')
   }
 }

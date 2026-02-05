@@ -39,16 +39,16 @@ export type { 處理後的碼表結果 } from '../types'
 export { 當量表服務, 當量表服務實例 } from './equivTableService'
 
 // 導出字頻表服務
-export { 字頻表服務 } from './charFrequencyService'
+export { 字頻表服務類別 } from './charFrequencyService'
 
 // 導出數據服務
 export {
-  loadCharFrequency,
-  loadCharFrequencySC,
-  loadCharFrequencyTC,
-  loadCharFrequencyUnified,
-  loadAllCharFrequencies,
-  loadEquivTable,
+  加載知乎簡體字頻,
+  加載北語簡體字頻,
+  加載臺標繁體字頻,
+  計算繁簡聯合字頻,
+  加載所有字頻數據,
+  加載當量表,
   getFrequencyCharsUnion,
   clearFrequencyCharsCache,
 } from './dataService'
@@ -92,4 +92,4 @@ export {
 } from './shortCodeEfficiencyService'
 
 // 導出類型
-export type { AnalysisParams, CodeTableMetrics, CharsetType } from '../types/index'
+export type { 分析參數介面, CodeTableMetrics, CharsetType } from '../types/index'

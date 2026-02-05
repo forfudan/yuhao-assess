@@ -3,15 +3,15 @@ import { atom } from 'jotai'
 /**
  * 數據加載狀態類型
  */
-export type 加載狀態 = 'idle' | 'loading' | 'loaded' | 'error'
+export type 加載狀態型別 = 'idle' | 'loading' | 'loaded' | 'error'
 
 /**
  * 單個數據項的加載狀態
  */
 export interface 數據加載狀態介面 {
-  status: 加載狀態
-  error?: Error
-  loadedAt?: number // 加載完成時間戳
+  狀態: 加載狀態型別
+  錯誤?: Error
+  加載完成時間戳?: number // 加載完成時間戳
 }
 
 /**
@@ -30,12 +30,12 @@ export interface 數據預加載狀態介面 {
  * 初始狀態
  */
 const initialState: 數據預加載狀態介面 = {
-  北語簡體字頻: { status: 'idle' },
-  臺標繁體字頻: { status: 'idle' },
-  知乎簡體字頻: { status: 'idle' },
-  古籍繁體字頻: { status: 'idle' },
-  繁簡聯合字頻: { status: 'idle' },
-  字符集數據: { status: 'idle' },
+  北語簡體字頻: { 狀態: 'idle' },
+  臺標繁體字頻: { 狀態: 'idle' },
+  知乎簡體字頻: { 狀態: 'idle' },
+  古籍繁體字頻: { 狀態: 'idle' },
+  繁簡聯合字頻: { 狀態: 'idle' },
+  字符集數據: { 狀態: 'idle' },
 }
 
 /**
@@ -48,19 +48,19 @@ export const 數據預加載狀態原子 = atom<數據預加載狀態介面>(ini
  * 是否正在預加載（只讀）
  */
 export const 是否正在預加載 = atom(get => {
-  const state = get(數據預加載狀態原子)
-  return Object.values(state).some(item => item.status === 'loading')
+  const 狀態 = get(數據預加載狀態原子)
+  return Object.values(狀態).some(item => item.狀態 === 'loading')
 })
 
 /**
  * 核心數據是否已加載（簡體+繁體+字符集）
  */
 export const 核心數據已加載 = atom(get => {
-  const state = get(數據預加載狀態原子)
+  const 狀態 = get(數據預加載狀態原子)
   return (
-    state.北語簡體字頻.status === 'loaded' &&
-    state.臺標繁體字頻.status === 'loaded' &&
-    state.字符集數據.status === 'loaded'
+    狀態.北語簡體字頻.狀態 === 'loaded' &&
+    狀態.臺標繁體字頻.狀態 === 'loaded' &&
+    狀態.字符集數據.狀態 === 'loaded'
   )
 })
 
@@ -68,6 +68,6 @@ export const 核心數據已加載 = atom(get => {
  * 所有數據是否已加載
  */
 export const 所有數據已加載 = atom(get => {
-  const state = get(數據預加載狀態原子)
-  return Object.values(state).every(item => item.status === 'loaded')
+  const 狀態 = get(數據預加載狀態原子)
+  return Object.values(狀態).every(item => item.狀態 === 'loaded')
 })
