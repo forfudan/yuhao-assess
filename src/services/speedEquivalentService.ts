@@ -22,6 +22,7 @@ export function 計算編碼對頻率(
     if (frequency === 0 || codes.length === 0) continue
 
     const code = codes[0] // 使用第一個編碼
+    if (!code) continue
 
     // 生成所有相鄰的編碼對
     for (let i = 0; i < code.length - 1; i++) {
@@ -121,9 +122,10 @@ export function calculateEquivDistribution(
       // 確保在1.0-2.1範圍内
       const clampedEquiv = Math.max(1.0, Math.min(2.1, roundedEquiv))
 
-      if (equivBuckets[clampedEquiv]) {
-        equivBuckets[clampedEquiv].keyPairs.add(pair)
-        equivBuckets[clampedEquiv].totalFrequency += frequency
+      const bucket = equivBuckets[clampedEquiv]
+      if (bucket) {
+        bucket.keyPairs.add(pair)
+        bucket.totalFrequency += frequency
       }
     }
   }
@@ -199,13 +201,17 @@ export function generateFirstShortCodeTable(
     if (!shortCode) continue
 
     // 檢查是否爲一級簡碼：長度≤2且末尾是空格或上屏鍵
-    if (shortCode.length <= 2 && validEndingKeys.has(shortCode[shortCode.length - 1])) {
+    const lastChar = shortCode[shortCode.length - 1]
+    if (shortCode.length <= 2 && lastChar && validEndingKeys.has(lastChar)) {
       result.set(char, [shortCode])
     } else {
       // 否則使用全碼
       const fullCodes = fullWithSelection.get(char)
       if (fullCodes) {
-        result.set(char, [fullCodes[0]])
+        const fullCode = fullCodes[0]
+        if (fullCode) {
+          result.set(char, [fullCode])
+        }
       }
     }
   }
@@ -235,13 +241,17 @@ export function generateSecondShortCodeTable(
     if (!shortCode) continue
 
     // 檢查是否爲二級簡碼：長度≤3且末尾是空格或上屏鍵
-    if (shortCode.length <= 3 && validEndingKeys.has(shortCode[shortCode.length - 1])) {
+    const lastChar = shortCode[shortCode.length - 1]
+    if (shortCode.length <= 3 && lastChar && validEndingKeys.has(lastChar)) {
       result.set(char, [shortCode])
     } else {
       // 否則使用全碼
       const fullCodes = fullWithSelection.get(char)
       if (fullCodes) {
-        result.set(char, [fullCodes[0]])
+        const fullCode = fullCodes[0]
+        if (fullCode) {
+          result.set(char, [fullCode])
+        }
       }
     }
   }
@@ -274,7 +284,10 @@ export function generateWordFirstShortCodeTable(
     } else {
       const fullCodes = wordFullCodeTable.get(word)
       if (fullCodes) {
-        result.set(word, [fullCodes[0]])
+        const fullCode = fullCodes[0]
+        if (fullCode) {
+          result.set(word, [fullCode])
+        }
       }
     }
   }
@@ -307,7 +320,10 @@ export function generateWordSecondShortCodeTable(
     } else {
       const fullCodes = wordFullCodeTable.get(word)
       if (fullCodes) {
-        result.set(word, [fullCodes[0]])
+        const fullCode = fullCodes[0]
+        if (fullCode) {
+          result.set(word, [fullCode])
+        }
       }
     }
   }

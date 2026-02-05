@@ -96,7 +96,10 @@ function preprocessCodeTable(
     // 为非首选字符增加選重码长
     for (const group of codeGroups.values()) {
       for (let i = 1; i < group.length; i++) {
-        group[i].actualLen += 1
+        const item = group[i]
+        if (item) {
+          item.actualLen += 1
+        }
       }
     }
 
@@ -110,6 +113,7 @@ function preprocessCodeTable(
     // 簡碼（最短）和全碼（最長）
     const shortCode = uniqueCodes[0]
     const fullCode = uniqueCodes[uniqueCodes.length - 1]
+    if (!shortCode || !fullCode) continue
 
     const freq = charFrequency[char] || 0
     const lenDiff = fullCode.actualLen - shortCode.actualLen

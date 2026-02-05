@@ -41,6 +41,7 @@ export async function getMaximumCandidates(
     const codes = fullCodeTable.get(char)
     if (codes && codes.length > 0) {
       const code = codes[0] // 使用第一個編碼（全碼）
+      if (!code) continue
       if (!codeToChars.has(code)) {
         codeToChars.set(code, [])
       }

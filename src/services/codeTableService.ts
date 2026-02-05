@@ -97,14 +97,18 @@ export class 碼表處理服務 {
       let 編碼: string
 
       if (第一列類型 === '字符') {
-        字符 = 部分[0]
-        編碼 = 部分[1]
+        const char = 部分[0]
+        const code = 部分[1]
+        if (!char || !code) continue
+        字符 = char
+        編碼 = code
       } else {
-        編碼 = 部分[0]
-        字符 = 部分[1]
+        const code = 部分[0]
+        const char = 部分[1]
+        if (!code || !char) continue
+        編碼 = code
+        字符 = char
       }
-
-      if (!字符 || !編碼) continue
 
       // 只處理單個字符（包括 CJK 漢字）
       if (Array.from(字符).length === 1 && isInCJKToJ(字符)) {
@@ -404,28 +408,42 @@ export class 碼表處理服務 {
         // 單字：根據useShortCode決定使用全碼還是簡碼
         if (useShortCode && shortCodeTable) {
           const codes = shortCodeTable.get(word)
-          return codes && codes.length > 0 ? codes[0] : ''
+          const firstCode = codes && codes.length > 0 ? codes[0] : undefined
+          return firstCode || ''
         } else {
           const codes = fullCodeTable.get(word)
-          return codes && codes.length > 0 ? codes[0] : ''
+          const firstCode = codes && codes.length > 0 ? codes[0] : undefined
+          return firstCode || ''
         }
       } else if (len === 2) {
         // 兩字詞：兩個字各取前兩碼
-        const code1 = fullCodeTable.get(word[0])?.[0] || ''
-        const code2 = fullCodeTable.get(word[1])?.[0] || ''
+        const char1 = word[0]
+        const char2 = word[1]
+        if (!char1 || !char2) return ''
+        const code1 = fullCodeTable.get(char1)?.[0] || ''
+        const code2 = fullCodeTable.get(char2)?.[0] || ''
         return code1.slice(0, 2) + code2.slice(0, 2)
       } else if (len === 3) {
         // 三字詞：首二字各取一碼，第三字兩碼
-        const code1 = fullCodeTable.get(word[0])?.[0] || ''
-        const code2 = fullCodeTable.get(word[1])?.[0] || ''
-        const code3 = fullCodeTable.get(word[2])?.[0] || ''
+        const char1 = word[0]
+        const char2 = word[1]
+        const char3 = word[2]
+        if (!char1 || !char2 || !char3) return ''
+        const code1 = fullCodeTable.get(char1)?.[0] || ''
+        const code2 = fullCodeTable.get(char2)?.[0] || ''
+        const code3 = fullCodeTable.get(char3)?.[0] || ''
         return code1.slice(0, 1) + code2.slice(0, 1) + code3.slice(0, 2)
       } else {
         // 四字及以上：首二三末各取第一碼
-        const code1 = fullCodeTable.get(word[0])?.[0] || ''
-        const code2 = fullCodeTable.get(word[1])?.[0] || ''
-        const code3 = fullCodeTable.get(word[2])?.[0] || ''
-        const codeLast = fullCodeTable.get(word[len - 1])?.[0] || ''
+        const char1 = word[0]
+        const char2 = word[1]
+        const char3 = word[2]
+        const charLast = word[len - 1]
+        if (!char1 || !char2 || !char3 || !charLast) return ''
+        const code1 = fullCodeTable.get(char1)?.[0] || ''
+        const code2 = fullCodeTable.get(char2)?.[0] || ''
+        const code3 = fullCodeTable.get(char3)?.[0] || ''
+        const codeLast = fullCodeTable.get(charLast)?.[0] || ''
         return code1.slice(0, 1) + code2.slice(0, 1) + code3.slice(0, 1) + codeLast.slice(0, 1)
       }
     } catch (error) {
@@ -573,14 +591,16 @@ export function 清理碼表(rawCodeTable: CodeTable, options: 碼表清理選�
       case 'longest': {
         const maxLength = Math.max(...filteredCodes.map(code => code.length))
         selectedCodes = filteredCodes.filter(code => code.length === maxLength)
-        selectedCodes = [selectedCodes[0]]
+        const firstCode = selectedCodes[0]
+        selectedCodes = firstCode ? [firstCode] : []
         break
       }
 
       case 'shortest': {
         const minLength = Math.min(...filteredCodes.map(code => code.length))
         selectedCodes = filteredCodes.filter(code => code.length === minLength)
-        selectedCodes = [selectedCodes[0]]
+        const firstCode = selectedCodes[0]
+        selectedCodes = firstCode ? [firstCode] : []
         break
       }
 

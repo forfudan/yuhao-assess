@@ -1,3 +1,7 @@
+/* eslint-disable no-undef */
+// Note: DOM types (HTMLElement, navigator, etc.) are available in browser environment
+// TypeScript knows about them via lib.dom.d.ts included in tsconfig.json
+
 export class ExportService {
   /**
    * 生成文件名
@@ -5,7 +9,8 @@ export class ExportService {
    * @param schemeName 方案名稱
    */
   static generateFileName(cardTitle: string, schemeName: string = '未命名方案'): string {
-    const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
+    const dateStr = new Date().toISOString().split('T')[0]
+    const today = dateStr ? dateStr.replace(/-/g, '') : 'unknown'
     return `${schemeName}_${cardTitle}_宇浩測評網_ceping.shurufa.app_${today}.png`
   }
 

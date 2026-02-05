@@ -77,8 +77,10 @@ export function getDynamicDupRate(
       }
 
       const groupTotalFreq = charFreqs.reduce((sum, item) => sum + item.freq, 0)
-      const firstCharFreq = charFreqs[0].freq
-      totalDupFreq += groupTotalFreq - firstCharFreq
+      const firstChar = charFreqs[0]
+      if (firstChar) {
+        totalDupFreq += groupTotalFreq - firstChar.freq
+      }
     }
   }
 
@@ -209,11 +211,13 @@ export function getNonFirstDuplicateDetails(
 
       // 添加非一選的字符（跳過第一個）
       for (let i = 1; i < charFreqs.length; i++) {
+        const charInfo = charFreqs[i]
+        if (!charInfo) continue
         results.push({
-          char: charFreqs[i].char,
+          char: charInfo.char,
           code: code,
-          frequency: charFreqs[i].freq,
-          rank: charRankMap.get(charFreqs[i].char) || 0,
+          frequency: charInfo.freq,
+          rank: charRankMap.get(charInfo.char) || 0,
           allCharsOnCode: allCharsOnCode,
         })
       }
@@ -362,6 +366,7 @@ export async function calculateCharsetDuplicates(
     const codes = fullCodeTable.get(char)
     if (codes && codes.length > 0) {
       const code = codes[0]
+      if (!code) continue
       if (!codeToChars.has(code)) {
         codeToChars.set(code, [])
       }

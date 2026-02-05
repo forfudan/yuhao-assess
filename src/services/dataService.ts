@@ -64,7 +64,8 @@ async function loadFrequencyCharsUnion(): Promise<Set<string>> {
 
     // 添加知乎字頻表中的字符
     for (const char in zhihuFreq) {
-      if (zhihuFreq[char] > 0) {
+      const freq = zhihuFreq[char]
+      if (freq && freq > 0) {
         // 只添加字頻大於0的字符
         allChars.add(char)
       }
@@ -72,21 +73,24 @@ async function loadFrequencyCharsUnion(): Promise<Set<string>> {
 
     // 添加簡體字頻表中的字符
     for (const char in scFreq) {
-      if (scFreq[char] > 0) {
+      const freq = scFreq[char]
+      if (freq && freq > 0) {
         allChars.add(char)
       }
     }
 
     // 添加繁體字頻表中的字符
     for (const char in tcFreq) {
-      if (tcFreq[char] > 0) {
+      const freq = tcFreq[char]
+      if (freq && freq > 0) {
         allChars.add(char)
       }
     }
 
     // 添加古籍字頻表中的字符
     for (const char in gujiFreq) {
-      if (gujiFreq[char] > 0) {
+      const freq = gujiFreq[char]
+      if (freq && freq > 0) {
         allChars.add(char)
       }
     }
