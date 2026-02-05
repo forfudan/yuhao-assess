@@ -7,6 +7,7 @@ import { 當前方案原子狀態 } from '@/atoms/scheme'
 import { 重碼分析原子狀態 } from '@/atoms/duplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
+import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 從JSON導入, 創建空白方案 } from '@/services/schemeService'
 import type { RcFile } from 'antd/es/upload'
 
@@ -42,13 +43,14 @@ export function AppHeader() {
   const 設置重碼分析結果 = useSetAtom(重碼分析原子狀態)
   const 設置候選個數分析結果 = useSetAtom(候選個數分析原子狀態)
   const 設置速度當量分析結果 = useSetAtom(速度當量分析原子狀態)
+  const 設置簡碼效率分析結果 = useSetAtom(簡碼效率分析原子狀態)
 
   // 讀取分析結果用於導出
   const 重碼分析結果 = useAtomValue(重碼分析原子狀態)
   const 候選個數分析結果 = useAtomValue(候選個數分析原子狀態)
   const 速度當量分析結果 = useAtomValue(速度當量分析原子狀態)
+  const 簡碼效率分析結果 = useAtomValue(簡碼效率分析原子狀態)
 
-  const 當前頁面標題 = 頁面標題映射[location.pathname] || '未知頁面'
   const 顯示標題 = 當前方案 ? 當前方案.元數據.方案名 : '未選擇方案'
 
   // 導入配置
@@ -64,6 +66,7 @@ export function AppHeader() {
           重碼分析結果: 數據中的重碼結果,
           候選個數分析結果: 數據中的候選個數結果,
           速度當量分析結果: 數據中的速度當量結果,
+          簡碼效率分析結果: 數據中的簡碼效率結果,
           ...方案配置
         } = 導入數據
 
@@ -90,10 +93,17 @@ export function AppHeader() {
           設置速度當量分析結果(null)
         }
 
+        if (數據中的簡碼效率結果) {
+          設置簡碼效率分析結果(數據中的簡碼效率結果)
+        } else {
+          設置簡碼效率分析結果(null)
+        }
+
         const 結果提示 = [
           數據中的重碼結果 && '重碼分析',
           數據中的候選個數結果 && '候選個數分析',
           數據中的速度當量結果 && '速度當量分析',
+          數據中的簡碼效率結果 && '簡碼效率分析',
         ]
           .filter(Boolean)
           .join('、')
@@ -122,6 +132,7 @@ export function AppHeader() {
         重碼分析結果: 重碼分析結果, // 直接使用 atom 的結構
         候選個數分析結果: 候選個數分析結果,
         速度當量分析結果: 速度當量分析結果,
+        簡碼效率分析結果: 簡碼效率分析結果,
       }
 
       const json文本 = JSON.stringify(導出數據, null, 2)
@@ -142,6 +153,7 @@ export function AppHeader() {
         重碼分析結果 && '重碼分析',
         候選個數分析結果 && '候選個數分析',
         速度當量分析結果 && '速度當量分析',
+        簡碼效率分析結果 && '簡碼效率分析',
       ].filter(Boolean)
       const 提示 = 結果列表.length > 0 ? `（包含${結果列表.join('、')}結果）` : ''
       message.success(`方案配置已導出${提示}`)

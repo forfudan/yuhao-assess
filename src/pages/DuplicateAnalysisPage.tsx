@@ -992,7 +992,6 @@ const DuplicatePage: React.FC = () => {
         ),
         dataIndex: '簡碼',
         key: '簡碼',
-        width: 120,
         align: 'right',
         render: (text, record) =>
           record.可點擊 ? (

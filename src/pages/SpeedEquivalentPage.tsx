@@ -483,7 +483,7 @@ const SpeedEquivalentPage: React.FC = () => {
         dataIndex: '字頻來源',
         key: '字頻來源',
         fixed: 'left',
-        width: 140,
+        width: 110,
         render: (value: string, record) => (
           <span
             style={{ cursor: 'pointer', color: '#1890ff', textDecoration: 'underline' }}
@@ -498,7 +498,7 @@ const SpeedEquivalentPage: React.FC = () => {
         dataIndex: '全碼當量',
         key: '全碼當量',
         align: 'right',
-        width: 110,
+        width: 80,
         render: (value: number) => value.toFixed(4),
       },
       {
@@ -506,7 +506,7 @@ const SpeedEquivalentPage: React.FC = () => {
         dataIndex: '一級簡碼當量',
         key: '一級簡碼當量',
         align: 'right',
-        width: 110,
+        width: 80,
         render: (value: number) => value.toFixed(4),
       },
       {
@@ -514,7 +514,7 @@ const SpeedEquivalentPage: React.FC = () => {
         dataIndex: '二級簡碼當量',
         key: '二級簡碼當量',
         align: 'right',
-        width: 110,
+        width: 80,
         render: (value: number) => value.toFixed(4),
       },
       {
@@ -522,7 +522,7 @@ const SpeedEquivalentPage: React.FC = () => {
         dataIndex: '簡碼當量',
         key: '簡碼當量',
         align: 'right',
-        width: 110,
+        width: 80,
         render: (value: number) => value.toFixed(4),
       },
       {
@@ -538,7 +538,6 @@ const SpeedEquivalentPage: React.FC = () => {
         dataSource={表格數據}
         pagination={false}
         bordered
-        scroll={{ x: 800 }}
         style={{ marginTop: 16 }}
       />
     )

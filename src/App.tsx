@@ -6,6 +6,7 @@ import ProcessTablePage from './pages/ProcessTablePage'
 import DuplicateAnalysisPage from './pages/DuplicateAnalysisPage'
 import MaximumCandidatesPage from './pages/MaximumCandidatesPage'
 import SpeedEquivalentPage from './pages/SpeedEquivalentPage'
+import 簡碼效率頁面 from './pages/ShortCodeEfficiencyPage'
 import { 數據預加載服務類别 } from './services/dataPreloadService'
 
 const routes = [
@@ -32,6 +33,10 @@ const routes = [
       {
         path: '/speed',
         element: <SpeedEquivalentPage />,
+      },
+      {
+        path: '/efficiency',
+        element: <簡碼效率頁面 />,
       },
     ],
   },
