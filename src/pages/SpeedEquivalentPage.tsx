@@ -8,11 +8,14 @@ import { 速度當量分析原子狀態, 當量詳情原子狀態 } from '../ato
 import type { 速度當量分析結果, 當量例字信息 } from '../atoms/speedEquivalent'
 import { 字頻表緩存原子狀態 } from '../atoms/charFrequency'
 import { 當量表原子狀態 } from '../atoms/equivTable'
-import { 從碼表計算加權速度當量 } from '../services/speedEquivalentService'
+import {
+  從碼表計算加權速度當量,
+  生成一級簡碼加選重鍵表,
+  生成二級簡碼加選重鍵表,
+} from '../services/speedEquivalentService'
 import { 當量表服務實例 } from '../services/equivTableService'
 import { 字頻表服務類別 } from '../services/charFrequencyService'
-import { useDataPreload } from '../hooks/useDataPreload'
-import type { 處理後的碼表結果 } from '../types'
+import type { 處理後的碼表結果, CodeTable } from '../types'
 
 const { Paragraph, Link } = Typography
 
@@ -30,6 +33,10 @@ const SpeedEquivalentPage: React.FC = () => {
   const [錯誤信息, 設置錯誤信息] = useState<string | null>(null)
   const [顯示詳情, 設置顯示詳情] = useState(false)
   const [詳情計算中, 設置詳情計算中] = useState(false)
+
+  // 保存一級和二級簡碼表，用於詳情顯示
+  const [一級簡碼加選重鍵表, 設置一級簡碼加選重鍵表] = useState<CodeTable | null>(null)
+  const [二級簡碼加選重鍵表, 設置二級簡碼加選重鍵表] = useState<CodeTable | null>(null)
 
   // 類型斷言：碼表數據實際上是 處理後的碼表結果
   const 處理後碼表 = 碼表數據 as 處理後的碼表結果 | null
@@ -161,23 +168,92 @@ const SpeedEquivalentPage: React.FC = () => {
         當量表數據
       )
 
-      // 簡化版本：不計算一簡、二簡當量（需要額外的邏輯生成一簡/二簡碼表）
+      // 生成一級簡碼表和二級簡碼表
+      const 一級簡碼加選重鍵表 = 生成一級簡碼加選重鍵表(
+        簡碼加選重鍵表,
+        全碼加選重鍵表,
+        [] // 如果有上屏鍵配置，可以從方案配置中讀取
+      )
+      const 二級簡碼加選重鍵表 = 生成二級簡碼加選重鍵表(
+        簡碼加選重鍵表,
+        全碼加選重鍵表,
+        [] // 如果有上屏鍵配置，可以從方案配置中讀取
+      )
+
+      // 保存到 state 以便詳情顯示使用
+      設置一級簡碼加選重鍵表(一級簡碼加選重鍵表)
+      設置二級簡碼加選重鍵表(二級簡碼加選重鍵表)
+
+      // 計算一級簡碼當量
+      const 知乎簡體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
+        一級簡碼加選重鍵表,
+        字頻表緩存.get('知乎簡體字頻') || {},
+        當量表數據
+      )
+      const 北語簡體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
+        一級簡碼加選重鍵表,
+        字頻表緩存.get('北語簡體字頻') || {},
+        當量表數據
+      )
+      const 臺標繁體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
+        一級簡碼加選重鍵表,
+        字頻表緩存.get('臺標繁體字頻') || {},
+        當量表數據
+      )
+      const 古籍繁體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
+        一級簡碼加選重鍵表,
+        字頻表緩存.get('古籍繁體字頻') || {},
+        當量表數據
+      )
+      const 繁簡聯合字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
+        一級簡碼加選重鍵表,
+        字頻表緩存.get('繁簡聯合字頻') || {},
+        當量表數據
+      )
+
+      // 計算二級簡碼當量
+      const 知乎簡體字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
+        二級簡碼加選重鍵表,
+        字頻表緩存.get('知乎簡體字頻') || {},
+        當量表數據
+      )
+      const 北語簡體字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
+        二級簡碼加選重鍵表,
+        字頻表緩存.get('北語簡體字頻') || {},
+        當量表數據
+      )
+      const 臺標繁體字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
+        二級簡碼加選重鍵表,
+        字頻表緩存.get('臺標繁體字頻') || {},
+        當量表數據
+      )
+      const 古籍繁體字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
+        二級簡碼加選重鍵表,
+        字頻表緩存.get('古籍繁體字頻') || {},
+        當量表數據
+      )
+      const 繁簡聯合字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
+        二級簡碼加選重鍵表,
+        字頻表緩存.get('繁簡聯合字頻') || {},
+        當量表數據
+      )
+
       const 新結果: 速度當量分析結果 = {
         知乎簡體字頻全碼速度當量,
         北語簡體字頻全碼速度當量,
         臺標繁體字頻全碼速度當量,
         古籍繁體字頻全碼速度當量,
         繁簡聯合字頻全碼速度當量,
-        知乎簡體字頻一級簡碼速度當量: 0, // 暫不實現
-        北語簡體字頻一級簡碼速度當量: 0,
-        臺標繁體字頻一級簡碼速度當量: 0,
-        古籍繁體字頻一級簡碼速度當量: 0,
-        繁簡聯合字頻一級簡碼速度當量: 0,
-        知乎簡體字頻二級簡碼速度當量: 0, // 暫不實現
-        北語簡體字頻二級簡碼速度當量: 0,
-        臺標繁體字頻二級簡碼速度當量: 0,
-        古籍繁體字頻二級簡碼速度當量: 0,
-        繁簡聯合字頻二級簡碼速度當量: 0,
+        知乎簡體字頻一級簡碼速度當量,
+        北語簡體字頻一級簡碼速度當量,
+        臺標繁體字頻一級簡碼速度當量,
+        古籍繁體字頻一級簡碼速度當量,
+        繁簡聯合字頻一級簡碼速度當量,
+        知乎簡體字頻二級簡碼速度當量,
+        北語簡體字頻二級簡碼速度當量,
+        臺標繁體字頻二級簡碼速度當量,
+        古籍繁體字頻二級簡碼速度當量,
+        繁簡聯合字頻二級簡碼速度當量,
         知乎簡體字頻全部簡碼速度當量,
         北語簡體字頻全部簡碼速度當量,
         臺標繁體字頻全部簡碼速度當量,
@@ -197,14 +273,33 @@ const SpeedEquivalentPage: React.FC = () => {
   /**
    * 顯示當量詳情（點擊表格單元格）
    */
-  const 顯示當量例字 = async (字頻類型: string, 碼表類型: '全碼' | '簡碼') => {
+  const 顯示當量例字 = async (
+    字頻類型: string,
+    碼表類型: '全碼' | '一級簡碼' | '二級簡碼' | '簡碼'
+  ) => {
     if (!處理後碼表 || !字頻表緩存) return
 
     設置詳情計算中(true)
     設置顯示詳情(true)
 
     try {
-      const 碼表 = 碼表類型 === '全碼' ? 處理後碼表.全碼加選重鍵表 : 處理後碼表.簡碼加選重鍵表
+      // 根據碼表類型選擇對應的碼表
+      let 碼表: CodeTable
+      if (碼表類型 === '全碼') {
+        碼表 = 處理後碼表.全碼加選重鍵表
+      } else if (碼表類型 === '一級簡碼') {
+        if (!一級簡碼加選重鍵表) {
+          throw new Error('一級簡碼表尚未生成')
+        }
+        碼表 = 一級簡碼加選重鍵表
+      } else if (碼表類型 === '二級簡碼') {
+        if (!二級簡碼加選重鍵表) {
+          throw new Error('二級簡碼表尚未生成')
+        }
+        碼表 = 二級簡碼加選重鍵表
+      } else {
+        碼表 = 處理後碼表.簡碼加選重鍵表
+      }
 
       // 使用更嚴格的類型定義
       type 字頻類型鍵 =
@@ -300,6 +395,8 @@ const SpeedEquivalentPage: React.FC = () => {
       key: string
       字頻來源: string
       全碼當量: number
+      一級簡碼當量: number
+      二級簡碼當量: number
       簡碼當量: number
       説明: React.ReactNode
     }
@@ -309,6 +406,8 @@ const SpeedEquivalentPage: React.FC = () => {
         key: '知乎簡體字頻',
         字頻來源: '知乎簡體字頻',
         全碼當量: 分析結果.知乎簡體字頻全碼速度當量,
+        一級簡碼當量: 分析結果.知乎簡體字頻一級簡碼速度當量,
+        二級簡碼當量: 分析結果.知乎簡體字頻二級簡碼速度當量,
         簡碼當量: 分析結果.知乎簡體字頻全部簡碼速度當量,
         説明: (
           <>
@@ -323,6 +422,8 @@ const SpeedEquivalentPage: React.FC = () => {
         key: '北語簡體字頻',
         字頻來源: '北語簡體字頻',
         全碼當量: 分析結果.北語簡體字頻全碼速度當量,
+        一級簡碼當量: 分析結果.北語簡體字頻一級簡碼速度當量,
+        二級簡碼當量: 分析結果.北語簡體字頻二級簡碼速度當量,
         簡碼當量: 分析結果.北語簡體字頻全部簡碼速度當量,
         説明: (
           <>
@@ -340,6 +441,8 @@ const SpeedEquivalentPage: React.FC = () => {
         key: '臺標繁體字頻',
         字頻來源: '臺標繁體字頻',
         全碼當量: 分析結果.臺標繁體字頻全碼速度當量,
+        一級簡碼當量: 分析結果.臺標繁體字頻一級簡碼速度當量,
+        二級簡碼當量: 分析結果.臺標繁體字頻二級簡碼速度當量,
         簡碼當量: 分析結果.臺標繁體字頻全部簡碼速度當量,
         説明: (
           <>
@@ -357,6 +460,8 @@ const SpeedEquivalentPage: React.FC = () => {
         key: '古籍繁體字頻',
         字頻來源: '古籍繁體字頻',
         全碼當量: 分析結果.古籍繁體字頻全碼速度當量,
+        一級簡碼當量: 分析結果.古籍繁體字頻一級簡碼速度當量,
+        二級簡碼當量: 分析結果.古籍繁體字頻二級簡碼速度當量,
         簡碼當量: 分析結果.古籍繁體字頻全部簡碼速度當量,
         説明: '基於古籍字頻',
       },
@@ -364,6 +469,8 @@ const SpeedEquivalentPage: React.FC = () => {
         key: '繁簡聯合字頻',
         字頻來源: '繁簡聯合字頻',
         全碼當量: 分析結果.繁簡聯合字頻全碼速度當量,
+        一級簡碼當量: 分析結果.繁簡聯合字頻一級簡碼速度當量,
+        二級簡碼當量: 分析結果.繁簡聯合字頻二級簡碼速度當量,
         簡碼當量: 分析結果.繁簡聯合字頻全部簡碼速度當量,
         説明: '基於繁簡聯合字頻表',
       },
@@ -374,12 +481,15 @@ const SpeedEquivalentPage: React.FC = () => {
         title: '字頻來源',
         dataIndex: '字頻來源',
         key: '字頻來源',
+        fixed: 'left',
+        width: 140,
       },
       {
         title: '全碼當量',
         dataIndex: '全碼當量',
         key: '全碼當量',
         align: 'right',
+        width: 110,
         render: (value: number, record) => (
           <span
             style={{ cursor: 'pointer', color: '#1890ff' }}
@@ -390,10 +500,41 @@ const SpeedEquivalentPage: React.FC = () => {
         ),
       },
       {
-        title: '簡碼當量',
+        title: '一級簡碼',
+        dataIndex: '一級簡碼當量',
+        key: '一級簡碼當量',
+        align: 'right',
+        width: 110,
+        render: (value: number, record) => (
+          <span
+            style={{ cursor: 'pointer', color: '#1890ff' }}
+            onClick={() => 顯示當量例字(record.key, '一級簡碼')}
+          >
+            {value.toFixed(4)}
+          </span>
+        ),
+      },
+      {
+        title: '二級簡碼',
+        dataIndex: '二級簡碼當量',
+        key: '二級簡碼當量',
+        align: 'right',
+        width: 110,
+        render: (value: number, record) => (
+          <span
+            style={{ cursor: 'pointer', color: '#1890ff' }}
+            onClick={() => 顯示當量例字(record.key, '二級簡碼')}
+          >
+            {value.toFixed(4)}
+          </span>
+        ),
+      },
+      {
+        title: '全部簡碼',
         dataIndex: '簡碼當量',
         key: '簡碼當量',
         align: 'right',
+        width: 110,
         render: (value: number, record) => (
           <span
             style={{ cursor: 'pointer', color: '#1890ff' }}
@@ -416,6 +557,7 @@ const SpeedEquivalentPage: React.FC = () => {
         dataSource={表格數據}
         pagination={false}
         bordered
+        scroll={{ x: 800 }}
         style={{ marginTop: 16 }}
       />
     )

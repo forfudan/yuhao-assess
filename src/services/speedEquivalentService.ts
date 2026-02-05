@@ -181,22 +181,22 @@ function generateEquivDescription(equivValue: number, keyPairs: string[]): strin
 
 /**
  * 生成一級簡碼表（長度≤2且末尾是空格或上屏鍵）
- * @param shortWithSelection 簡碼表（帶選重鍵）
- * @param fullWithSelection 全碼表（帶選重鍵）
- * @param prefixKeys 上屏鍵列表
+ * @param 簡碼加選重鍵表 簡碼表（最後為選重鍵）
+ * @param 全碼加選重鍵表 全碼表（最後為選重鍵）
+ * @param 上屏鍵列表 上屏鍵列表
  * @returns 一級簡碼表
  */
-export function generateFirstShortCodeTable(
-  shortWithSelection: CodeTable,
-  fullWithSelection: CodeTable,
-  prefixKeys: string[] = []
+export function 生成一級簡碼加選重鍵表(
+  簡碼加選重鍵表: CodeTable,
+  全碼加選重鍵表: CodeTable,
+  上屏鍵列表: string[] = []
 ): CodeTable {
   const result: CodeTable = new Map()
 
   // 创建上屏键集合，包含空格(_)和用户设置的上屏键
-  const validEndingKeys = new Set(['_', ...prefixKeys])
+  const validEndingKeys = new Set(['_', ...上屏鍵列表])
 
-  for (const [char, codes] of shortWithSelection) {
+  for (const [char, codes] of 簡碼加選重鍵表) {
     const shortCode = codes[0]
     if (!shortCode) continue
 
@@ -206,7 +206,7 @@ export function generateFirstShortCodeTable(
       result.set(char, [shortCode])
     } else {
       // 否則使用全碼
-      const fullCodes = fullWithSelection.get(char)
+      const fullCodes = 全碼加選重鍵表.get(char)
       if (fullCodes) {
         const fullCode = fullCodes[0]
         if (fullCode) {
@@ -221,22 +221,22 @@ export function generateFirstShortCodeTable(
 
 /**
  * 生成二級簡碼表（長度≤3且末尾是空格或上屏鍵）
- * @param shortWithSelection 簡碼表（帶選重鍵）
- * @param fullWithSelection 全碼表（帶選重鍵）
- * @param prefixKeys 上屏鍵列表
+ * @param 簡碼加選重鍵表 簡碼表（最後為選重鍵）
+ * @param 全碼加選重鍵表 全碼表（最後為選重鍵）
+ * @param 上屏鍵列表 上屏鍵列表
  * @returns 二級簡碼表
  */
-export function generateSecondShortCodeTable(
-  shortWithSelection: CodeTable,
-  fullWithSelection: CodeTable,
-  prefixKeys: string[] = []
+export function 生成二級簡碼加選重鍵表(
+  簡碼加選重鍵表: CodeTable,
+  全碼加選重鍵表: CodeTable,
+  上屏鍵列表: string[] = []
 ): CodeTable {
   const result: CodeTable = new Map()
 
   // 创建上屏键集合，包含空格(_)和用户设置的上屏键
-  const validEndingKeys = new Set(['_', ...prefixKeys])
+  const validEndingKeys = new Set(['_', ...上屏鍵列表])
 
-  for (const [char, codes] of shortWithSelection) {
+  for (const [char, codes] of 簡碼加選重鍵表) {
     const shortCode = codes[0]
     if (!shortCode) continue
 
@@ -246,7 +246,7 @@ export function generateSecondShortCodeTable(
       result.set(char, [shortCode])
     } else {
       // 否則使用全碼
-      const fullCodes = fullWithSelection.get(char)
+      const fullCodes = 全碼加選重鍵表.get(char)
       if (fullCodes) {
         const fullCode = fullCodes[0]
         if (fullCode) {
