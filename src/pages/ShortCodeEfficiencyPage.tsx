@@ -750,8 +750,14 @@ const ShortCodeEfficiencyPage: React.FC = () => {
 
         {/* 操作按鈕 */}
         <Space>
-          <Button type="primary" icon={<ReloadOutlined />} onClick={重新計算} loading={計算中}>
-            {計算中 ? '計算中...' : '重新計算'}
+          <Button
+            type="primary"
+            icon={<ReloadOutlined />}
+            onClick={重新計算}
+            loading={計算中}
+            disabled={!處理後碼表 || !字頻表緩存 || 字頻表緩存.size === 0}
+          >
+            重新計算
           </Button>
         </Space>
 

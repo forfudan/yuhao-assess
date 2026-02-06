@@ -8,6 +8,7 @@ import { 重碼分析原子狀態 } from '@/atoms/duplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
+import { 碼表原子狀態, 原始碼表原子狀態 } from '@/atoms/codeTable'
 import { 從JSON導入, 創建空白方案 } from '@/services/schemeService'
 import type { RcFile } from 'antd/es/upload'
 
@@ -44,6 +45,8 @@ export function AppHeader() {
   const 設置候選個數分析結果 = useSetAtom(候選個數分析原子狀態)
   const 設置速度當量分析結果 = useSetAtom(速度當量分析原子狀態)
   const 設置簡碼效率分析結果 = useSetAtom(簡碼效率分析原子狀態)
+  const 設置碼表數據 = useSetAtom(碼表原子狀態)
+  const 設置原始碼表 = useSetAtom(原始碼表原子狀態)
 
   // 讀取分析結果用於導出
   const 重碼分析結果 = useAtomValue(重碼分析原子狀態)
@@ -172,15 +175,19 @@ export function AppHeader() {
     設置重碼分析結果(null)
     設置候選個數分析結果(null)
     設置速度當量分析結果(null)
+    設置簡碼效率分析結果(null)
     message.success('已創建新方案')
   }
 
   // 清除所有
   const 處理清除所有 = () => {
     設置當前方案(null)
+    設置碼表數據(null)
+    設置原始碼表('')
     設置重碼分析結果(null)
     設置候選個數分析結果(null)
     設置速度當量分析結果(null)
+    設置簡碼效率分析結果(null)
     message.success('已清除所有數據')
   }
 
