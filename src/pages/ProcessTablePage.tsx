@@ -250,50 +250,51 @@ const ProcessTablePage: React.FC = () => {
           </div>
         )}
 
+        {/* 碼表解析配置 */}
+        {當前方案?.碼表元數據 && 選中的文件 && (
+          <div style={{ marginBottom: '16px' }}>
+            <Space size="large">
+              <div>
+                <Text type="secondary">分隔符：</Text>
+                <Select
+                  value={當前方案.碼表元數據.分隔符}
+                  style={{ width: '120px' }}
+                  onChange={值 => {
+                    設置當前方案({
+                      ...當前方案,
+                      碼表元數據: { ...當前方案.碼表元數據!, 分隔符: 值 },
+                    })
+                  }}
+                >
+                  <Option value="空格">空格</Option>
+                  <Option value="製表符">製表符</Option>
+                  <Option value="逗號">逗號</Option>
+                  <Option value="分號">分號</Option>
+                </Select>
+              </div>
+              <div>
+                <Text type="secondary">第一列類型：</Text>
+                <Select
+                  value={當前方案.碼表元數據.第一列類型}
+                  style={{ width: '120px' }}
+                  onChange={值 => {
+                    設置當前方案({
+                      ...當前方案,
+                      碼表元數據: { ...當前方案.碼表元數據!, 第一列類型: 值 },
+                    })
+                  }}
+                >
+                  <Option value="字符">字符</Option>
+                  <Option value="編碼">編碼</Option>
+                </Select>
+              </div>
+            </Space>
+          </div>
+        )}
+
         {/* 文件上傳 */}
         {!選中的文件 && 編碼預覽數據.length === 0 && (
           <div>
-            {/* 碼表解析配置 */}
-            {當前方案?.碼表元數據 && (
-              <div style={{ marginBottom: '16px' }}>
-                <Space size="large">
-                  <div>
-                    <Text type="secondary">分隔符：</Text>
-                    <Select
-                      value={當前方案.碼表元數據.分隔符}
-                      style={{ width: '120px' }}
-                      onChange={值 => {
-                        設置當前方案({
-                          ...當前方案,
-                          碼表元數據: { ...當前方案.碼表元數據!, 分隔符: 值 },
-                        })
-                      }}
-                    >
-                      <Option value="空格">空格</Option>
-                      <Option value="製表符">製表符</Option>
-                      <Option value="逗號">逗號</Option>
-                      <Option value="分號">分號</Option>
-                    </Select>
-                  </div>
-                  <div>
-                    <Text type="secondary">第一列類型：</Text>
-                    <Select
-                      value={當前方案.碼表元數據.第一列類型}
-                      style={{ width: '120px' }}
-                      onChange={值 => {
-                        設置當前方案({
-                          ...當前方案,
-                          碼表元數據: { ...當前方案.碼表元數據!, 第一列類型: 值 },
-                        })
-                      }}
-                    >
-                      <Option value="字符">字符</Option>
-                      <Option value="編碼">編碼</Option>
-                    </Select>
-                  </div>
-                </Space>
-              </div>
-            )}
             <Upload.Dragger
               accept=".txt,.csv,.yaml,.yml"
               beforeUpload={處理文件變化}
@@ -418,7 +419,11 @@ const ProcessTablePage: React.FC = () => {
                 showTotal: (total, range) => `顯示 ${range[0]}-${range[1]} 個，共 ${total} 個字符`,
               }}
               columns={[
-                { title: '行號', render: (_: any, __: any, index: number) => index + 1, width: 60 },
+                {
+                  title: '行號',
+                  render: (_text: unknown, _record: unknown, index: number) => index + 1,
+                  width: 60,
+                },
                 { title: '漢字', dataIndex: 'char', width: 60 },
                 { title: '全碼', dataIndex: 'fullCode', width: 120 },
                 { title: '簡碼', dataIndex: 'shortCode', width: 120 },

@@ -6,7 +6,9 @@ import ProcessTablePage from './pages/ProcessTablePage'
 import DuplicateAnalysisPage from './pages/DuplicateAnalysisPage'
 import MaximumCandidatesPage from './pages/MaximumCandidatesPage'
 import SpeedEquivalentPage from './pages/SpeedEquivalentPage'
-import 簡碼效率頁面 from './pages/ShortCodeEfficiencyPage'
+import ShortCodeEfficiencyPage from './pages/ShortCodeEfficiencyPage'
+import SettingsPage from './pages/SettingsPage'
+import { ThemeProvider } from './components/ThemeProvider'
 import { 數據預加載服務類别 } from './services/dataPreloadService'
 
 const routes = [
@@ -36,7 +38,11 @@ const routes = [
       },
       {
         path: '/efficiency',
-        element: <簡碼效率頁面 />,
+        element: <ShortCodeEfficiencyPage />,
+      },
+      {
+        path: '/settings',
+        element: <SettingsPage />,
       },
     ],
   },
@@ -50,7 +56,7 @@ function App() {
     數據預加載服務類别.啓動預加載()
   }, [])
 
-  return element
+  return <ThemeProvider>{element}</ThemeProvider>
 }
 
 export default App

@@ -4,9 +4,10 @@
 /* 此文件只保留特殊的辅助样式 */
 
 /* 統一字符顯示（用於碼表等需要等寬字體的場景） */
+/* 使用動態 CSS 變量，與表格字體大小保持一致 */
 .ant-table .monospace-cell {
   font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
+  font-size: var(--table-font-size, 13px);
 }
 
 /* 深色模式下的表格樣式 */

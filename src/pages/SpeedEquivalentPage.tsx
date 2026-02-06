@@ -547,7 +547,11 @@ const SpeedEquivalentPage: React.FC = () => {
    * 詳情表格列定義
    */
   const 詳情列定義: ColumnsType<當量例字信息介面> = [
-    { title: '#', render: (_: any, __: any, index: number) => index + 1, width: 60 },
+    {
+      title: '#',
+      render: (_text: unknown, _record: unknown, index: number) => index + 1,
+      width: 60,
+    },
     { title: '字符', dataIndex: '字符', width: 80 },
     { title: '全碼', dataIndex: '全碼', width: 100 },
     { title: '簡碼', dataIndex: '簡碼', width: 100 },

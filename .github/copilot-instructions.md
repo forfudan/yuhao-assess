@@ -2,6 +2,8 @@
 
 > 本文檔爲 GitHub Copilot 提供項目背景和開發約定，確保跨會話的上下文連續性。
 
+Use Traditional Chinese for all communication.
+
 ## ⚠️ 重要規範
 
 ### � 完成一步後更新 ROADMAP
@@ -406,7 +408,7 @@ const 字頻數據 = await loadCharFrequency() // 舊代碼
 
 ```bash
 pnpm run fetch   # 從 CDN 下載數據到 public/data/
-pnpm run dev     # 啟動開發服務器（讀取 public/data/）
+pnpm run dev     # 啓動開發服務器（讀取 public/data/）
 ```
 
 **生産環境**：
