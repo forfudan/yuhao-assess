@@ -3,7 +3,12 @@
  * 處理重碼率計算、重碼統計和重碼報告生成
  */
 
-import { 過濾自定義字符集, type 預設字符集名稱型别, charsetInfo } from './charsetService'
+import {
+  過濾自定義字符集,
+  getTheoreticalCharsetSize,
+  type 預設字符集名稱型别,
+  charsetInfo,
+} from './charsetService'
 import type { 碼表型别, 頻率數據型别, 頻數數據型别 } from '../types/index'
 
 /**
@@ -127,6 +132,9 @@ export interface 某字符集的重碼數據介面 {
   /** 字符集名稱 */
   charsetName: string
   description: string
+  /** 理論字符集大小（該字符集應該有的總字符數） */
+  theoreticalSize: number
+  /** 實際有編碼的字符數（方案中收録的字符數） */
   totalChars: number
   /** 重碼字數（所有重碼字符的總數） */
   duplicateCount: number
@@ -384,8 +392,12 @@ export async function 計算某字符集的重碼數據(
   }
 
   const totalChars = charset.size
+
+  // 獲取理論字符集大小
+  const theoreticalSize = await getTheoreticalCharsetSize(字符集)
+
   console.log(
-    `[calculateCharsetDuplicates] ${字符集} - 重碼字數: ${duplicateCount}, 重碼組數: ${duplicateGroupCount}, 總字數: ${totalChars}`
+    `[calculateCharsetDuplicates] ${字符集} - 理論總數: ${theoreticalSize}, 實際有編碼: ${totalChars}, 重碼字數: ${duplicateCount}, 重碼組數: ${duplicateGroupCount}`
   )
 
   const uniqueCodes = codeToChars.size
@@ -394,6 +406,7 @@ export async function 計算某字符集的重碼數據(
     charset: 字符集,
     charsetName: info.name,
     description: info.description,
+    theoreticalSize,
     totalChars,
     duplicateCount,
     duplicateGroupCount,

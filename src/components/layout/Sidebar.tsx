@@ -90,9 +90,14 @@ export function Sidebar({ collapsed = false, onCollapse }: SidebarProps) {
       label: '碼表解析',
     },
     {
+      key: '/static',
+      icon: <DashboardOutlined />,
+      label: '靜態重碼',
+    },
+    {
       key: '/duplicate',
       icon: <DashboardOutlined />,
-      label: '重碼分析',
+      label: '動態選重',
     },
     {
       key: '/candidates',

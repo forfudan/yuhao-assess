@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useAtom } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { Button, Space, Typography, Alert, Spin, Tooltip, Modal, Table, Input, message } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
@@ -12,6 +12,7 @@ import {
   計算某字符集的重碼數據,
 } from '../services/duplicateAnalysisService'
 import { 字頻表服務類别 } from '../services/charFrequencyService'
+import { loadCJKBlockData } from '../services/charsetService'
 import type { 碼表型别, 處理後的碼表結果介面 } from '../types'
 
 const { Paragraph, Link } = Typography
@@ -476,24 +477,14 @@ const DuplicatePage: React.FC = () => {
   /**
    * 組件掛載時檢查數據
    */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    console.log('[DuplicateAnalysisPage] 組件掛載，檢查數據完整性')
-    console.log('[DuplicateAnalysisPage] 分析結果:', 分析結果)
-    console.log('[DuplicateAnalysisPage] 數據完整性:', 檢查數據完整性())
-
     if (!分析結果 || !檢查數據完整性()) {
-      console.log('[DuplicateAnalysisPage] 數據不完整，檢查是否需要重新計算')
       // 數據不完整，自動觸發計算
       if (處理後碼表) {
-        console.log('[DuplicateAnalysisPage] 有碼表數據，觸發重新計算')
         重新計算()
-      } else {
-        console.log('[DuplicateAnalysisPage] 無碼表數據，跳過計算')
       }
-    } else {
-      console.log('[DuplicateAnalysisPage] 數據完整，直接顯示')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /**
@@ -810,146 +801,6 @@ const DuplicatePage: React.FC = () => {
         全碼: 分析結果.常用國字靜態重碼?.全碼?.重碼組數?.toLocaleString() ?? '-',
         簡碼: 分析結果.常用國字靜態重碼?.簡碼?.重碼組數?.toLocaleString() ?? '-',
         説明: '常用國字標準字體表字符集中的重碼組數',
-        可點擊: false,
-      },
-      {
-        key: '14',
-        指標: 'GB2312重碼字數',
-        全碼: 分析結果.GB2312靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.GB2312靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.GB2312靜態重碼?.全碼?.總字符數
-          ? `${分析結果.GB2312靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.GB2312靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '15',
-        指標: '通規重碼字數',
-        全碼: 分析結果.通用規範靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.通用規範靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.通用規範靜態重碼?.全碼?.總字符數
-          ? `${分析結果.通用規範靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.通用規範靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '16',
-        指標: '國字重碼字數',
-        全碼: 分析結果.常用國字靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.常用國字靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.常用國字靜態重碼?.全碼?.總字符數
-          ? `${分析結果.常用國字靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.常用國字靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '17',
-        指標: 'CJK基本區重碼字數',
-        全碼: 分析結果.CJK基本靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.CJK基本靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.CJK基本靜態重碼?.全碼?.總字符數
-          ? `${分析結果.CJK基本靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.CJK基本靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '18',
-        指標: '到CJK-A重碼字數',
-        全碼: 分析結果.CJK擴A靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.CJK擴A靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.CJK擴A靜態重碼?.全碼?.總字符數
-          ? `${分析結果.CJK擴A靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴A靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '19',
-        指標: '到CJK-B重碼字數',
-        全碼: 分析結果.CJK擴B靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.CJK擴B靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.CJK擴B靜態重碼?.全碼?.總字符數
-          ? `${分析結果.CJK擴B靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴B靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '20',
-        指標: '到CJK-C重碼字數',
-        全碼: 分析結果.CJK擴C靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.CJK擴C靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.CJK擴C靜態重碼?.全碼?.總字符數
-          ? `${分析結果.CJK擴C靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴C靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '21',
-        指標: '到CJK-D重碼字數',
-        全碼: 分析結果.CJK擴D靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.CJK擴D靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.CJK擴D靜態重碼?.全碼?.總字符數
-          ? `${分析結果.CJK擴D靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴D靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '22',
-        指標: '到CJK-E重碼字數',
-        全碼: 分析結果.CJK擴E靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.CJK擴E靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.CJK擴E靜態重碼?.全碼?.總字符數
-          ? `${分析結果.CJK擴E靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴E靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '23',
-        指標: '到CJK-F重碼字數',
-        全碼: 分析結果.CJK擴F靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.CJK擴F靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.CJK擴F靜態重碼?.全碼?.總字符數
-          ? `${分析結果.CJK擴F靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴F靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '24',
-        指標: '到CJK-G重碼字數',
-        全碼: 分析結果.CJK擴G靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.CJK擴G靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.CJK擴G靜態重碼?.全碼?.總字符數
-          ? `${分析結果.CJK擴G靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴G靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '25',
-        指標: '到CJK-H重碼字數',
-        全碼: 分析結果.CJK擴H靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.CJK擴H靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.CJK擴H靜態重碼?.全碼?.總字符數
-          ? `${分析結果.CJK擴H靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴H靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '26',
-        指標: '到CJK-I重碼字數',
-        全碼: 分析結果.CJK擴I靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.CJK擴I靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.CJK擴I靜態重碼?.全碼?.總字符數
-          ? `${分析結果.CJK擴I靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴I靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
-        可點擊: false,
-      },
-      {
-        key: '27',
-        指標: '到CJK-J重碼字數',
-        全碼: 分析結果.CJK擴J靜態重碼?.全碼?.重碼字數?.toLocaleString() ?? '-',
-        簡碼: 分析結果.CJK擴J靜態重碼?.簡碼?.重碼字數?.toLocaleString() ?? '-',
-        説明: 分析結果.CJK擴J靜態重碼?.全碼?.總字符數
-          ? `${分析結果.CJK擴J靜態重碼.全碼.總字符數.toLocaleString()} 之 ${分析結果.CJK擴J靜態重碼.全碼.總字符數.toLocaleString()} 有編碼`
-          : '-',
         可點擊: false,
       },
     ]

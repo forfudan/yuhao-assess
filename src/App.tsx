@@ -3,6 +3,7 @@ import { useRoutes } from 'react-router-dom'
 import MainLayout from './components/layout/MainLayout'
 import HomePage from './pages/HomePage'
 import ProcessTablePage from './pages/ProcessTablePage'
+import StaticDuplicateAnalysisPage from './pages/StaticDuplicateAnalysisPage'
 import DuplicateAnalysisPage from './pages/DuplicateAnalysisPage'
 import MaximumCandidatesPage from './pages/MaximumCandidatesPage'
 import SpeedEquivalentPage from './pages/SpeedEquivalentPage'
@@ -25,6 +26,10 @@ const routes = [
       {
         path: '/process',
         element: <ProcessTablePage />,
+      },
+      {
+        path: '/static',
+        element: <StaticDuplicateAnalysisPage />,
       },
       {
         path: '/duplicate',

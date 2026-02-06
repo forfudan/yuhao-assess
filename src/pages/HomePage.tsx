@@ -23,6 +23,7 @@ import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { 當前方案原子狀態, 方案列表原子狀態 } from '@/atoms/scheme'
 import { 重碼分析原子狀態 } from '@/atoms/duplicate'
+import { 靜態重碼分析原子狀態 } from '@/atoms/staticDuplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
@@ -39,6 +40,7 @@ function HomePage() {
   const [當前方案, 設置當前方案] = useAtom(當前方案原子狀態)
   const [方案列表, 設置方案列表] = useAtom(方案列表原子狀態)
   const [重碼分析結果, 設置重碼分析結果] = useAtom(重碼分析原子狀態)
+  const [靜態重碼分析結果, 設置靜態重碼分析結果] = useAtom(靜態重碼分析原子狀態)
   const [候選個數分析結果, 設置候選個數分析結果] = useAtom(候選個數分析原子狀態)
   const [速度當量分析結果, 設置速度當量分析結果] = useAtom(速度當量分析原子狀態)
   const [簡碼效率分析結果, 設置簡碼效率分析結果] = useAtom(簡碼效率分析原子狀態)
@@ -61,6 +63,7 @@ function HomePage() {
 
     // 從測評結果中讀取分析數據
     const 數據中的重碼結果 = 測評結果?.重碼分析
+    const 數據中的靜態重碼結果 = 測評結果?.靜態重碼分析
     const 數據中的候選個數結果 = 測評結果?.候選個數分析
     const 數據中的速度當量結果 = 測評結果?.速度當量分析
     const 數據中的簡碼效率結果 = 測評結果?.簡碼效率分析
@@ -74,6 +77,7 @@ function HomePage() {
 
     // 如果有分析結果，寫入 atom
     const 有重碼結果 = !!數據中的重碼結果
+    const 有靜態重碼結果 = !!數據中的靜態重碼結果
     const 有候選個數結果 = !!數據中的候選個數結果
     const 有速度當量結果 = !!數據中的速度當量結果
     const 有簡碼效率結果 = !!數據中的簡碼效率結果
@@ -84,6 +88,14 @@ function HomePage() {
     } else {
       console.log(`[HomePage] ${來源}無重碼分析結果`)
       設置重碼分析結果(null)
+    }
+
+    if (有靜態重碼結果) {
+      console.log(`[HomePage] 設置${來源}的靜態重碼分析結果到 atom:`, 數據中的靜態重碼結果)
+      設置靜態重碼分析結果(數據中的靜態重碼結果)
+    } else {
+      console.log(`[HomePage] ${來源}無靜態重碼分析結果`)
+      設置靜態重碼分析結果(null)
     }
 
     if (有候選個數結果) {
@@ -112,6 +124,7 @@ function HomePage() {
 
     const 結果提示 = [
       有重碼結果 && '重碼分析',
+      有靜態重碼結果 && '靜態重碼分析',
       有候選個數結果 && '候選個數分析',
       有速度當量結果 && '速度當量分析',
       有簡碼效率結果 && '簡碼效率分析',
@@ -185,6 +198,7 @@ function HomePage() {
       ...當前方案,
       測評結果: {
         重碼分析: 重碼分析結果,
+        靜態重碼分析: 靜態重碼分析結果,
         候選個數分析: 候選個數分析結果,
         速度當量分析: 速度當量分析結果,
         簡碼效率分析: 簡碼效率分析結果,

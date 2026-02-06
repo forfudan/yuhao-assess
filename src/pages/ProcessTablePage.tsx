@@ -304,6 +304,7 @@ const ProcessTablePage: React.FC = () => {
                   onChange={值 => {
                     設置當前方案({
                       ...當前方案,
+                      元數據: { ...當前方案.元數據, 更新時間: new Date().toISOString() },
                       碼表元數據: { ...當前方案.碼表元數據!, 分隔符: 值 },
                     })
                   }}
@@ -322,6 +323,7 @@ const ProcessTablePage: React.FC = () => {
                   onChange={值 => {
                     設置當前方案({
                       ...當前方案,
+                      元數據: { ...當前方案.元數據, 更新時間: new Date().toISOString() },
                       碼表元數據: { ...當前方案.碼表元數據!, 第一列類型: 值 },
                     })
                   }}

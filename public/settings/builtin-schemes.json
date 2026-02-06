@@ -41,6 +41,12 @@
       "name": "冰雪清韻",
       "description": "冰雪系列",
       "enabled": true
+    },
+    {
+      "key": "tiger",
+      "name": "虎碼",
+      "description": "",
+      "enabled": true
     }
   ]
 }
