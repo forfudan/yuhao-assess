@@ -71,12 +71,9 @@ const ProcessTablePage: React.FC = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     設置碼表(處理結果 as any)
 
-    // 生成編碼預覽（所有数据）
+    // 生成編碼預覽（遍历处理后的全码表，确保每个字符只出现一次）
     const 預覽項: 編碼預覽項[] = []
-    for (const [, [字符]] of 原始碼表) {
-      if (!處理結果.全碼表.has(字符)) continue
-
-      const 全碼數組 = 處理結果.全碼表.get(字符) || []
+    for (const [字符, 全碼數組] of 處理結果.全碼表.entries()) {
       const 簡碼數組 = 處理結果.簡碼表.get(字符) || []
       const 全碼選重數組 = 處理結果.全碼加選重鍵表.get(字符) || []
       const 簡碼選重數組 = 處理結果.簡碼加選重鍵表.get(字符) || []
