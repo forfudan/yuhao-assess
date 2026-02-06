@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "fetch": "node scripts/fetch-data.js",
+    "fetch-local": "node scripts/fetch-local.js",
     "dev": "vite",
     "build": "node scripts/fetch-data.js && tsc && vite build",
     "build-cf": "node scripts/build-cf.js",

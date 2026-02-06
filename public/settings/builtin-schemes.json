@@ -3,32 +3,38 @@
     {
       "key": "yuhao-ling",
       "name": "靈明",
-      "description": "宇浩系列"
+      "description": "宇浩系列",
+      "enabled": true
     },
     {
       "key": "yuhao-star",
       "name": "星陳",
-      "description": "宇浩系列"
+      "description": "宇浩系列",
+      "enabled": true
     },
     {
       "key": "yuhao-joy",
       "name": "卿雲",
-      "description": "宇浩系列"
+      "description": "宇浩系列",
+      "enabled": true
     },
     {
       "key": "yuhao-ming",
       "name": "日月",
-      "description": "宇浩系列"
+      "description": "宇浩系列",
+      "enabled": true
     },
     {
       "key": "yuhao-light",
       "name": "光華",
-      "description": "宇浩系列"
+      "description": "宇浩系列",
+      "enabled": true
     },
     {
       "key": "snow-qingyun",
       "name": "冰雪清韻",
-      "description": "冰雪系列"
+      "description": "冰雪系列",
+      "enabled": true
     }
   ]
 }

@@ -16,24 +16,37 @@ const CDN_BASE = 'https://zhuyuhao.com/yuhao-assess-data/'
 const DATA_DIR = path.resolve(__dirname, '../public/data')
 const SCHEMES_DIR = path.resolve(__dirname, '../public/schemes')
 
-// 需要下載的數據文件列表
+// 需要下載的數據文件列表（從 data/ 路徑）
 const DATA_FILES = [
-  'charAbsoluteFrequencyZhihu.json',
-  'charAbsoluteFrequencySC.json',
-  'charAbsoluteFrequencyTC.json',
-  'charAbsoluteFrequencyGuji.json',
-  'wordAbsoluteFrequencySC.json',
-  'charsets.json',
+  'data/charAbsoluteFrequencyZhihu.json',
+  'data/charAbsoluteFrequencySC.json',
+  'data/charAbsoluteFrequencyTC.json',
+  'data/charAbsoluteFrequencyGuji.json',
+  'data/wordAbsoluteFrequencySC.json',
+  'data/charsets.json',
 ]
 
-// 需要下載的方案文件列表
-const SCHEME_FILES = [
-  'schemes/yuhao-joy.json',
-  'schemes/yuhao-ming.json',
-  'schemes/yuhao-ling.json',
-  'schemes/yuhao-star.json',
-  'schemes/snow-qingyun.json',
-]
+/**
+ * 從 builtin-schemes.json 讀取啟用的方案列表
+ */
+function getEnabledSchemes() {
+  const builtinSchemesPath = path.resolve(__dirname, '../public/settings/builtin-schemes.json')
+  
+  if (!fs.existsSync(builtinSchemesPath)) {
+    console.warn('⚠️  找不到 builtin-schemes.json，跳過方案文件')
+    return []
+  }
+  
+  try {
+    const builtinSchemes = JSON.parse(fs.readFileSync(builtinSchemesPath, 'utf-8'))
+    return builtinSchemes.schemes
+      .filter(scheme => scheme.enabled)
+      .map(scheme => `schemes/${scheme.key}.json`)
+  } catch (error) {
+    console.error('❌ 解析 builtin-schemes.json 失敗:', error.message)
+    return []
+  }
+}
 
 /**
  * 下載單個文件
@@ -120,8 +133,14 @@ async function main() {
 
     console.log('')
     console.log('📦 下載內置方案...')
-    for (const filename of SCHEME_FILES) {
-      await downloadFile(filename, SCHEMES_DIR)
+    const SCHEME_FILES = getEnabledSchemes()
+    if (SCHEME_FILES.length === 0) {
+      console.warn('⚠️  沒有找到啟用的方案，跳過')
+    } else {
+      console.log(`   找到 ${SCHEME_FILES.length} 個啟用的方案`)
+      for (const filename of SCHEME_FILES) {
+        await downloadFile(filename, SCHEMES_DIR)
+      }
     }
 
     console.log('')
