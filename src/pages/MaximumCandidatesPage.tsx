@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAtom } from 'jotai'
 import { Button, Space, Typography, Alert, Spin, Modal, Table, message } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
@@ -21,6 +21,7 @@ const MaximumCandidatesPage: React.FC = () => {
   const [計算中, 設置計算中] = useState(false)
   const [錯誤信息, 設置錯誤信息] = useState<string | null>(null)
   const [字符總數, 設置字符總數] = useState(0)
+  const 已初始化計算 = useRef(false)
 
   // 編碼詳情 Modal
   const [顯示詳情, 設置顯示詳情] = useState(false)
@@ -137,7 +138,8 @@ const MaximumCandidatesPage: React.FC = () => {
    * 組件掛載時自動計算
    */
   useEffect(() => {
-    if (!分析結果 && 處理後碼表) {
+    if (!分析結果 && 處理後碼表 && !已初始化計算.current) {
+      已初始化計算.current = true
       重新計算()
     } else if (分析結果?.字符數) {
       設置字符總數(分析結果.字符數)

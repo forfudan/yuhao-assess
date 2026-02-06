@@ -7,6 +7,7 @@ import DuplicateAnalysisPage from './pages/DuplicateAnalysisPage'
 import MaximumCandidatesPage from './pages/MaximumCandidatesPage'
 import SpeedEquivalentPage from './pages/SpeedEquivalentPage'
 import ShortCodeEfficiencyPage from './pages/ShortCodeEfficiencyPage'
+import KeyboardHeatmapPage from './pages/KeyboardHeatmapPage'
 import ComparisonPage from './pages/ComparisonPage'
 import SettingsPage from './pages/SettingsPage'
 import { ThemeProvider } from './components/ThemeProvider'
@@ -40,6 +41,10 @@ const routes = [
       {
         path: '/efficiency',
         element: <ShortCodeEfficiencyPage />,
+      },
+      {
+        path: '/heatmap',
+        element: <KeyboardHeatmapPage />,
       },
       {
         path: '/comparison',

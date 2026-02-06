@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAtom } from 'jotai'
 import { Button, Space, Typography, Alert, Spin, Modal, Table, Input, message } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
@@ -34,6 +34,7 @@ const SpeedEquivalentPage: React.FC = () => {
   const [顯示詳情, 設置顯示詳情] = useState(false)
   const [詳情計算中, 設置詳情計算中] = useState(false)
   const [搜索关键词, 設置搜索关键词] = useState('')
+  const 已初始化計算 = useRef(false)
 
   // 類型斷言：碼表數據實際上是 處理後的碼表結果
   const 處理後碼表 = 碼表數據 as 處理後的碼表結果介面 | null
@@ -381,7 +382,8 @@ const SpeedEquivalentPage: React.FC = () => {
    * 組件掛載時檢查數據
    */
   useEffect(() => {
-    if (!分析結果 && 處理後碼表 && 字頻表緩存) {
+    if (!分析結果 && 處理後碼表 && 字頻表緩存 && !已初始化計算.current) {
+      已初始化計算.current = true
       重新計算()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
