@@ -22,7 +22,7 @@ import {
 import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { 當前方案原子狀態, 方案列表原子狀態 } from '@/atoms/scheme'
-import { 重碼分析原子狀態 } from '@/atoms/duplicate'
+import { 動態選重分析原子狀態 } from '@/atoms/dynamicDuplicate'
 import { 靜態重碼分析原子狀態 } from '@/atoms/staticDuplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
@@ -39,7 +39,7 @@ const { TextArea } = Input
 function HomePage() {
   const [當前方案, 設置當前方案] = useAtom(當前方案原子狀態)
   const [方案列表, 設置方案列表] = useAtom(方案列表原子狀態)
-  const [重碼分析結果, 設置重碼分析結果] = useAtom(重碼分析原子狀態)
+  const [動態選重分析結果, 設置動態選重分析結果] = useAtom(動態選重分析原子狀態)
   const [靜態重碼分析結果, 設置靜態重碼分析結果] = useAtom(靜態重碼分析原子狀態)
   const [候選個數分析結果, 設置候選個數分析結果] = useAtom(候選個數分析原子狀態)
   const [速度當量分析結果, 設置速度當量分析結果] = useAtom(速度當量分析原子狀態)
@@ -62,13 +62,13 @@ function HomePage() {
     const { 測評結果, ...方案配置 } = 導入數據
 
     // 從測評結果中讀取分析數據
-    const 數據中的重碼結果 = 測評結果?.重碼分析
+    const 數據中的動態選重結果 = 測評結果?.動態選重分析
     const 數據中的靜態重碼結果 = 測評結果?.靜態重碼分析
     const 數據中的候選個數結果 = 測評結果?.候選個數分析
     const 數據中的速度當量結果 = 測評結果?.速度當量分析
     const 數據中的簡碼效率結果 = 測評結果?.簡碼效率分析
 
-    console.log(`[HomePage] ${來源}的重碼分析結果:`, 數據中的重碼結果)
+    console.log(`[HomePage] ${來源}的動態選重分析結果:`, 數據中的動態選重結果)
     console.log(`[HomePage] ${來源}的方案配置:`, 方案配置)
 
     // 驗證方案配置
@@ -76,18 +76,18 @@ function HomePage() {
     設置當前方案(方案)
 
     // 如果有分析結果，寫入 atom
-    const 有重碼結果 = !!數據中的重碼結果
+    const 有動態選重結果 = !!數據中的動態選重結果
     const 有靜態重碼結果 = !!數據中的靜態重碼結果
     const 有候選個數結果 = !!數據中的候選個數結果
     const 有速度當量結果 = !!數據中的速度當量結果
     const 有簡碼效率結果 = !!數據中的簡碼效率結果
 
-    if (有重碼結果) {
-      console.log(`[HomePage] 設置${來源}的重碼分析結果到 atom:`, 數據中的重碼結果)
-      設置重碼分析結果(數據中的重碼結果)
+    if (有動態選重結果) {
+      console.log(`[HomePage] 設置${來源}的動態選重分析結果到 atom:`, 數據中的動態選重結果)
+      設置動態選重分析結果(數據中的動態選重結果)
     } else {
-      console.log(`[HomePage] ${來源}無重碼分析結果`)
-      設置重碼分析結果(null)
+      console.log(`[HomePage] ${來源}無動態選重分析結果`)
+      設置動態選重分析結果(null)
     }
 
     if (有靜態重碼結果) {
@@ -123,7 +123,7 @@ function HomePage() {
     }
 
     const 結果提示 = [
-      有重碼結果 && '重碼分析',
+      有動態選重結果 && '動態選重分析',
       有靜態重碼結果 && '靜態重碼分析',
       有候選個數結果 && '候選個數分析',
       有速度當量結果 && '速度當量分析',
@@ -183,76 +183,6 @@ function HomePage() {
     } finally {
       設置加載中(false)
     }
-  }
-
-  // 導出 JSON
-  const 處理導出JSON = () => {
-    if (!當前方案) {
-      message.warning('請先選擇或創建方案')
-      return
-    }
-
-    // 直接導出，將 atom 的分析結果附加到方案配置
-    // 使用 測評結果 字段包裹所有分析結果
-    const 導出數據 = {
-      ...當前方案,
-      測評結果: {
-        重碼分析: 重碼分析結果,
-        靜態重碼分析: 靜態重碼分析結果,
-        候選個數分析: 候選個數分析結果,
-        速度當量分析: 速度當量分析結果,
-        簡碼效率分析: 簡碼效率分析結果,
-      },
-    }
-
-    const json文本 = JSON.stringify(導出數據, null, 2)
-    const blob = new Blob([json文本], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-
-    // 文件名格式：標識符-方案名-作者-版本號.json
-    const 標識符 = 當前方案.元數據.標識符
-    const 方案名 = 當前方案.元數據.方案名
-    const 作者 = 當前方案.元數據.作者 || 'unknown'
-    const 版本 = 當前方案.元數據.版本 || '1.0.0'
-    a.download = `${標識符}-${方案名}-${作者}-${版本}.json`
-
-    a.click()
-    URL.revokeObjectURL(url)
-
-    const 結果列表 = [
-      重碼分析結果 && '重碼分析',
-      候選個數分析結果 && '候選個數分析',
-      速度當量分析結果 && '速度當量分析',
-      簡碼效率分析結果 && '簡碼效率分析',
-    ].filter(Boolean)
-    const 提示 = 結果列表.length > 0 ? `（包含${結果列表.join('、')}結果）` : ''
-    message.success(`方案配置已導出${提示}`)
-  }
-
-  // 導入 JSON
-  const 處理導入JSON = async (file: UploadFile) => {
-    const reader = new FileReader()
-    reader.onload = e => {
-      try {
-        const 文本 = e.target?.result as string
-        const 導入數據 = JSON.parse(文本)
-        處理方案數據(導入數據, '導入JSON')
-      } catch (錯誤) {
-        console.error('[HomePage] 導入失敗:', 錯誤)
-        message.error(錯誤 instanceof Error ? 錯誤.message : '導入失敗')
-      }
-    }
-    reader.readAsText(file as unknown as Blob)
-    return false // 阻止自動上傳
-  }
-
-  // 創建新方案
-  const 處理創建新方案 = () => {
-    const 新方案 = 創建空白方案()
-    設置當前方案(新方案)
-    message.success('已創建新方案')
   }
 
   // 更新元數據字段

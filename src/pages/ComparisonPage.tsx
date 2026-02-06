@@ -5,13 +5,15 @@ import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 當前方案原子狀態 } from '@/atoms/scheme'
 import { 選中對比方案鍵名列表原子狀態 } from '@/atoms/comparison'
-import { 重碼分析原子狀態 } from '@/atoms/duplicate'
+import { 動態選重分析原子狀態 } from '@/atoms/dynamicDuplicate'
+import { 靜態重碼分析原子狀態 } from '@/atoms/staticDuplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 獲取内置方案列表, 加載方案, type 内置方案配置 } from '@/services/schemeService'
 import type { 方案配置介面 } from '@/types/scheme'
-import type { 重碼分析結果介面 } from '@/atoms/duplicate'
+import type { 動態選重分析結果介面 } from '@/atoms/dynamicDuplicate'
+import type { 靜態重碼分析結果介面 } from '@/atoms/staticDuplicate'
 import type { 最大候選個數分析結果 } from '@/atoms/maximumCandidates'
 import type { 速度當量分析結果介面 } from '@/atoms/speedEquivalent'
 import type { 簡碼效率分析結果介面 } from '@/atoms/shortCodeEfficiency'
@@ -25,7 +27,8 @@ interface 對比方案數據 {
   顯示名稱: string // 顯示用的名稱，當前方案會添加 "(當前方案)" 後綴
   是否當前方案: boolean
   碼表哈希?: string // 用於去重判斷
-  重碼分析?: 重碼分析結果介面 | null
+  動態選重分析?: 動態選重分析結果介面 | null
+  靜態重碼分析?: 靜態重碼分析結果介面 | null
   候選個數分析?: 最大候選個數分析結果 | null
   速度當量分析?: 速度當量分析結果介面 | null
   簡碼效率分析?: 簡碼效率分析結果介面 | null
@@ -42,7 +45,8 @@ type TabType =
 
 const ComparisonPage: React.FC = () => {
   const [當前方案] = useAtom(當前方案原子狀態)
-  const 重碼分析結果介面 = useAtomValue(重碼分析原子狀態)
+  const 動態選重分析結果 = useAtomValue(動態選重分析原子狀態)
+  const 靜態重碼分析結果 = useAtomValue(靜態重碼分析原子狀態)
   const 候選個數分析結果 = useAtomValue(候選個數分析原子狀態)
   const 速度當量分析結果 = useAtomValue(速度當量分析原子狀態)
   const 簡碼效率分析結果 = useAtomValue(簡碼效率分析原子狀態)
@@ -73,10 +77,11 @@ const ComparisonPage: React.FC = () => {
     const 方案列表: 對比方案數據[] = []
     let 當前方案哈希: string | undefined = undefined
 
-    // 添加當前方案（如果存在且有重碼分析數據）
-    if (當前方案 && 重碼分析結果介面) {
+    // 添加當前方案（如果存在且有分析數據）
+    if (當前方案 && (動態選重分析結果 || 靜態重碼分析結果)) {
       console.log('🟢 [Step 2] 添加當前方案:', 當前方案.元數據.方案名)
-      console.log('🟢 當前方案的重碼分析:', 重碼分析結果介面)
+      console.log('🟢 當前方案的動態選重率:', 動態選重分析結果)
+      console.log('🟢 當前方案的靜態重碼:', 靜態重碼分析結果)
 
       當前方案哈希 = 當前方案.碼表元數據?.哈希值
       const 方案名 = 當前方案.元數據.方案名
@@ -87,13 +92,14 @@ const ComparisonPage: React.FC = () => {
         顯示名稱: `${方案名}（當前方案）`,
         是否當前方案: true,
         碼表哈希: 當前方案哈希,
-        重碼分析: 重碼分析結果介面,
+        動態選重分析: 動態選重分析結果,
+        靜態重碼分析: 靜態重碼分析結果,
         候選個數分析: 候選個數分析結果,
         速度當量分析: 速度當量分析結果,
         簡碼效率分析: 簡碼效率分析結果,
       })
     } else {
-      console.log('⚠️ 没有當前方案或没有重碼分析數據')
+      console.log('⚠️ 没有當前方案或没有分析數據')
     }
 
     // 加載選中的内置方案數據
@@ -126,7 +132,8 @@ const ComparisonPage: React.FC = () => {
           顯示名稱: 方案名,
           是否當前方案: false,
           碼表哈希: 方案哈希,
-          重碼分析: 測評結果?.重碼分析 || null,
+          動態選重分析: 測評結果?.動態選重分析 || null,
+          靜態重碼分析: 測評結果?.靜態重碼分析 || null,
           候選個數分析: 測評結果?.候選個數分析 || null,
           速度當量分析: 測評結果?.速度當量分析 || null,
           簡碼效率分析: 測評結果?.簡碼效率分析 || null,
@@ -157,7 +164,8 @@ const ComparisonPage: React.FC = () => {
     }
   }, [
     當前方案,
-    重碼分析結果介面,
+    動態選重分析結果,
+    靜態重碼分析結果,
     候選個數分析結果,
     速度當量分析結果,
     簡碼效率分析結果,
@@ -229,31 +237,31 @@ const ComparisonPage: React.FC = () => {
       title: 'GB2312 全碼',
       key: 'gb2312-full',
       render: (_, record) => {
-        const value = record.重碼分析?.GB2312靜態重碼?.全碼?.重碼字數
+        const value = record.靜態重碼分析?.GB2312?.全碼重碼字數
         console.log(`📊 [${record.方案名}] GB2312全碼重碼字數:`, value)
-        console.log(`📊 [${record.方案名}] 重碼分析結構:`, record.重碼分析)
+        console.log(`📊 [${record.方案名}] 靜態重碼分析結構:`, record.靜態重碼分析)
         return value || '-'
       },
     },
     {
       title: 'GB2312 簡碼',
       key: 'gb2312-short',
-      render: (_, record) => record.重碼分析?.GB2312靜態重碼?.簡碼?.重碼字數 || '-',
+      render: (_, record) => record.靜態重碼分析?.GB2312?.簡碼重碼字數 || '-',
     },
     {
       title: '通用規範 全碼',
       key: 'tonggui-full',
-      render: (_, record) => record.重碼分析?.通用規範靜態重碼?.全碼?.重碼字數 || '-',
+      render: (_, record) => record.靜態重碼分析?.通用規範?.全碼重碼字數 || '-',
     },
     {
       title: '常用國字 全碼',
       key: 'guozi-full',
-      render: (_, record) => record.重碼分析?.常用國字靜態重碼?.全碼?.重碼字數 || '-',
+      render: (_, record) => record.靜態重碼分析?.常用國字?.全碼重碼字數 || '-',
     },
     {
       title: 'CJK 基本 全碼',
       key: 'cjk-basic-full',
-      render: (_, record) => record.重碼分析?.CJK基本靜態重碼?.全碼?.重碼字數 || '-',
+      render: (_, record) => record.靜態重碼分析?.CJK基本?.全碼重碼字數 || '-',
     },
   ]
 
@@ -329,40 +337,40 @@ const ComparisonPage: React.FC = () => {
       title: '知乎簡體',
       key: 'zhihu-full',
       render: (_, record) =>
-        record.重碼分析?.知乎簡體動態選重率?.全碼
-          ? `${(record.重碼分析.知乎簡體動態選重率.全碼 * 10000).toFixed(2)}‱`
+        record.動態選重分析?.知乎簡體動態選重率?.全碼
+          ? `${(record.動態選重分析.知乎簡體動態選重率.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
     {
       title: '北語簡體',
       key: 'sc-full',
       render: (_, record) =>
-        record.重碼分析?.北語簡體動態選重率?.全碼
-          ? `${(record.重碼分析.北語簡體動態選重率.全碼 * 10000).toFixed(2)}‱`
+        record.動態選重分析?.北語簡體動態選重率?.全碼
+          ? `${(record.動態選重分析.北語簡體動態選重率.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
     {
       title: '臺標繁體',
       key: 'tc-full',
       render: (_, record) =>
-        record.重碼分析?.臺標繁體動態選重率?.全碼
-          ? `${(record.重碼分析.臺標繁體動態選重率.全碼 * 10000).toFixed(2)}‱`
+        record.動態選重分析?.臺標繁體動態選重率?.全碼
+          ? `${(record.動態選重分析.臺標繁體動態選重率.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
     {
       title: '古籍繁體',
       key: 'guji-full',
       render: (_, record) =>
-        record.重碼分析?.古籍繁體動態選重率?.全碼
-          ? `${(record.重碼分析.古籍繁體動態選重率.全碼 * 10000).toFixed(2)}‱`
+        record.動態選重分析?.古籍繁體動態選重率?.全碼
+          ? `${(record.動態選重分析.古籍繁體動態選重率.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
     {
       title: '繁簡聯合',
       key: 'fanjian-full',
       render: (_, record) =>
-        record.重碼分析?.繁簡聯合動態選重率?.全碼
-          ? `${(record.重碼分析.繁簡聯合動態選重率.全碼 * 10000).toFixed(2)}‱`
+        record.動態選重分析?.繁簡聯合動態選重率?.全碼
+          ? `${(record.動態選重分析.繁簡聯合動態選重率.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
   ]
@@ -379,40 +387,40 @@ const ComparisonPage: React.FC = () => {
       title: '知乎簡體',
       key: 'zhihu-full-orig',
       render: (_, record) =>
-        record.重碼分析?.知乎簡體動態選重率原序?.全碼
-          ? `${(record.重碼分析.知乎簡體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
+        record.動態選重分析?.知乎簡體動態選重率原序?.全碼
+          ? `${(record.動態選重分析.知乎簡體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
     {
       title: '北語簡體',
       key: 'sc-full-orig',
       render: (_, record) =>
-        record.重碼分析?.北語簡體動態選重率原序?.全碼
-          ? `${(record.重碼分析.北語簡體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
+        record.動態選重分析?.北語簡體動態選重率原序?.全碼
+          ? `${(record.動態選重分析.北語簡體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
     {
       title: '臺標繁體',
       key: 'tc-full-orig',
       render: (_, record) =>
-        record.重碼分析?.臺標繁體動態選重率原序?.全碼
-          ? `${(record.重碼分析.臺標繁體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
+        record.動態選重分析?.臺標繁體動態選重率原序?.全碼
+          ? `${(record.動態選重分析.臺標繁體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
     {
       title: '古籍繁體',
       key: 'guji-full-orig',
       render: (_, record) =>
-        record.重碼分析?.古籍繁體動態選重率原序?.全碼
-          ? `${(record.重碼分析.古籍繁體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
+        record.動態選重分析?.古籍繁體動態選重率原序?.全碼
+          ? `${(record.動態選重分析.古籍繁體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
     {
       title: '繁簡聯合',
       key: 'fanjian-full-orig',
       render: (_, record) =>
-        record.重碼分析?.繁簡聯合動態選重率原序?.全碼
-          ? `${(record.重碼分析.繁簡聯合動態選重率原序.全碼 * 10000).toFixed(2)}‱`
+        record.動態選重分析?.繁簡聯合動態選重率原序?.全碼
+          ? `${(record.動態選重分析.繁簡聯合動態選重率原序.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
   ]

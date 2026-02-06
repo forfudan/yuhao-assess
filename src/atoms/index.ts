@@ -15,8 +15,13 @@ export {
 export { 設置原子狀態, 分析參數原子狀態 } from './settings'
 
 // 重碼分析原子狀態
-export { 重碼分析原子狀態 } from './duplicate'
-export type { 重碼分析結果介面, 動態選重率結果介面, 靜態重碼結果介面 } from './duplicate'
+export { 重碼分析原子狀態, 動態選重分析原子狀態 } from './dynamicDuplicate'
+export type {
+  重碼分析結果介面,
+  動態選重分析結果介面,
+  動態選重結果介面,
+  靜態重碼結果介面,
+} from './dynamicDuplicate'
 
 // 數據預加載原子狀態
 export { 數據預加載狀態原子, 是否正在預加載, 核心數據已加載, 所有數據已加載 } from './dataPreload'

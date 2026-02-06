@@ -7,7 +7,7 @@
  * 這樣導入和導出都非常方便，且不需要額外的轉換邏輯。
  */
 
-import type { 重碼分析結果介面 } from '../atoms/duplicate'
+import type { 重碼分析結果介面 } from '../atoms/dynamicDuplicate'
 import type { 最大候選個數分析結果 } from '../atoms/maximumCandidates'
 import type { 速度當量分析結果介面 } from '../atoms/speedEquivalent'
 import type { 簡碼效率分析結果介面 } from '../atoms/shortCodeEfficiency'
@@ -64,7 +64,13 @@ export interface 鍵位熱力結果介面 {
  * 直接使用各個 Atom 的類型定義，確保與應用中的數據結構保持同步
  */
 export interface 方案測評結果介面 {
-  // 重碼分析（完整結構，包含靜態重碼和動態選重率）
+  // 動態選重分析（按字頻重排和保持原序）
+  動態選重分析?: import('@/atoms/dynamicDuplicate').動態選重分析結果介面
+
+  // 靜態重碼分析（各字符集的靜態重碼數據）
+  靜態重碼分析?: import('@/atoms/staticDuplicate').靜態重碼分析結果介面
+
+  // 重碼分析（已廢棄，僅用於向後兼容）
   重碼分析?: 重碼分析結果介面
 
   // 最大候選數分析

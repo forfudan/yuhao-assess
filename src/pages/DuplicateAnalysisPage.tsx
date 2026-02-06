@@ -1,24 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAtom, useAtomValue } from 'jotai'
 import { Button, Space, Typography, Alert, Spin, Tooltip, Modal, Table, Input, message } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 碼表原子狀態 } from '../atoms/codeTable'
-import { 動態選重分析原子狀態 } from '../atoms/dynamicDuplicate'
-import type { 動態選重分析結果介面 } from '../atoms/dynamicDuplicate'
-import { 計算動態選重率, 計算原始碼表的動態選重率 } from '../services/duplicateAnalysisService'
+import { 重碼分析原子狀態 } from '../atoms/dynamicDuplicate'
+import type { 重碼分析結果介面 } from '../atoms/dynamicDuplicate'
+import {
+  計算動態選重率,
+  計算原始碼表的動態選重率,
+  計算某字符集的重碼數據,
+} from '../services/duplicateAnalysisService'
 import { 字頻表服務類别 } from '../services/charFrequencyService'
+import { loadCJKBlockData } from '../services/charsetService'
 import type { 碼表型别, 處理後的碼表結果介面 } from '../types'
 
 const { Paragraph, Link } = Typography
 
 /**
- * 動態選重率分析頁面
- * 展示基於不同字頻表的動態選重率數據
+ * 重碼分析頁面
+ * 展示動態選重率、靜態重碼等數據
  */
-const DynamicDuplicateAnalysisPage: React.FC = () => {
+const DuplicatePage: React.FC = () => {
   const [碼表數據] = useAtom(碼表原子狀態)
-  const [分析結果, 設置分析結果] = useAtom(動態選重分析原子狀態)
+  const [分析結果, 設置分析結果] = useAtom(重碼分析原子狀態)
   const [計算中, 設置計算中] = useState(false)
   const [錯誤信息, 設置錯誤信息] = useState<string | null>(null)
 
@@ -45,7 +50,7 @@ const DynamicDuplicateAnalysisPage: React.FC = () => {
    */
   const 檢查數據完整性 = (): boolean => {
     if (!分析結果) {
-      console.log('[DynamicDuplicateAnalysisPage] 檢查完整性: 無分析結果')
+      console.log('[DuplicateAnalysisPage] 檢查完整性: 無分析結果')
       return false
     }
 
@@ -56,17 +61,49 @@ const DynamicDuplicateAnalysisPage: React.FC = () => {
       '古籍繁體動態選重率',
       '繁簡聯合動態選重率',
       '知乎簡體動態選重率原序',
+      'GB2312靜態重碼',
+      '通用規範靜態重碼',
+      '常用國字靜態重碼',
     ]
 
     const 完整 = 必需字段.every(字段 => 字段 in 分析結果)
 
     if (!完整) {
       const 缺少字段 = 必需字段.filter(字段 => !(字段 in 分析結果))
-      console.log('[DynamicDuplicateAnalysisPage] 檢查完整性: 數據不完整，缺少字段:', 缺少字段)
+      console.log('[DuplicateAnalysisPage] 檢查完整性: 數據不完整，缺少字段:', 缺少字段)
       return false
     }
 
-    console.log('[DynamicDuplicateAnalysisPage] 檢查完整性: 數據完整')
+    // 驗證靜態重碼數據結構類型（必須是嵌套結構：{ 全碼: {...}, 簡碼: {...} }）
+    const 靜態重碼字段 = ['GB2312靜態重碼', '通用規範靜態重碼', '常用國字靜態重碼']
+    for (const 字段 of 靜態重碼字段) {
+      const 數據 = 分析結果[字段 as keyof typeof 分析結果] as any
+      if (數據) {
+        // 檢查是否有正確的嵌套結構
+        if (typeof 數據 !== 'object' || !('全碼' in 數據) || !('簡碼' in 數據)) {
+          console.log(
+            `[DuplicateAnalysisPage] 檢查完整性: ${字段} 類型不匹配（缺少全碼或簡碼），需要重新計算`
+          )
+          return false
+        }
+        // 檢查嵌套對象是否有必需的字段
+        const 全碼數據 = 數據.全碼
+        const 簡碼數據 = 數據.簡碼
+        if (
+          !全碼數據 ||
+          !簡碼數據 ||
+          typeof 全碼數據 !== 'object' ||
+          typeof 簡碼數據 !== 'object' ||
+          !('重碼組數' in 全碼數據) ||
+          !('重碼組數' in 簡碼數據)
+        ) {
+          console.log(`[DuplicateAnalysisPage] 檢查完整性: ${字段} 嵌套結構不完整，需要重新計算`)
+          return false
+        }
+      }
+    }
+
+    console.log('[DuplicateAnalysisPage] 檢查完整性: 數據完整且類型正確')
     return true
   }
 
@@ -151,7 +188,74 @@ const DynamicDuplicateAnalysisPage: React.FC = () => {
         簡碼: 計算原始碼表的動態選重率(簡碼加選重鍵表, 繁簡聯合字頻),
       }
 
-      const 新結果: 動態選重分析結果介面 = {
+      // ========== 靜態重碼 ==========
+      // 全碼表計算
+      const [
+        GB2312數據全碼,
+        通用規範數據全碼,
+        常用國字數據全碼,
+        CJK基本數據全碼,
+        CJKA數據全碼,
+        CJKB數據全碼,
+        CJKC數據全碼,
+        CJKD數據全碼,
+        CJKE數據全碼,
+        CJKF數據全碼,
+        CJKG數據全碼,
+        CJKH數據全碼,
+        CJKI數據全碼,
+        CJKJ數據全碼,
+      ] = await Promise.all([
+        計算某字符集的重碼數據(全碼表, 'gb2312'),
+        計算某字符集的重碼數據(全碼表, 'tonggui'),
+        計算某字符集的重碼數據(全碼表, 'guozi'),
+        計算某字符集的重碼數據(全碼表, 'cjk_basic'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_a'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_b'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_c'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_d'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_e'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_f'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_g'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_h'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_i'),
+        計算某字符集的重碼數據(全碼表, 'cjk_to_j'),
+      ])
+
+      // 簡碼表計算
+      const [
+        GB2312數據簡碼,
+        通用規範數據簡碼,
+        常用國字數據簡碼,
+        CJK基本數據簡碼,
+        CJKA數據簡碼,
+        CJKB數據簡碼,
+        CJKC數據簡碼,
+        CJKD數據簡碼,
+        CJKE數據簡碼,
+        CJKF數據簡碼,
+        CJKG數據簡碼,
+        CJKH數據簡碼,
+        CJKI數據簡碼,
+        CJKJ數據簡碼,
+      ] = await Promise.all([
+        計算某字符集的重碼數據(簡碼表, 'gb2312'),
+        計算某字符集的重碼數據(簡碼表, 'tonggui'),
+        計算某字符集的重碼數據(簡碼表, 'guozi'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_basic'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_a'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_b'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_c'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_d'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_e'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_f'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_g'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_h'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_i'),
+        計算某字符集的重碼數據(簡碼表, 'cjk_to_j'),
+      ])
+
+      const 新結果: 重碼分析結果介面 = {
         知乎簡體動態選重率,
         北語簡體動態選重率,
         臺標繁體動態選重率,
@@ -162,11 +266,207 @@ const DynamicDuplicateAnalysisPage: React.FC = () => {
         臺標繁體動態選重率原序,
         古籍繁體動態選重率原序,
         繁簡聯合動態選重率原序,
+        GB2312靜態重碼: {
+          全碼: {
+            重碼組數: GB2312數據全碼.duplicateGroupCount,
+            重碼字數: GB2312數據全碼.duplicateCount,
+            總字符數: GB2312數據全碼.totalChars,
+            重碼率: GB2312數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: GB2312數據簡碼.duplicateGroupCount,
+            重碼字數: GB2312數據簡碼.duplicateCount,
+            總字符數: GB2312數據簡碼.totalChars,
+            重碼率: GB2312數據簡碼.duplicateRate,
+          },
+        },
+        通用規範靜態重碼: {
+          全碼: {
+            重碼組數: 通用規範數據全碼.duplicateGroupCount,
+            重碼字數: 通用規範數據全碼.duplicateCount,
+            總字符數: 通用規範數據全碼.totalChars,
+            重碼率: 通用規範數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: 通用規範數據簡碼.duplicateGroupCount,
+            重碼字數: 通用規範數據簡碼.duplicateCount,
+            總字符數: 通用規範數據簡碼.totalChars,
+            重碼率: 通用規範數據簡碼.duplicateRate,
+          },
+        },
+        常用國字靜態重碼: {
+          全碼: {
+            重碼組數: 常用國字數據全碼.duplicateGroupCount,
+            重碼字數: 常用國字數據全碼.duplicateCount,
+            總字符數: 常用國字數據全碼.totalChars,
+            重碼率: 常用國字數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: 常用國字數據簡碼.duplicateGroupCount,
+            重碼字數: 常用國字數據簡碼.duplicateCount,
+            總字符數: 常用國字數據簡碼.totalChars,
+            重碼率: 常用國字數據簡碼.duplicateRate,
+          },
+        },
+        CJK基本靜態重碼: {
+          全碼: {
+            重碼組數: CJK基本數據全碼.duplicateGroupCount,
+            重碼字數: CJK基本數據全碼.duplicateCount,
+            總字符數: CJK基本數據全碼.totalChars,
+            重碼率: CJK基本數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: CJK基本數據簡碼.duplicateGroupCount,
+            重碼字數: CJK基本數據簡碼.duplicateCount,
+            總字符數: CJK基本數據簡碼.totalChars,
+            重碼率: CJK基本數據簡碼.duplicateRate,
+          },
+        },
+        CJK擴A靜態重碼: {
+          全碼: {
+            重碼組數: CJKA數據全碼.duplicateGroupCount,
+            重碼字數: CJKA數據全碼.duplicateCount,
+            總字符數: CJKA數據全碼.totalChars,
+            重碼率: CJKA數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: CJKA數據簡碼.duplicateGroupCount,
+            重碼字數: CJKA數據簡碼.duplicateCount,
+            總字符數: CJKA數據簡碼.totalChars,
+            重碼率: CJKA數據簡碼.duplicateRate,
+          },
+        },
+        CJK擴B靜態重碼: {
+          全碼: {
+            重碼組數: CJKB數據全碼.duplicateGroupCount,
+            重碼字數: CJKB數據全碼.duplicateCount,
+            總字符數: CJKB數據全碼.totalChars,
+            重碼率: CJKB數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: CJKB數據簡碼.duplicateGroupCount,
+            重碼字數: CJKB數據簡碼.duplicateCount,
+            總字符數: CJKB數據簡碼.totalChars,
+            重碼率: CJKB數據簡碼.duplicateRate,
+          },
+        },
+        CJK擴C靜態重碼: {
+          全碼: {
+            重碼組數: CJKC數據全碼.duplicateGroupCount,
+            重碼字數: CJKC數據全碼.duplicateCount,
+            總字符數: CJKC數據全碼.totalChars,
+            重碼率: CJKC數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: CJKC數據簡碼.duplicateGroupCount,
+            重碼字數: CJKC數據簡碼.duplicateCount,
+            總字符數: CJKC數據簡碼.totalChars,
+            重碼率: CJKC數據簡碼.duplicateRate,
+          },
+        },
+        CJK擴D靜態重碼: {
+          全碼: {
+            重碼組數: CJKD數據全碼.duplicateGroupCount,
+            重碼字數: CJKD數據全碼.duplicateCount,
+            總字符數: CJKD數據全碼.totalChars,
+            重碼率: CJKD數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: CJKD數據簡碼.duplicateGroupCount,
+            重碼字數: CJKD數據簡碼.duplicateCount,
+            總字符數: CJKD數據簡碼.totalChars,
+            重碼率: CJKD數據簡碼.duplicateRate,
+          },
+        },
+        CJK擴E靜態重碼: {
+          全碼: {
+            重碼組數: CJKE數據全碼.duplicateGroupCount,
+            重碼字數: CJKE數據全碼.duplicateCount,
+            總字符數: CJKE數據全碼.totalChars,
+            重碼率: CJKE數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: CJKE數據簡碼.duplicateGroupCount,
+            重碼字數: CJKE數據簡碼.duplicateCount,
+            總字符數: CJKE數據簡碼.totalChars,
+            重碼率: CJKE數據簡碼.duplicateRate,
+          },
+        },
+        CJK擴F靜態重碼: {
+          全碼: {
+            重碼組數: CJKF數據全碼.duplicateGroupCount,
+            重碼字數: CJKF數據全碼.duplicateCount,
+            總字符數: CJKF數據全碼.totalChars,
+            重碼率: CJKF數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: CJKF數據簡碼.duplicateGroupCount,
+            重碼字數: CJKF數據簡碼.duplicateCount,
+            總字符數: CJKF數據簡碼.totalChars,
+            重碼率: CJKF數據簡碼.duplicateRate,
+          },
+        },
+        CJK擴G靜態重碼: {
+          全碼: {
+            重碼組數: CJKG數據全碼.duplicateGroupCount,
+            重碼字數: CJKG數據全碼.duplicateCount,
+            總字符數: CJKG數據全碼.totalChars,
+            重碼率: CJKG數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: CJKG數據簡碼.duplicateGroupCount,
+            重碼字數: CJKG數據簡碼.duplicateCount,
+            總字符數: CJKG數據簡碼.totalChars,
+            重碼率: CJKG數據簡碼.duplicateRate,
+          },
+        },
+        CJK擴H靜態重碼: {
+          全碼: {
+            重碼組數: CJKH數據全碼.duplicateGroupCount,
+            重碼字數: CJKH數據全碼.duplicateCount,
+            總字符數: CJKH數據全碼.totalChars,
+            重碼率: CJKH數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: CJKH數據簡碼.duplicateGroupCount,
+            重碼字數: CJKH數據簡碼.duplicateCount,
+            總字符數: CJKH數據簡碼.totalChars,
+            重碼率: CJKH數據簡碼.duplicateRate,
+          },
+        },
+        CJK擴I靜態重碼: {
+          全碼: {
+            重碼組數: CJKI數據全碼.duplicateGroupCount,
+            重碼字數: CJKI數據全碼.duplicateCount,
+            總字符數: CJKI數據全碼.totalChars,
+            重碼率: CJKI數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: CJKI數據簡碼.duplicateGroupCount,
+            重碼字數: CJKI數據簡碼.duplicateCount,
+            總字符數: CJKI數據簡碼.totalChars,
+            重碼率: CJKI數據簡碼.duplicateRate,
+          },
+        },
+        CJK擴J靜態重碼: {
+          全碼: {
+            重碼組數: CJKJ數據全碼.duplicateGroupCount,
+            重碼字數: CJKJ數據全碼.duplicateCount,
+            總字符數: CJKJ數據全碼.totalChars,
+            重碼率: CJKJ數據全碼.duplicateRate,
+          },
+          簡碼: {
+            重碼組數: CJKJ數據簡碼.duplicateGroupCount,
+            重碼字數: CJKJ數據簡碼.duplicateCount,
+            總字符數: CJKJ數據簡碼.totalChars,
+            重碼率: CJKJ數據簡碼.duplicateRate,
+          },
+        },
         更新時間: new Date().toISOString(),
       }
 
       設置分析結果(新結果)
-      message.success('動態選重率計算完成')
+      message.success('重碼分析計算完成')
     } catch (error) {
       設置錯誤信息(error instanceof Error ? error.message : '計算失敗')
     } finally {
@@ -479,6 +779,30 @@ const DynamicDuplicateAnalysisPage: React.FC = () => {
         可點擊: true,
         點擊處理: (碼表類型: '全碼' | '簡碼') => 顯示重碼字符詳情('unified', 碼表類型, false),
       },
+      {
+        key: '11',
+        指標: 'GB2312重碼組數',
+        全碼: 分析結果.GB2312靜態重碼?.全碼?.重碼組數?.toLocaleString() ?? '-',
+        簡碼: 分析結果.GB2312靜態重碼?.簡碼?.重碼組數?.toLocaleString() ?? '-',
+        説明: 'GB2312字符集中的重碼組數',
+        可點擊: false,
+      },
+      {
+        key: '12',
+        指標: '通規重碼組數',
+        全碼: 分析結果.通用規範靜態重碼?.全碼?.重碼組數?.toLocaleString() ?? '-',
+        簡碼: 分析結果.通用規範靜態重碼?.簡碼?.重碼組數?.toLocaleString() ?? '-',
+        説明: '通用規範漢字表字符集中的重碼組數',
+        可點擊: false,
+      },
+      {
+        key: '13',
+        指標: '國字重碼組數',
+        全碼: 分析結果.常用國字靜態重碼?.全碼?.重碼組數?.toLocaleString() ?? '-',
+        簡碼: 分析結果.常用國字靜態重碼?.簡碼?.重碼組數?.toLocaleString() ?? '-',
+        説明: '常用國字標準字體表字符集中的重碼組數',
+        可點擊: false,
+      },
     ]
 
     const 列定義: ColumnsType<表格數據項> = [
@@ -710,4 +1034,4 @@ const DynamicDuplicateAnalysisPage: React.FC = () => {
   )
 }
 
-export default DynamicDuplicateAnalysisPage
+export default DuplicatePage

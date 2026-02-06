@@ -4,7 +4,8 @@ import { DownloadOutlined, UploadOutlined, PlusOutlined, DeleteOutlined } from '
 import { useAtom, useSetAtom, useAtomValue } from 'jotai'
 import styled from 'styled-components'
 import { 當前方案原子狀態 } from '@/atoms/scheme'
-import { 重碼分析原子狀態 } from '@/atoms/duplicate'
+import { 動態選重分析原子狀態 } from '@/atoms/dynamicDuplicate'
+import { 靜態重碼分析原子狀態 } from '@/atoms/staticDuplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
@@ -42,7 +43,8 @@ const 頁面標題映射: Record<string, string> = {
 export function AppHeader() {
   const location = useLocation()
   const [當前方案, 設置當前方案] = useAtom(當前方案原子狀態)
-  const 設置重碼分析結果 = useSetAtom(重碼分析原子狀態)
+  const 設置動態選重分析結果 = useSetAtom(動態選重分析原子狀態)
+  const 設置靜態重碼分析結果 = useSetAtom(靜態重碼分析原子狀態)
   const 設置候選個數分析結果 = useSetAtom(候選個數分析原子狀態)
   const 設置速度當量分析結果 = useSetAtom(速度當量分析原子狀態)
   const 設置簡碼效率分析結果 = useSetAtom(簡碼效率分析原子狀態)
@@ -50,7 +52,8 @@ export function AppHeader() {
   const 設置原始碼表 = useSetAtom(原始碼表原子狀態)
 
   // 讀取分析結果用於導出
-  const 重碼分析結果 = useAtomValue(重碼分析原子狀態)
+  const 動態選重分析結果 = useAtomValue(動態選重分析原子狀態)
+  const 靜態重碼分析結果 = useAtomValue(靜態重碼分析原子狀態)
   const 候選個數分析結果 = useAtomValue(候選個數分析原子狀態)
   const 速度當量分析結果 = useAtomValue(速度當量分析原子狀態)
   const 簡碼效率分析結果 = useAtomValue(簡碼效率分析原子狀態)
@@ -73,16 +76,23 @@ export function AppHeader() {
         設置當前方案(方案)
 
         // 從測評結果中讀取分析數據
-        const 數據中的重碼結果 = 測評結果?.重碼分析
+        const 數據中的動態選重結果 = 測評結果?.動態選重分析
+        const 數據中的靜態重碼結果 = 測評結果?.靜態重碼分析
         const 數據中的候選個數結果 = 測評結果?.候選個數分析
         const 數據中的速度當量結果 = 測評結果?.速度當量分析
         const 數據中的簡碼效率結果 = 測評結果?.簡碼效率分析
 
         // 如果有分析結果，寫入 atom
-        if (數據中的重碼結果) {
-          設置重碼分析結果(數據中的重碼結果)
+        if (數據中的動態選重結果) {
+          設置動態選重分析結果(數據中的動態選重結果)
         } else {
-          設置重碼分析結果(null)
+          設置動態選重分析結果(null)
+        }
+
+        if (數據中的靜態重碼結果) {
+          設置靜態重碼分析結果(數據中的靜態重碼結果)
+        } else {
+          設置靜態重碼分析結果(null)
         }
 
         if (數據中的候選個數結果) {
@@ -104,7 +114,8 @@ export function AppHeader() {
         }
 
         const 結果提示 = [
-          數據中的重碼結果 && '重碼分析',
+          數據中的動態選重結果 && '動態選重分析',
+          數據中的靜態重碼結果 && '靜態重碼分析',
           數據中的候選個數結果 && '候選個數分析',
           數據中的速度當量結果 && '速度當量分析',
           數據中的簡碼效率結果 && '簡碼效率分析',
@@ -135,7 +146,8 @@ export function AppHeader() {
       const 導出數據: 方案配置介面 = {
         ...當前方案,
         測評結果: {
-          重碼分析: 重碼分析結果 ?? undefined,
+          動態選重分析: 動態選重分析結果 ?? undefined,
+          靜態重碼分析: 靜態重碼分析結果 ?? undefined,
           候選個數分析: 候選個數分析結果 ?? undefined,
           速度當量分析: 速度當量分析結果 ?? undefined,
           簡碼效率分析: 簡碼效率分析結果 ?? undefined,
@@ -159,7 +171,8 @@ export function AppHeader() {
       URL.revokeObjectURL(url)
 
       const 結果列表 = [
-        重碼分析結果 && '重碼分析',
+        動態選重分析結果 && '動態選重分析',
+        靜態重碼分析結果 && '靜態重碼分析',
         候選個數分析結果 && '候選個數分析',
         速度當量分析結果 && '速度當量分析',
         簡碼效率分析結果 && '簡碼效率分析',
@@ -176,7 +189,8 @@ export function AppHeader() {
   const 處理創建新方案 = () => {
     const 新方案 = 創建空白方案()
     設置當前方案(新方案)
-    設置重碼分析結果(null)
+    設置動態選重分析結果(null)
+    設置靜態重碼分析結果(null)
     設置候選個數分析結果(null)
     設置速度當量分析結果(null)
     設置簡碼效率分析結果(null)
@@ -188,7 +202,8 @@ export function AppHeader() {
     設置當前方案(null)
     設置碼表數據(null)
     設置原始碼表('')
-    設置重碼分析結果(null)
+    設置動態選重分析結果(null)
+    設置靜態重碼分析結果(null)
     設置候選個數分析結果(null)
     設置速度當量分析結果(null)
     設置簡碼效率分析結果(null)

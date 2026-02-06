@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAtom } from 'jotai'
 import { Button, Space, Typography, Alert, Spin, Table, message } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
@@ -570,7 +570,7 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
         {/* 無數據提示 */}
         {!計算中 && !分析結果 && !錯誤信息 && (
           <Alert
-            message="請點擊「重新計算」來查看分析結果"
+            title="請點擊「重新計算」來查看分析結果"
             type="info"
             showIcon
             style={{ marginTop: 16 }}
