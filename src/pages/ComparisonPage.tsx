@@ -27,13 +27,14 @@ interface 對比方案數據 {
   簡碼效率分析?: 簡碼效率分析結果介面 | null
 }
 
-// 五個 Tab 類型
+// Tab 類型
 type TabType =
   | 'duplicate'
+  | 'dynamicDupRate'
+  | 'dynamicDupRateOriginal'
   | 'maxCandidates'
   | 'speedEquiv'
   | 'shortCodeEfficiency'
-  | 'dynamicDupRate'
 
 const ComparisonPage: React.FC = () => {
   const [當前方案] = useAtom(當前方案原子狀態)
@@ -116,10 +117,13 @@ const ComparisonPage: React.FC = () => {
         const 方案 = await 加載方案(key)
         const 方案信息 = 内置方案列表.find(b => b.key === key)
 
+        // TODO: 從方案配置中提取測評結果
+        // 目前内置方案的 JSON 文件中没有測評結果字段
+        // 後續需要添加測評結果數據並實現轉換邏輯
+
         新方案列表.push({
           方案名: 方案信息?.name || 方案.元數據.方案名,
           是否當前方案: false,
-          // 内置方案没有計算結果，顯示爲 null
           重碼分析: null,
           候選個數分析: null,
           速度當量分析: null,
@@ -138,13 +142,8 @@ const ComparisonPage: React.FC = () => {
     }
   }
 
-  // 移除方案（不能移除當前方案）
-  const 移除方案 = (方案名: string) => {
-    設置對比方案列表(對比方案列表.filter(s => s.方案名 !== 方案名))
-  }
-
-  // 靜態重碼率表格列定義
-  const 靜態重碼率列: ColumnsType<對比方案數據> = [
+  // 靜態重碼字數表格列定義
+  const 靜態重碼字數列: ColumnsType<對比方案數據> = [
     {
       title: '方案名',
       dataIndex: '方案名',
@@ -155,43 +154,31 @@ const ComparisonPage: React.FC = () => {
     {
       title: 'GB2312 全碼',
       key: 'gb2312-full',
-      render: (_, record) => record.重碼分析?.GB2312靜態重碼?.全碼?.重碼率?.toFixed(2) || '-',
+      render: (_, record) => record.重碼分析?.GB2312靜態重碼?.全碼?.重碼字數 || '-',
     },
     {
       title: 'GB2312 簡碼',
       key: 'gb2312-short',
-      render: (_, record) => record.重碼分析?.GB2312靜態重碼?.簡碼?.重碼率?.toFixed(2) || '-',
+      render: (_, record) => record.重碼分析?.GB2312靜態重碼?.簡碼?.重碼字數 || '-',
     },
     {
       title: '通用規範 全碼',
       key: 'tonggui-full',
-      render: (_, record) => record.重碼分析?.通用規範靜態重碼?.全碼?.重碼率?.toFixed(2) || '-',
+      render: (_, record) => record.重碼分析?.通用規範靜態重碼?.全碼?.重碼字數 || '-',
     },
     {
       title: '常用國字 全碼',
       key: 'guozi-full',
-      render: (_, record) => record.重碼分析?.常用國字靜態重碼?.全碼?.重碼率?.toFixed(2) || '-',
+      render: (_, record) => record.重碼分析?.常用國字靜態重碼?.全碼?.重碼字數 || '-',
     },
     {
       title: 'CJK 基本 全碼',
       key: 'cjk-basic-full',
-      render: (_, record) => record.重碼分析?.CJK基本靜態重碼?.全碼?.重碼率?.toFixed(2) || '-',
-    },
-    {
-      title: '操作',
-      key: 'action',
-      fixed: 'right',
-      width: 100,
-      render: (_, record) =>
-        !record.是否當前方案 && (
-          <Button type="link" size="small" onClick={() => 移除方案(record.方案名)}>
-            移除
-          </Button>
-        ),
+      render: (_, record) => record.重碼分析?.CJK基本靜態重碼?.全碼?.重碼字數 || '-',
     },
   ]
 
-  // 其他表格列定義（暂时简化）
+  // 最大候選數列
   const 最大候選數列: ColumnsType<對比方案數據> = [
     {
       title: '方案名',
@@ -214,18 +201,6 @@ const ComparisonPage: React.FC = () => {
       title: 'CJK 基本',
       key: 'cjk-basic',
       render: (_, record) => record.候選個數分析?.cjk_basic?.最大候選個數 || '-',
-    },
-    {
-      title: '操作',
-      key: 'action',
-      fixed: 'right',
-      width: 100,
-      render: (_, record) =>
-        !record.是否當前方案 && (
-          <Button type="link" size="small" onClick={() => 移除方案(record.方案名)}>
-            移除
-          </Button>
-        ),
     },
   ]
 
@@ -252,18 +227,6 @@ const ComparisonPage: React.FC = () => {
       title: '臺標繁體',
       key: 'tc',
       render: (_, record) => record.速度當量分析?.臺標繁體字頻全碼速度當量?.toFixed(2) || '-',
-    },
-    {
-      title: '操作',
-      key: 'action',
-      fixed: 'right',
-      width: 100,
-      render: (_, record) =>
-        !record.是否當前方案 && (
-          <Button type="link" size="small" onClick={() => 移除方案(record.方案名)}>
-            移除
-          </Button>
-        ),
     },
   ]
 
@@ -308,17 +271,48 @@ const ComparisonPage: React.FC = () => {
           ? `${(record.重碼分析.臺標繁體動態選重率.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
+  ]
+
+  // 動態重碼率原始排序列
+  const 動態重碼率原始排序列: ColumnsType<對比方案數據> = [
     {
-      title: '操作',
-      key: 'action',
-      fixed: 'right',
-      width: 100,
+      title: '方案名',
+      dataIndex: '方案名',
+      key: '方案名',
+      fixed: 'left',
+      width: 200,
+    },
+    {
+      title: '知乎簡體 全碼',
+      key: 'zhihu-full-orig',
       render: (_, record) =>
-        !record.是否當前方案 && (
-          <Button type="link" size="small" onClick={() => 移除方案(record.方案名)}>
-            移除
-          </Button>
-        ),
+        record.重碼分析?.知乎簡體動態選重率原序?.全碼
+          ? `${(record.重碼分析.知乎簡體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
+          : '-',
+    },
+    {
+      title: '知乎簡體 簡碼',
+      key: 'zhihu-short-orig',
+      render: (_, record) =>
+        record.重碼分析?.知乎簡體動態選重率原序?.簡碼
+          ? `${(record.重碼分析.知乎簡體動態選重率原序.簡碼 * 10000).toFixed(2)}‱`
+          : '-',
+    },
+    {
+      title: '北語簡體 全碼',
+      key: 'sc-full-orig',
+      render: (_, record) =>
+        record.重碼分析?.北語簡體動態選重率原序?.全碼
+          ? `${(record.重碼分析.北語簡體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
+          : '-',
+    },
+    {
+      title: '臺標繁體 全碼',
+      key: 'tc-full-orig',
+      render: (_, record) =>
+        record.重碼分析?.臺標繁體動態選重率原序?.全碼
+          ? `${(record.重碼分析.臺標繁體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
+          : '-',
     },
   ]
 
@@ -361,27 +355,17 @@ const ComparisonPage: React.FC = () => {
         return result?.簡碼效率值?.toFixed(3) || '-'
       },
     },
-    {
-      title: '操作',
-      key: 'action',
-      fixed: 'right',
-      width: 100,
-      render: (_, record) =>
-        !record.是否當前方案 && (
-          <Button type="link" size="small" onClick={() => 移除方案(record.方案名)}>
-            移除
-          </Button>
-        ),
-    },
   ]
 
   // 根據當前 Tab 選擇列定義
   const 當前列定義 = useMemo(() => {
     switch (當前Tab) {
       case 'duplicate':
-        return 靜態重碼率列
+        return 靜態重碼字數列
       case 'dynamicDupRate':
         return 動態重碼率列
+      case 'dynamicDupRateOriginal':
+        return 動態重碼率原始排序列
       case 'maxCandidates':
         return 最大候選數列
       case 'speedEquiv':
@@ -389,7 +373,7 @@ const ComparisonPage: React.FC = () => {
       case 'shortCodeEfficiency':
         return 簡碼效率列
       default:
-        return 靜態重碼率列
+        return 靜態重碼字數列
     }
   }, [當前Tab])
 
@@ -406,38 +390,44 @@ const ComparisonPage: React.FC = () => {
             type={當前Tab === 'duplicate' ? 'primary' : 'default'}
             onClick={() => 設置當前Tab('duplicate')}
           >
-            靜態重碼
+            靜碼
           </Button>
           <Button
             type={當前Tab === 'dynamicDupRate' ? 'primary' : 'default'}
             onClick={() => 設置當前Tab('dynamicDupRate')}
           >
-            動態選重
+            動重
+          </Button>
+          <Button
+            type={當前Tab === 'dynamicDupRateOriginal' ? 'primary' : 'default'}
+            onClick={() => 設置當前Tab('dynamicDupRateOriginal')}
+          >
+            原始碼表動重
           </Button>
           <Button
             type={當前Tab === 'maxCandidates' ? 'primary' : 'default'}
             onClick={() => 設置當前Tab('maxCandidates')}
           >
-            最大候選數
+            候選數
           </Button>
           <Button
             type={當前Tab === 'speedEquiv' ? 'primary' : 'default'}
             onClick={() => 設置當前Tab('speedEquiv')}
           >
-            速度當量
+            當量
           </Button>
           <Button
             type={當前Tab === 'shortCodeEfficiency' ? 'primary' : 'default'}
             onClick={() => 設置當前Tab('shortCodeEfficiency')}
           >
-            簡碼效率
+            簡碼
           </Button>
         </Space>
 
         {/* 操作按鈕 */}
         <Space>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => 設置顯示選擇彈窗(true)}>
-            添加對比方案
+            選擇對比方案
           </Button>
         </Space>
 
