@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAtom } from 'jotai'
-import { Button, Typography, Alert, Spin, Modal, message, Space } from 'antd'
+import { Button, Typography, Alert, Spin, Modal, message, Space, Table, Input } from 'antd'
 import { ReloadOutlined, CopyOutlined } from '@ant-design/icons'
+import type { ColumnsType } from 'antd/es/table'
 import styled from 'styled-components'
 import { 碼表原子狀態 } from '../atoms/codeTable'
 import { 簡碼效率分析原子狀態 } from '../atoms/shortCodeEfficiency'
@@ -97,105 +98,14 @@ const HiddenCell = styled.td`
   pointer-events: none;
 `
 
-const EmptyState = styled.div`
-  text-align: center;
-  padding: 60px 20px;
-  color: #6b7280;
-
-  .empty-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-  }
-
-  h4 {
-    margin: 0 0 8px 0;
-    color: #374151;
-    font-size: 18px;
-  }
-
-  p {
-    margin: 0;
-    font-size: 14px;
-  }
-`
-
-const ModalCharGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 8px;
-  padding: 16px 0;
-
-  @media (max-width: 900px) {
-    grid-template-columns: repeat(5, 1fr);
-  }
-`
-
-const ModalCharItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 4px;
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: #eff6ff;
-    border-color: #3b82f6;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-  }
-`
-
-const ModalChar = styled.div`
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 6px;
-`
-
-const ModalCodes = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  width: 100%;
-`
-
-const ModalCharCode = styled.div<{ $type?: 'short' | 'full' | 'saving' }>`
-  font-size: 11px;
-  // font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-  background: white;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-weight: 600;
-
-  ${props => {
-    switch (props.$type) {
-      case 'short':
-        return `
-          color: #059669;
-          border: 1px solid #dcfce7;
-        `
-      case 'full':
-        return `
-          color: #3b82f6;
-          border: 1px solid #dbeafe;
-        `
-      case 'saving':
-        return `
-          color: #ea580c;
-          border: 1px solid #fed7aa;
-        `
-      default:
-        return `
-          color: #6b7280;
-          border: 1px solid #e5e7eb;
-        `
-    }
-  }}
-`
+// 詳情表格數據介面
+interface 詳情表格行數據 {
+  序號: number
+  字符: string
+  簡碼: string
+  全碼: string
+  簡碼效率: string
+}
 
 // ===================
 // 類型定義
@@ -277,6 +187,7 @@ const ShortCodeEfficiencyPage: React.FC = () => {
   const [詳情標題, 設置詳情標題] = useState('')
   const [詳情字符列表, 設置詳情字符列表] = useState<string[]>([])
   const [詳情字頻類型, 設置詳情字頻類型] = useState('')
+  const [詳情搜索關鍵詞, 設置詳情搜索關鍵詞] = useState('')
 
   // 類型斷言：碼表數據實際上是處理後的碼表結果
   const 處理後碼表 = 碼表數據 as 處理後的碼表結果介面 | null
@@ -681,26 +592,6 @@ const ShortCodeEfficiencyPage: React.FC = () => {
   }
 
   /**
-   * 複製字符到剪貼板
-   */
-  const 複製到剪貼板 = async () => {
-    if (詳情字符列表.length === 0) return
-
-    try {
-      const 文本 = 詳情字符列表.join('')
-      if (typeof window !== 'undefined' && window.navigator?.clipboard) {
-        await window.navigator.clipboard.writeText(文本)
-        message.success('已複製到剪貼板')
-      } else {
-        message.error('您的瀏覽器不支持剪貼板功能')
-      }
-    } catch (err) {
-      console.error('複製失敗:', err)
-      message.error('複製失敗，請重試')
-    }
-  }
-
-  /**
    * 獲取簡碼（帶選重）
    */
   const 獲取簡碼 = (字符: string): string => {
@@ -759,27 +650,96 @@ const ShortCodeEfficiencyPage: React.FC = () => {
     return `-${節約碼長.toFixed(4)}`
   }
 
+  /**
+   * 複製字符到剪貼板
+   */
+  const 複製到剪貼板 = async () => {
+    if (詳情字符列表.length === 0) return
+
+    try {
+      const 文本 = 詳情字符列表.join('')
+      if (typeof window !== 'undefined' && window.navigator?.clipboard) {
+        await window.navigator.clipboard.writeText(文本)
+        message.success('已將這些漢字複製到剪貼板')
+      } else {
+        message.error('您的瀏覽器不支持剪貼板功能')
+      }
+    } catch (err) {
+      console.error('複製失敗:', err)
+      message.error('複製失敗，請重試')
+    }
+  }
+
+  /**
+   * 構建詳情表格數據
+   */
+  const 詳情表格數據 = useMemo<詳情表格行數據[]>(() => {
+    return 詳情字符列表.map((字符, 索引) => ({
+      序號: 索引 + 1,
+      字符,
+      簡碼: 獲取簡碼(字符),
+      全碼: 獲取全碼(字符),
+      簡碼效率: 獲取加權節約碼長(字符, 詳情字頻類型),
+    }))
+  }, [詳情字符列表, 詳情字頻類型])
+
+  /**
+   * 過濾後的詳情表格數據
+   */
+  const 過濾後詳情表格數據 = useMemo(() => {
+    if (!詳情搜索關鍵詞) return 詳情表格數據
+
+    const 關鍵詞 = 詳情搜索關鍵詞.toLowerCase()
+    return 詳情表格數據.filter(
+      行 =>
+        行.字符.includes(詳情搜索關鍵詞) ||
+        行.簡碼.toLowerCase().includes(關鍵詞) ||
+        行.全碼.toLowerCase().includes(關鍵詞)
+    )
+  }, [詳情表格數據, 詳情搜索關鍵詞])
+
+  /**
+   * 詳情表格列定義
+   */
+  const 詳情列定義: ColumnsType<詳情表格行數據> = [
+    {
+      title: '#',
+      dataIndex: '序號',
+      width: 60,
+      align: 'center',
+    },
+    {
+      title: '字',
+      dataIndex: '字符',
+      width: 80,
+      align: 'center',
+    },
+    {
+      title: '簡碼',
+      dataIndex: '簡碼',
+      width: 120,
+      align: 'center',
+      render: (text: string) => <span className="monospace-cell">{text}</span>,
+    },
+    {
+      title: '全碼',
+      dataIndex: '全碼',
+      width: 120,
+      align: 'center',
+      render: (text: string) => <span className="monospace-cell">{text}</span>,
+    },
+    {
+      title: '簡碼效率',
+      dataIndex: '簡碼效率',
+      width: 120,
+      align: 'center',
+      render: (text: string) => <span style={{ color: '#059669', fontWeight: 600 }}>{text}</span>,
+    },
+  ]
+
   // ===================
   // 渲染
   // ===================
-
-  if (!處理後碼表) {
-    return (
-      <div style={{ padding: 24 }}>
-        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
-          <div>
-            <Paragraph>計算使用效率最高的若干簡碼下的字頻加權平均碼長</Paragraph>
-          </div>
-
-          <EmptyState>
-            <div className="empty-icon">📊</div>
-            <h4>等待碼表數據</h4>
-            <p>請先在「碼表解析」頁面上傳碼表文件</p>
-          </EmptyState>
-        </Space>
-      </div>
-    )
-  }
 
   return (
     <div style={{ padding: 24 }}>
@@ -937,7 +897,7 @@ const ShortCodeEfficiencyPage: React.FC = () => {
       {/* 詳情模態框 */}
       <Modal
         title={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'normal', alignItems: 'center' }}>
             <span>{詳情標題}</span>
             <Button
               type="primary"
@@ -951,26 +911,35 @@ const ShortCodeEfficiencyPage: React.FC = () => {
           </div>
         }
         open={顯示詳情}
-        onCancel={() => 設置顯示詳情(false)}
+        onCancel={() => {
+          設置顯示詳情(false)
+          設置詳情搜索關鍵詞('')
+        }}
         footer={null}
-        width={900}
-        style={{ maxHeight: '80vh' }}
+        width={800}
       >
+        <div style={{ marginBottom: 16 }}>
+          <Input.Search
+            placeholder="搜索字符或編碼..."
+            value={詳情搜索關鍵詞}
+            onChange={e => 設置詳情搜索關鍵詞(e.target.value)}
+            allowClear
+            style={{ width: '100%' }}
+          />
+        </div>
         {詳情字符列表.length > 0 ? (
-          <ModalCharGrid>
-            {詳情字符列表.map((字符, 索引) => (
-              <ModalCharItem key={`${字符}-${索引}`}>
-                <ModalChar>{字符}</ModalChar>
-                <ModalCodes>
-                  <ModalCharCode $type="short">{獲取簡碼(字符)}</ModalCharCode>
-                  <ModalCharCode $type="full">{獲取全碼(字符)}</ModalCharCode>
-                  <ModalCharCode $type="saving">
-                    {獲取加權節約碼長(字符, 詳情字頻類型)}
-                  </ModalCharCode>
-                </ModalCodes>
-              </ModalCharItem>
-            ))}
-          </ModalCharGrid>
+          <Table
+            dataSource={過濾後詳情表格數據}
+            columns={詳情列定義}
+            rowKey="序號"
+            pagination={{
+              defaultPageSize: 10,
+              pageSizeOptions: ['10', '20', '50', '100'],
+              showSizeChanger: true,
+              showTotal: (total, range) => `顯示 ${range[0]}-${range[1]} 項，共 ${total} 項`,
+            }}
+            scroll={{ y: 400 }}
+          />
         ) : (
           <div style={{ textAlign: 'center', padding: '40px 0', color: '#6b7280' }}>無數據</div>
         )}

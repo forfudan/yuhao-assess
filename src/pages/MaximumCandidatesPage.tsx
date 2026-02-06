@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAtom } from 'jotai'
-import { Button, Space, Typography, Alert, Spin, Modal, Table } from 'antd'
+import { Button, Space, Typography, Alert, Spin, Modal, Table, message } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 碼表原子狀態 } from '../atoms/codeTable'
@@ -117,6 +117,7 @@ const MaximumCandidatesPage: React.FC = () => {
 
       設置分析結果(新結果)
       設置字符總數(總字符數)
+      message.success('最大候選項計算完成')
     } catch (error) {
       設置錯誤信息(error instanceof Error ? error.message : '計算失敗')
     } finally {

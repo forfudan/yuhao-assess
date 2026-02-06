@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAtom } from 'jotai'
-import { Button, Space, Typography, Alert, Spin, Modal, Table, Input } from 'antd'
+import { Button, Space, Typography, Alert, Spin, Modal, Table, Input, message } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 碼表原子狀態 } from '../atoms/codeTable'
@@ -256,6 +256,7 @@ const SpeedEquivalentPage: React.FC = () => {
       }
 
       設置分析結果(新結果)
+      message.success('速度當量計算完成')
     } catch (error) {
       設置錯誤信息(error instanceof Error ? error.message : '計算失敗')
     } finally {
