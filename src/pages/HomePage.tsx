@@ -19,7 +19,7 @@ import {
   ReloadOutlined,
   PlusCircleOutlined,
 } from '@ant-design/icons'
-import { useAtom } from 'jotai'
+import { useAtom, useSetAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { 當前方案原子狀態, 方案列表原子狀態 } from '@/atoms/scheme'
 import { 動態選重分析原子狀態 } from '@/atoms/dynamicDuplicate'
@@ -27,6 +27,7 @@ import { 靜態重碼分析原子狀態 } from '@/atoms/staticDuplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
+import { 碼表原子狀態, 原始碼表原子狀態, 編碼預覽數據原子狀態 } from '@/atoms/codeTable'
 import { 加載方案, 列出可用方案, 從JSON導入, 創建空白方案 } from '@/services/schemeService'
 import { useDataPreload } from '@/hooks/useDataPreload'
 import type { 方案配置介面 } from '@/types/scheme'
@@ -44,7 +45,22 @@ function HomePage() {
   const [候選個數分析結果, 設置候選個數分析結果] = useAtom(候選個數分析原子狀態)
   const [速度當量分析結果, 設置速度當量分析結果] = useAtom(速度當量分析原子狀態)
   const [簡碼效率分析結果, 設置簡碼效率分析結果] = useAtom(簡碼效率分析原子狀態)
+  const 設置碼表數據 = useSetAtom(碼表原子狀態)
+  const 設置原始碼表 = useSetAtom(原始碼表原子狀態)
+  const 設置編碼預覽數據 = useSetAtom(編碼預覽數據原子狀態)
   const [加載中, 設置加載中] = useState(false)
+
+  // 清空所有 atom 狀態（統一函數）
+  const 清空所有Atom = () => {
+    設置碼表數據(null)
+    設置原始碼表('')
+    設置編碼預覽數據([])
+    設置靜態重碼分析結果(null)
+    設置動態選重分析結果(null)
+    設置候選個數分析結果(null)
+    設置速度當量分析結果(null)
+    設置簡碼效率分析結果(null)
+  }
 
   // 使用數據預加載狀態
   const {
@@ -57,6 +73,9 @@ function HomePage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const 處理方案數據 = (導入數據: any, 來源: string) => {
     console.log(`[HomePage] 從${來源}獲取的原始數據:`, 導入數據)
+
+    // 先清空所有 atom
+    清空所有Atom()
 
     // 分離方案配置和測評結果
     const { 測評結果, ...方案配置 } = 導入數據

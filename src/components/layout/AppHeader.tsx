@@ -46,6 +46,7 @@ export function AppHeader() {
   const 設置簡碼效率分析結果 = useSetAtom(簡碼效率分析原子狀態)
   const 設置碼表數據 = useSetAtom(碼表原子狀態)
   const 設置原始碼表 = useSetAtom(原始碼表原子狀態)
+  const 設置編碼預覽數據 = useSetAtom(編碼預覽數據原子狀態)
 
   // 讀取分析結果用於導出
   const 靜態重碼分析結果 = useAtomValue(靜態重碼分析原子狀態)
@@ -58,6 +59,18 @@ export function AppHeader() {
   const 顯示標題 = 當前方案 ? 當前方案.元數據.方案名 : '未選擇方案'
   const 可以全局重算 = 編碼預覽數據.length > 0
 
+  // 清空所有原子狀態（統一函數）
+  const 清空所有原子狀態 = () => {
+    設置碼表數據(null)
+    設置原始碼表('')
+    設置編碼預覽數據([])
+    設置靜態重碼分析結果(null)
+    設置動態選重分析結果(null)
+    設置候選個數分析結果(null)
+    設置速度當量分析結果(null)
+    設置簡碼效率分析結果(null)
+  }
+
   // 導入配置
   const 處理導入JSON = (file: RcFile): boolean => {
     const reader = new FileReader()
@@ -65,6 +78,9 @@ export function AppHeader() {
       try {
         const 導入數據 = JSON.parse(e.target?.result as string)
         console.log('[AppHeader] 從文件導入的原始數據:', 導入數據)
+
+        // 先清空所有原子狀態
+        清空所有原子狀態()
 
         // 分離方案配置和測評結果
         const { 測評結果, ...方案配置 } = 導入數據
@@ -185,26 +201,17 @@ export function AppHeader() {
 
   // 創建方案
   const 處理創建新方案 = () => {
+    // 先清空所有原子狀態
+    清空所有原子狀態()
     const 新方案 = 創建空白方案()
     設置當前方案(新方案)
-    設置靜態重碼分析結果(null)
-    設置動態選重分析結果(null)
-    設置候選個數分析結果(null)
-    設置速度當量分析結果(null)
-    設置簡碼效率分析結果(null)
     message.success('已創建新方案')
   }
 
   // 清除所有
   const 處理清除所有 = () => {
+    清空所有原子狀態()
     設置當前方案(null)
-    設置碼表數據(null)
-    設置原始碼表('')
-    設置靜態重碼分析結果(null)
-    設置動態選重分析結果(null)
-    設置候選個數分析結果(null)
-    設置速度當量分析結果(null)
-    設置簡碼效率分析結果(null)
     message.success('已清除所有數據')
   }
 
