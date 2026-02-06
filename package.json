@@ -6,7 +6,7 @@
   "scripts": {
     "fetch": "node scripts/fetch-data.js",
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "node scripts/fetch-data.js && tsc && vite build",
     "build-cf": "node scripts/build-cf.js",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
