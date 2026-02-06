@@ -176,13 +176,11 @@ const MaximumCandidatesPage: React.FC = () => {
         title: '字符集',
         dataIndex: '字符集',
         key: '字符集',
-        width: '25%',
       },
       {
         title: '候選個數',
         dataIndex: '候選個數',
         key: '候選個數',
-        width: '20%',
         align: 'center',
         render: (count: number) => {
           let color = '#dcfce7'
@@ -245,20 +243,13 @@ const MaximumCandidatesPage: React.FC = () => {
     ]
 
     return (
-      <Table
-        columns={列定義}
-        dataSource={表格數據}
-        pagination={false}
-        bordered
-        style={{ marginTop: 16 }}
-      />
+      <Table columns={列定義} dataSource={表格數據} pagination={false} style={{ marginTop: 16 }} />
     )
   }
 
   return (
     <div style={{ padding: 24 }}>
       <Space orientation="vertical" size="large" style={{ width: '100%' }}>
-        {/* 頁面標題 */}
         <div>
           <Paragraph>
             分析不同字符集下方案的最大候選項個數，借以反映方案的檢字效率。閲讀

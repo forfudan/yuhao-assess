@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAtom } from 'jotai'
-import { Button, Typography, Alert, Spin, Modal, message } from 'antd'
+import { Button, Typography, Alert, Spin, Modal, message, Space } from 'antd'
 import { ReloadOutlined, CopyOutlined } from '@ant-design/icons'
 import styled from 'styled-components'
 import { 碼表原子狀態 } from '../atoms/codeTable'
@@ -11,65 +11,32 @@ import { 計算指定字頻下之簡碼效率 } from '../services/shortCodeEffic
 import type { 處理後的碼表結果介面, 頻率數據型别 } from '../types'
 import type { 單個字頻簡碼效率結果介面 } from '../atoms/shortCodeEfficiency'
 
+const { Paragraph } = Typography
+
 // ===================
 // 樣式組件
 // ===================
 
-const PageContainer = styled.div`
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
-`
-
-const PageHeader = styled.div`
-  margin-bottom: 24px;
-`
-
-const PageTitle = styled.h2`
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #1f2937;
-`
-
-const PageDescription = styled.p`
-  margin: 0 0 16px 0;
-  color: #6b7280;
-  font-size: 14px;
-  line-height: 1.6;
-`
-
 const TableContainer = styled.div`
   overflow-x: auto;
-  border-radius: 8px;
   margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 `
 
 const MetricsTable = styled.table`
   width: 100%;
   border-collapse: collapse;
   background: white;
+  border: 1px solid #e5e7eb;
 
   th {
-    padding: 12px 16px;
     text-align: center;
     background: #f8fafc;
-    font-weight: 600;
-    color: #374151;
-    font-size: 13px;
-    border-bottom: 2px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
   }
 
   td {
-    padding: 10px 16px;
     text-align: center;
     border-bottom: 1px solid #e5e7eb;
-    font-size: 14px;
-  }
-
-  tbody tr:hover {
-    background: #f9fafb;
   }
 
   tbody tr:last-child td {
@@ -78,16 +45,11 @@ const MetricsTable = styled.table`
 `
 
 const NValueCell = styled.td`
-  font-weight: 600;
   background: #f8fafc;
-  color: #374151;
 `
 
 const MetricValueCell = styled.td<{ $clickable?: boolean; $colorClass?: string }>`
-  font-weight: 600;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
   cursor: ${props => (props.$clickable ? 'pointer' : 'help')};
-  transition: all 0.2s ease;
 
   /* 根據顔色類别應用不同的背景色 */
   ${props => {
@@ -133,42 +95,6 @@ const HiddenCell = styled.td`
   background: transparent !important;
   color: transparent !important;
   pointer-events: none;
-`
-
-const InfoSection = styled.div`
-  margin-top: 16px;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #4b5563;
-
-  strong {
-    color: #1f2937;
-  }
-
-  ul {
-    margin: 8px 0 0 0;
-    padding-left: 20px;
-  }
-
-  li {
-    margin: 4px 0;
-  }
-`
-
-const OmittedNotice = styled.div`
-  margin: 12px 0;
-  padding: 12px 16px;
-  background: #fff3cd;
-  border: 1px solid #ffeaa7;
-  border-radius: 6px;
-  color: #856404;
-  font-size: 14px;
-
-  strong {
-    font-weight: 600;
-  }
 `
 
 const EmptyState = styled.div`
@@ -239,7 +165,7 @@ const ModalCodes = styled.div`
 
 const ModalCharCode = styled.div<{ $type?: 'short' | 'full' | 'saving' }>`
   font-size: 11px;
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  // font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
   background: white;
   padding: 2px 6px;
   border-radius: 3px;
@@ -839,165 +765,174 @@ const ShortCodeEfficiencyPage: React.FC = () => {
 
   if (!處理後碼表) {
     return (
-      <PageContainer>
-        <PageHeader>
-          <PageTitle>簡碼效率</PageTitle>
-          <PageDescription>計算使用效率最高的若干簡碼下的字頻加權平均碼長</PageDescription>
-        </PageHeader>
-        <EmptyState>
-          <div className="empty-icon">📊</div>
-          <h4>等待碼表數據</h4>
-          <p>請先在「碼表解析」頁面上傳碼表文件</p>
-        </EmptyState>
-      </PageContainer>
+      <div style={{ padding: 24 }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+          <div>
+            <Paragraph>計算使用效率最高的若干簡碼下的字頻加權平均碼長</Paragraph>
+          </div>
+
+          <EmptyState>
+            <div className="empty-icon">📊</div>
+            <h4>等待碼表數據</h4>
+            <p>請先在「碼表解析」頁面上傳碼表文件</p>
+          </EmptyState>
+        </Space>
+      </div>
     )
   }
 
   return (
-    <PageContainer>
-      <PageHeader>
-        <PageTitle>簡碼效率</PageTitle>
-        <PageDescription>計算使用效率最高的若干簡碼下的字頻加權平均碼長</PageDescription>
-        <Button type="primary" icon={<ReloadOutlined />} onClick={重新計算} loading={計算中}>
-          {計算中 ? '計算中...' : '重新計算'}
-        </Button>
-      </PageHeader>
-
-      {錯誤信息 && (
-        <Alert
-          message="錯誤"
-          description={錯誤信息}
-          type="error"
-          showIcon
-          closable
-          style={{ marginBottom: 24 }}
-        />
-      )}
-
-      {計算中 && (
-        <div style={{ textAlign: 'center', padding: '40px 0' }}>
-          <Spin size="large" />
-          <p style={{ marginTop: 16, color: '#6b7280' }}>正在計算簡碼效率...</p>
+    <div style={{ padding: 24 }}>
+      <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+        <div>
+          <Paragraph>計算使用效率最高的若干簡碼下的字頻加權平均碼長</Paragraph>
         </div>
-      )}
 
-      {!計算中 && 表格數據.length > 0 && (
-        <>
-          <TableContainer>
-            <MetricsTable>
-              <thead>
-                <tr>
-                  <th>簡碼數量</th>
-                  <th>知乎簡體字頻</th>
-                  <th>北語簡體字頻</th>
-                  <th>臺標繁體字頻</th>
-                  <th>古籍繁體字頻</th>
-                  <th>繁簡聯合字頻</th>
-                </tr>
-              </thead>
-              <tbody>
-                {表格數據.map((行, 索引) => (
-                  <tr key={行.最有效率的簡碼個數}>
-                    <NValueCell>{行.最有效率的簡碼個數}</NValueCell>
+        {/* 操作按鈕 */}
+        <Space>
+          <Button type="primary" icon={<ReloadOutlined />} onClick={重新計算} loading={計算中}>
+            {計算中 ? '計算中...' : '重新計算'}
+          </Button>
+        </Space>
 
-                    {應隱藏單元格(索引, '知乎簡體字頻加權碼長') ? (
-                      <HiddenCell />
-                    ) : (
-                      <MetricValueCell
-                        $clickable
-                        $colorClass={獲取顔色類别(行.知乎簡體字頻加權碼長)}
-                        onClick={() =>
-                          顯示詳情模態框(行.知乎簡體字頻字符, 行.最有效率的簡碼個數, '知乎')
-                        }
-                      >
-                        {行.知乎簡體字頻加權碼長.toFixed(3)}
-                      </MetricValueCell>
-                    )}
+        {/* 錯誤提示 */}
+        {錯誤信息 && (
+          <Alert title={錯誤信息} type="error" closable onClose={() => 設置錯誤信息(null)} />
+        )}
 
-                    {應隱藏單元格(索引, '北語簡體字頻加權碼長') ? (
-                      <HiddenCell />
-                    ) : (
-                      <MetricValueCell
-                        $clickable
-                        $colorClass={獲取顔色類别(行.北語簡體字頻加權碼長)}
-                        onClick={() =>
-                          顯示詳情模態框(行.北語簡體字頻字符, 行.最有效率的簡碼個數, '北語')
-                        }
-                      >
-                        {行.北語簡體字頻加權碼長.toFixed(3)}
-                      </MetricValueCell>
-                    )}
+        {/* 加載中 */}
+        {計算中 && (
+          <div style={{ textAlign: 'center', padding: '48px 0' }}>
+            <Spin size="large" />
+            <p style={{ marginTop: 16 }}>正在計算簡碼效率...</p>
+          </div>
+        )}
 
-                    {應隱藏單元格(索引, '臺標繁體字頻加權碼長') ? (
-                      <HiddenCell />
-                    ) : (
-                      <MetricValueCell
-                        $clickable
-                        $colorClass={獲取顔色類别(行.臺標繁體字頻加權碼長)}
-                        onClick={() =>
-                          顯示詳情模態框(行.臺標繁體字頻字符, 行.最有效率的簡碼個數, '臺標')
-                        }
-                      >
-                        {行.臺標繁體字頻加權碼長.toFixed(3)}
-                      </MetricValueCell>
-                    )}
-
-                    {應隱藏單元格(索引, '古籍繁體字頻加權碼長') ? (
-                      <HiddenCell />
-                    ) : (
-                      <MetricValueCell
-                        $clickable
-                        $colorClass={獲取顔色類别(行.古籍繁體字頻加權碼長)}
-                        onClick={() =>
-                          顯示詳情模態框(行.古籍繁體字頻字符, 行.最有效率的簡碼個數, '古籍')
-                        }
-                      >
-                        {行.古籍繁體字頻加權碼長.toFixed(3)}
-                      </MetricValueCell>
-                    )}
-
-                    {應隱藏單元格(索引, '繁簡聯合字頻加權碼長') ? (
-                      <HiddenCell />
-                    ) : (
-                      <MetricValueCell
-                        $clickable
-                        $colorClass={獲取顔色類别(行.繁簡聯合字頻加權碼長)}
-                        onClick={() =>
-                          顯示詳情模態框(行.繁簡聯合字頻字符, 行.最有效率的簡碼個數, '繁簡')
-                        }
-                      >
-                        {行.繁簡聯合字頻加權碼長.toFixed(3)}
-                      </MetricValueCell>
-                    )}
+        {/* 數據表格 */}
+        {!計算中 && 表格數據.length > 0 && (
+          <>
+            <TableContainer>
+              <MetricsTable>
+                <thead>
+                  <tr>
+                    <th>簡碼數量</th>
+                    <th>知乎簡體字頻</th>
+                    <th>北語簡體字頻</th>
+                    <th>臺標繁體字頻</th>
+                    <th>古籍繁體字頻</th>
+                    <th>繁簡聯合字頻</th>
                   </tr>
-                ))}
-              </tbody>
-            </MetricsTable>
-          </TableContainer>
+                </thead>
+                <tbody>
+                  {表格數據.map((行, 索引) => (
+                    <tr key={行.最有效率的簡碼個數}>
+                      <NValueCell>{行.最有效率的簡碼個數}</NValueCell>
 
-          {有省略行 && (
-            <OmittedNotice>
-              <strong>注意：</strong>繼續出簡不再降低碼長
-            </OmittedNotice>
-          )}
+                      {應隱藏單元格(索引, '知乎簡體字頻加權碼長') ? (
+                        <HiddenCell />
+                      ) : (
+                        <MetricValueCell
+                          $clickable
+                          $colorClass={獲取顔色類别(行.知乎簡體字頻加權碼長)}
+                          onClick={() =>
+                            顯示詳情模態框(行.知乎簡體字頻字符, 行.最有效率的簡碼個數, '知乎')
+                          }
+                        >
+                          {行.知乎簡體字頻加權碼長.toFixed(3)}
+                        </MetricValueCell>
+                      )}
 
-          <InfoSection>
-            <strong>説明：</strong>
-            <ul>
-              <li>本模塊使用前 N 個（最大爲 1000 個）最有效率的簡碼時的平均碼長</li>
-              <li>簡碼字的效率取決於漢字字頻 × 節約碼長</li>
-              <li>僅考慮簡碼長度小於全碼長度且小於最大碼長的漢字，實際簡碼數量可能小於 N</li>
-              <li>點擊數字可查看該區間所有高效簡碼字的詳細列表</li>
-            </ul>
-          </InfoSection>
+                      {應隱藏單元格(索引, '北語簡體字頻加權碼長') ? (
+                        <HiddenCell />
+                      ) : (
+                        <MetricValueCell
+                          $clickable
+                          $colorClass={獲取顔色類别(行.北語簡體字頻加權碼長)}
+                          onClick={() =>
+                            顯示詳情模態框(行.北語簡體字頻字符, 行.最有效率的簡碼個數, '北語')
+                          }
+                        >
+                          {行.北語簡體字頻加權碼長.toFixed(3)}
+                        </MetricValueCell>
+                      )}
 
-          {當前方案?.元數據?.方案名 && (
-            <div style={{ marginTop: 16, textAlign: 'center', color: '#6b7280', fontSize: 14 }}>
-              當前方案：{當前方案.元數據.方案名}
-            </div>
-          )}
-        </>
-      )}
+                      {應隱藏單元格(索引, '臺標繁體字頻加權碼長') ? (
+                        <HiddenCell />
+                      ) : (
+                        <MetricValueCell
+                          $clickable
+                          $colorClass={獲取顔色類别(行.臺標繁體字頻加權碼長)}
+                          onClick={() =>
+                            顯示詳情模態框(行.臺標繁體字頻字符, 行.最有效率的簡碼個數, '臺標')
+                          }
+                        >
+                          {行.臺標繁體字頻加權碼長.toFixed(3)}
+                        </MetricValueCell>
+                      )}
+
+                      {應隱藏單元格(索引, '古籍繁體字頻加權碼長') ? (
+                        <HiddenCell />
+                      ) : (
+                        <MetricValueCell
+                          $clickable
+                          $colorClass={獲取顔色類别(行.古籍繁體字頻加權碼長)}
+                          onClick={() =>
+                            顯示詳情模態框(行.古籍繁體字頻字符, 行.最有效率的簡碼個數, '古籍')
+                          }
+                        >
+                          {行.古籍繁體字頻加權碼長.toFixed(3)}
+                        </MetricValueCell>
+                      )}
+
+                      {應隱藏單元格(索引, '繁簡聯合字頻加權碼長') ? (
+                        <HiddenCell />
+                      ) : (
+                        <MetricValueCell
+                          $clickable
+                          $colorClass={獲取顔色類别(行.繁簡聯合字頻加權碼長)}
+                          onClick={() =>
+                            顯示詳情模態框(行.繁簡聯合字頻字符, 行.最有效率的簡碼個數, '繁簡')
+                          }
+                        >
+                          {行.繁簡聯合字頻加權碼長.toFixed(3)}
+                        </MetricValueCell>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </MetricsTable>
+            </TableContainer>
+
+            <Alert
+              message="説明"
+              description={
+                <div>
+                  <ul style={{ marginBottom: 0 }}>
+                    {有省略行 && (
+                      <li>
+                        <strong>注意：</strong>繼續出簡不再降低碼長（部分行已省略顯示）
+                      </li>
+                    )}
+                    <li>本模塊使用前 N 個（最大爲 2000 個）最有效率的簡碼時的平均碼長</li>
+                    <li>簡碼字的效率取決於漢字字頻 × 節約碼長</li>
+                    <li>僅考慮簡碼長度小於全碼長度且小於最大碼長的漢字，實際簡碼數量可能小於 N</li>
+                    <li>點擊數字可查看該區間所有高效簡碼字的詳細列表</li>
+                  </ul>
+                </div>
+              }
+              type="info"
+              showIcon
+              style={{ marginTop: 16 }}
+            />
+
+            {當前方案?.元數據?.方案名 && (
+              <div style={{ marginTop: 16, textAlign: 'center', color: '#6b7280', fontSize: 14 }}>
+                當前方案：{當前方案.元數據.方案名}
+              </div>
+            )}
+          </>
+        )}
+      </Space>
 
       {/* 詳情模態框 */}
       <Modal
@@ -1040,7 +975,7 @@ const ShortCodeEfficiencyPage: React.FC = () => {
           <div style={{ textAlign: 'center', padding: '40px 0', color: '#6b7280' }}>無數據</div>
         )}
       </Modal>
-    </PageContainer>
+    </div>
   )
 }
 
