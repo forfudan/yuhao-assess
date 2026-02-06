@@ -4,7 +4,7 @@ import MainLayout from './components/layout/MainLayout'
 import HomePage from './pages/HomePage'
 import ProcessTablePage from './pages/ProcessTablePage'
 import StaticDuplicateAnalysisPage from './pages/StaticDuplicateAnalysisPage'
-import DuplicateAnalysisPage from './pages/DuplicateAnalysisPage'
+import DynamicDuplicateAnalysisPage from './pages/DynamicDuplicateAnalysisPage'
 import MaximumCandidatesPage from './pages/MaximumCandidatesPage'
 import SpeedEquivalentPage from './pages/SpeedEquivalentPage'
 import ShortCodeEfficiencyPage from './pages/ShortCodeEfficiencyPage'
@@ -32,8 +32,8 @@ const routes = [
         element: <StaticDuplicateAnalysisPage />,
       },
       {
-        path: '/duplicate',
-        element: <DuplicateAnalysisPage />,
+        path: '/dynamic',
+        element: <DynamicDuplicateAnalysisPage />,
       },
       {
         path: '/candidates',

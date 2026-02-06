@@ -95,7 +95,7 @@ export function Sidebar({ collapsed = false, onCollapse }: SidebarProps) {
       label: '靜態重碼',
     },
     {
-      key: '/duplicate',
+      key: '/dynamic',
       icon: <DashboardOutlined />,
       label: '動態選重',
     },

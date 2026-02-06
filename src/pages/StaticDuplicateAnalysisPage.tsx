@@ -133,6 +133,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
 
       const 新結果: 靜態重碼分析結果介面 = {
         GB2312: {
+          全碼重碼組數: GB2312數據全碼.duplicateGroupCount,
+          簡碼重碼組數: GB2312數據簡碼.duplicateGroupCount,
           全碼重碼字數: GB2312數據全碼.duplicateCount,
           簡碼重碼字數: GB2312數據簡碼.duplicateCount,
           實際字符數: GB2312數據全碼.totalChars,
@@ -140,6 +142,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: GB2312數據全碼.totalChars / GB2312數據全碼.theoreticalSize,
         },
         通用規範: {
+          全碼重碼組數: 通用規範數據全碼.duplicateGroupCount,
+          簡碼重碼組數: 通用規範數據簡碼.duplicateGroupCount,
           全碼重碼字數: 通用規範數據全碼.duplicateCount,
           簡碼重碼字數: 通用規範數據簡碼.duplicateCount,
           實際字符數: 通用規範數據全碼.totalChars,
@@ -147,6 +151,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: 通用規範數據全碼.totalChars / 通用規範數據全碼.theoreticalSize,
         },
         常用國字: {
+          全碼重碼組數: 常用國字數據全碼.duplicateGroupCount,
+          簡碼重碼組數: 常用國字數據簡碼.duplicateGroupCount,
           全碼重碼字數: 常用國字數據全碼.duplicateCount,
           簡碼重碼字數: 常用國字數據簡碼.duplicateCount,
           實際字符數: 常用國字數據全碼.totalChars,
@@ -154,6 +160,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: 常用國字數據全碼.totalChars / 常用國字數據全碼.theoreticalSize,
         },
         CJK基本: {
+          全碼重碼組數: CJK基本數據全碼.duplicateGroupCount,
+          簡碼重碼組數: CJK基本數據簡碼.duplicateGroupCount,
           全碼重碼字數: CJK基本數據全碼.duplicateCount,
           簡碼重碼字數: CJK基本數據簡碼.duplicateCount,
           實際字符數: CJK基本數據全碼.totalChars,
@@ -161,6 +169,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: CJK基本數據全碼.totalChars / CJK基本數據全碼.theoreticalSize,
         },
         到CJKA: {
+          全碼重碼組數: CJKA數據全碼.duplicateGroupCount,
+          簡碼重碼組數: CJKA數據簡碼.duplicateGroupCount,
           全碼重碼字數: CJKA數據全碼.duplicateCount,
           簡碼重碼字數: CJKA數據簡碼.duplicateCount,
           實際字符數: CJKA數據全碼.totalChars,
@@ -168,6 +178,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: CJKA數據全碼.totalChars / CJKA數據全碼.theoreticalSize,
         },
         到CJKB: {
+          全碼重碼組數: CJKB數據全碼.duplicateGroupCount,
+          簡碼重碼組數: CJKB數據簡碼.duplicateGroupCount,
           全碼重碼字數: CJKB數據全碼.duplicateCount,
           簡碼重碼字數: CJKB數據簡碼.duplicateCount,
           實際字符數: CJKB數據全碼.totalChars,
@@ -175,6 +187,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: CJKB數據全碼.totalChars / CJKB數據全碼.theoreticalSize,
         },
         到CJKC: {
+          全碼重碼組數: CJKC數據全碼.duplicateGroupCount,
+          簡碼重碼組數: CJKC數據簡碼.duplicateGroupCount,
           全碼重碼字數: CJKC數據全碼.duplicateCount,
           簡碼重碼字數: CJKC數據簡碼.duplicateCount,
           實際字符數: CJKC數據全碼.totalChars,
@@ -182,6 +196,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: CJKC數據全碼.totalChars / CJKC數據全碼.theoreticalSize,
         },
         到CJKD: {
+          全碼重碼組數: CJKD數據全碼.duplicateGroupCount,
+          簡碼重碼組數: CJKD數據簡碼.duplicateGroupCount,
           全碼重碼字數: CJKD數據全碼.duplicateCount,
           簡碼重碼字數: CJKD數據簡碼.duplicateCount,
           實際字符數: CJKD數據全碼.totalChars,
@@ -189,6 +205,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: CJKD數據全碼.totalChars / CJKD數據全碼.theoreticalSize,
         },
         到CJKE: {
+          全碼重碼組數: CJKE數據全碼.duplicateGroupCount,
+          簡碼重碼組數: CJKE數據簡碼.duplicateGroupCount,
           全碼重碼字數: CJKE數據全碼.duplicateCount,
           簡碼重碼字數: CJKE數據簡碼.duplicateCount,
           實際字符數: CJKE數據全碼.totalChars,
@@ -196,6 +214,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: CJKE數據全碼.totalChars / CJKE數據全碼.theoreticalSize,
         },
         到CJKF: {
+          全碼重碼組數: CJKF數據全碼.duplicateGroupCount,
+          簡碼重碼組數: CJKF數據簡碼.duplicateGroupCount,
           全碼重碼字數: CJKF數據全碼.duplicateCount,
           簡碼重碼字數: CJKF數據簡碼.duplicateCount,
           實際字符數: CJKF數據全碼.totalChars,
@@ -203,6 +223,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: CJKF數據全碼.totalChars / CJKF數據全碼.theoreticalSize,
         },
         到CJKG: {
+          全碼重碼組數: CJKG數據全碼.duplicateGroupCount,
+          簡碼重碼組數: CJKG數據簡碼.duplicateGroupCount,
           全碼重碼字數: CJKG數據全碼.duplicateCount,
           簡碼重碼字數: CJKG數據簡碼.duplicateCount,
           實際字符數: CJKG數據全碼.totalChars,
@@ -210,6 +232,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: CJKG數據全碼.totalChars / CJKG數據全碼.theoreticalSize,
         },
         到CJKH: {
+          全碼重碼組數: CJKH數據全碼.duplicateGroupCount,
+          簡碼重碼組數: CJKH數據簡碼.duplicateGroupCount,
           全碼重碼字數: CJKH數據全碼.duplicateCount,
           簡碼重碼字數: CJKH數據簡碼.duplicateCount,
           實際字符數: CJKH數據全碼.totalChars,
@@ -217,6 +241,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: CJKH數據全碼.totalChars / CJKH數據全碼.theoreticalSize,
         },
         到CJKI: {
+          全碼重碼組數: CJKI數據全碼.duplicateGroupCount,
+          簡碼重碼組數: CJKI數據簡碼.duplicateGroupCount,
           全碼重碼字數: CJKI數據全碼.duplicateCount,
           簡碼重碼字數: CJKI數據簡碼.duplicateCount,
           實際字符數: CJKI數據全碼.totalChars,
@@ -224,6 +250,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
           字集覆蓋率: CJKI數據全碼.totalChars / CJKI數據全碼.theoreticalSize,
         },
         到CJKJ: {
+          全碼重碼組數: CJKJ數據全碼.duplicateGroupCount,
+          簡碼重碼組數: CJKJ數據簡碼.duplicateGroupCount,
           全碼重碼字數: CJKJ數據全碼.duplicateCount,
           簡碼重碼字數: CJKJ數據簡碼.duplicateCount,
           實際字符數: CJKJ數據全碼.totalChars,
@@ -264,6 +292,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
     type 表格數據項 = {
       key: string
       字集名稱: string
+      全碼重碼組數: string
+      簡碼重碼組數: string
       全碼重碼字數: string
       簡碼重碼字數: string
       實際字符數: string
@@ -275,6 +305,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '1',
         字集名稱: 'GB2312',
+        全碼重碼組數: 分析結果.GB2312.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.GB2312.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.GB2312.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.GB2312.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.GB2312.實際字符數.toLocaleString(),
@@ -284,6 +316,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '2',
         字集名稱: '通用規範',
+        全碼重碼組數: 分析結果.通用規範.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.通用規範.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.通用規範.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.通用規範.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.通用規範.實際字符數.toLocaleString(),
@@ -293,6 +327,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '3',
         字集名稱: '常用國字',
+        全碼重碼組數: 分析結果.常用國字.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.常用國字.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.常用國字.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.常用國字.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.常用國字.實際字符數.toLocaleString(),
@@ -302,6 +338,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '4',
         字集名稱: 'CJK基本',
+        全碼重碼組數: 分析結果.CJK基本.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.CJK基本.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.CJK基本.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.CJK基本.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.CJK基本.實際字符數.toLocaleString(),
@@ -311,6 +349,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '5',
         字集名稱: '到CJK-A',
+        全碼重碼組數: 分析結果.到CJKA.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.到CJKA.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.到CJKA.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.到CJKA.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.到CJKA.實際字符數.toLocaleString(),
@@ -320,6 +360,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '6',
         字集名稱: '到CJK-B',
+        全碼重碼組數: 分析結果.到CJKB.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.到CJKB.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.到CJKB.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.到CJKB.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.到CJKB.實際字符數.toLocaleString(),
@@ -329,6 +371,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '7',
         字集名稱: '到CJK-C',
+        全碼重碼組數: 分析結果.到CJKC.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.到CJKC.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.到CJKC.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.到CJKC.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.到CJKC.實際字符數.toLocaleString(),
@@ -338,6 +382,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '8',
         字集名稱: '到CJK-D',
+        全碼重碼組數: 分析結果.到CJKD.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.到CJKD.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.到CJKD.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.到CJKD.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.到CJKD.實際字符數.toLocaleString(),
@@ -347,6 +393,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '9',
         字集名稱: '到CJK-E',
+        全碼重碼組數: 分析結果.到CJKE.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.到CJKE.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.到CJKE.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.到CJKE.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.到CJKE.實際字符數.toLocaleString(),
@@ -356,6 +404,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '10',
         字集名稱: '到CJK-F',
+        全碼重碼組數: 分析結果.到CJKF.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.到CJKF.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.到CJKF.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.到CJKF.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.到CJKF.實際字符數.toLocaleString(),
@@ -365,6 +415,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '11',
         字集名稱: '到CJK-G',
+        全碼重碼組數: 分析結果.到CJKG.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.到CJKG.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.到CJKG.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.到CJKG.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.到CJKG.實際字符數.toLocaleString(),
@@ -374,6 +426,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '12',
         字集名稱: '到CJK-H',
+        全碼重碼組數: 分析結果.到CJKH.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.到CJKH.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.到CJKH.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.到CJKH.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.到CJKH.實際字符數.toLocaleString(),
@@ -383,6 +437,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '13',
         字集名稱: '到CJK-I',
+        全碼重碼組數: 分析結果.到CJKI.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.到CJKI.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.到CJKI.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.到CJKI.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.到CJKI.實際字符數.toLocaleString(),
@@ -392,6 +448,8 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
       {
         key: '14',
         字集名稱: '到CJK-J',
+        全碼重碼組數: 分析結果.到CJKJ.全碼重碼組數.toLocaleString(),
+        簡碼重碼組數: 分析結果.到CJKJ.簡碼重碼組數.toLocaleString(),
         全碼重碼字數: 分析結果.到CJKJ.全碼重碼字數.toLocaleString(),
         簡碼重碼字數: 分析結果.到CJKJ.簡碼重碼字數.toLocaleString(),
         實際字符數: 分析結果.到CJKJ.實際字符數.toLocaleString(),
@@ -405,6 +463,21 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
         title: '字集名稱',
         dataIndex: '字集名稱',
         key: '字集名稱',
+        width: 120,
+        fixed: 'left',
+      },
+      {
+        title: '全碼重碼組數',
+        dataIndex: '全碼重碼組數',
+        key: '全碼重碼組數',
+        align: 'right',
+        width: 120,
+      },
+      {
+        title: '簡碼重碼組數',
+        dataIndex: '簡碼重碼組數',
+        key: '簡碼重碼組數',
+        align: 'right',
         width: 120,
       },
       {

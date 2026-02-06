@@ -9,6 +9,8 @@ import { atomWithStorage } from 'jotai/utils'
  * 某字符集的靜態重碼數據介面
  */
 export interface 某字符集的靜態重碼數據介面 {
+  全碼重碼組數: number
+  簡碼重碼組數: number
   全碼重碼字數: number
   簡碼重碼字數: number
   實際字符數: number
@@ -40,5 +42,9 @@ export interface 靜態重碼分析結果介面 {
 /**
  * 靜態重碼分析原子狀態
  * 存儲各字符集的靜態重碼數據
+ * 使用 atomWithStorage 支持本地存儲和導入導出
  */
-export const 靜態重碼分析原子狀態 = atom<靜態重碼分析結果介面 | null>(null)
+export const 靜態重碼分析原子狀態 = atomWithStorage<靜態重碼分析結果介面 | null>(
+  '靜態重碼分析結果',
+  null
+)
