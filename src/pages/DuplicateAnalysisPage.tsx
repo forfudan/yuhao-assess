@@ -5,7 +5,7 @@ import { ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 碼表原子狀態 } from '../atoms/codeTable'
 import { 重碼分析原子狀態 } from '../atoms/duplicate'
-import type { 重碼分析結果 } from '../atoms/duplicate'
+import type { 重碼分析結果介面 } from '../atoms/duplicate'
 import {
   計算動態選重率,
   計算原始碼表的動態選重率,
@@ -254,7 +254,7 @@ const DuplicatePage: React.FC = () => {
         計算某字符集的重碼數據(簡碼表, 'cjk_to_j'),
       ])
 
-      const 新結果: 重碼分析結果 = {
+      const 新結果: 重碼分析結果介面 = {
         知乎簡體動態選重率,
         北語簡體動態選重率,
         臺標繁體動態選重率,

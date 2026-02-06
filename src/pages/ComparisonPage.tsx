@@ -9,8 +9,8 @@ import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 獲取内置方案列表, 加載方案, type 内置方案配置 } from '@/services/schemeService'
-import type { 方案配置 } from '@/types/scheme'
-import type { 重碼分析結果 } from '@/atoms/duplicate'
+import type { 方案配置介面 } from '@/types/scheme'
+import type { 重碼分析結果介面 } from '@/atoms/duplicate'
 import type { 最大候選個數分析結果 } from '@/atoms/maximumCandidates'
 import type { 速度當量分析結果介面 } from '@/atoms/speedEquivalent'
 import type { 簡碼效率分析結果介面 } from '@/atoms/shortCodeEfficiency'
@@ -21,7 +21,7 @@ const { Paragraph } = Typography
 interface 對比方案數據 {
   方案名: string
   是否當前方案: boolean
-  重碼分析?: 重碼分析結果 | null
+  重碼分析?: 重碼分析結果介面 | null
   候選個數分析?: 最大候選個數分析結果 | null
   速度當量分析?: 速度當量分析結果介面 | null
   簡碼效率分析?: 簡碼效率分析結果介面 | null
@@ -38,7 +38,7 @@ type TabType =
 
 const ComparisonPage: React.FC = () => {
   const [當前方案] = useAtom(當前方案原子狀態)
-  const 重碼分析結果 = useAtomValue(重碼分析原子狀態)
+  const 重碼分析結果介面 = useAtomValue(重碼分析原子狀態)
   const 候選個數分析結果 = useAtomValue(候選個數分析原子狀態)
   const 速度當量分析結果 = useAtomValue(速度當量分析原子狀態)
   const 簡碼效率分析結果 = useAtomValue(簡碼效率分析原子狀態)
@@ -68,7 +68,7 @@ const ComparisonPage: React.FC = () => {
       方案列表.push({
         方案名: 當前方案.元數據.方案名,
         是否當前方案: true,
-        重碼分析: 重碼分析結果,
+        重碼分析: 重碼分析結果介面,
         候選個數分析: 候選個數分析結果,
         速度當量分析: 速度當量分析結果,
         簡碼效率分析: 簡碼效率分析結果,
@@ -76,7 +76,7 @@ const ComparisonPage: React.FC = () => {
     }
 
     設置對比方案列表(方案列表)
-  }, [當前方案, 重碼分析結果, 候選個數分析結果, 速度當量分析結果, 簡碼效率分析結果])
+  }, [當前方案, 重碼分析結果介面, 候選個數分析結果, 速度當量分析結果, 簡碼效率分析結果])
 
   // 全選/取消全選
   const 處理全選 = (checked: boolean) => {
@@ -117,17 +117,17 @@ const ComparisonPage: React.FC = () => {
         const 方案 = await 加載方案(key)
         const 方案信息 = 内置方案列表.find(b => b.key === key)
 
-        // TODO: 從方案配置中提取測評結果
-        // 目前内置方案的 JSON 文件中没有測評結果字段
-        // 後續需要添加測評結果數據並實現轉換邏輯
+        // 從方案配置中提取測評結果
+        // 測評結果字段直接使用 Atom 的結構，無需轉換
+        const 測評結果 = 方案.測評結果
 
         新方案列表.push({
           方案名: 方案信息?.name || 方案.元數據.方案名,
           是否當前方案: false,
-          重碼分析: null,
-          候選個數分析: null,
-          速度當量分析: null,
-          簡碼效率分析: null,
+          重碼分析: 測評結果?.重碼分析 || null,
+          候選個數分析: 測評結果?.候選個數分析 || null,
+          速度當量分析: 測評結果?.速度當量分析 || null,
+          簡碼效率分析: 測評結果?.簡碼效率分析 || null,
         })
       }
 
@@ -204,7 +204,7 @@ const ComparisonPage: React.FC = () => {
     },
   ]
 
-  // 速度當量列
+  // 速度當量列（五個字頻的全碼速度當量）
   const 速度當量列: ColumnsType<對比方案數據> = [
     {
       title: '方案名',
@@ -228,9 +228,19 @@ const ComparisonPage: React.FC = () => {
       key: 'tc',
       render: (_, record) => record.速度當量分析?.臺標繁體字頻全碼速度當量?.toFixed(2) || '-',
     },
+    {
+      title: '古籍繁體',
+      key: 'guji',
+      render: (_, record) => record.速度當量分析?.古籍繁體字頻全碼速度當量?.toFixed(2) || '-',
+    },
+    {
+      title: '繁簡聯合',
+      key: 'fanjian',
+      render: (_, record) => record.速度當量分析?.繁簡聯合字頻全碼速度當量?.toFixed(2) || '-',
+    },
   ]
 
-  // 動態重碼率列（全碼）
+  // 動態重碼率列（五個字頻源的全碼）
   const 動態重碼率列: ColumnsType<對比方案數據> = [
     {
       title: '方案名',
@@ -240,7 +250,7 @@ const ComparisonPage: React.FC = () => {
       width: 200,
     },
     {
-      title: '知乎簡體 全碼',
+      title: '知乎簡體',
       key: 'zhihu-full',
       render: (_, record) =>
         record.重碼分析?.知乎簡體動態選重率?.全碼
@@ -248,15 +258,7 @@ const ComparisonPage: React.FC = () => {
           : '-',
     },
     {
-      title: '知乎簡體 簡碼',
-      key: 'zhihu-short',
-      render: (_, record) =>
-        record.重碼分析?.知乎簡體動態選重率?.簡碼
-          ? `${(record.重碼分析.知乎簡體動態選重率.簡碼 * 10000).toFixed(2)}‱`
-          : '-',
-    },
-    {
-      title: '北語簡體 全碼',
+      title: '北語簡體',
       key: 'sc-full',
       render: (_, record) =>
         record.重碼分析?.北語簡體動態選重率?.全碼
@@ -264,16 +266,32 @@ const ComparisonPage: React.FC = () => {
           : '-',
     },
     {
-      title: '臺標繁體 全碼',
+      title: '臺標繁體',
       key: 'tc-full',
       render: (_, record) =>
         record.重碼分析?.臺標繁體動態選重率?.全碼
           ? `${(record.重碼分析.臺標繁體動態選重率.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
+    {
+      title: '古籍繁體',
+      key: 'guji-full',
+      render: (_, record) =>
+        record.重碼分析?.古籍繁體動態選重率?.全碼
+          ? `${(record.重碼分析.古籍繁體動態選重率.全碼 * 10000).toFixed(2)}‱`
+          : '-',
+    },
+    {
+      title: '繁簡聯合',
+      key: 'fanjian-full',
+      render: (_, record) =>
+        record.重碼分析?.繁簡聯合動態選重率?.全碼
+          ? `${(record.重碼分析.繁簡聯合動態選重率.全碼 * 10000).toFixed(2)}‱`
+          : '-',
+    },
   ]
 
-  // 動態重碼率原始排序列
+  // 動態重碼率原始排序列（五個字頻源的全碼）
   const 動態重碼率原始排序列: ColumnsType<對比方案數據> = [
     {
       title: '方案名',
@@ -283,7 +301,7 @@ const ComparisonPage: React.FC = () => {
       width: 200,
     },
     {
-      title: '知乎簡體 全碼',
+      title: '知乎簡體',
       key: 'zhihu-full-orig',
       render: (_, record) =>
         record.重碼分析?.知乎簡體動態選重率原序?.全碼
@@ -291,15 +309,7 @@ const ComparisonPage: React.FC = () => {
           : '-',
     },
     {
-      title: '知乎簡體 簡碼',
-      key: 'zhihu-short-orig',
-      render: (_, record) =>
-        record.重碼分析?.知乎簡體動態選重率原序?.簡碼
-          ? `${(record.重碼分析.知乎簡體動態選重率原序.簡碼 * 10000).toFixed(2)}‱`
-          : '-',
-    },
-    {
-      title: '北語簡體 全碼',
+      title: '北語簡體',
       key: 'sc-full-orig',
       render: (_, record) =>
         record.重碼分析?.北語簡體動態選重率原序?.全碼
@@ -307,16 +317,32 @@ const ComparisonPage: React.FC = () => {
           : '-',
     },
     {
-      title: '臺標繁體 全碼',
+      title: '臺標繁體',
       key: 'tc-full-orig',
       render: (_, record) =>
         record.重碼分析?.臺標繁體動態選重率原序?.全碼
           ? `${(record.重碼分析.臺標繁體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
           : '-',
     },
+    {
+      title: '古籍繁體',
+      key: 'guji-full-orig',
+      render: (_, record) =>
+        record.重碼分析?.古籍繁體動態選重率原序?.全碼
+          ? `${(record.重碼分析.古籍繁體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
+          : '-',
+    },
+    {
+      title: '繁簡聯合',
+      key: 'fanjian-full-orig',
+      render: (_, record) =>
+        record.重碼分析?.繁簡聯合動態選重率原序?.全碼
+          ? `${(record.重碼分析.繁簡聯合動態選重率原序.全碼 * 10000).toFixed(2)}‱`
+          : '-',
+    },
   ]
 
-  // 簡碼效率列
+  // 簡碼效率列（僅北語簡體字頻，5 個 N 值）
   const 簡碼效率列: ColumnsType<對比方案數據> = [
     {
       title: '方案名',
@@ -326,30 +352,50 @@ const ComparisonPage: React.FC = () => {
       width: 200,
     },
     {
-      title: '知乎簡體 (N=500)',
-      key: 'zhihu-500',
-      render: (_, record) => {
-        const result = record.簡碼效率分析?.知乎簡體字頻下之簡碼效率?.N值結果?.find(
-          r => r.最有效率的簡碼個數 === 500
-        )
-        return result?.簡碼效率值?.toFixed(3) || '-'
-      },
-    },
-    {
-      title: '北語簡體 (N=500)',
-      key: 'sc-500',
+      title: 'N=25',
+      key: 'n25',
       render: (_, record) => {
         const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
-          r => r.最有效率的簡碼個數 === 500
+          r => r.最有效率的簡碼個數 === 25
         )
         return result?.簡碼效率值?.toFixed(3) || '-'
       },
     },
     {
-      title: '臺標繁體 (N=500)',
-      key: 'tc-500',
+      title: 'N=50',
+      key: 'n50',
       render: (_, record) => {
-        const result = record.簡碼效率分析?.臺標繁體字頻下之簡碼效率?.N值結果?.find(
+        const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
+          r => r.最有效率的簡碼個數 === 50
+        )
+        return result?.簡碼效率值?.toFixed(3) || '-'
+      },
+    },
+    {
+      title: 'N=100',
+      key: 'n100',
+      render: (_, record) => {
+        const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
+          r => r.最有效率的簡碼個數 === 100
+        )
+        return result?.簡碼效率值?.toFixed(3) || '-'
+      },
+    },
+    {
+      title: 'N=200',
+      key: 'n200',
+      render: (_, record) => {
+        const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
+          r => r.最有效率的簡碼個數 === 200
+        )
+        return result?.簡碼效率值?.toFixed(3) || '-'
+      },
+    },
+    {
+      title: 'N=500',
+      key: 'n500',
+      render: (_, record) => {
+        const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
           r => r.最有效率的簡碼個數 === 500
         )
         return result?.簡碼效率值?.toFixed(3) || '-'

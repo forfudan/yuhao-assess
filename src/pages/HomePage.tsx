@@ -27,7 +27,7 @@ import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 加載方案, 列出可用方案, 從JSON導入, 創建空白方案 } from '@/services/schemeService'
 import { useDataPreload } from '@/hooks/useDataPreload'
-import type { 方案配置 } from '@/types/scheme'
+import type { 方案配置介面 } from '@/types/scheme'
 import type { UploadFile } from 'antd'
 
 const { Paragraph, Text } = Typography
@@ -123,7 +123,7 @@ function HomePage() {
             }
           })
         )
-        設置方案列表(加載的方案列表.filter((方案): 方案 is 方案配置 => 方案 !== null))
+        設置方案列表(加載的方案列表.filter((方案): 方案 is 方案配置介面 => 方案 !== null))
       } catch (錯誤) {
         message.error('加載方案列表失敗')
       }
@@ -210,7 +210,7 @@ function HomePage() {
   }
 
   // 更新元數據字段
-  const 更新元數據 = (字段名: keyof 方案配置['元數據'], 值: string) => {
+  const 更新元數據 = (字段名: keyof 方案配置介面['元數據'], 值: string) => {
     if (!當前方案) return
     設置當前方案({
       ...當前方案,
@@ -223,9 +223,9 @@ function HomePage() {
   }
 
   // 更新方案參數字段
-  const 更新方案參數 = <K extends keyof 方案配置['方案參數']>(
+  const 更新方案參數 = <K extends keyof 方案配置介面['方案參數']>(
     字段名: K,
-    值: 方案配置['方案參數'][K]
+    值: 方案配置介面['方案參數'][K]
   ) => {
     if (!當前方案) return
     設置當前方案({

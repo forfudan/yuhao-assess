@@ -3,12 +3,12 @@
  * 提供方案的加載、導出、驗證等功能
  */
 
-import type { 方案配置 } from '../types/scheme'
+import type { 方案配置介面 } from '../types/scheme'
 
 /**
  * 從 public/schemes/ 加載方案配置
  */
-export async function 加載方案(方案鍵名: string): Promise<方案配置> {
+export async function 加載方案(方案鍵名: string): Promise<方案配置介面> {
   try {
     const response = await fetch(`/schemes/${方案鍵名}.json`)
 
@@ -16,7 +16,7 @@ export async function 加載方案(方案鍵名: string): Promise<方案配置> 
       throw new Error(`加載方案失敗: ${response.status} ${response.statusText}`)
     }
 
-    const 配置: 方案配置 = await response.json()
+    const 配置: 方案配置介面 = await response.json()
 
     // 驗證基本結構
     驗證方案(配置)
@@ -77,7 +77,7 @@ export async function 獲取内置方案列表(): Promise<内置方案配置[]> 
 /**
  * 驗證方案配置的完整性
  */
-export function 驗證方案(配置: 方案配置): void {
+export function 驗證方案(配置: 方案配置介面): void {
   // 驗證元數據
   if (!配置.元數據) {
     throw new Error('缺少「元數據」字段')
@@ -131,16 +131,16 @@ export function 驗證方案(配置: 方案配置): void {
 /**
  * 導出方案配置爲 JSON 字符串
  */
-export function 導出JSON(配置: 方案配置, 格式化 = true): string {
+export function 導出JSON(配置: 方案配置介面, 格式化 = true): string {
   return JSON.stringify(配置, null, 格式化 ? 2 : 0)
 }
 
 /**
  * 從 JSON 字符串導入方案配置
  */
-export function 從JSON導入(json文本: string): 方案配置 {
+export function 從JSON導入(json文本: string): 方案配置介面 {
   try {
-    const 配置: 方案配置 = JSON.parse(json文本)
+    const 配置: 方案配置介面 = JSON.parse(json文本)
     驗證方案(配置)
     return 配置
   } catch (error) {
@@ -154,7 +154,7 @@ export function 從JSON導入(json文本: string): 方案配置 {
 /**
  * 創建空白方案配置模板
  */
-export function 創建空白方案(): 方案配置 {
+export function 創建空白方案(): 方案配置介面 {
   const 當前時間 = new Date().toISOString()
 
   return {
@@ -174,7 +174,7 @@ export function 創建空白方案(): 方案配置 {
 /**
  * 更新方案的時間戳
  */
-export function 更新方案時間戳(配置: 方案配置): 方案配置 {
+export function 更新方案時間戳(配置: 方案配置介面): 方案配置介面 {
   return {
     ...配置,
     元數據: {
@@ -187,25 +187,25 @@ export function 更新方案時間戳(配置: 方案配置): 方案配置 {
 /**
  * 檢查方案是否有測評結果
  */
-export function 有測評結果(配置: 方案配置): boolean {
+export function 有測評結果(配置: 方案配置介面): boolean {
   return !!配置.測評結果 && Object.keys(配置.測評結果).length > 0
 }
 
 /**
  * 獲取方案的測評完成度（百分比）
  */
-export function 獲取完成度(配置: 方案配置): number {
+export function 獲取完成度(配置: 方案配置介面): number {
   if (!配置.測評結果) return 0
 
   const 總指標數 = 7 // 總共 7 個測評指標
   let 已完成數 = 0
 
   if (配置.測評結果.重碼分析) 已完成數++
-  if (配置.測評結果.動態選重) 已完成數++
-  if (配置.測評結果.最大候選數) 已完成數++
-  if (配置.測評結果.碼長分布) 已完成數++
-  if (配置.測評結果.速度當量) 已完成數++
-  if (配置.測評結果.簡碼效率) 已完成數++
+  // 動態選重包含在重碼分析中
+  if (配置.測評結果.候選個數分析) 已完成數++
+  // 碼長分布（暫時保留，未來實現）
+  if (配置.測評結果.速度當量分析) 已完成數++
+  if (配置.測評結果.簡碼效率分析) 已完成數++
   if (配置.測評結果.鍵位熱力) 已完成數++
 
   return Math.round((已完成數 / 總指標數) * 100)

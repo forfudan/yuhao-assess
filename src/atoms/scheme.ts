@@ -4,13 +4,13 @@
 
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
-import type { 方案配置 } from '../types/scheme'
+import type { 方案配置介面 } from '../types/scheme'
 
 /**
  * 當前方案原子狀態
  * 使用 atomWithStorage 持久化到 localStorage
  */
-export const 當前方案原子狀態 = atomWithStorage<方案配置 | null>(
+export const 當前方案原子狀態 = atomWithStorage<方案配置介面 | null>(
   'yuhao-assess:current-scheme',
   null
 )
@@ -19,7 +19,7 @@ export const 當前方案原子狀態 = atomWithStorage<方案配置 | null>(
  * 方案列表原子狀態
  * 可用方案列表（從 public/schemes/ 加載）
  */
-export const 方案列表原子狀態 = atom<方案配置[]>([])
+export const 方案列表原子狀態 = atom<方案配置介面[]>([])
 
 /**
  * 加載中原子狀態
