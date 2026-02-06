@@ -31,11 +31,47 @@ export async function 加載方案(方案鍵名: string): Promise<方案配置> 
 }
 
 /**
+ * 内置方案配置接口
+ */
+export interface 内置方案配置 {
+  key: string
+  name: string
+  description: string
+}
+
+/**
  * 列出所有可用的預設方案
  */
 export async function 列出可用方案(): Promise<string[]> {
-  // 預設方案列表（未來可以從 manifest.json 動態加載）
-  return ['yuhao-ming', 'yuhao-star', 'yuhao-ling', 'snow-qingyun']
+  try {
+    const response = await fetch('/settings/builtin-schemes.json')
+    if (!response.ok) {
+      throw new Error('無法加載内置方案列表')
+    }
+    const data = await response.json()
+    return data.schemes.map((scheme: 内置方案配置) => scheme.key)
+  } catch (error) {
+    console.error('加載内置方案列表失敗:', error)
+    // 返回空數組而不是抛出錯誤，讓應用能繼續運行
+    return []
+  }
+}
+
+/**
+ * 獲取所有内置方案的詳細信息
+ */
+export async function 獲取内置方案列表(): Promise<内置方案配置[]> {
+  try {
+    const response = await fetch('/settings/builtin-schemes.json')
+    if (!response.ok) {
+      throw new Error('無法加載内置方案列表')
+    }
+    const data = await response.json()
+    return data.schemes
+  } catch (error) {
+    console.error('加載内置方案列表失敗:', error)
+    return []
+  }
 }
 
 /**

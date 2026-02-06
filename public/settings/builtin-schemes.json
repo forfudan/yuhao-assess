@@ -1,0 +1,24 @@
+{
+  "schemes": [
+    {
+      "key": "yuhao-ming",
+      "name": "日月",
+      "description": "宇浩系列"
+    },
+    {
+      "key": "yuhao-star",
+      "name": "星陳",
+      "description": "宇浩系列"
+    },
+    {
+      "key": "yuhao-ling",
+      "name": "靈明",
+      "description": "宇浩系列"
+    },
+    {
+      "key": "snow-qingyun",
+      "name": "冰雪清韻",
+      "description": "冰雪系列"
+    }
+  ]
+}
