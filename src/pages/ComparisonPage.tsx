@@ -267,15 +267,127 @@ const ComparisonPage: React.FC = () => {
     },
   ]
 
+  // 動態重碼率列（全碼）
+  const 動態重碼率列: ColumnsType<對比方案數據> = [
+    {
+      title: '方案名',
+      dataIndex: '方案名',
+      key: '方案名',
+      fixed: 'left',
+      width: 200,
+    },
+    {
+      title: '知乎簡體 全碼',
+      key: 'zhihu-full',
+      render: (_, record) =>
+        record.重碼分析?.知乎簡體動態選重率?.全碼
+          ? `${(record.重碼分析.知乎簡體動態選重率.全碼 * 10000).toFixed(2)}‱`
+          : '-',
+    },
+    {
+      title: '知乎簡體 簡碼',
+      key: 'zhihu-short',
+      render: (_, record) =>
+        record.重碼分析?.知乎簡體動態選重率?.簡碼
+          ? `${(record.重碼分析.知乎簡體動態選重率.簡碼 * 10000).toFixed(2)}‱`
+          : '-',
+    },
+    {
+      title: '北語簡體 全碼',
+      key: 'sc-full',
+      render: (_, record) =>
+        record.重碼分析?.北語簡體動態選重率?.全碼
+          ? `${(record.重碼分析.北語簡體動態選重率.全碼 * 10000).toFixed(2)}‱`
+          : '-',
+    },
+    {
+      title: '臺標繁體 全碼',
+      key: 'tc-full',
+      render: (_, record) =>
+        record.重碼分析?.臺標繁體動態選重率?.全碼
+          ? `${(record.重碼分析.臺標繁體動態選重率.全碼 * 10000).toFixed(2)}‱`
+          : '-',
+    },
+    {
+      title: '操作',
+      key: 'action',
+      fixed: 'right',
+      width: 100,
+      render: (_, record) =>
+        !record.是否當前方案 && (
+          <Button type="link" size="small" onClick={() => 移除方案(record.方案名)}>
+            移除
+          </Button>
+        ),
+    },
+  ]
+
+  // 簡碼效率列
+  const 簡碼效率列: ColumnsType<對比方案數據> = [
+    {
+      title: '方案名',
+      dataIndex: '方案名',
+      key: '方案名',
+      fixed: 'left',
+      width: 200,
+    },
+    {
+      title: '知乎簡體 (N=500)',
+      key: 'zhihu-500',
+      render: (_, record) => {
+        const result = record.簡碼效率分析?.知乎簡體字頻下之簡碼效率?.N值結果?.find(
+          r => r.最有效率的簡碼個數 === 500
+        )
+        return result?.簡碼效率值?.toFixed(3) || '-'
+      },
+    },
+    {
+      title: '北語簡體 (N=500)',
+      key: 'sc-500',
+      render: (_, record) => {
+        const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
+          r => r.最有效率的簡碼個數 === 500
+        )
+        return result?.簡碼效率值?.toFixed(3) || '-'
+      },
+    },
+    {
+      title: '臺標繁體 (N=500)',
+      key: 'tc-500',
+      render: (_, record) => {
+        const result = record.簡碼效率分析?.臺標繁體字頻下之簡碼效率?.N值結果?.find(
+          r => r.最有效率的簡碼個數 === 500
+        )
+        return result?.簡碼效率值?.toFixed(3) || '-'
+      },
+    },
+    {
+      title: '操作',
+      key: 'action',
+      fixed: 'right',
+      width: 100,
+      render: (_, record) =>
+        !record.是否當前方案 && (
+          <Button type="link" size="small" onClick={() => 移除方案(record.方案名)}>
+            移除
+          </Button>
+        ),
+    },
+  ]
+
   // 根據當前 Tab 選擇列定義
   const 當前列定義 = useMemo(() => {
     switch (當前Tab) {
       case 'duplicate':
         return 靜態重碼率列
+      case 'dynamicDupRate':
+        return 動態重碼率列
       case 'maxCandidates':
         return 最大候選數列
       case 'speedEquiv':
         return 速度當量列
+      case 'shortCodeEfficiency':
+        return 簡碼效率列
       default:
         return 靜態重碼率列
     }
@@ -297,6 +409,12 @@ const ComparisonPage: React.FC = () => {
             靜態重碼
           </Button>
           <Button
+            type={當前Tab === 'dynamicDupRate' ? 'primary' : 'default'}
+            onClick={() => 設置當前Tab('dynamicDupRate')}
+          >
+            動態選重
+          </Button>
+          <Button
             type={當前Tab === 'maxCandidates' ? 'primary' : 'default'}
             onClick={() => 設置當前Tab('maxCandidates')}
           >
@@ -307,6 +425,12 @@ const ComparisonPage: React.FC = () => {
             onClick={() => 設置當前Tab('speedEquiv')}
           >
             速度當量
+          </Button>
+          <Button
+            type={當前Tab === 'shortCodeEfficiency' ? 'primary' : 'default'}
+            onClick={() => 設置當前Tab('shortCodeEfficiency')}
+          >
+            簡碼效率
           </Button>
         </Space>
 
