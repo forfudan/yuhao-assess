@@ -527,7 +527,7 @@ export default function KeyboardHeatmapPage() {
       const compressedRawFrequency = rawFrequency * remainingRatio
 
       if (punctuationKeys[keyLower]) {
-        const punctuationFrequency = punctuationKeyRatio * punctuationKeys[keyLower]
+        const punctuationFrequency = punctuationKeyRatio * (punctuationKeys[keyLower] || 0)
         frequency = compressedRawFrequency + punctuationFrequency
         count = (totalWeightedKeyUsage * frequency) / remainingRatio
         if (count < 0.0001) count = 0.0001

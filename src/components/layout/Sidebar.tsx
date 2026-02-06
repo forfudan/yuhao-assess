@@ -28,8 +28,8 @@ const StyledSider = styled(Sider)`
   }
 `
 
-const LogoContainer = styled.div<{ collapsed: boolean }>`
-  padding: ${props => (props.collapsed ? '16px 8px' : '20px 16px')};
+const LogoContainer = styled.div<{ $collapsed: boolean }>`
+  padding: ${props => (props.$collapsed ? '16px 8px' : '20px 16px')};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -37,8 +37,8 @@ const LogoContainer = styled.div<{ collapsed: boolean }>`
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
   img {
-    width: ${props => (props.collapsed ? '32px' : '48px')};
-    height: ${props => (props.collapsed ? '32px' : '48px')};
+    width: ${props => (props.$collapsed ? '32px' : '48px')};
+    height: ${props => (props.$collapsed ? '32px' : '48px')};
     transition: all 0.2s;
   }
 `
@@ -133,7 +133,7 @@ export function Sidebar({ collapsed = false, onCollapse }: SidebarProps) {
    */
   return (
     <StyledSider collapsible collapsed={折疊狀態} trigger={null} width={150} theme="dark">
-      <LogoContainer collapsed={折疊狀態}>
+      <LogoContainer $collapsed={折疊狀態}>
         <img src="/logo_blue.png" alt="宇浩輸入法" />
       </LogoContainer>
 

@@ -43,7 +43,28 @@ const ProcessTablePage: React.FC = () => {
   const [編碼搜索關鍵詞, 設置編碼搜索關鍵詞] = useState('')
 
   // 服務實例（不再需要 useRef，直接使用單例）
+  // 生成碼表哈希值（SHA-256）
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const 生成碼表哈希值 = async (原始碼表: 原始碼表型别): Promise<string> => {
+    // 將原始碼表轉換爲字符串（排序以確保一致性）
+    const 排序數據 = Array.from(原始碼表.entries())
+      .sort((a, b) => a[0] - b[0]) // 按行號排序
+      .map(([_, [字符, 編碼]]) => `${字符}\t${編碼}`)
+      .join('\n')
 
+    // 使用 Web Crypto API 計算 SHA-256
+    // eslint-disable-next-line no-undef
+    const 編碼器 = new TextEncoder()
+    const 數據 = 編碼器.encode(排序數據)
+    // eslint-disable-next-line no-undef
+    const 哈希緩衝 = await crypto.subtle.digest('SHA-256', 數據)
+
+    // 轉換爲十六進制字符串
+    const 哈希數組 = Array.from(new Uint8Array(哈希緩衝))
+    const 哈希字符串 = 哈希數組.map(b => b.toString(16).padStart(2, '0')).join('')
+
+    return 哈希字符串
+  }
   // 讀取文件内容
   const 讀取文件 = (file: RcFile): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -63,6 +84,10 @@ const ProcessTablePage: React.FC = () => {
       編碼終止指示符列表: 當前方案!.方案參數.編碼終止指示符列表,
     })
 
+    // 生成哈希值
+    const 哈希值 = await 生成碼表哈希值(原始碼表)
+    const 總字符數 = 處理結果.全碼表.size
+
     // 設置全局狀態
     設置原始碼表('')
     設置碼表元數據({
@@ -70,6 +95,20 @@ const ProcessTablePage: React.FC = () => {
     })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     設置碼表(處理結果 as any)
+
+    // 更新當前方案的碼表元數據
+    if (當前方案 && 當前方案.碼表元數據) {
+      設置當前方案({
+        ...當前方案,
+        碼表元數據: {
+          分隔符: 當前方案.碼表元數據.分隔符,
+          第一列類型: 當前方案.碼表元數據.第一列類型,
+          哈希值,
+          總字符數,
+          數據來源: 當前方案.碼表元數據.數據來源,
+        },
+      })
+    }
 
     // 生成編碼預覽（遍历处理后的全码表，确保每个字符只出现一次）
     const 預覽項: 編碼預覽項[] = []
@@ -90,7 +129,7 @@ const ProcessTablePage: React.FC = () => {
     設置文件預覽數據([]) // 隱藏源文件預覽
 
     設置成功信息(
-      `碼表解析完成！共 ${原始碼表.size} 個字符，${處理結果.詞語全碼加選重鍵表 ? '包含詞語數據' : '僅單字數據'}`
+      `碼表解析完成！共 ${總字符數} 個字符，${處理結果.詞語全碼加選重鍵表 ? '包含詞語數據' : '僅單字數據'}，哈希值：${哈希值.substring(0, 16)}...`
     )
   }
 

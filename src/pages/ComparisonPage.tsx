@@ -20,8 +20,11 @@ const { Paragraph } = Typography
 
 // 對比方案數據接口
 interface 對比方案數據 {
+  唯一鍵: string // 用於 React key，格式：方案名-current 或 方案名-builtin
   方案名: string
+  顯示名稱: string // 顯示用的名稱，當前方案會添加 "(當前方案)" 後綴
   是否當前方案: boolean
+  碼表哈希?: string // 用於去重判斷
   重碼分析?: 重碼分析結果介面 | null
   候選個數分析?: 最大候選個數分析結果 | null
   速度當量分析?: 速度當量分析結果介面 | null
@@ -68,22 +71,29 @@ const ComparisonPage: React.FC = () => {
     console.log('🔵 内置方案列表:', 内置方案列表)
 
     const 方案列表: 對比方案數據[] = []
+    let 當前方案哈希: string | undefined = undefined
 
-    // 添加當前方案（如果存在）
-    if (當前方案) {
+    // 添加當前方案（如果存在且有重碼分析數據）
+    if (當前方案 && 重碼分析結果介面) {
       console.log('🟢 [Step 2] 添加當前方案:', 當前方案.元數據.方案名)
       console.log('🟢 當前方案的重碼分析:', 重碼分析結果介面)
 
+      當前方案哈希 = 當前方案.碼表元數據?.哈希值
+      const 方案名 = 當前方案.元數據.方案名
+
       方案列表.push({
-        方案名: 當前方案.元數據.方案名,
+        唯一鍵: `${方案名}-current`,
+        方案名,
+        顯示名稱: `${方案名}（當前方案）`,
         是否當前方案: true,
+        碼表哈希: 當前方案哈希,
         重碼分析: 重碼分析結果介面,
         候選個數分析: 候選個數分析結果,
         速度當量分析: 速度當量分析結果,
         簡碼效率分析: 簡碼效率分析結果,
       })
     } else {
-      console.log('⚠️ 没有當前方案')
+      console.log('⚠️ 没有當前方案或没有重碼分析數據')
     }
 
     // 加載選中的内置方案數據
@@ -97,13 +107,25 @@ const ComparisonPage: React.FC = () => {
 
         const 方案信息 = 内置方案列表.find(b => b.key === key)
         const 測評結果 = 方案.測評結果
+        const 方案哈希 = 方案.碼表元數據?.哈希值
 
         console.log(`🟡 方案 ${key} 的測評結果:`, 測評結果)
-        console.log(`🟡 方案 ${key} 的重碼分析:`, 測評結果?.重碼分析)
+        console.log(`🟡 方案 ${key} 的碼表元數據:`, 方案.碼表元數據)
+        console.log(`🟡 方案 ${key} 的哈希值:`, 方案哈希)
 
+        // 如果當前方案存在且哈希值相同，則跳過此内置方案
+        if (當前方案哈希 && 方案哈希 && 當前方案哈希 === 方案哈希) {
+          console.log(`⚠️ 方案 ${key} 與當前方案哈希值相同，跳過`)
+          continue
+        }
+
+        const 方案名 = 方案信息?.name || 方案.元數據.方案名
         const 新方案數據 = {
-          方案名: 方案信息?.name || 方案.元數據.方案名,
+          唯一鍵: `${方案名}-builtin-${key}`,
+          方案名,
+          顯示名稱: 方案名,
           是否當前方案: false,
+          碼表哈希: 方案哈希,
           重碼分析: 測評結果?.重碼分析 || null,
           候選個數分析: 測評結果?.候選個數分析 || null,
           速度當量分析: 測評結果?.速度當量分析 || null,
@@ -199,8 +221,8 @@ const ComparisonPage: React.FC = () => {
   const 靜態重碼字數列: ColumnsType<對比方案數據> = [
     {
       title: '方案名',
-      dataIndex: '方案名',
-      key: '方案名',
+      dataIndex: '顯示名稱',
+      key: '顯示名稱',
       fixed: 'left',
       width: 200,
     },
@@ -240,8 +262,8 @@ const ComparisonPage: React.FC = () => {
   const 最大候選數列: ColumnsType<對比方案數據> = [
     {
       title: '方案名',
-      dataIndex: '方案名',
-      key: '方案名',
+      dataIndex: '顯示名稱',
+      key: '顯示名稱',
       fixed: 'left',
       width: 200,
     },
@@ -266,8 +288,8 @@ const ComparisonPage: React.FC = () => {
   const 速度當量列: ColumnsType<對比方案數據> = [
     {
       title: '方案名',
-      dataIndex: '方案名',
-      key: '方案名',
+      dataIndex: '顯示名稱',
+      key: '顯示名稱',
       fixed: 'left',
       width: 200,
     },
@@ -302,8 +324,8 @@ const ComparisonPage: React.FC = () => {
   const 動態重碼率列: ColumnsType<對比方案數據> = [
     {
       title: '方案名',
-      dataIndex: '方案名',
-      key: '方案名',
+      dataIndex: '顯示名稱',
+      key: '顯示名稱',
       fixed: 'left',
       width: 200,
     },
@@ -353,8 +375,8 @@ const ComparisonPage: React.FC = () => {
   const 動態重碼率原始排序列: ColumnsType<對比方案數據> = [
     {
       title: '方案名',
-      dataIndex: '方案名',
-      key: '方案名',
+      dataIndex: '顯示名稱',
+      key: '顯示名稱',
       fixed: 'left',
       width: 200,
     },
@@ -404,8 +426,8 @@ const ComparisonPage: React.FC = () => {
   const 簡碼效率列: ColumnsType<對比方案數據> = [
     {
       title: '方案名',
-      dataIndex: '方案名',
-      key: '方案名',
+      dataIndex: '顯示名稱',
+      key: '顯示名稱',
       fixed: 'left',
       width: 200,
     },
@@ -542,7 +564,7 @@ const ComparisonPage: React.FC = () => {
         <Table
           columns={當前列定義}
           dataSource={對比方案列表}
-          rowKey="方案名"
+          rowKey="唯一鍵"
           pagination={false}
           scroll={{ x: 'max-content' }}
         />

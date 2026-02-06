@@ -44,14 +44,19 @@ export interface 内置方案配置 {
  */
 export async function 列出可用方案(): Promise<string[]> {
   try {
+    console.log('🔵 [schemeService] 開始讀取 builtin-schemes.json')
     const response = await fetch('/settings/builtin-schemes.json')
     if (!response.ok) {
       throw new Error('無法加載内置方案列表')
     }
     const data = await response.json()
-    return data.schemes.map((scheme: 内置方案配置) => scheme.key)
+    console.log('🔵 [schemeService] 讀取到的原始數據:', data)
+    console.log('🔵 [schemeService] schemes 數組:', data.schemes)
+    const keys = data.schemes.map((scheme: 内置方案配置) => scheme.key)
+    console.log('🔵 [schemeService] 提取的方案鍵名列表:', keys)
+    return keys
   } catch (error) {
-    console.error('加載内置方案列表失敗:', error)
+    console.error('❌ [schemeService] 加載内置方案列表失敗:', error)
     // 返回空數組而不是抛出錯誤，讓應用能繼續運行
     return []
   }
@@ -62,14 +67,20 @@ export async function 列出可用方案(): Promise<string[]> {
  */
 export async function 獲取内置方案列表(): Promise<内置方案配置[]> {
   try {
+    console.log('🔵 [schemeService] 獲取内置方案列表 - 開始讀取')
     const response = await fetch('/settings/builtin-schemes.json')
     if (!response.ok) {
       throw new Error('無法加載内置方案列表')
     }
     const data = await response.json()
+    console.log('🔵 [schemeService] 獲取内置方案列表 - 讀取到:', data.schemes)
+    console.log('🔵 [schemeService] 方案數量:', data.schemes.length)
+    data.schemes.forEach((scheme: 内置方案配置, index: number) => {
+      console.log(`  ${index + 1}. ${scheme.name} (${scheme.key}) - ${scheme.description}`)
+    })
     return data.schemes
   } catch (error) {
-    console.error('加載内置方案列表失敗:', error)
+    console.error('❌ [schemeService] 加載内置方案列表失敗:', error)
     return []
   }
 }

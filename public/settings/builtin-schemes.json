@@ -31,6 +31,12 @@
       "enabled": true
     },
     {
+      "key": "sky",
+      "name": "天碼",
+      "description": "表形碼",
+      "enabled": true
+    },
+    {
       "key": "snow-qingyun",
       "name": "冰雪清韻",
       "description": "冰雪系列",

@@ -126,18 +126,32 @@ function HomePage() {
   useEffect(() => {
     async function 初始化方案列表() {
       try {
+        console.log('🟢 [HomePage] 開始初始化方案列表')
         const 方案鍵名列表 = await 列出可用方案()
+        console.log('🟢 [HomePage] 獲取到的方案鍵名列表:', 方案鍵名列表)
         const 加載的方案列表 = await Promise.all(
           方案鍵名列表.map(async 鍵名 => {
             try {
-              return await 加載方案(鍵名)
-            } catch {
+              console.log(`🟡 [HomePage] 正在加載方案: ${鍵名}`)
+              const 方案 = await 加載方案(鍵名)
+              console.log(`✅ [HomePage] 方案 ${鍵名} 加載成功:`, 方案.元數據.方案名)
+              return 方案
+            } catch (錯誤) {
+              console.error(`❌ [HomePage] 方案 ${鍵名} 加載失敗:`, 錯誤)
               return null
             }
           })
         )
-        設置方案列表(加載的方案列表.filter((方案): 方案 is 方案配置介面 => 方案 !== null))
+        const 過濾後的方案列表 = 加載的方案列表.filter(
+          (方案): 方案 is 方案配置介面 => 方案 !== null
+        )
+        console.log(
+          '🟢 [HomePage] 最終方案列表:',
+          過濾後的方案列表.map(s => s.元數據.方案名)
+        )
+        設置方案列表(過濾後的方案列表)
       } catch (錯誤) {
+        console.error('❌ [HomePage] 加載方案列表失敗:', 錯誤)
         message.error('加載方案列表失敗')
       }
     }
@@ -469,9 +483,15 @@ function HomePage() {
           {當前方案.碼表元數據 && (
             <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                {當前方案.碼表元數據.總字符數 && (
+                  <div>
+                    <Text type="secondary">總字符數（已解析）</Text>
+                    <Input value={當前方案.碼表元數據.總字符數.toLocaleString()} disabled />
+                  </div>
+                )}
                 {當前方案.碼表元數據.哈希值 && (
                   <div style={{ gridColumn: 'span 2' }}>
-                    <Text type="secondary">哈希值（只讀）</Text>
+                    <Text type="secondary">哈希值（SHA-256）</Text>
                     <Input value={當前方案.碼表元數據.哈希值} disabled />
                   </div>
                 )}
