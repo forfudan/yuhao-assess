@@ -96,16 +96,19 @@ const ProcessTablePage: React.FC = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     設置碼表(處理結果 as any)
 
-    // 更新當前方案的碼表元數據
+    // 更新當前方案的碼表元數據和更新時間
     if (當前方案 && 當前方案.碼表元數據) {
       設置當前方案({
         ...當前方案,
+        元數據: {
+          ...當前方案.元數據,
+          更新時間: new Date().toISOString(),
+        },
         碼表元數據: {
           分隔符: 當前方案.碼表元數據.分隔符,
           第一列類型: 當前方案.碼表元數據.第一列類型,
           哈希值,
           總字符數,
-          數據來源: 當前方案.碼表元數據.數據來源,
         },
       })
     }

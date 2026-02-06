@@ -224,7 +224,6 @@ const ComparisonPage: React.FC = () => {
       dataIndex: '顯示名稱',
       key: '顯示名稱',
       fixed: 'left',
-      width: 200,
     },
     {
       title: 'GB2312 全碼',
@@ -265,7 +264,6 @@ const ComparisonPage: React.FC = () => {
       dataIndex: '顯示名稱',
       key: '顯示名稱',
       fixed: 'left',
-      width: 200,
     },
     {
       title: 'GB2312',
@@ -291,7 +289,6 @@ const ComparisonPage: React.FC = () => {
       dataIndex: '顯示名稱',
       key: '顯示名稱',
       fixed: 'left',
-      width: 200,
     },
     {
       title: '知乎簡體',
@@ -327,7 +324,6 @@ const ComparisonPage: React.FC = () => {
       dataIndex: '顯示名稱',
       key: '顯示名稱',
       fixed: 'left',
-      width: 200,
     },
     {
       title: '知乎簡體',
@@ -378,7 +374,6 @@ const ComparisonPage: React.FC = () => {
       dataIndex: '顯示名稱',
       key: '顯示名稱',
       fixed: 'left',
-      width: 200,
     },
     {
       title: '知乎簡體',
@@ -429,10 +424,9 @@ const ComparisonPage: React.FC = () => {
       dataIndex: '顯示名稱',
       key: '顯示名稱',
       fixed: 'left',
-      width: 200,
     },
     {
-      title: 'N=25',
+      title: '25簡碼',
       key: 'n25',
       render: (_, record) => {
         const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
@@ -442,7 +436,7 @@ const ComparisonPage: React.FC = () => {
       },
     },
     {
-      title: 'N=50',
+      title: '50簡碼',
       key: 'n50',
       render: (_, record) => {
         const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
@@ -452,7 +446,7 @@ const ComparisonPage: React.FC = () => {
       },
     },
     {
-      title: 'N=100',
+      title: '100簡碼',
       key: 'n100',
       render: (_, record) => {
         const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
@@ -462,7 +456,7 @@ const ComparisonPage: React.FC = () => {
       },
     },
     {
-      title: 'N=200',
+      title: '200簡碼',
       key: 'n200',
       render: (_, record) => {
         const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
@@ -472,7 +466,7 @@ const ComparisonPage: React.FC = () => {
       },
     },
     {
-      title: 'N=500',
+      title: '500簡碼',
       key: 'n500',
       render: (_, record) => {
         const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
@@ -505,7 +499,7 @@ const ComparisonPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Space orientation="vertical" size="large" style={{ width: '100%' }}>
         <div>
           <Paragraph>對比當前方案與内置方案的各項指標</Paragraph>
         </div>

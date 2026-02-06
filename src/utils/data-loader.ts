@@ -1,24 +1,16 @@
 /**
  * 數據加載工具
  *
- * 開發環境：從本地 public/data/ 加載
- * 生産環境：從 GitHub Pages CDN 加載
+ * 所有數據文件都通過 pnpm run fetch 下載到 public/data/
+ * 運行時直接從本地 /data/ 加載（開發和生産環境統一）
  */
-
-// 數據倉庫 CDN 地址
-const DATA_CDN_URL = 'https://zhuyuhao.com/yuhao-assess-data/'
-
-// 根據環境決定數據源
-const DATA_BASE_URL = import.meta.env.DEV
-  ? '/data/' // 開發：本地文件
-  : DATA_CDN_URL // 生産：CDN
 
 /**
  * 加載 JSON 數據文件
- * @param filename 文件名（如 'charFrequencySC.json'）
+ * @param filename 文件名（如 'charAbsoluteFrequencySC.json'）
  */
 export async function 加載JSON數據文件<T = any>(filename: string): Promise<T> {
-  const url = DATA_BASE_URL + filename
+  const url = `/data/${filename}`
 
   try {
     const response = await fetch(url)
@@ -103,14 +95,9 @@ export const dataLoaders = {
   /** 字符集 */
   charsets: () => 帶緩存地加載JSON數據文件('charsets.json', 'charsets'),
 
-  /** CJK 區塊 */
-  cjkBlocks: () => 加載JSON數據文件('cjkBlocks.json'),
-
-  /** 碼表配置 */
-  codeTableConfig: () => 加載JSON數據文件('codeTableConfig.json'),
-
-  /** 等價字表 */
-  equivTable: () => 加載JSON數據文件('equivTable.json'),
+  // 注意：以下配置文件在 /settings/ 文件夾中，不使用 CDN
+  // cjkBlocks, codeTableConfig, equivTable 等配置文件
+  // 由各自的服務直接從 /settings/ 加載，不經過此工具
 }
 
 /**
@@ -118,11 +105,11 @@ export const dataLoaders = {
  */
 export function clearDataCache(): void {
   const keys = [
-    'charFreq-zhihu',
-    'charFreq-sc',
-    'charFreq-tc',
-    'charFreq-guji',
-    'wordFreq-sc',
+    'charAbsFreq-zhihu',
+    'charAbsFreq-sc',
+    'charAbsFreq-tc',
+    'charAbsFreq-guji',
+    'wordAbsFreq-sc',
     'charsets',
   ]
 
