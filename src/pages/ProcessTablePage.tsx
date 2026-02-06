@@ -10,20 +10,19 @@ import {
 } from '@ant-design/icons'
 import type { RcFile } from 'antd/es/upload'
 import { 當前方案原子狀態 } from '@/atoms/scheme'
-import { 原始碼表原子狀態, 碼表原子狀態, 碼表元數據原子狀態, 碼表加載中原子狀態 } from '@/atoms'
+import {
+  原始碼表原子狀態,
+  碼表原子狀態,
+  碼表元數據原子狀態,
+  碼表加載中原子狀態,
+  編碼預覽數據原子狀態,
+} from '@/atoms'
 import { 碼表處理服務實例 } from '@/services/codeTableService'
 import type { 原始碼表型别 } from '@/types'
+import type { 編碼預覽項 } from '@/atoms/codeTable'
 
 const { Title, Paragraph, Text, Link } = Typography
 const { Option } = Select
-
-interface 編碼預覽項 {
-  char: string
-  fullCode: string
-  shortCode: string
-  全碼加選重鍵表: string
-  簡碼加選重鍵表: string
-}
 
 const ProcessTablePage: React.FC = () => {
   // Jotai 狀態
@@ -33,10 +32,12 @@ const ProcessTablePage: React.FC = () => {
   const 設置碼表元數據 = useSetAtom(碼表元數據原子狀態)
   const [加載中, 設置加載中] = useAtom(碼表加載中原子狀態)
 
+  // 原子狀態
+  const [編碼預覽數據, 設置編碼預覽數據] = useAtom(編碼預覽數據原子狀態)
+
   // 本地狀態
   const [選中的文件, 設置選中的文件] = useState<RcFile | null>(null)
   const [文件預覽數據, 設置文件預覽數據] = useState<string[]>([])
-  const [編碼預覽數據, 設置編碼預覽數據] = useState<編碼預覽項[]>([])
   const [錯誤信息, 設置錯誤信息] = useState<string | null>(null)
   const [成功信息, 設置成功信息] = useState<string | null>(null)
   const [文件搜索關鍵詞, 設置文件搜索關鍵詞] = useState('')
@@ -410,7 +411,7 @@ const ProcessTablePage: React.FC = () => {
           )}
         </Space>
 
-        {/* 狀態提示 */}
+        {/* 錯誤提示 */}
         {錯誤信息 && (
           <Alert
             title="錯誤"
@@ -418,15 +419,6 @@ const ProcessTablePage: React.FC = () => {
             type="error"
             closable
             onClose={() => 設置錯誤信息(null)}
-          />
-        )}
-        {成功信息 && (
-          <Alert
-            title="成功"
-            description={成功信息}
-            type="success"
-            closable
-            onClose={() => 設置成功信息(null)}
           />
         )}
 
@@ -475,6 +467,18 @@ const ProcessTablePage: React.FC = () => {
                 { title: '簡碼（帶選重）', dataIndex: '簡碼加選重鍵表', width: 150 },
               ]}
             />
+
+            {/* 成功提示 */}
+            {成功信息 && (
+              <Alert
+                title="成功"
+                description={成功信息}
+                type="success"
+                closable
+                onClose={() => 設置成功信息(null)}
+                style={{ marginTop: 16 }}
+              />
+            )}
           </div>
         )}
       </Space>

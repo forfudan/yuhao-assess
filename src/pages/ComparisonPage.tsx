@@ -580,7 +580,7 @@ const ComparisonPage: React.FC = () => {
         onOk={確認選擇方案}
         width={600}
       >
-        <Space direction="vertical" style={{ width: '100%' }}>
+        <Space orientation="vertical" style={{ width: '100%' }}>
           <Space>
             <Checkbox
               checked={臨時已選方案鍵名列表.length === 内置方案列表.length}
@@ -597,7 +597,7 @@ const ComparisonPage: React.FC = () => {
           </Space>
 
           <div style={{ maxHeight: 400, overflow: 'auto' }}>
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space orientation="vertical" style={{ width: '100%' }}>
               {内置方案列表.map(scheme => (
                 <Checkbox
                   key={scheme.key}

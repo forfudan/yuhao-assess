@@ -578,7 +578,7 @@ export default function KeyboardHeatmapPage() {
       <PageContainer>
         <Card>
           <Alert
-            message="等待碼表上傳"
+            title="等待碼表上傳"
             description="請先在「碼表解析」頁面上傳碼表後，再查看鍵位熱力圖分析"
             type="info"
             showIcon

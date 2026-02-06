@@ -13,7 +13,7 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Space orientation="vertical" size="large" style={{ width: '100%' }}>
         <div>
           <Title level={2}>主題設置</Title>
           <Paragraph type="secondary">
@@ -22,7 +22,7 @@ const SettingsPage: React.FC = () => {
         </div>
 
         <Alert
-          message="提示"
+          title="提示"
           description="所有設置僅在當前會話有效，刷新頁面後將恢復默認值。如需永久修改，請編輯源代碼中的默認主題配置。"
           type="info"
           showIcon
@@ -30,7 +30,7 @@ const SettingsPage: React.FC = () => {
 
         {/* 全局样式 */}
         <Card title="全局樣式" size="small">
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
             <div>
               <Text strong>全局字體大小</Text>
               <div style={{ marginTop: '8px' }}>
@@ -78,7 +78,7 @@ const SettingsPage: React.FC = () => {
 
         {/* 表格样式 */}
         <Card title="表格樣式" size="small">
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
             <div>
               <Text strong>表格字體大小</Text>
               <div style={{ marginTop: '8px' }}>
@@ -202,7 +202,7 @@ const SettingsPage: React.FC = () => {
 
         {/* 说明 */}
         <Card size="small">
-          <Space direction="vertical" size="small">
+          <Space orientation="vertical" size="small">
             <Text strong>CSS 變量機制説明</Text>
             <Paragraph type="secondary" style={{ marginBottom: 0 }}>
               • 表格字體大小使用 <code>var(--table-font-size, 13px)</code>

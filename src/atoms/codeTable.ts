@@ -16,3 +16,15 @@ export const 碼表元數據原子狀態 = atomWithStorage('codeTableMeta', {
 // 碼表狀態（原子狀態）
 export const 碼表加載中原子狀態 = atom<boolean>(false)
 export const 碼表錯誤原子狀態 = atom<string | null>(null)
+
+// 編碼預覽數據介面
+export interface 編碼預覽項 {
+  char: string
+  fullCode: string
+  shortCode: string
+  全碼加選重鍵表: string
+  簡碼加選重鍵表: string
+}
+
+// 編碼預覽數據（原子狀態）
+export const 編碼預覽數據原子狀態 = atom<編碼預覽項[]>([])

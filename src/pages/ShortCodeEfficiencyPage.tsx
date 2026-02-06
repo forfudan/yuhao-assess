@@ -870,7 +870,7 @@ const ShortCodeEfficiencyPage: React.FC = () => {
             </TableContainer>
 
             <Alert
-              message="説明"
+              title="説明"
               description={
                 <div>
                   <ul style={{ marginBottom: 0 }}>

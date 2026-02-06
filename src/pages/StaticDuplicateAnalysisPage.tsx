@@ -530,7 +530,7 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Space orientation="vertical" size="large" style={{ width: '100%' }}>
         {/* 頁面標題 */}
         <div>
           <Paragraph>
@@ -553,7 +553,7 @@ const StaticDuplicateAnalysisPage: React.FC = () => {
 
         {/* 錯誤提示 */}
         {錯誤信息 && (
-          <Alert message={錯誤信息} type="error" closable onClose={() => 設置錯誤信息(null)} />
+          <Alert title={錯誤信息} type="error" closable onClose={() => 設置錯誤信息(null)} />
         )}
 
         {/* 加載中 */}

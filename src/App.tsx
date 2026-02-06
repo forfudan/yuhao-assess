@@ -63,6 +63,18 @@ const routes = [
   },
 ]
 
+// 定義所有分析頁面路徑，用於編譯時檢查
+const 分析頁面路徑 = [
+  '/dynamic',
+  '/static',
+  '/candidates',
+  '/speed',
+  '/efficiency',
+  '/heatmap',
+] as const
+
+export type 分析頁面路徑型别 = (typeof 分析頁面路徑)[number]
+
 function App() {
   const element = useRoutes(routes)
 
