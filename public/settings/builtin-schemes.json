@@ -1,8 +1,8 @@
 {
   "schemes": [
     {
-      "key": "yuhao-ming",
-      "name": "日月",
+      "key": "yuhao-ling",
+      "name": "靈明",
       "description": "宇浩系列"
     },
     {
@@ -11,8 +11,13 @@
       "description": "宇浩系列"
     },
     {
-      "key": "yuhao-ling",
-      "name": "靈明",
+      "key": "yuhao-joy",
+      "name": "卿雲",
+      "description": "宇浩系列"
+    },
+    {
+      "key": "yuhao-ming",
+      "name": "日月",
       "description": "宇浩系列"
     },
     {

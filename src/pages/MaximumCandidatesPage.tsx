@@ -38,14 +38,14 @@ const MaximumCandidatesPage: React.FC = () => {
    * 字符集信息映射
    */
   const 字符集信息 = {
-    gb2312: { name: 'GB2312' },
-    tonggui: { name: '通用規範漢字表' },
-    guozi: { name: '國字常用' },
-    cjk_basic: { name: 'CJK基本區' },
-    cjk_to_a: { name: '到CJK-A' },
-    cjk_to_b: { name: '到CJK-B' },
-    cjk_to_f: { name: '到CJK-F' },
-    cjk_to_j: { name: '到CJK-J' },
+    GB2312: { name: 'GB2312' },
+    通用規範: { name: '通用規範漢字表' },
+    常用國字: { name: '國字常用' },
+    CJK基本: { name: 'CJK基本區' },
+    CJK擴A: { name: '到CJK-A' },
+    CJK擴B: { name: '到CJK-B' },
+    CJK擴F: { name: '到CJK-F' },
+    CJK擴J: { name: '到CJK-J' },
   }
 
   /**
@@ -103,14 +103,14 @@ const MaximumCandidatesPage: React.FC = () => {
       const 總字符數 = 全碼表.size
 
       const 新結果: 最大候選個數分析結果 = {
-        gb2312: 結果['gb2312'],
-        tonggui: 結果['tonggui'],
-        guozi: 結果['guozi'],
-        cjk_basic: 結果['cjk_basic'],
-        cjk_to_a: 結果['cjk_to_a'],
-        cjk_to_b: 結果['cjk_to_b'],
-        cjk_to_f: 結果['cjk_to_f'],
-        cjk_to_j: 結果['cjk_to_j'],
+        GB2312: 結果['gb2312'],
+        通用規範: 結果['tonggui'],
+        常用國字: 結果['guozi'],
+        CJK基本: 結果['cjk_basic'],
+        CJK擴A: 結果['cjk_to_a'],
+        CJK擴B: 結果['cjk_to_b'],
+        CJK擴F: 結果['cjk_to_f'],
+        CJK擴J: 結果['cjk_to_j'],
         字符數: 總字符數,
         更新時間: new Date().toISOString(),
       }

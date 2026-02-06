@@ -117,7 +117,6 @@
 | 當量         | 速度當量值   | equiv          | 速度當量數值           |
 | 平均按鍵數   | 擊鍵數       | avgKeystrokes  | 平均每字的按鍵次數     |
 | 覆蓋率       | 簡碼覆蓋     | coverage       | 簡碼覆蓋率數值（小數） |
-| 效率         | 簡碼效率值   | efficiency     | 簡碼效率數值           |
 | 按鍵頻率     | 鍵位頻率     | keyFrequency   | 各鍵位的使用頻率對象   |
 | 左右手平衡   | 手部平衡     | handBalance    | 左右手使用比例對象     |
 | 分布         | 統計分布     | distribution   | 數據分布對象           |

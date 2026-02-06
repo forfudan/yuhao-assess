@@ -34,6 +34,9 @@ function loadScheme(key: string): Promise<Config> { ... }
 # 安裝依賴
 pnpm install
 
+# 下載數據文件和内置方案
+node scripts/fetch-data.js
+
 # 開發模式
 pnpm dev
 
@@ -57,9 +60,9 @@ yuhao-assess/
 │   ├── NOMENCLATURE.md    # 命名規範（必讀）
 │   └── ROADMAP.md         # 開發路線圖
 ├── public/
-│   ├── data/              # 大型數據文件（不 track，從 CDN 加載）
-│   ├── settings/          # 配置文件（Git 追蹤）
-│   └── schemes/           # 方案配置 JSON（階段四點五）
+│   ├── data/              # 大型數據文件（從 yuhao-assess-data CDN 加載）
+│   ├── schemes/           # 内置方案測評結果（從 yuhao-assess-data CDN 加載）
+│   └── settings/          # 配置文件（Git 追蹤）
 ├── src/
 │   ├── atoms/             # Jotai 狀態管理
 │   ├── components/        # React 組件

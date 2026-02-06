@@ -13,10 +13,11 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const CDN_BASE = 'https://zhuyuhao.com/yuhao-assess-data/'
-const TARGET_DIR = path.resolve(__dirname, '../public/data')
+const DATA_DIR = path.resolve(__dirname, '../public/data')
+const SCHEMES_DIR = path.resolve(__dirname, '../public/schemes')
 
-// 需要下載的文件列表
-const FILES = [
+// 需要下載的數據文件列表
+const DATA_FILES = [
   'charAbsoluteFrequencyZhihu.json',
   'charAbsoluteFrequencySC.json',
   'charAbsoluteFrequencyTC.json',
@@ -25,13 +26,22 @@ const FILES = [
   'charsets.json',
 ]
 
+// 需要下載的方案文件列表
+const SCHEME_FILES = [
+  'schemes/yuhao-joy.json',
+  'schemes/yuhao-ming.json',
+  'schemes/yuhao-ling.json',
+  'schemes/yuhao-star.json',
+  'schemes/snow-qingyun.json',
+]
+
 /**
  * 下載單個文件
  */
-function downloadFile(filename) {
+function downloadFile(filename, targetDir) {
   return new Promise((resolve, reject) => {
     const url = CDN_BASE + filename
-    const targetPath = path.join(TARGET_DIR, filename)
+    const targetPath = path.join(targetDir, path.basename(filename))
 
     console.log(`📥 下載: ${filename}`)
 
@@ -88,20 +98,30 @@ function downloadFile(filename) {
 async function main() {
   console.log('🚀 從 CDN 下載數據文件...')
   console.log(`📦 CDN: ${CDN_BASE}`)
-  console.log(`📁 目標: ${TARGET_DIR}`)
   console.log('')
 
   // 確保目標目錄存在
-  if (!fs.existsSync(TARGET_DIR)) {
-    fs.mkdirSync(TARGET_DIR, { recursive: true })
-    console.log(`✅ 創建目錄: ${TARGET_DIR}`)
-    console.log('')
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true })
+    console.log(`✅ 創建目錄: ${DATA_DIR}`)
   }
+  if (!fs.existsSync(SCHEMES_DIR)) {
+    fs.mkdirSync(SCHEMES_DIR, { recursive: true })
+    console.log(`✅ 創建目錄: ${SCHEMES_DIR}`)
+  }
+  console.log('')
 
-  // 下載所有文件
+  // 下載所有數據文件
   try {
-    for (const filename of FILES) {
-      await downloadFile(filename)
+    console.log('📦 下載數據文件...')
+    for (const filename of DATA_FILES) {
+      await downloadFile(filename, DATA_DIR)
+    }
+
+    console.log('')
+    console.log('📦 下載內置方案...')
+    for (const filename of SCHEME_FILES) {
+      await downloadFile(filename, SCHEMES_DIR)
     }
 
     console.log('')

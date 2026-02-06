@@ -10,6 +10,7 @@ import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 碼表原子狀態, 原始碼表原子狀態 } from '@/atoms/codeTable'
 import { 從JSON導入, 創建空白方案 } from '@/services/schemeService'
+import type { 方案配置介面 } from '@/types/scheme'
 import type { RcFile } from 'antd/es/upload'
 
 const HeaderContainer = styled.div`
@@ -64,18 +65,18 @@ export function AppHeader() {
         const 導入數據 = JSON.parse(e.target?.result as string)
         console.log('[AppHeader] 從文件導入的原始數據:', 導入數據)
 
-        // 分離方案配置和分析結果
-        const {
-          重碼分析結果: 數據中的重碼結果,
-          候選個數分析結果: 數據中的候選個數結果,
-          速度當量分析結果: 數據中的速度當量結果,
-          簡碼效率分析結果: 數據中的簡碼效率結果,
-          ...方案配置
-        } = 導入數據
+        // 分離方案配置和測評結果
+        const { 測評結果, ...方案配置 } = 導入數據
 
         // 驗證方案配置
         const 方案 = 從JSON導入(JSON.stringify(方案配置))
         設置當前方案(方案)
+
+        // 從測評結果中讀取分析數據
+        const 數據中的重碼結果 = 測評結果?.重碼分析
+        const 數據中的候選個數結果 = 測評結果?.候選個數分析
+        const 數據中的速度當量結果 = 測評結果?.速度當量分析
+        const 數據中的簡碼效率結果 = 測評結果?.簡碼效率分析
 
         // 如果有分析結果，寫入 atom
         if (數據中的重碼結果) {
@@ -130,12 +131,15 @@ export function AppHeader() {
 
     try {
       // 直接導出，將 atom 的分析結果附加到方案配置
-      const 導出數據 = {
+      // 使用 測評結果 字段包裹所有分析結果
+      const 導出數據: 方案配置介面 = {
         ...當前方案,
-        重碼分析結果: 重碼分析結果, // 直接使用 atom 的結構
-        候選個數分析結果: 候選個數分析結果,
-        速度當量分析結果: 速度當量分析結果,
-        簡碼效率分析結果: 簡碼效率分析結果,
+        測評結果: {
+          重碼分析: 重碼分析結果 ?? undefined,
+          候選個數分析: 候選個數分析結果 ?? undefined,
+          速度當量分析: 速度當量分析結果 ?? undefined,
+          簡碼效率分析: 簡碼效率分析結果 ?? undefined,
+        },
       }
 
       const json文本 = JSON.stringify(導出數據, null, 2)

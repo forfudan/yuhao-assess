@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAtom, useAtomValue } from 'jotai'
 import { Button, Space, Typography, Table, Modal, Checkbox, message } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
+import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 當前方案原子狀態 } from '@/atoms/scheme'
+import { 選中對比方案鍵名列表原子狀態 } from '@/atoms/comparison'
 import { 重碼分析原子狀態 } from '@/atoms/duplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
@@ -44,7 +45,8 @@ const ComparisonPage: React.FC = () => {
   const 簡碼效率分析結果 = useAtomValue(簡碼效率分析原子狀態)
 
   const [内置方案列表, 設置内置方案列表] = useState<内置方案配置[]>([])
-  const [已選方案鍵名列表, 設置已選方案鍵名列表] = useState<string[]>([])
+  const [選中對比方案鍵名列表, 設置選中對比方案鍵名列表] = useAtom(選中對比方案鍵名列表原子狀態)
+  const [臨時已選方案鍵名列表, 設置臨時已選方案鍵名列表] = useState<string[]>([])
   const [對比方案列表, 設置對比方案列表] = useState<對比方案數據[]>([])
   const [顯示選擇彈窗, 設置顯示選擇彈窗] = useState(false)
   const [加載中, 設置加載中] = useState(false)
@@ -59,12 +61,19 @@ const ComparisonPage: React.FC = () => {
     加載列表()
   }, [])
 
-  // 構建對比方案數據
-  useEffect(() => {
+  // 加載對比方案數據
+  const 加載對比方案數據 = async () => {
+    console.log('🔵 [Step 1] 開始加載對比方案數據')
+    console.log('🔵 選中的方案鍵名列表:', 選中對比方案鍵名列表)
+    console.log('🔵 内置方案列表:', 内置方案列表)
+
     const 方案列表: 對比方案數據[] = []
 
     // 添加當前方案（如果存在）
     if (當前方案) {
+      console.log('🟢 [Step 2] 添加當前方案:', 當前方案.元數據.方案名)
+      console.log('🟢 當前方案的重碼分析:', 重碼分析結果介面)
+
       方案列表.push({
         方案名: 當前方案.元數據.方案名,
         是否當前方案: true,
@@ -73,70 +82,114 @@ const ComparisonPage: React.FC = () => {
         速度當量分析: 速度當量分析結果,
         簡碼效率分析: 簡碼效率分析結果,
       })
-    }
-
-    設置對比方案列表(方案列表)
-  }, [當前方案, 重碼分析結果介面, 候選個數分析結果, 速度當量分析結果, 簡碼效率分析結果])
-
-  // 全選/取消全選
-  const 處理全選 = (checked: boolean) => {
-    if (checked) {
-      設置已選方案鍵名列表(内置方案列表.map(s => s.key))
     } else {
-      設置已選方案鍵名列表([])
-    }
-  }
-
-  // 選擇方案
-  const 處理方案選擇 = (key: string, checked: boolean) => {
-    if (checked) {
-      設置已選方案鍵名列表([...已選方案鍵名列表, key])
-    } else {
-      設置已選方案鍵名列表(已選方案鍵名列表.filter(k => k !== key))
-    }
-  }
-
-  // 添加選中的方案
-  const 添加選中方案 = async () => {
-    if (已選方案鍵名列表.length === 0) {
-      message.warning('請選擇至少一個方案')
-      return
+      console.log('⚠️ 没有當前方案')
     }
 
-    設置加載中(true)
-    try {
-      const 新方案列表: 對比方案數據[] = [...對比方案列表]
+    // 加載選中的内置方案數據
+    console.log('🔵 [Step 3] 開始加載内置方案，共', 選中對比方案鍵名列表.length, '個')
 
-      for (const key of 已選方案鍵名列表) {
-        // 檢查是否已經添加
-        if (新方案列表.some(s => s.方案名 === 内置方案列表.find(b => b.key === key)?.name)) {
-          continue
-        }
-
-        // 加載方案配置
+    for (const key of 選中對比方案鍵名列表) {
+      try {
+        console.log(`🟡 正在加載方案: ${key}`)
         const 方案 = await 加載方案(key)
-        const 方案信息 = 内置方案列表.find(b => b.key === key)
+        console.log(`🟡 方案 ${key} 加載成功:`, 方案)
 
-        // 從方案配置中提取測評結果
-        // 測評結果字段直接使用 Atom 的結構，無需轉換
+        const 方案信息 = 内置方案列表.find(b => b.key === key)
         const 測評結果 = 方案.測評結果
 
-        新方案列表.push({
+        console.log(`🟡 方案 ${key} 的測評結果:`, 測評結果)
+        console.log(`🟡 方案 ${key} 的重碼分析:`, 測評結果?.重碼分析)
+
+        const 新方案數據 = {
           方案名: 方案信息?.name || 方案.元數據.方案名,
           是否當前方案: false,
           重碼分析: 測評結果?.重碼分析 || null,
           候選個數分析: 測評結果?.候選個數分析 || null,
           速度當量分析: 測評結果?.速度當量分析 || null,
           簡碼效率分析: 測評結果?.簡碼效率分析 || null,
-        })
-      }
+        }
 
-      設置對比方案列表(新方案列表)
-      設置顯示選擇彈窗(false)
-      設置已選方案鍵名列表([])
-      message.success(`已添加 ${已選方案鍵名列表.length} 個方案`)
+        console.log(`🟢 方案 ${key} 添加到列表:`, 新方案數據)
+        方案列表.push(新方案數據)
+      } catch (error) {
+        console.error(`❌ 加載方案 ${key} 失敗:`, error)
+      }
+    }
+
+    console.log('🔵 [Step 4] 最終方案列表:', 方案列表)
+    設置對比方案列表(方案列表)
+  }
+
+  // 初始化和刷新對比方案數據
+  useEffect(() => {
+    console.log('🔄 useEffect 觸發')
+    console.log('🔄 内置方案列表長度:', 内置方案列表.length)
+    console.log('🔄 選中對比方案鍵名列表:', 選中對比方案鍵名列表)
+
+    if (内置方案列表.length > 0) {
+      console.log('🔄 開始執行加載對比方案數據')
+      加載對比方案數據()
+    } else {
+      console.log('⚠️ 内置方案列表爲空，跳過加載')
+    }
+  }, [
+    當前方案,
+    重碼分析結果介面,
+    候選個數分析結果,
+    速度當量分析結果,
+    簡碼效率分析結果,
+    選中對比方案鍵名列表,
+    内置方案列表,
+  ])
+
+  // 打開選擇彈窗時初始化臨時列表
+  const 打開選擇彈窗 = () => {
+    設置臨時已選方案鍵名列表(選中對比方案鍵名列表)
+    設置顯示選擇彈窗(true)
+  }
+
+  // 全選/取消全選
+  const 處理全選 = (checked: boolean) => {
+    if (checked) {
+      設置臨時已選方案鍵名列表(内置方案列表.map(s => s.key))
+    } else {
+      設置臨時已選方案鍵名列表([])
+    }
+  }
+
+  // 選擇方案
+  const 處理方案選擇 = (key: string, checked: boolean) => {
+    if (checked) {
+      設置臨時已選方案鍵名列表([...臨時已選方案鍵名列表, key])
+    } else {
+      設置臨時已選方案鍵名列表(臨時已選方案鍵名列表.filter(k => k !== key))
+    }
+  }
+
+  // 確認選擇的方案
+  const 確認選擇方案 = () => {
+    console.log('✅ 確認選擇方案')
+    console.log('✅ 臨時已選:', 臨時已選方案鍵名列表)
+    console.log('✅ 保存到 atom 之前:', 選中對比方案鍵名列表)
+
+    設置選中對比方案鍵名列表(臨時已選方案鍵名列表)
+
+    console.log('✅ 保存到 atom 之後 (實際會在下次渲染生效)')
+    設置顯示選擇彈窗(false)
+    message.success('已更新對比方案列表')
+  }
+
+  // 刷新對比數據
+  const 刷新對比數據 = async () => {
+    console.log('🔄 手動刷新對比數據')
+    設置加載中(true)
+    try {
+      await 加載對比方案數據()
+      message.success('刷新成功')
     } catch (error) {
-      message.error('添加方案失敗: ' + (error instanceof Error ? error.message : String(error)))
+      console.error('❌ 刷新失敗:', error)
+      message.error('刷新失敗: ' + (error instanceof Error ? error.message : String(error)))
     } finally {
       設置加載中(false)
     }
@@ -154,7 +207,12 @@ const ComparisonPage: React.FC = () => {
     {
       title: 'GB2312 全碼',
       key: 'gb2312-full',
-      render: (_, record) => record.重碼分析?.GB2312靜態重碼?.全碼?.重碼字數 || '-',
+      render: (_, record) => {
+        const value = record.重碼分析?.GB2312靜態重碼?.全碼?.重碼字數
+        console.log(`📊 [${record.方案名}] GB2312全碼重碼字數:`, value)
+        console.log(`📊 [${record.方案名}] 重碼分析結構:`, record.重碼分析)
+        return value || '-'
+      },
     },
     {
       title: 'GB2312 簡碼',
@@ -190,17 +248,17 @@ const ComparisonPage: React.FC = () => {
     {
       title: 'GB2312',
       key: 'gb2312',
-      render: (_, record) => record.候選個數分析?.gb2312?.最大候選個數 || '-',
+      render: (_, record) => record.候選個數分析?.GB2312?.最大候選個數 || '-',
     },
     {
       title: '常用國字',
       key: 'guozi',
-      render: (_, record) => record.候選個數分析?.guozi?.最大候選個數 || '-',
+      render: (_, record) => record.候選個數分析?.常用國字?.最大候選個數 || '-',
     },
     {
       title: 'CJK 基本',
       key: 'cjk-basic',
-      render: (_, record) => record.候選個數分析?.cjk_basic?.最大候選個數 || '-',
+      render: (_, record) => record.候選個數分析?.CJK基本?.最大候選個數 || '-',
     },
   ]
 
@@ -358,7 +416,7 @@ const ComparisonPage: React.FC = () => {
         const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
           r => r.最有效率的簡碼個數 === 25
         )
-        return result?.簡碼效率值?.toFixed(3) || '-'
+        return result?.字頻加權碼長?.toFixed(3) || '-'
       },
     },
     {
@@ -368,7 +426,7 @@ const ComparisonPage: React.FC = () => {
         const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
           r => r.最有效率的簡碼個數 === 50
         )
-        return result?.簡碼效率值?.toFixed(3) || '-'
+        return result?.字頻加權碼長?.toFixed(3) || '-'
       },
     },
     {
@@ -378,7 +436,7 @@ const ComparisonPage: React.FC = () => {
         const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
           r => r.最有效率的簡碼個數 === 100
         )
-        return result?.簡碼效率值?.toFixed(3) || '-'
+        return result?.字頻加權碼長?.toFixed(3) || '-'
       },
     },
     {
@@ -388,7 +446,7 @@ const ComparisonPage: React.FC = () => {
         const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
           r => r.最有效率的簡碼個數 === 200
         )
-        return result?.簡碼效率值?.toFixed(3) || '-'
+        return result?.字頻加權碼長?.toFixed(3) || '-'
       },
     },
     {
@@ -398,7 +456,7 @@ const ComparisonPage: React.FC = () => {
         const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
           r => r.最有效率的簡碼個數 === 500
         )
-        return result?.簡碼效率值?.toFixed(3) || '-'
+        return result?.字頻加權碼長?.toFixed(3) || '-'
       },
     },
   ]
@@ -436,7 +494,7 @@ const ComparisonPage: React.FC = () => {
             type={當前Tab === 'duplicate' ? 'primary' : 'default'}
             onClick={() => 設置當前Tab('duplicate')}
           >
-            靜碼
+            靜重
           </Button>
           <Button
             type={當前Tab === 'dynamicDupRate' ? 'primary' : 'default'}
@@ -472,8 +530,11 @@ const ComparisonPage: React.FC = () => {
 
         {/* 操作按鈕 */}
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => 設置顯示選擇彈窗(true)}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={打開選擇彈窗}>
             選擇對比方案
+          </Button>
+          <Button icon={<ReloadOutlined />} onClick={刷新對比數據} loading={加載中}>
+            刷新
           </Button>
         </Space>
 
@@ -491,27 +552,23 @@ const ComparisonPage: React.FC = () => {
       <Modal
         title="選擇對比方案"
         open={顯示選擇彈窗}
-        onCancel={() => {
-          設置顯示選擇彈窗(false)
-          設置已選方案鍵名列表([])
-        }}
-        onOk={添加選中方案}
-        confirmLoading={加載中}
+        onCancel={() => 設置顯示選擇彈窗(false)}
+        onOk={確認選擇方案}
         width={600}
       >
         <Space direction="vertical" style={{ width: '100%' }}>
           <Space>
             <Checkbox
-              checked={已選方案鍵名列表.length === 内置方案列表.length}
+              checked={臨時已選方案鍵名列表.length === 内置方案列表.length}
               indeterminate={
-                已選方案鍵名列表.length > 0 && 已選方案鍵名列表.length < 内置方案列表.length
+                臨時已選方案鍵名列表.length > 0 && 臨時已選方案鍵名列表.length < 内置方案列表.length
               }
               onChange={e => 處理全選(e.target.checked)}
             >
               全選
             </Checkbox>
             <span style={{ color: '#999' }}>
-              已選 {已選方案鍵名列表.length} / {内置方案列表.length}
+              已選 {臨時已選方案鍵名列表.length} / {内置方案列表.length}
             </span>
           </Space>
 
@@ -520,7 +577,7 @@ const ComparisonPage: React.FC = () => {
               {内置方案列表.map(scheme => (
                 <Checkbox
                   key={scheme.key}
-                  checked={已選方案鍵名列表.includes(scheme.key)}
+                  checked={臨時已選方案鍵名列表.includes(scheme.key)}
                   onChange={e => 處理方案選擇(scheme.key, e.target.checked)}
                 >
                   <div>

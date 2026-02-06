@@ -69,5 +69,7 @@ dist
 tmp/
 temp/
 local/
+
 # Data files (loaded from yuhao-assess-data repo)
 public/data/
+public/schemes/
