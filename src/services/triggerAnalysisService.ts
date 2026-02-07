@@ -23,7 +23,7 @@ export function 觸發所有分析計算(
       '/candidates',
       '/speed',
       '/efficiency',
-      '/heatmap',
+      // 移除 heatmap，不需要触发计算
     ]
     let currentIndex = 0
 
@@ -34,7 +34,7 @@ export function 觸發所有分析計算(
           navigate(page)
         }
         currentIndex++
-        setTimeout(navigateNext, 500) // 每個頁面停留500ms觸發計算
+        setTimeout(navigateNext, 2000) // 每個頁面停留2秒確保計算完成
       } else {
         // 所有頁面都已訪問，返回指定路徑
         setTimeout(() => {

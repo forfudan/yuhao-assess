@@ -12,7 +12,11 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+// 發佈後的 CDN 地址，不容易被防火牆屏蔽
 const CDN_BASE = 'https://zhuyuhao.com/yuhao-assess-data/'
+// 使用 GitHub raw URL 確保獲取最新數據
+// GitHub Pages 有緩存延遲，raw.githubusercontent.com 直接從 GitHub 獲取
+// const CDN_BASE = 'https://raw.githubusercontent.com/forfudan/yuhao-assess-data/main/'
 const DATA_DIR = path.resolve(__dirname, '../public/data')
 const SCHEMES_DIR = path.resolve(__dirname, '../public/schemes')
 

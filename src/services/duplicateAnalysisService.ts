@@ -360,13 +360,7 @@ export async function 計算某字符集的重碼數據(
   字符集: 預設字符集名稱型别
 ): Promise<某字符集的重碼數據介面> {
   const allChars = new Set(全碼表.keys())
-  console.log(`[某字符集的重碼數據介面] charsetType: ${字符集}, 碼表總字數: ${allChars.size}`)
-
   const charset = await 過濾自定義字符集(字符集, allChars)
-  console.log(
-    `[某字符集的重碼數據介面] 生成字符集大小: ${charset.size}, 前10個字符:`,
-    Array.from(charset).slice(0, 10)
-  )
 
   // 計算重碼字數和重碼組數
   const codeToChars = new Map<string, string[]>()
@@ -395,11 +389,6 @@ export async function 計算某字符集的重碼數據(
 
   // 獲取理論字符集大小
   const theoreticalSize = await getTheoreticalCharsetSize(字符集)
-
-  console.log(
-    `[calculateCharsetDuplicates] ${字符集} - 理論總數: ${theoreticalSize}, 實際有編碼: ${totalChars}, 重碼字數: ${duplicateCount}, 重碼組數: ${duplicateGroupCount}`
-  )
-
   const uniqueCodes = codeToChars.size
   const info = charsetInfo[字符集]
   return {

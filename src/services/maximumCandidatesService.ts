@@ -82,7 +82,13 @@ export async function getAllMaximumCandidates(codeTable: 碼表型别) {
     'cjk_basic',
     'cjk_to_a',
     'cjk_to_b',
+    'cjk_to_c',
+    'cjk_to_d',
+    'cjk_to_e',
     'cjk_to_f',
+    'cjk_to_g',
+    'cjk_to_h',
+    'cjk_to_i',
     'cjk_to_j',
   ]
 

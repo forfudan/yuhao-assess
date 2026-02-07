@@ -647,7 +647,7 @@ export function 導出方案配置JSON(
     const 作者 = 當前方案.元數據.作者 || 'unknown'
     const 版本 = 當前方案.元數據.版本 || '1.0.0'
     if (簡易文件名) {
-      a.download = `${方案名}.json`
+      a.download = `${標識符}.json`
     } else {
       a.download = `${標識符}-${方案名}-${作者}-${版本}.json`
     }

@@ -37,6 +37,36 @@
       "enabled": true
     },
     {
+      "key": "cangjie-5",
+      "name": "倉頡五代",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "cangjie-6",
+      "name": "蒼頡檢字法",
+      "description": "倉頡六代",
+      "enabled": true
+    },
+    {
+      "key": "wubi-86",
+      "name": "五筆86",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "zhengma",
+      "name": "鄭碼",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "xuma",
+      "name": "徐碼",
+      "description": "",
+      "enabled": true
+    },
+    {
       "key": "zhenma",
       "name": "真碼",
       "description": "",
@@ -45,6 +75,12 @@
     {
       "key": "tiger",
       "name": "虎碼",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "sapphire-3",
+      "name": "藍寶石第三代",
       "description": "",
       "enabled": true
     },

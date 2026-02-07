@@ -45,7 +45,6 @@ const DynamicDuplicateAnalysisPage: React.FC = () => {
    */
   const 檢查數據完整性 = (): boolean => {
     if (!分析結果) {
-      console.log('[DynamicDuplicateAnalysisPage] 檢查完整性: 無分析結果')
       return false
     }
 
@@ -59,15 +58,7 @@ const DynamicDuplicateAnalysisPage: React.FC = () => {
     ]
 
     const 完整 = 必需字段.every(字段 => 字段 in 分析結果)
-
-    if (!完整) {
-      const 缺少字段 = 必需字段.filter(字段 => !(字段 in 分析結果))
-      console.log('[DynamicDuplicateAnalysisPage] 檢查完整性: 數據不完整，缺少字段:', 缺少字段)
-      return false
-    }
-
-    console.log('[DynamicDuplicateAnalysisPage] 檢查完整性: 數據完整')
-    return true
+    return 完整
   }
 
   /**

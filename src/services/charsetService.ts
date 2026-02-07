@@ -570,18 +570,12 @@ export async function 過濾自定義字符集(
   自定義字符集: Set<string>
 ): Promise<Set<string>> {
   const charset = new Set<string>()
-  console.log(
-    `[過濾自定義字符集] 預設字符集: ${預設字符集}, 自定義字符集大小: ${自定義字符集.size}`
-  )
 
   // 對於 gb2312、tonggui 和 guozi，直接從字符集數據中過濾
   if (預設字符集 === 'gb2312' || 預設字符集 === 'tonggui' || 預設字符集 === 'guozi') {
     await loadCharsetData()
     const store = getDefaultStore()
     const charsetData = store.get(字符集數據原子狀態)
-    console.log(
-      `[generateCharset] charsetData 是否存在: ${!!charsetData}, 總記録數: ${charsetData ? Object.keys(charsetData).length : 0}`
-    )
     if (!charsetData) return charset
 
     for (const char of 自定義字符集) {
@@ -596,7 +590,6 @@ export async function 過濾自定義字符集(
         }
       }
     }
-    console.log(`[過濾自定義字符集] ${預設字符集} 過濾後字符集大小: ${charset.size}`)
   } else {
     // 對於其他字符集，加載CJK塊數據並使用Unicode範圍檢查
     await loadCJKBlockData()
@@ -611,7 +604,6 @@ export async function 過濾自定義字符集(
         charset.add(char)
       }
     }
-    console.log(`[過濾自定義字符集] ${預設字符集} CJK區塊過濾後字符集大小: ${charset.size}`)
   }
 
   return charset

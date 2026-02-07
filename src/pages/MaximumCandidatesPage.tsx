@@ -45,7 +45,13 @@ const MaximumCandidatesPage: React.FC = () => {
     CJK基本: { name: 'CJK基本區' },
     CJK擴A: { name: '到CJK-A' },
     CJK擴B: { name: '到CJK-B' },
+    CJK擴C: { name: '到CJK-C' },
+    CJK擴D: { name: '到CJK-D' },
+    CJK擴E: { name: '到CJK-E' },
     CJK擴F: { name: '到CJK-F' },
+    CJK擴G: { name: '到CJK-G' },
+    CJK擴H: { name: '到CJK-H' },
+    CJK擴I: { name: '到CJK-I' },
     CJK擴J: { name: '到CJK-J' },
   }
 
@@ -110,7 +116,13 @@ const MaximumCandidatesPage: React.FC = () => {
         CJK基本: 結果['cjk_basic'],
         CJK擴A: 結果['cjk_to_a'],
         CJK擴B: 結果['cjk_to_b'],
+        CJK擴C: 結果['cjk_to_c'],
+        CJK擴D: 結果['cjk_to_d'],
+        CJK擴E: 結果['cjk_to_e'],
         CJK擴F: 結果['cjk_to_f'],
+        CJK擴G: 結果['cjk_to_g'],
+        CJK擴H: 結果['cjk_to_h'],
+        CJK擴I: 結果['cjk_to_i'],
         CJK擴J: 結果['cjk_to_j'],
         字符數: 總字符數,
         更新時間: new Date().toISOString(),
@@ -161,6 +173,24 @@ const MaximumCandidatesPage: React.FC = () => {
       是否展開: boolean
     }
 
+    // 定義字符集顯示順序
+    const 字符集順序 = [
+      'GB2312',
+      '常用國字',
+      '通用規範',
+      'CJK基本',
+      'CJK擴A',
+      'CJK擴B',
+      'CJK擴C',
+      'CJK擴D',
+      'CJK擴E',
+      'CJK擴F',
+      'CJK擴G',
+      'CJK擴H',
+      'CJK擴I',
+      'CJK擴J',
+    ]
+
     const 表格數據: 表格數據項[] = Object.entries(分析結果)
       .filter(([key]) => key !== '更新時間' && key !== '碼表哈希' && key !== '字符數')
       .map(([key, value]) => {
@@ -172,6 +202,11 @@ const MaximumCandidatesPage: React.FC = () => {
           編碼列表: result.編碼列表,
           是否展開: 展開狀態.has(key),
         }
+      })
+      .sort((a, b) => {
+        const indexA = 字符集順序.indexOf(a.key)
+        const indexB = 字符集順序.indexOf(b.key)
+        return indexA - indexB
       })
 
     const 列定義: ColumnsType<表格數據項> = [

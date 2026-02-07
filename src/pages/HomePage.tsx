@@ -75,8 +75,6 @@ function HomePage() {
   // 共用：處理方案數據（從JSON導入或加載預設方案）
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const 處理方案數據 = (導入數據: any, 來源: string) => {
-    console.log(`[HomePage] 從${來源}獲取的原始數據:`, 導入數據)
-
     // 先清空所有 atom
     清空所有原子狀態()
 
@@ -90,9 +88,6 @@ function HomePage() {
     const 數據中的速度當量結果 = 測評結果?.速度當量分析
     const 數據中的簡碼效率結果 = 測評結果?.簡碼效率分析
 
-    console.log(`[HomePage] ${來源}的動態選重分析結果:`, 數據中的動態選重結果)
-    console.log(`[HomePage] ${來源}的方案配置:`, 方案配置)
-
     // 驗證方案配置
     const 方案 = 從JSON導入(JSON.stringify(方案配置))
     設置當前方案(方案)
@@ -105,42 +100,32 @@ function HomePage() {
     const 有簡碼效率結果 = !!數據中的簡碼效率結果
 
     if (有動態選重結果) {
-      console.log(`[HomePage] 設置${來源}的動態選重分析結果到 atom:`, 數據中的動態選重結果)
       設置動態選重分析結果(數據中的動態選重結果)
     } else {
-      console.log(`[HomePage] ${來源}無動態選重分析結果`)
       設置動態選重分析結果(null)
     }
 
     if (有靜態重碼結果) {
-      console.log(`[HomePage] 設置${來源}的靜態重碼分析結果到 atom:`, 數據中的靜態重碼結果)
       設置靜態重碼分析結果(數據中的靜態重碼結果)
     } else {
-      console.log(`[HomePage] ${來源}無靜態重碼分析結果`)
       設置靜態重碼分析結果(null)
     }
 
     if (有候選個數結果) {
-      console.log(`[HomePage] 設置${來源}的候選個數分析結果到 atom:`, 數據中的候選個數結果)
       設置候選個數分析結果(數據中的候選個數結果)
     } else {
-      console.log(`[HomePage] ${來源}無候選個數分析結果`)
       設置候選個數分析結果(null)
     }
 
     if (有速度當量結果) {
-      console.log(`[HomePage] 設置${來源}的速度當量分析結果到 atom:`, 數據中的速度當量結果)
       設置速度當量分析結果(數據中的速度當量結果)
     } else {
-      console.log(`[HomePage] ${來源}無速度當量分析結果`)
       設置速度當量分析結果(null)
     }
 
     if (有簡碼效率結果) {
-      console.log(`[HomePage] 設置${來源}的簡碼效率分析結果到 atom:`, 數據中的簡碼效率結果)
       設置簡碼效率分析結果(數據中的簡碼效率結果)
     } else {
-      console.log(`[HomePage] ${來源}無簡碼效率分析結果`)
       設置簡碼效率分析結果(null)
     }
 
@@ -161,15 +146,11 @@ function HomePage() {
   useEffect(() => {
     async function 初始化方案列表() {
       try {
-        console.log('🟢 [HomePage] 開始初始化方案列表')
         const 方案鍵名列表 = await 列出可用方案()
-        console.log('🟢 [HomePage] 獲取到的方案鍵名列表:', 方案鍵名列表)
         const 加載的方案列表 = await Promise.all(
           方案鍵名列表.map(async 鍵名 => {
             try {
-              console.log(`🟡 [HomePage] 正在加載方案: ${鍵名}`)
               const 方案 = await 加載方案(鍵名)
-              console.log(`✅ [HomePage] 方案 ${鍵名} 加載成功:`, 方案.元數據.方案名)
               return 方案
             } catch (錯誤) {
               console.error(`❌ [HomePage] 方案 ${鍵名} 加載失敗:`, 錯誤)
@@ -179,10 +160,6 @@ function HomePage() {
         )
         const 過濾後的方案列表 = 加載的方案列表.filter(
           (方案): 方案 is 方案配置介面 => 方案 !== null
-        )
-        console.log(
-          '🟢 [HomePage] 最終方案列表:',
-          過濾後的方案列表.map(s => s.元數據.方案名)
         )
         設置方案列表(過濾後的方案列表)
       } catch (錯誤) {

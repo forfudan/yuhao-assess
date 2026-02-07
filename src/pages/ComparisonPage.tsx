@@ -79,19 +79,11 @@ const ComparisonPage: React.FC = () => {
 
   // 加載對比方案數據
   const 加載對比方案數據 = async () => {
-    console.log('🔵 [Step 1] 開始加載對比方案數據')
-    console.log('🔵 選中的方案鍵名列表:', 選中對比方案鍵名列表)
-    console.log('🔵 内置方案列表:', 内置方案列表)
-
     const 方案列表: 對比方案數據介面[] = []
     let 當前方案哈希: string | undefined = undefined
 
     // 添加當前方案（如果存在且有分析數據）
     if (當前方案 && (動態選重分析結果 || 靜態重碼分析結果)) {
-      console.log('🟢 [Step 2] 添加當前方案:', 當前方案.元數據.方案名)
-      console.log('🟢 當前方案的動態選重率:', 動態選重分析結果)
-      console.log('🟢 當前方案的靜態重碼:', 靜態重碼分析結果)
-
       當前方案哈希 = 當前方案.碼表元數據?.哈希值
       const 方案名 = 當前方案.元數據.方案名
 
@@ -107,30 +99,19 @@ const ComparisonPage: React.FC = () => {
         速度當量分析: 速度當量分析結果,
         簡碼效率分析: 簡碼效率分析結果,
       })
-    } else {
-      console.log('⚠️ 没有當前方案或没有分析數據')
     }
 
     // 加載選中的内置方案數據
-    console.log('🔵 [Step 3] 開始加載内置方案，共', 選中對比方案鍵名列表.length, '個')
-
     for (const key of 選中對比方案鍵名列表) {
       try {
-        console.log(`🟡 正在加載方案: ${key}`)
         const 方案 = await 加載方案(key)
-        console.log(`🟡 方案 ${key} 加載成功:`, 方案)
 
         const 方案信息 = 内置方案列表.find(b => b.key === key)
         const 測評結果 = 方案.測評結果
         const 方案哈希 = 方案.碼表元數據?.哈希值
 
-        console.log(`🟡 方案 ${key} 的測評結果:`, 測評結果)
-        console.log(`🟡 方案 ${key} 的碼表元數據:`, 方案.碼表元數據)
-        console.log(`🟡 方案 ${key} 的哈希值:`, 方案哈希)
-
         // 如果當前方案存在且哈希值相同，則跳過此内置方案
         if (當前方案哈希 && 方案哈希 && 當前方案哈希 === 方案哈希) {
-          console.log(`⚠️ 方案 ${key} 與當前方案哈希值相同，跳過`)
           continue
         }
 
@@ -148,28 +129,19 @@ const ComparisonPage: React.FC = () => {
           簡碼效率分析: 測評結果?.簡碼效率分析 || null,
         }
 
-        console.log(`🟢 方案 ${key} 添加到列表:`, 新方案數據)
         方案列表.push(新方案數據)
       } catch (error) {
         console.error(`❌ 加載方案 ${key} 失敗:`, error)
       }
     }
 
-    console.log('🔵 [Step 4] 最終方案列表:', 方案列表)
     設置對比方案列表(方案列表)
   }
 
   // 初始化和刷新對比方案數據
   useEffect(() => {
-    console.log('🔄 useEffect 觸發')
-    console.log('🔄 内置方案列表長度:', 内置方案列表.length)
-    console.log('🔄 選中對比方案鍵名列表:', 選中對比方案鍵名列表)
-
     if (内置方案列表.length > 0) {
-      console.log('🔄 開始執行加載對比方案數據')
       加載對比方案數據()
-    } else {
-      console.log('⚠️ 内置方案列表爲空，跳過加載')
     }
   }, [
     當前方案,
@@ -208,20 +180,13 @@ const ComparisonPage: React.FC = () => {
 
   // 確認選擇的方案
   const 確認選擇方案 = () => {
-    console.log('✅ 確認選擇方案')
-    console.log('✅ 臨時已選:', 臨時已選方案鍵名列表)
-    console.log('✅ 保存到 atom 之前:', 選中對比方案鍵名列表)
-
     設置選中對比方案鍵名列表(臨時已選方案鍵名列表)
-
-    console.log('✅ 保存到 atom 之後 (實際會在下次渲染生效)')
     設置顯示選擇彈窗(false)
     message.success('已更新對比方案列表')
   }
 
   // 刷新對比數據
   const 刷新對比數據 = async () => {
-    console.log('🔄 手動刷新對比數據')
     設置加載中(true)
     try {
       await 加載對比方案數據()
@@ -297,14 +262,34 @@ const ComparisonPage: React.FC = () => {
       render: (_, record) => record.候選個數分析?.GB2312?.最大候選個數 || '-',
     },
     {
+      title: '通用規範',
+      key: 'tonggui',
+      render: (_, record) => record.候選個數分析?.通用規範?.最大候選個數 || '-',
+    },
+    {
       title: '常用國字',
       key: 'guozi',
       render: (_, record) => record.候選個數分析?.常用國字?.最大候選個數 || '-',
     },
     {
-      title: 'CJK 基本',
+      title: 'CJK基本',
       key: 'cjk-basic',
       render: (_, record) => record.候選個數分析?.CJK基本?.最大候選個數 || '-',
+    },
+    {
+      title: 'CJK擴B',
+      key: 'cjk-b',
+      render: (_, record) => record.候選個數分析?.CJK擴B?.最大候選個數 || '-',
+    },
+    {
+      title: 'CJK擴H',
+      key: 'cjk-h',
+      render: (_, record) => record.候選個數分析?.CJK擴H?.最大候選個數 || '-',
+    },
+    {
+      title: 'CJK擴J',
+      key: 'cjk-j',
+      render: (_, record) => record.候選個數分析?.CJK擴J?.最大候選個數 || '-',
     },
   ]
 
@@ -332,7 +317,7 @@ const ComparisonPage: React.FC = () => {
         key: 'full-equiv',
         render: (_, record) => {
           const 值 = (record.速度當量分析 as any)?.[`${前綴}全碼速度當量`]
-          return 值 ? 值.toFixed(2) : '-'
+          return 值 ? 值.toFixed(3) : '-'
         },
       },
       {
@@ -340,7 +325,7 @@ const ComparisonPage: React.FC = () => {
         key: 'first-short-equiv',
         render: (_, record) => {
           const 值 = (record.速度當量分析 as any)?.[`${前綴}一級簡碼速度當量`]
-          return 值 ? 值.toFixed(2) : '-'
+          return 值 ? 值.toFixed(3) : '-'
         },
       },
       {
@@ -348,7 +333,7 @@ const ComparisonPage: React.FC = () => {
         key: 'second-short-equiv',
         render: (_, record) => {
           const 值 = (record.速度當量分析 as any)?.[`${前綴}二級簡碼速度當量`]
-          return 值 ? 值.toFixed(2) : '-'
+          return 值 ? 值.toFixed(3) : '-'
         },
       },
       {
@@ -356,7 +341,7 @@ const ComparisonPage: React.FC = () => {
         key: 'all-short-equiv',
         render: (_, record) => {
           const 值 = (record.速度當量分析 as any)?.[`${前綴}全部簡碼速度當量`]
-          return 值 ? 值.toFixed(2) : '-'
+          return 值 ? 值.toFixed(3) : '-'
         },
       },
     ]
