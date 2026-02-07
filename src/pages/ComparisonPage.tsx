@@ -11,7 +11,6 @@ import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 獲取内置方案列表, 加載方案, type 内置方案配置 } from '@/services/schemeService'
-import type { 方案配置介面 } from '@/types/scheme'
 import type { 動態選重分析結果介面 } from '@/atoms/dynamicDuplicate'
 import type { 靜態重碼分析結果介面 } from '@/atoms/staticDuplicate'
 import type { 最大候選個數分析結果 } from '@/atoms/maximumCandidates'
@@ -20,8 +19,8 @@ import type { 簡碼效率分析結果介面 } from '@/atoms/shortCodeEfficiency
 
 const { Paragraph } = Typography
 
-// 對比方案數據接口
-interface 對比方案數據 {
+// 對比方案數據介面
+interface 對比方案數據介面 {
   唯一鍵: string // 用於 React key，格式：方案名-current 或 方案名-builtin
   方案名: string
   顯示名稱: string // 顯示用的名稱，當前方案會添加 "(當前方案)" 後綴
@@ -34,20 +33,20 @@ interface 對比方案數據 {
   簡碼效率分析?: 簡碼效率分析結果介面 | null
 }
 
-// 分析類型
-type 分析類型 =
-  | 'duplicate'
-  | 'dynamicDupRate'
-  | 'dynamicDupRateOriginal'
-  | 'maxCandidates'
-  | 'speedEquiv'
-  | 'shortCodeEfficiency'
+// 分析型别
+type 分析型别 =
+  | '靜態重碼'
+  | '頻率降序動態選重'
+  | '原始碼表動態選重'
+  | '候選個數'
+  | '速度當量'
+  | '簡碼效率'
 
-// 字頻來源類型
-type 字頻來源類型 = 'zhihu' | 'sc' | 'tc' | 'guji' | 'fanjian'
+// 字頻來源型别
+type 字頻來源型别 = '知乎簡體' | '北語簡體' | '臺標繁體' | '古籍繁體' | '繁簡聯合'
 
-// 全碼簡碼類型
-type 全碼簡碼類型 = 'full' | 'short'
+// 全碼簡碼型别
+type 全碼簡碼型别 = 'full' | 'short'
 
 const ComparisonPage: React.FC = () => {
   const [當前方案] = useAtom(當前方案原子狀態)
@@ -60,14 +59,14 @@ const ComparisonPage: React.FC = () => {
   const [内置方案列表, 設置内置方案列表] = useState<内置方案配置[]>([])
   const [選中對比方案鍵名列表, 設置選中對比方案鍵名列表] = useAtom(選中對比方案鍵名列表原子狀態)
   const [臨時已選方案鍵名列表, 設置臨時已選方案鍵名列表] = useState<string[]>([])
-  const [對比方案列表, 設置對比方案列表] = useState<對比方案數據[]>([])
+  const [對比方案列表, 設置對比方案列表] = useState<對比方案數據介面[]>([])
   const [顯示選擇彈窗, 設置顯示選擇彈窗] = useState(false)
   const [加載中, 設置加載中] = useState(false)
 
   // 三層選擇狀態
-  const [當前分析類型, 設置當前分析類型] = useState<分析類型>('duplicate')
-  const [當前字頻來源, 設置當前字頻來源] = useState<字頻來源類型>('zhihu')
-  const [當前全碼簡碼, 設置當前全碼簡碼] = useState<全碼簡碼類型>('full')
+  const [當前分析類型, 設置當前分析類型] = useState<分析型别>('靜態重碼')
+  const [當前字頻來源, 設置當前字頻來源] = useState<字頻來源型别>('知乎簡體')
+  const [當前全碼簡碼, 設置當前全碼簡碼] = useState<全碼簡碼型别>('full')
 
   // 加載内置方案列表
   useEffect(() => {
@@ -84,7 +83,7 @@ const ComparisonPage: React.FC = () => {
     console.log('🔵 選中的方案鍵名列表:', 選中對比方案鍵名列表)
     console.log('🔵 内置方案列表:', 内置方案列表)
 
-    const 方案列表: 對比方案數據[] = []
+    const 方案列表: 對比方案數據介面[] = []
     let 當前方案哈希: string | undefined = undefined
 
     // 添加當前方案（如果存在且有分析數據）
@@ -236,7 +235,7 @@ const ComparisonPage: React.FC = () => {
   }
 
   // 靜態重碼字數表格列定義
-  const 靜態重碼字數列: ColumnsType<對比方案數據> = [
+  const 靜態重碼字數列: ColumnsType<對比方案數據介面> = [
     {
       title: '方案名',
       dataIndex: '顯示名稱',
@@ -276,7 +275,7 @@ const ComparisonPage: React.FC = () => {
   ]
 
   // 最大候選數列
-  const 最大候選數列: ColumnsType<對比方案數據> = [
+  const 最大候選數列: ColumnsType<對比方案數據介面> = [
     {
       title: '方案名',
       dataIndex: '顯示名稱',
@@ -301,13 +300,13 @@ const ComparisonPage: React.FC = () => {
   ]
 
   // 速度當量列（根據字頻來源動態生成，顯示4列：全碼、一級簡碼、二級簡碼、全部簡碼）
-  const 獲取速度當量列 = (字頻來源: 字頻來源類型): ColumnsType<對比方案數據> => {
-    const 字頻前綴映射: Record<字頻來源類型, string> = {
-      zhihu: '知乎簡體字頻',
-      sc: '北語簡體字頻',
-      tc: '臺標繁體字頻',
-      guji: '古籍繁體字頻',
-      fanjian: '繁簡聯合字頻',
+  const 獲取速度當量列 = (字頻來源: 字頻來源型别): ColumnsType<對比方案數據介面> => {
+    const 字頻前綴映射: Record<字頻來源型别, string> = {
+      知乎簡體: '知乎簡體字頻',
+      北語簡體: '北語簡體字頻',
+      臺標繁體: '臺標繁體字頻',
+      古籍繁體: '古籍繁體字頻',
+      繁簡聯合: '繁簡聯合字頻',
     }
 
     const 前綴 = 字頻前綴映射[字頻來源]
@@ -355,7 +354,7 @@ const ComparisonPage: React.FC = () => {
   }
 
   // 動態重碼率列（根據全碼/簡碼動態生成，顯示5個字頻來源）
-  const 獲取動態重碼率列 = (全碼簡碼: 全碼簡碼類型): ColumnsType<對比方案數據> => {
+  const 獲取動態重碼率列 = (全碼簡碼: 全碼簡碼型别): ColumnsType<對比方案數據介面> => {
     const 碼類型 = 全碼簡碼 === 'full' ? '全碼' : '簡碼'
 
     return [
@@ -367,7 +366,7 @@ const ComparisonPage: React.FC = () => {
       },
       {
         title: '知乎簡體',
-        key: 'zhihu',
+        key: '知乎簡體',
         render: (_, record) => {
           const 值 = record.動態選重分析?.知乎簡體動態選重率?.[碼類型]
           return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
@@ -375,7 +374,7 @@ const ComparisonPage: React.FC = () => {
       },
       {
         title: '北語簡體',
-        key: 'sc',
+        key: '北語簡體',
         render: (_, record) => {
           const 值 = record.動態選重分析?.北語簡體動態選重率?.[碼類型]
           return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
@@ -383,7 +382,7 @@ const ComparisonPage: React.FC = () => {
       },
       {
         title: '臺標繁體',
-        key: 'tc',
+        key: '臺標繁體',
         render: (_, record) => {
           const 值 = record.動態選重分析?.臺標繁體動態選重率?.[碼類型]
           return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
@@ -391,7 +390,7 @@ const ComparisonPage: React.FC = () => {
       },
       {
         title: '古籍繁體',
-        key: 'guji',
+        key: '古籍繁體',
         render: (_, record) => {
           const 值 = record.動態選重分析?.古籍繁體動態選重率?.[碼類型]
           return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
@@ -399,7 +398,7 @@ const ComparisonPage: React.FC = () => {
       },
       {
         title: '繁簡聯合',
-        key: 'fanjian',
+        key: '繁簡聯合',
         render: (_, record) => {
           const 值 = record.動態選重分析?.繁簡聯合動態選重率?.[碼類型]
           return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
@@ -409,7 +408,7 @@ const ComparisonPage: React.FC = () => {
   }
 
   // 動態重碼率原始排序列（根據全碼/簡碼動態生成，顯示5個字頻來源）
-  const 獲取動態重碼率原始排序列 = (全碼簡碼: 全碼簡碼類型): ColumnsType<對比方案數據> => {
+  const 獲取動態重碼率原始排序列 = (全碼簡碼: 全碼簡碼型别): ColumnsType<對比方案數據介面> => {
     const 碼類型 = 全碼簡碼 === 'full' ? '全碼' : '簡碼'
 
     return [
@@ -463,13 +462,13 @@ const ComparisonPage: React.FC = () => {
   }
 
   // 簡碼效率列（根據字頻來源動態生成，顯示5個N值）
-  const 獲取簡碼效率列 = (字頻來源: 字頻來源類型): ColumnsType<對比方案數據> => {
-    const 字頻鍵名映射: Record<字頻來源類型, string> = {
-      zhihu: '知乎簡體字頻下之簡碼效率',
-      sc: '北語簡體字頻下之簡碼效率',
-      tc: '臺標繁體字頻下之簡碼效率',
-      guji: '古籍繁體字頻下之簡碼效率',
-      fanjian: '繁簡聯合字頻下之簡碼效率',
+  const 獲取簡碼效率列 = (字頻來源: 字頻來源型别): ColumnsType<對比方案數據介面> => {
+    const 字頻鍵名映射: Record<字頻來源型别, string> = {
+      知乎簡體: '知乎簡體字頻下之簡碼效率',
+      北語簡體: '北語簡體字頻下之簡碼效率',
+      臺標繁體: '臺標繁體字頻下之簡碼效率',
+      古籍繁體: '古籍繁體字頻下之簡碼效率',
+      繁簡聯合: '繁簡聯合字頻下之簡碼效率',
     }
 
     const 字頻鍵 = 字頻鍵名映射[字頻來源]
@@ -537,17 +536,17 @@ const ComparisonPage: React.FC = () => {
   // 根據當前選擇動態生成列定義
   const 當前列定義 = useMemo(() => {
     switch (當前分析類型) {
-      case 'duplicate':
+      case '靜態重碼':
         return 靜態重碼字數列
-      case 'dynamicDupRate':
+      case '頻率降序動態選重':
         return 獲取動態重碼率列(當前全碼簡碼)
-      case 'dynamicDupRateOriginal':
+      case '原始碼表動態選重':
         return 獲取動態重碼率原始排序列(當前全碼簡碼)
-      case 'maxCandidates':
+      case '候選個數':
         return 最大候選數列
-      case 'speedEquiv':
+      case '速度當量':
         return 獲取速度當量列(當前字頻來源)
-      case 'shortCodeEfficiency':
+      case '簡碼效率':
         return 獲取簡碼效率列(當前字頻來源)
       default:
         return 靜態重碼字數列
@@ -568,77 +567,77 @@ const ComparisonPage: React.FC = () => {
         {/* 第一行：分析種類選擇 */}
         <Space wrap>
           <Button
-            type={當前分析類型 === 'duplicate' ? 'primary' : 'default'}
-            onClick={() => 設置當前分析類型('duplicate')}
+            type={當前分析類型 === '靜態重碼' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('靜態重碼')}
           >
             靜重
           </Button>
           <Button
-            type={當前分析類型 === 'dynamicDupRate' ? 'primary' : 'default'}
-            onClick={() => 設置當前分析類型('dynamicDupRate')}
+            type={當前分析類型 === '頻率降序動態選重' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('頻率降序動態選重')}
           >
-            動重
+            頻率降序動重
           </Button>
           <Button
-            type={當前分析類型 === 'dynamicDupRateOriginal' ? 'primary' : 'default'}
-            onClick={() => 設置當前分析類型('dynamicDupRateOriginal')}
+            type={當前分析類型 === '原始碼表動態選重' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('原始碼表動態選重')}
           >
             原始碼表動重
           </Button>
           <Button
-            type={當前分析類型 === 'maxCandidates' ? 'primary' : 'default'}
-            onClick={() => 設置當前分析類型('maxCandidates')}
+            type={當前分析類型 === '候選個數' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('候選個數')}
           >
             候選數
           </Button>
           <Button
-            type={當前分析類型 === 'speedEquiv' ? 'primary' : 'default'}
-            onClick={() => 設置當前分析類型('speedEquiv')}
+            type={當前分析類型 === '速度當量' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('速度當量')}
           >
-            當量
+            速度當量
           </Button>
           <Button
-            type={當前分析類型 === 'shortCodeEfficiency' ? 'primary' : 'default'}
-            onClick={() => 設置當前分析類型('shortCodeEfficiency')}
+            type={當前分析類型 === '簡碼效率' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('簡碼效率')}
           >
             簡碼效率
           </Button>
         </Space>
 
         {/* 第二行：字頻來源選擇（僅在當量和簡碼效率時顯示） */}
-        {(當前分析類型 === 'speedEquiv' || 當前分析類型 === 'shortCodeEfficiency') && (
+        {(當前分析類型 === '速度當量' || 當前分析類型 === '簡碼效率') && (
           <Space wrap>
             <Button
-              type={當前字頻來源 === 'zhihu' ? 'primary' : 'default'}
-              onClick={() => 設置當前字頻來源('zhihu')}
+              type={當前字頻來源 === '知乎簡體' ? 'primary' : 'default'}
+              onClick={() => 設置當前字頻來源('知乎簡體')}
               size="small"
             >
               知乎簡體
             </Button>
             <Button
-              type={當前字頻來源 === 'sc' ? 'primary' : 'default'}
-              onClick={() => 設置當前字頻來源('sc')}
+              type={當前字頻來源 === '北語簡體' ? 'primary' : 'default'}
+              onClick={() => 設置當前字頻來源('北語簡體')}
               size="small"
             >
               北語簡體
             </Button>
             <Button
-              type={當前字頻來源 === 'tc' ? 'primary' : 'default'}
-              onClick={() => 設置當前字頻來源('tc')}
+              type={當前字頻來源 === '臺標繁體' ? 'primary' : 'default'}
+              onClick={() => 設置當前字頻來源('臺標繁體')}
               size="small"
             >
               臺標繁體
             </Button>
             <Button
-              type={當前字頻來源 === 'guji' ? 'primary' : 'default'}
-              onClick={() => 設置當前字頻來源('guji')}
+              type={當前字頻來源 === '古籍繁體' ? 'primary' : 'default'}
+              onClick={() => 設置當前字頻來源('古籍繁體')}
               size="small"
             >
               古籍繁體
             </Button>
             <Button
-              type={當前字頻來源 === 'fanjian' ? 'primary' : 'default'}
-              onClick={() => 設置當前字頻來源('fanjian')}
+              type={當前字頻來源 === '繁簡聯合' ? 'primary' : 'default'}
+              onClick={() => 設置當前字頻來源('繁簡聯合')}
               size="small"
             >
               繁簡聯合
@@ -647,7 +646,7 @@ const ComparisonPage: React.FC = () => {
         )}
 
         {/* 第三行：全碼/簡碼選擇（僅在動重和原始碼表動重時顯示） */}
-        {(當前分析類型 === 'dynamicDupRate' || 當前分析類型 === 'dynamicDupRateOriginal') && (
+        {(當前分析類型 === '頻率降序動態選重' || 當前分析類型 === '原始碼表動態選重') && (
           <Space wrap>
             <Button
               type={當前全碼簡碼 === 'full' ? 'primary' : 'default'}
