@@ -46,7 +46,7 @@ type 分析型别 =
 type 字頻來源型别 = '知乎簡體' | '北語簡體' | '臺標繁體' | '古籍繁體' | '繁簡聯合'
 
 // 全碼簡碼型别
-type 全碼簡碼型别 = 'full' | 'short'
+type 全碼簡碼型别 = '全碼' | '簡碼'
 
 const ComparisonPage: React.FC = () => {
   const [當前方案] = useAtom(當前方案原子狀態)
@@ -66,7 +66,7 @@ const ComparisonPage: React.FC = () => {
   // 三層選擇狀態
   const [當前分析類型, 設置當前分析類型] = useState<分析型别>('靜態重碼')
   const [當前字頻來源, 設置當前字頻來源] = useState<字頻來源型别>('知乎簡體')
-  const [當前全碼簡碼, 設置當前全碼簡碼] = useState<全碼簡碼型别>('full')
+  const [當前全碼簡碼, 設置當前全碼簡碼] = useState<全碼簡碼型别>('全碼')
 
   // 加載内置方案列表
   useEffect(() => {
@@ -234,45 +234,54 @@ const ComparisonPage: React.FC = () => {
     }
   }
 
-  // 靜態重碼字數表格列定義
-  const 靜態重碼字數列: ColumnsType<對比方案數據介面> = [
-    {
-      title: '方案名',
-      dataIndex: '顯示名稱',
-      key: '顯示名稱',
-      fixed: 'left',
-    },
-    {
-      title: 'GB2312 全碼',
-      key: 'gb2312-full',
-      render: (_, record) => {
-        const value = record.靜態重碼分析?.GB2312?.全碼重碼字數
-        console.log(`📊 [${record.方案名}] GB2312全碼重碼字數:`, value)
-        console.log(`📊 [${record.方案名}] 靜態重碼分析結構:`, record.靜態重碼分析)
-        return value || '-'
+  // 靜態重碼字數表格列定義（根據全碼/簡碼動態生成，顯示7個字符集）
+  const 獲取靜態重碼字數列 = (全碼簡碼: 全碼簡碼型别): ColumnsType<對比方案數據介面> => {
+    const 碼類型 = 全碼簡碼 === '全碼' ? '全碼重碼字數' : '簡碼重碼字數'
+
+    return [
+      {
+        title: '方案名',
+        dataIndex: '顯示名稱',
+        key: '顯示名稱',
+        fixed: 'left',
       },
-    },
-    {
-      title: 'GB2312 簡碼',
-      key: 'gb2312-short',
-      render: (_, record) => record.靜態重碼分析?.GB2312?.簡碼重碼字數 || '-',
-    },
-    {
-      title: '通用規範 全碼',
-      key: 'tonggui-full',
-      render: (_, record) => record.靜態重碼分析?.通用規範?.全碼重碼字數 || '-',
-    },
-    {
-      title: '常用國字 全碼',
-      key: 'guozi-full',
-      render: (_, record) => record.靜態重碼分析?.常用國字?.全碼重碼字數 || '-',
-    },
-    {
-      title: 'CJK 基本 全碼',
-      key: 'cjk-basic-full',
-      render: (_, record) => record.靜態重碼分析?.CJK基本?.全碼重碼字數 || '-',
-    },
-  ]
+      {
+        title: 'GB2312',
+        key: 'gb2312',
+        render: (_, record) => record.靜態重碼分析?.GB2312?.[碼類型] || '-',
+      },
+      {
+        title: '通用規範',
+        key: 'tonggui',
+        render: (_, record) => record.靜態重碼分析?.通用規範?.[碼類型] || '-',
+      },
+      {
+        title: '常用國字',
+        key: 'guozi',
+        render: (_, record) => record.靜態重碼分析?.常用國字?.[碼類型] || '-',
+      },
+      {
+        title: 'CJK基本',
+        key: 'cjk-basic',
+        render: (_, record) => record.靜態重碼分析?.CJK基本?.[碼類型] || '-',
+      },
+      {
+        title: 'CJK擴B',
+        key: 'cjk-b',
+        render: (_, record) => record.靜態重碼分析?.到CJKB?.[碼類型] || '-',
+      },
+      {
+        title: 'CJK擴H',
+        key: 'cjk-h',
+        render: (_, record) => record.靜態重碼分析?.到CJKH?.[碼類型] || '-',
+      },
+      {
+        title: 'CJK擴J',
+        key: 'cjk-j',
+        render: (_, record) => record.靜態重碼分析?.到CJKJ?.[碼類型] || '-',
+      },
+    ]
+  }
 
   // 最大候選數列
   const 最大候選數列: ColumnsType<對比方案數據介面> = [
@@ -355,7 +364,7 @@ const ComparisonPage: React.FC = () => {
 
   // 動態重碼率列（根據全碼/簡碼動態生成，顯示5個字頻來源）
   const 獲取動態重碼率列 = (全碼簡碼: 全碼簡碼型别): ColumnsType<對比方案數據介面> => {
-    const 碼類型 = 全碼簡碼 === 'full' ? '全碼' : '簡碼'
+    const 碼類型 = 全碼簡碼 === '全碼' ? '全碼' : '簡碼'
 
     return [
       {
@@ -409,7 +418,7 @@ const ComparisonPage: React.FC = () => {
 
   // 動態重碼率原始排序列（根據全碼/簡碼動態生成，顯示5個字頻來源）
   const 獲取動態重碼率原始排序列 = (全碼簡碼: 全碼簡碼型别): ColumnsType<對比方案數據介面> => {
-    const 碼類型 = 全碼簡碼 === 'full' ? '全碼' : '簡碼'
+    const 碼類型 = 全碼簡碼 === '全碼' ? '全碼' : '簡碼'
 
     return [
       {
@@ -537,7 +546,7 @@ const ComparisonPage: React.FC = () => {
   const 當前列定義 = useMemo(() => {
     switch (當前分析類型) {
       case '靜態重碼':
-        return 靜態重碼字數列
+        return 獲取靜態重碼字數列(當前全碼簡碼)
       case '頻率降序動態選重':
         return 獲取動態重碼率列(當前全碼簡碼)
       case '原始碼表動態選重':
@@ -549,7 +558,7 @@ const ComparisonPage: React.FC = () => {
       case '簡碼效率':
         return 獲取簡碼效率列(當前字頻來源)
       default:
-        return 靜態重碼字數列
+        return 獲取靜態重碼字數列(當前全碼簡碼)
     }
   }, [當前分析類型, 當前字頻來源, 當前全碼簡碼])
 
@@ -645,19 +654,21 @@ const ComparisonPage: React.FC = () => {
           </Space>
         )}
 
-        {/* 第三行：全碼/簡碼選擇（僅在動重和原始碼表動重時顯示） */}
-        {(當前分析類型 === '頻率降序動態選重' || 當前分析類型 === '原始碼表動態選重') && (
+        {/* 第三行：全碼/簡碼選擇（在靜重、動重和原始碼表動重時顯示） */}
+        {(當前分析類型 === '靜態重碼' ||
+          當前分析類型 === '頻率降序動態選重' ||
+          當前分析類型 === '原始碼表動態選重') && (
           <Space wrap>
             <Button
-              type={當前全碼簡碼 === 'full' ? 'primary' : 'default'}
-              onClick={() => 設置當前全碼簡碼('full')}
+              type={當前全碼簡碼 === '全碼' ? 'primary' : 'default'}
+              onClick={() => 設置當前全碼簡碼('全碼')}
               size="small"
             >
               全碼
             </Button>
             <Button
-              type={當前全碼簡碼 === 'short' ? 'primary' : 'default'}
-              onClick={() => 設置當前全碼簡碼('short')}
+              type={當前全碼簡碼 === '簡碼' ? 'primary' : 'default'}
+              onClick={() => 設置當前全碼簡碼('簡碼')}
               size="small"
             >
               簡碼
