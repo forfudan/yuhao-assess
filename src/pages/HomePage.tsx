@@ -29,6 +29,7 @@ import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 碼表原子狀態, 原始碼表原子狀態, 編碼預覽數據原子狀態 } from '@/atoms/codeTable'
 import { 加載方案, 列出可用方案, 從JSON導入, 創建空白方案 } from '@/services/schemeService'
+import { 清空所有Atom, type AtomSetters } from '@/services/atomResetService'
 import { useDataPreload } from '@/hooks/useDataPreload'
 import type { 方案配置介面 } from '@/types/scheme'
 import type { UploadFile } from 'antd'
@@ -51,15 +52,17 @@ function HomePage() {
   const [加載中, 設置加載中] = useState(false)
 
   // 清空所有 atom 狀態（統一函數）
-  const 清空所有Atom = () => {
-    設置碼表數據(null)
-    設置原始碼表('')
-    設置編碼預覽數據([])
-    設置靜態重碼分析結果(null)
-    設置動態選重分析結果(null)
-    設置候選個數分析結果(null)
-    設置速度當量分析結果(null)
-    設置簡碼效率分析結果(null)
+  const 清空所有原子狀態 = () => {
+    清空所有Atom({
+      設置碼表數據,
+      設置原始碼表,
+      設置編碼預覽數據,
+      設置靜態重碼分析結果,
+      設置動態選重分析結果,
+      設置候選個數分析結果,
+      設置速度當量分析結果,
+      設置簡碼效率分析結果,
+    })
   }
 
   // 使用數據預加載狀態
@@ -75,7 +78,7 @@ function HomePage() {
     console.log(`[HomePage] 從${來源}獲取的原始數據:`, 導入數據)
 
     // 先清空所有 atom
-    清空所有Atom()
+    清空所有原子狀態()
 
     // 分離方案配置和測評結果
     const { 測評結果, ...方案配置 } = 導入數據

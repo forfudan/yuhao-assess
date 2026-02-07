@@ -17,8 +17,10 @@ import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 碼表原子狀態, 原始碼表原子狀態, 編碼預覽數據原子狀態 } from '@/atoms/codeTable'
 import { 從JSON導入, 創建空白方案 } from '@/services/schemeService'
+import { 清空所有Atom, type AtomSetters } from '@/services/atomResetService'
+import { 導出方案配置JSON } from '@/services/exportService'
+import { 觸發所有分析計算 } from '@/services/triggerAnalysisService'
 import type { 方案配置介面 } from '@/types/scheme'
-import type { 分析頁面路徑型别 } from '@/App'
 import type { RcFile } from 'antd/es/upload'
 
 const HeaderContainer = styled.div`
@@ -61,14 +63,16 @@ export function AppHeader() {
 
   // 清空所有原子狀態（統一函數）
   const 清空所有原子狀態 = () => {
-    設置碼表數據(null)
-    設置原始碼表('')
-    設置編碼預覽數據([])
-    設置靜態重碼分析結果(null)
-    設置動態選重分析結果(null)
-    設置候選個數分析結果(null)
-    設置速度當量分析結果(null)
-    設置簡碼效率分析結果(null)
+    清空所有Atom({
+      設置碼表數據,
+      設置原始碼表,
+      設置編碼預覽數據,
+      設置靜態重碼分析結果,
+      設置動態選重分析結果,
+      設置候選個數分析結果,
+      設置速度當量分析結果,
+      設置簡碼效率分析結果,
+    })
   }
 
   // 導入配置
@@ -154,48 +158,18 @@ export function AppHeader() {
       return
     }
 
-    try {
-      // 直接導出，將 atom 的分析結果附加到方案配置
-      // 使用 測評結果 字段包裹所有分析結果
-      const 導出數據: 方案配置介面 = {
-        ...當前方案,
-        測評結果: {
-          靜態重碼分析: 靜態重碼分析結果 ?? undefined,
-          動態選重分析: 動態選重分析結果 ?? undefined,
-          候選個數分析: 候選個數分析結果 ?? undefined,
-          速度當量分析: 速度當量分析結果 ?? undefined,
-          簡碼效率分析: 簡碼效率分析結果 ?? undefined,
-        },
-      }
+    const 結果 = 導出方案配置JSON(當前方案, {
+      靜態重碼分析結果,
+      動態選重分析結果,
+      候選個數分析結果,
+      速度當量分析結果,
+      簡碼效率分析結果,
+    })
 
-      const json文本 = JSON.stringify(導出數據, null, 2)
-      const blob = new Blob([json文本], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-
-      // 文件名格式：標識符-方案名-作者-版本號.json
-      const 標識符 = 當前方案.元數據.標識符
-      const 方案名 = 當前方案.元數據.方案名
-      const 作者 = 當前方案.元數據.作者 || 'unknown'
-      const 版本 = 當前方案.元數據.版本 || '1.0.0'
-      a.download = `${標識符}-${方案名}-${作者}-${版本}.json`
-
-      a.click()
-      URL.revokeObjectURL(url)
-
-      const 結果列表 = [
-        靜態重碼分析結果 && '靜態重碼分析',
-        動態選重分析結果 && '動態選重分析',
-        候選個數分析結果 && '候選個數分析',
-        速度當量分析結果 && '速度當量分析',
-        簡碼效率分析結果 && '簡碼效率分析',
-      ].filter(Boolean)
-      const 提示 = 結果列表.length > 0 ? `（包含${結果列表.join('、')}結果）` : ''
-      message.success(`方案配置已導出${提示}`)
-    } catch (錯誤) {
-      console.error('[AppHeader] 導出配置失敗:', 錯誤)
-      message.error('導出配置失敗')
+    if (結果.success) {
+      message.success(結果.message || '導出成功')
+    } else {
+      message.error(結果.message || '導出失敗')
     }
   }
 
@@ -226,34 +200,9 @@ export function AppHeader() {
 
     message.loading('正在清除舊數據並觸发重新計算...', 1)
 
-    // 稍後導航到各個頁面觸发計算
-    setTimeout(() => {
-      const pages: 分析頁面路徑型别[] = [
-        '/dynamic',
-        '/static',
-        '/candidates',
-        '/speed',
-        '/efficiency',
-        '/heatmap',
-      ]
-      let currentIndex = 0
-
-      const navigateNext = () => {
-        if (currentIndex < pages.length) {
-          const page = pages[currentIndex]
-          if (page) {
-            navigate(page)
-          }
-          currentIndex++
-          setTimeout(navigateNext, 500) // 每個頁面停留500ms觸发計算
-        } else {
-          message.success('所有分析已觸发！')
-          setTimeout(() => navigate('/'), 500) // 回到首頁
-        }
-      }
-
-      navigateNext()
-    }, 100)
+    // 使用公共服务触发所有分析
+    await 觸發所有分析計算(navigate, '/')
+    message.success('所有分析已觸发！')
   }
 
   return (
