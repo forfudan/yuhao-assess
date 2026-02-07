@@ -7,6 +7,12 @@
       "enabled": true
     },
     {
+      "key": "yuhao-ling5",
+      "name": "靈明五碼",
+      "description": "宇浩系列",
+      "enabled": true
+    },
+    {
       "key": "yuhao-star",
       "name": "星陳",
       "description": "宇浩系列",
@@ -31,6 +37,18 @@
       "enabled": true
     },
     {
+      "key": "zhenma",
+      "name": "真碼",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "tiger",
+      "name": "虎碼",
+      "description": "",
+      "enabled": true
+    },
+    {
       "key": "sky",
       "name": "天碼",
       "description": "表形碼",
@@ -40,12 +58,6 @@
       "key": "snow-qingyun",
       "name": "冰雪清韻",
       "description": "冰雪系列",
-      "enabled": true
-    },
-    {
-      "key": "tiger",
-      "name": "虎碼",
-      "description": "",
       "enabled": true
     }
   ]

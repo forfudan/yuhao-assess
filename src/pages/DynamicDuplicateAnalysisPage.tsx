@@ -324,7 +324,7 @@ const DynamicDuplicateAnalysisPage: React.FC = () => {
             <Link href="https://github.com/forfudan/chinese-characters-frequency" target="_blank">
               知乎字頻表
             </Link>
-            的加權選重率，‱ 爲萬分符
+            的加權選重率。
           </>
         ),
         提示: '計算動態選衝率時，會使用字頻數據對漢字進行降序重排，以方便不同方案進行比較。因此上，計算結果可能會稍低於真實選重率。',
@@ -587,11 +587,11 @@ const DynamicDuplicateAnalysisPage: React.FC = () => {
         {/* 頁面標題 */}
         <div>
           <Paragraph>
-            分析不同字符集下的重碼情况，計算靜態重碼率和動態選重率。閲讀
+            分析不同字頻數據下的選重率。閲讀
             <Link href="https://shurufa.app/docs/concepts.html" target="_blank">
               瓊林擷英
             </Link>
-            瞭解詳細定義。‱ 爲萬分符。
+            瞭解詳細定義。
           </Paragraph>
         </div>
 
@@ -637,8 +637,19 @@ const DynamicDuplicateAnalysisPage: React.FC = () => {
         {/* 提示信息 */}
         {分析結果 && (
           <Alert
-            title="💡 提示"
-            description="點擊動態選重率的數值，可查看具體需要選重的字符及其編碼詳情。"
+            title="提示"
+            description={
+              <div>
+                <p>‱ 爲萬分符。</p>
+                <p>點擊動態選重率的數值，可查看具體需要選重的字符及其編碼詳情。</p>
+                <p>
+                  「原始碼表」，指字符編碼排序不經過任何處理，顯示實際的選重體驗。如果方案存在「出簡讓全」情况，則原始碼表下的全碼選重率會很高。
+                </p>
+                <p>
+                  「頻率降序」，指的是字符按照某字頻來源從高到底進行重新排序後的選重率。它可以反映這個方案在某字頻環境下的理想選重率。
+                </p>
+              </div>
+            }
             type="info"
             showIcon
           />

@@ -296,29 +296,25 @@ const MaximumCandidatesPage: React.FC = () => {
 
             {/* 數據説明 */}
             <Alert
-              title="説明"
+              title="提示"
               description={
                 <div>
                   <p>
-                    <strong>
-                      本方案累計收録 {字符總數.toLocaleString()} 個漢字（CJK 基本區到擴展 J 區共
-                      101,984 個漢字）
-                    </strong>
+                    本方案累計收録 {字符總數.toLocaleString()} 個漢字（CJK 基本區到擴展 J 區共
+                    101,984 個漢字）
                   </p>
                   <p>
-                    最大候選項個數評估輸入法的選字體驗，數值越小表示翻頁次數越少，檢字效率越高。計算考慮了：
+                    最大候選項個數評估輸入法的選字體驗，數值越小表示翻頁次數越少，檢字效率越高。
+                    計算考慮了：一、單字全碼和指定字符集，統計每個編碼對應的漢字數量；二、取所有編碼中候選項個數的最大值作爲該字符集的評估指標。
                   </p>
-                  <ul style={{ marginBottom: 0 }}>
-                    <li>單字全碼和指定字符集，統計每個編碼對應的漢字數量</li>
-                    <li>取所有編碼中候選項個數的最大值</li>
-                    <li>
-                      顔色標示：
-                      <span style={{ color: '#059669', fontWeight: 600 }}>≤2</span>、
-                      <span style={{ color: '#d97706', fontWeight: 600 }}>3-5</span>、
-                      <span style={{ color: '#dc2626', fontWeight: 600 }}>&gt;5</span>
-                    </li>
-                    <li>點擊編碼可查看該編碼對應的所有漢字</li>
-                  </ul>
+                  <p>
+                    {' '}
+                    顔色標示：
+                    <span style={{ color: '#059669', fontWeight: 600 }}>≤2</span>、
+                    <span style={{ color: '#d97706', fontWeight: 600 }}>3-5</span>、
+                    <span style={{ color: '#dc2626', fontWeight: 600 }}>&gt;5</span>
+                  </p>
+                  <p>點擊編碼可查看該編碼對應的所有漢字。</p>
                 </div>
               }
               type="info"

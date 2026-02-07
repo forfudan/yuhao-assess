@@ -619,7 +619,7 @@ export interface 分析結果集 {
 export function 導出方案配置JSON(
   當前方案: 方案配置介面,
   分析結果: 分析結果集,
-  簡易文件名: boolean = true
+  簡易文件名: boolean
 ): { success: boolean; message?: string } {
   try {
     // 構建導出數據

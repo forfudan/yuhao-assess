@@ -158,13 +158,17 @@ export function AppHeader() {
       return
     }
 
-    const 結果 = 導出方案配置JSON(當前方案, {
-      靜態重碼分析結果,
-      動態選重分析結果,
-      候選個數分析結果,
-      速度當量分析結果,
-      簡碼效率分析結果,
-    })
+    const 結果 = 導出方案配置JSON(
+      當前方案,
+      {
+        靜態重碼分析結果,
+        動態選重分析結果,
+        候選個數分析結果,
+        速度當量分析結果,
+        簡碼效率分析結果,
+      },
+      false
+    )
 
     if (結果.success) {
       message.success(結果.message || '導出成功')
