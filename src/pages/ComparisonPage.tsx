@@ -34,14 +34,20 @@ interface 對比方案數據 {
   簡碼效率分析?: 簡碼效率分析結果介面 | null
 }
 
-// Tab 類型
-type TabType =
+// 分析類型
+type 分析類型 =
   | 'duplicate'
   | 'dynamicDupRate'
   | 'dynamicDupRateOriginal'
   | 'maxCandidates'
   | 'speedEquiv'
   | 'shortCodeEfficiency'
+
+// 字頻來源類型
+type 字頻來源類型 = 'zhihu' | 'sc' | 'tc' | 'guji' | 'fanjian'
+
+// 全碼簡碼類型
+type 全碼簡碼類型 = 'full' | 'short'
 
 const ComparisonPage: React.FC = () => {
   const [當前方案] = useAtom(當前方案原子狀態)
@@ -57,7 +63,11 @@ const ComparisonPage: React.FC = () => {
   const [對比方案列表, 設置對比方案列表] = useState<對比方案數據[]>([])
   const [顯示選擇彈窗, 設置顯示選擇彈窗] = useState(false)
   const [加載中, 設置加載中] = useState(false)
-  const [當前Tab, 設置當前Tab] = useState<TabType>('duplicate')
+
+  // 三層選擇狀態
+  const [當前分析類型, 設置當前分析類型] = useState<分析類型>('duplicate')
+  const [當前字頻來源, 設置當前字頻來源] = useState<字頻來源類型>('zhihu')
+  const [當前全碼簡碼, 設置當前全碼簡碼] = useState<全碼簡碼類型>('full')
 
   // 加載内置方案列表
   useEffect(() => {
@@ -290,267 +300,371 @@ const ComparisonPage: React.FC = () => {
     },
   ]
 
-  // 速度當量列（五個字頻的全碼速度當量）
-  const 速度當量列: ColumnsType<對比方案數據> = [
-    {
-      title: '方案名',
-      dataIndex: '顯示名稱',
-      key: '顯示名稱',
-      fixed: 'left',
-    },
-    {
-      title: '知乎簡體',
-      key: 'zhihu',
-      render: (_, record) => record.速度當量分析?.知乎簡體字頻全碼速度當量?.toFixed(2) || '-',
-    },
-    {
-      title: '北語簡體',
-      key: 'sc',
-      render: (_, record) => record.速度當量分析?.北語簡體字頻全碼速度當量?.toFixed(2) || '-',
-    },
-    {
-      title: '臺標繁體',
-      key: 'tc',
-      render: (_, record) => record.速度當量分析?.臺標繁體字頻全碼速度當量?.toFixed(2) || '-',
-    },
-    {
-      title: '古籍繁體',
-      key: 'guji',
-      render: (_, record) => record.速度當量分析?.古籍繁體字頻全碼速度當量?.toFixed(2) || '-',
-    },
-    {
-      title: '繁簡聯合',
-      key: 'fanjian',
-      render: (_, record) => record.速度當量分析?.繁簡聯合字頻全碼速度當量?.toFixed(2) || '-',
-    },
-  ]
+  // 速度當量列（根據字頻來源動態生成，顯示4列：全碼、一級簡碼、二級簡碼、全部簡碼）
+  const 獲取速度當量列 = (字頻來源: 字頻來源類型): ColumnsType<對比方案數據> => {
+    const 字頻前綴映射: Record<字頻來源類型, string> = {
+      zhihu: '知乎簡體字頻',
+      sc: '北語簡體字頻',
+      tc: '臺標繁體字頻',
+      guji: '古籍繁體字頻',
+      fanjian: '繁簡聯合字頻',
+    }
 
-  // 動態重碼率列（五個字頻源的全碼）
-  const 動態重碼率列: ColumnsType<對比方案數據> = [
-    {
-      title: '方案名',
-      dataIndex: '顯示名稱',
-      key: '顯示名稱',
-      fixed: 'left',
-    },
-    {
-      title: '知乎簡體',
-      key: 'zhihu-full',
-      render: (_, record) =>
-        record.動態選重分析?.知乎簡體動態選重率?.全碼
-          ? `${(record.動態選重分析.知乎簡體動態選重率.全碼 * 10000).toFixed(2)}‱`
-          : '-',
-    },
-    {
-      title: '北語簡體',
-      key: 'sc-full',
-      render: (_, record) =>
-        record.動態選重分析?.北語簡體動態選重率?.全碼
-          ? `${(record.動態選重分析.北語簡體動態選重率.全碼 * 10000).toFixed(2)}‱`
-          : '-',
-    },
-    {
-      title: '臺標繁體',
-      key: 'tc-full',
-      render: (_, record) =>
-        record.動態選重分析?.臺標繁體動態選重率?.全碼
-          ? `${(record.動態選重分析.臺標繁體動態選重率.全碼 * 10000).toFixed(2)}‱`
-          : '-',
-    },
-    {
-      title: '古籍繁體',
-      key: 'guji-full',
-      render: (_, record) =>
-        record.動態選重分析?.古籍繁體動態選重率?.全碼
-          ? `${(record.動態選重分析.古籍繁體動態選重率.全碼 * 10000).toFixed(2)}‱`
-          : '-',
-    },
-    {
-      title: '繁簡聯合',
-      key: 'fanjian-full',
-      render: (_, record) =>
-        record.動態選重分析?.繁簡聯合動態選重率?.全碼
-          ? `${(record.動態選重分析.繁簡聯合動態選重率.全碼 * 10000).toFixed(2)}‱`
-          : '-',
-    },
-  ]
+    const 前綴 = 字頻前綴映射[字頻來源]
 
-  // 動態重碼率原始排序列（五個字頻源的全碼）
-  const 動態重碼率原始排序列: ColumnsType<對比方案數據> = [
-    {
-      title: '方案名',
-      dataIndex: '顯示名稱',
-      key: '顯示名稱',
-      fixed: 'left',
-    },
-    {
-      title: '知乎簡體',
-      key: 'zhihu-full-orig',
-      render: (_, record) =>
-        record.動態選重分析?.知乎簡體動態選重率原序?.全碼
-          ? `${(record.動態選重分析.知乎簡體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
-          : '-',
-    },
-    {
-      title: '北語簡體',
-      key: 'sc-full-orig',
-      render: (_, record) =>
-        record.動態選重分析?.北語簡體動態選重率原序?.全碼
-          ? `${(record.動態選重分析.北語簡體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
-          : '-',
-    },
-    {
-      title: '臺標繁體',
-      key: 'tc-full-orig',
-      render: (_, record) =>
-        record.動態選重分析?.臺標繁體動態選重率原序?.全碼
-          ? `${(record.動態選重分析.臺標繁體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
-          : '-',
-    },
-    {
-      title: '古籍繁體',
-      key: 'guji-full-orig',
-      render: (_, record) =>
-        record.動態選重分析?.古籍繁體動態選重率原序?.全碼
-          ? `${(record.動態選重分析.古籍繁體動態選重率原序.全碼 * 10000).toFixed(2)}‱`
-          : '-',
-    },
-    {
-      title: '繁簡聯合',
-      key: 'fanjian-full-orig',
-      render: (_, record) =>
-        record.動態選重分析?.繁簡聯合動態選重率原序?.全碼
-          ? `${(record.動態選重分析.繁簡聯合動態選重率原序.全碼 * 10000).toFixed(2)}‱`
-          : '-',
-    },
-  ]
+    return [
+      {
+        title: '方案名',
+        dataIndex: '顯示名稱',
+        key: '顯示名稱',
+        fixed: 'left',
+      },
+      {
+        title: '全碼當量',
+        key: 'full-equiv',
+        render: (_, record) => {
+          const 值 = (record.速度當量分析 as any)?.[`${前綴}全碼速度當量`]
+          return 值 ? 值.toFixed(2) : '-'
+        },
+      },
+      {
+        title: '一級簡碼當量',
+        key: 'first-short-equiv',
+        render: (_, record) => {
+          const 值 = (record.速度當量分析 as any)?.[`${前綴}一級簡碼速度當量`]
+          return 值 ? 值.toFixed(2) : '-'
+        },
+      },
+      {
+        title: '二級簡碼當量',
+        key: 'second-short-equiv',
+        render: (_, record) => {
+          const 值 = (record.速度當量分析 as any)?.[`${前綴}二級簡碼速度當量`]
+          return 值 ? 值.toFixed(2) : '-'
+        },
+      },
+      {
+        title: '全部簡碼當量',
+        key: 'all-short-equiv',
+        render: (_, record) => {
+          const 值 = (record.速度當量分析 as any)?.[`${前綴}全部簡碼速度當量`]
+          return 值 ? 值.toFixed(2) : '-'
+        },
+      },
+    ]
+  }
 
-  // 簡碼效率列（僅北語簡體字頻，5 個 N 值）
-  const 簡碼效率列: ColumnsType<對比方案數據> = [
-    {
-      title: '方案名',
-      dataIndex: '顯示名稱',
-      key: '顯示名稱',
-      fixed: 'left',
-    },
-    {
-      title: '25簡碼',
-      key: 'n25',
-      render: (_, record) => {
-        const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
-          r => r.最有效率的簡碼個數 === 25
-        )
-        return result?.字頻加權碼長?.toFixed(3) || '-'
-      },
-    },
-    {
-      title: '50簡碼',
-      key: 'n50',
-      render: (_, record) => {
-        const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
-          r => r.最有效率的簡碼個數 === 50
-        )
-        return result?.字頻加權碼長?.toFixed(3) || '-'
-      },
-    },
-    {
-      title: '100簡碼',
-      key: 'n100',
-      render: (_, record) => {
-        const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
-          r => r.最有效率的簡碼個數 === 100
-        )
-        return result?.字頻加權碼長?.toFixed(3) || '-'
-      },
-    },
-    {
-      title: '200簡碼',
-      key: 'n200',
-      render: (_, record) => {
-        const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
-          r => r.最有效率的簡碼個數 === 200
-        )
-        return result?.字頻加權碼長?.toFixed(3) || '-'
-      },
-    },
-    {
-      title: '500簡碼',
-      key: 'n500',
-      render: (_, record) => {
-        const result = record.簡碼效率分析?.北語簡體字頻下之簡碼效率?.N值結果?.find(
-          r => r.最有效率的簡碼個數 === 500
-        )
-        return result?.字頻加權碼長?.toFixed(3) || '-'
-      },
-    },
-  ]
+  // 動態重碼率列（根據全碼/簡碼動態生成，顯示5個字頻來源）
+  const 獲取動態重碼率列 = (全碼簡碼: 全碼簡碼類型): ColumnsType<對比方案數據> => {
+    const 碼類型 = 全碼簡碼 === 'full' ? '全碼' : '簡碼'
 
-  // 根據當前 Tab 選擇列定義
+    return [
+      {
+        title: '方案名',
+        dataIndex: '顯示名稱',
+        key: '顯示名稱',
+        fixed: 'left',
+      },
+      {
+        title: '知乎簡體',
+        key: 'zhihu',
+        render: (_, record) => {
+          const 值 = record.動態選重分析?.知乎簡體動態選重率?.[碼類型]
+          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
+        },
+      },
+      {
+        title: '北語簡體',
+        key: 'sc',
+        render: (_, record) => {
+          const 值 = record.動態選重分析?.北語簡體動態選重率?.[碼類型]
+          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
+        },
+      },
+      {
+        title: '臺標繁體',
+        key: 'tc',
+        render: (_, record) => {
+          const 值 = record.動態選重分析?.臺標繁體動態選重率?.[碼類型]
+          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
+        },
+      },
+      {
+        title: '古籍繁體',
+        key: 'guji',
+        render: (_, record) => {
+          const 值 = record.動態選重分析?.古籍繁體動態選重率?.[碼類型]
+          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
+        },
+      },
+      {
+        title: '繁簡聯合',
+        key: 'fanjian',
+        render: (_, record) => {
+          const 值 = record.動態選重分析?.繁簡聯合動態選重率?.[碼類型]
+          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
+        },
+      },
+    ]
+  }
+
+  // 動態重碼率原始排序列（根據全碼/簡碼動態生成，顯示5個字頻來源）
+  const 獲取動態重碼率原始排序列 = (全碼簡碼: 全碼簡碼類型): ColumnsType<對比方案數據> => {
+    const 碼類型 = 全碼簡碼 === 'full' ? '全碼' : '簡碼'
+
+    return [
+      {
+        title: '方案名',
+        dataIndex: '顯示名稱',
+        key: '顯示名稱',
+        fixed: 'left',
+      },
+      {
+        title: '知乎簡體',
+        key: 'zhihu-orig',
+        render: (_, record) => {
+          const 值 = record.動態選重分析?.知乎簡體動態選重率原序?.[碼類型]
+          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
+        },
+      },
+      {
+        title: '北語簡體',
+        key: 'sc-orig',
+        render: (_, record) => {
+          const 值 = record.動態選重分析?.北語簡體動態選重率原序?.[碼類型]
+          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
+        },
+      },
+      {
+        title: '臺標繁體',
+        key: 'tc-orig',
+        render: (_, record) => {
+          const 值 = record.動態選重分析?.臺標繁體動態選重率原序?.[碼類型]
+          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
+        },
+      },
+      {
+        title: '古籍繁體',
+        key: 'guji-orig',
+        render: (_, record) => {
+          const 值 = record.動態選重分析?.古籍繁體動態選重率原序?.[碼類型]
+          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
+        },
+      },
+      {
+        title: '繁簡聯合',
+        key: 'fanjian-orig',
+        render: (_, record) => {
+          const 值 = record.動態選重分析?.繁簡聯合動態選重率原序?.[碼類型]
+          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
+        },
+      },
+    ]
+  }
+
+  // 簡碼效率列（根據字頻來源動態生成，顯示5個N值）
+  const 獲取簡碼效率列 = (字頻來源: 字頻來源類型): ColumnsType<對比方案數據> => {
+    const 字頻鍵名映射: Record<字頻來源類型, string> = {
+      zhihu: '知乎簡體字頻下之簡碼效率',
+      sc: '北語簡體字頻下之簡碼效率',
+      tc: '臺標繁體字頻下之簡碼效率',
+      guji: '古籍繁體字頻下之簡碼效率',
+      fanjian: '繁簡聯合字頻下之簡碼效率',
+    }
+
+    const 字頻鍵 = 字頻鍵名映射[字頻來源]
+
+    return [
+      {
+        title: '方案名',
+        dataIndex: '顯示名稱',
+        key: '顯示名稱',
+        fixed: 'left',
+      },
+      {
+        title: '25簡碼',
+        key: 'n25',
+        render: (_, record) => {
+          const result = (record.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
+            (r: any) => r.最有效率的簡碼個數 === 25
+          )
+          return result?.字頻加權碼長?.toFixed(3) || '-'
+        },
+      },
+      {
+        title: '50簡碼',
+        key: 'n50',
+        render: (_, record) => {
+          const result = (record.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
+            (r: any) => r.最有效率的簡碼個數 === 50
+          )
+          return result?.字頻加權碼長?.toFixed(3) || '-'
+        },
+      },
+      {
+        title: '100簡碼',
+        key: 'n100',
+        render: (_, record) => {
+          const result = (record.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
+            (r: any) => r.最有效率的簡碼個數 === 100
+          )
+          return result?.字頻加權碼長?.toFixed(3) || '-'
+        },
+      },
+      {
+        title: '200簡碼',
+        key: 'n200',
+        render: (_, record) => {
+          const result = (record.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
+            (r: any) => r.最有效率的簡碼個數 === 200
+          )
+          return result?.字頻加權碼長?.toFixed(3) || '-'
+        },
+      },
+      {
+        title: '500簡碼',
+        key: 'n500',
+        render: (_, record) => {
+          const result = (record.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
+            (r: any) => r.最有效率的簡碼個數 === 500
+          )
+          return result?.字頻加權碼長?.toFixed(3) || '-'
+        },
+      },
+    ]
+  }
+
+  // 根據當前選擇動態生成列定義
   const 當前列定義 = useMemo(() => {
-    switch (當前Tab) {
+    switch (當前分析類型) {
       case 'duplicate':
         return 靜態重碼字數列
       case 'dynamicDupRate':
-        return 動態重碼率列
+        return 獲取動態重碼率列(當前全碼簡碼)
       case 'dynamicDupRateOriginal':
-        return 動態重碼率原始排序列
+        return 獲取動態重碼率原始排序列(當前全碼簡碼)
       case 'maxCandidates':
         return 最大候選數列
       case 'speedEquiv':
-        return 速度當量列
+        return 獲取速度當量列(當前字頻來源)
       case 'shortCodeEfficiency':
-        return 簡碼效率列
+        return 獲取簡碼效率列(當前字頻來源)
       default:
         return 靜態重碼字數列
     }
-  }, [當前Tab])
+  }, [當前分析類型, 當前字頻來源, 當前全碼簡碼])
 
   return (
     <div style={{ padding: 24 }}>
       <Space orientation="vertical" size="large" style={{ width: '100%' }}>
         <div>
-          <Paragraph>對比當前方案與内置方案的各項指標</Paragraph>
+          <Paragraph>
+            對比當前方案與内置方案的各項指標。
+            <br />
+            選擇分析種類後，根據需要選擇字頻來源或全碼/簡碼，表格會自動更新。
+          </Paragraph>
         </div>
 
-        {/* Tab 切換 */}
-        <Space>
+        {/* 第一行：分析種類選擇 */}
+        <Space wrap>
           <Button
-            type={當前Tab === 'duplicate' ? 'primary' : 'default'}
-            onClick={() => 設置當前Tab('duplicate')}
+            type={當前分析類型 === 'duplicate' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('duplicate')}
           >
             靜重
           </Button>
           <Button
-            type={當前Tab === 'dynamicDupRate' ? 'primary' : 'default'}
-            onClick={() => 設置當前Tab('dynamicDupRate')}
+            type={當前分析類型 === 'dynamicDupRate' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('dynamicDupRate')}
           >
             動重
           </Button>
           <Button
-            type={當前Tab === 'dynamicDupRateOriginal' ? 'primary' : 'default'}
-            onClick={() => 設置當前Tab('dynamicDupRateOriginal')}
+            type={當前分析類型 === 'dynamicDupRateOriginal' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('dynamicDupRateOriginal')}
           >
             原始碼表動重
           </Button>
           <Button
-            type={當前Tab === 'maxCandidates' ? 'primary' : 'default'}
-            onClick={() => 設置當前Tab('maxCandidates')}
+            type={當前分析類型 === 'maxCandidates' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('maxCandidates')}
           >
             候選數
           </Button>
           <Button
-            type={當前Tab === 'speedEquiv' ? 'primary' : 'default'}
-            onClick={() => 設置當前Tab('speedEquiv')}
+            type={當前分析類型 === 'speedEquiv' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('speedEquiv')}
           >
             當量
           </Button>
           <Button
-            type={當前Tab === 'shortCodeEfficiency' ? 'primary' : 'default'}
-            onClick={() => 設置當前Tab('shortCodeEfficiency')}
+            type={當前分析類型 === 'shortCodeEfficiency' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('shortCodeEfficiency')}
           >
-            簡碼
+            簡碼效率
           </Button>
         </Space>
+
+        {/* 第二行：字頻來源選擇（僅在當量和簡碼效率時顯示） */}
+        {(當前分析類型 === 'speedEquiv' || 當前分析類型 === 'shortCodeEfficiency') && (
+          <Space wrap>
+            <Button
+              type={當前字頻來源 === 'zhihu' ? 'primary' : 'default'}
+              onClick={() => 設置當前字頻來源('zhihu')}
+              size="small"
+            >
+              知乎簡體
+            </Button>
+            <Button
+              type={當前字頻來源 === 'sc' ? 'primary' : 'default'}
+              onClick={() => 設置當前字頻來源('sc')}
+              size="small"
+            >
+              北語簡體
+            </Button>
+            <Button
+              type={當前字頻來源 === 'tc' ? 'primary' : 'default'}
+              onClick={() => 設置當前字頻來源('tc')}
+              size="small"
+            >
+              臺標繁體
+            </Button>
+            <Button
+              type={當前字頻來源 === 'guji' ? 'primary' : 'default'}
+              onClick={() => 設置當前字頻來源('guji')}
+              size="small"
+            >
+              古籍繁體
+            </Button>
+            <Button
+              type={當前字頻來源 === 'fanjian' ? 'primary' : 'default'}
+              onClick={() => 設置當前字頻來源('fanjian')}
+              size="small"
+            >
+              繁簡聯合
+            </Button>
+          </Space>
+        )}
+
+        {/* 第三行：全碼/簡碼選擇（僅在動重和原始碼表動重時顯示） */}
+        {(當前分析類型 === 'dynamicDupRate' || 當前分析類型 === 'dynamicDupRateOriginal') && (
+          <Space wrap>
+            <Button
+              type={當前全碼簡碼 === 'full' ? 'primary' : 'default'}
+              onClick={() => 設置當前全碼簡碼('full')}
+              size="small"
+            >
+              全碼
+            </Button>
+            <Button
+              type={當前全碼簡碼 === 'short' ? 'primary' : 'default'}
+              onClick={() => 設置當前全碼簡碼('short')}
+              size="small"
+            >
+              簡碼
+            </Button>
+          </Space>
+        )}
 
         {/* 操作按鈕 */}
         <Space>
