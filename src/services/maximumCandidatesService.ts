@@ -1,4 +1,4 @@
-import { 過濾自定義字符集, type 預設字符集名稱型别 } from './charsetService'
+import { 累積漢字集名稱型别, 過濾自定義字符集, type 漢字集名稱型别 } from './charsetService'
 import { 碼表處理服務實例 } from './codeTableService'
 import type { 碼表型别 } from '../types/index'
 
@@ -13,7 +13,7 @@ export interface 最大候選個數結果 {
  */
 export async function getMaximumCandidates(
   codeTable: 碼表型别,
-  charsetType: 預設字符集名稱型别
+  charsetType: 漢字集名稱型别
 ): Promise<最大候選個數結果> {
   // 從碼表鍵中提取所有單個字符
   const allUniqueChars = new Set<string>()
@@ -75,24 +75,24 @@ export async function getMaximumCandidates(
  * 計算所有字符集的最大候選項個數
  */
 export async function getAllMaximumCandidates(codeTable: 碼表型别) {
-  const charsetTypes: 預設字符集名稱型别[] = [
-    'gb2312',
-    'tonggui',
-    'guozi',
-    'cjk_basic',
-    'cjk_to_a',
-    'cjk_to_b',
-    'cjk_to_c',
-    'cjk_to_d',
-    'cjk_to_e',
-    'cjk_to_f',
-    'cjk_to_g',
-    'cjk_to_h',
-    'cjk_to_i',
-    'cjk_to_j',
+  const charsetTypes: 累積漢字集名稱型别[] = [
+    'GB2312',
+    '通用規範',
+    '常用國字',
+    'CJK基本',
+    '到CJK擴A',
+    '到CJK擴B',
+    '到CJK擴C',
+    '到CJK擴D',
+    '到CJK擴E',
+    '到CJK擴F',
+    '到CJK擴G',
+    '到CJK擴H',
+    '到CJK擴I',
+    '到CJK擴J',
   ]
 
-  const results: Record<string, 最大候選個數結果> = {}
+  const results: Partial<Record<累積漢字集名稱型别, 最大候選個數結果>> = {}
 
   for (const charsetType of charsetTypes) {
     try {

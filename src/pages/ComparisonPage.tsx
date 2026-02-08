@@ -16,6 +16,7 @@ import type { 靜態重碼分析結果介面 } from '@/atoms/staticDuplicate'
 import type { 最大候選個數分析結果 } from '@/atoms/maximumCandidates'
 import type { 速度當量分析結果介面 } from '@/atoms/speedEquivalent'
 import type { 簡碼效率分析結果介面 } from '@/atoms/shortCodeEfficiency'
+import type { 字頻來源型别, 全碼簡碼型别 } from '@/types'
 
 const { Paragraph } = Typography
 
@@ -41,12 +42,6 @@ type 分析型别 =
   | '候選個數'
   | '速度當量'
   | '簡碼效率'
-
-// 字頻來源型别
-type 字頻來源型别 = '知乎簡體' | '北語簡體' | '臺標繁體' | '古籍繁體' | '繁簡聯合'
-
-// 全碼簡碼型别
-type 全碼簡碼型别 = '全碼' | '簡碼'
 
 const ComparisonPage: React.FC = () => {
   const [當前方案] = useAtom(當前方案原子狀態)
@@ -254,7 +249,7 @@ const ComparisonPage: React.FC = () => {
         title: 'CJK擴B',
         key: 'cjk-b',
         render: (_, record) => {
-          const data = record.靜態重碼分析?.到CJKB
+          const data = record.靜態重碼分析?.到CJK擴B
           if (!data) return '-'
           const 覆蓋率 = data.字集覆蓋率
           return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
@@ -264,7 +259,7 @@ const ComparisonPage: React.FC = () => {
         title: 'CJK擴H',
         key: 'cjk-h',
         render: (_, record) => {
-          const data = record.靜態重碼分析?.到CJKH
+          const data = record.靜態重碼分析?.到CJK擴H
           if (!data) return '-'
           const 覆蓋率 = data.字集覆蓋率
           return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
@@ -274,7 +269,7 @@ const ComparisonPage: React.FC = () => {
         title: 'CJK擴J',
         key: 'cjk-j',
         render: (_, record) => {
-          const data = record.靜態重碼分析?.到CJKJ
+          const data = record.靜態重碼分析?.到CJK擴J
           if (!data) return '-'
           const 覆蓋率 = data.字集覆蓋率
           return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
@@ -335,9 +330,9 @@ const ComparisonPage: React.FC = () => {
       title: 'CJK擴B',
       key: 'cjk-b',
       render: (_, record) => {
-        const data = record.候選個數分析?.CJK擴B
+        const data = record.候選個數分析?.到CJK擴B
         if (!data) return '-'
-        const 覆蓋率 = record.靜態重碼分析?.到CJKB.字集覆蓋率
+        const 覆蓋率 = record.靜態重碼分析?.到CJK擴B.字集覆蓋率
         return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
       },
     },
@@ -345,9 +340,9 @@ const ComparisonPage: React.FC = () => {
       title: 'CJK擴H',
       key: 'cjk-h',
       render: (_, record) => {
-        const data = record.候選個數分析?.CJK擴H
+        const data = record.候選個數分析?.到CJK擴H
         if (!data) return '-'
-        const 覆蓋率 = record.靜態重碼分析?.到CJKH.字集覆蓋率
+        const 覆蓋率 = record.靜態重碼分析?.到CJK擴H.字集覆蓋率
         return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
       },
     },
@@ -355,9 +350,9 @@ const ComparisonPage: React.FC = () => {
       title: 'CJK擴J',
       key: 'cjk-j',
       render: (_, record) => {
-        const data = record.候選個數分析?.CJK擴J
+        const data = record.候選個數分析?.到CJK擴J
         if (!data) return '-'
-        const 覆蓋率 = record.靜態重碼分析?.到CJKJ.字集覆蓋率
+        const 覆蓋率 = record.靜態重碼分析?.到CJK擴J.字集覆蓋率
         return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
       },
     },

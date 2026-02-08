@@ -110,20 +110,20 @@ const MaximumCandidatesPage: React.FC = () => {
       const 總字符數 = 全碼表.size
 
       const 新結果: 最大候選個數分析結果 = {
-        GB2312: 結果['gb2312'],
-        通用規範: 結果['tonggui'],
-        常用國字: 結果['guozi'],
-        CJK基本: 結果['cjk_basic'],
-        CJK擴A: 結果['cjk_to_a'],
-        CJK擴B: 結果['cjk_to_b'],
-        CJK擴C: 結果['cjk_to_c'],
-        CJK擴D: 結果['cjk_to_d'],
-        CJK擴E: 結果['cjk_to_e'],
-        CJK擴F: 結果['cjk_to_f'],
-        CJK擴G: 結果['cjk_to_g'],
-        CJK擴H: 結果['cjk_to_h'],
-        CJK擴I: 結果['cjk_to_i'],
-        CJK擴J: 結果['cjk_to_j'],
+        GB2312: 結果['GB2312'],
+        通用規範: 結果['通用規範'],
+        常用國字: 結果['常用國字'],
+        CJK基本: 結果['CJK基本'],
+        到CJK擴A: 結果['到CJK擴A'],
+        到CJK擴B: 結果['到CJK擴B'],
+        到CJK擴C: 結果['到CJK擴C'],
+        到CJK擴D: 結果['到CJK擴D'],
+        到CJK擴E: 結果['到CJK擴E'],
+        到CJK擴F: 結果['到CJK擴F'],
+        到CJK擴G: 結果['到CJK擴G'],
+        到CJK擴H: 結果['到CJK擴H'],
+        到CJK擴I: 結果['到CJK擴I'],
+        到CJK擴J: 結果['到CJK擴J'],
         字符數: 總字符數,
         更新時間: new Date().toISOString(),
       }
@@ -195,6 +195,11 @@ const MaximumCandidatesPage: React.FC = () => {
       .filter(([key]) => key !== '更新時間' && key !== '碼表哈希' && key !== '字符數')
       .map(([key, value]) => {
         const result = value as 最大候選個數結果
+        // 防御性检查：确保数据结构完整
+        if (!result || typeof result.最大候選個數 !== 'number' || !Array.isArray(result.編碼列表)) {
+          console.warn(`⚠️ 字符集 ${key} 的数据结构不完整，跳过`)
+          return null
+        }
         return {
           key,
           字符集: 字符集信息[key as keyof typeof 字符集信息]?.name || key,
@@ -203,6 +208,7 @@ const MaximumCandidatesPage: React.FC = () => {
           是否展開: 展開狀態.has(key),
         }
       })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
       .sort((a, b) => {
         const indexA = 字符集順序.indexOf(a.key)
         const indexB = 字符集順序.indexOf(b.key)

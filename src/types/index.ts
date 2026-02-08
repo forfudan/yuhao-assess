@@ -1,3 +1,9 @@
+// 字頻來源型别
+export type 字頻來源型别 = '知乎簡體' | '北語簡體' | '臺標繁體' | '古籍繁體' | '繁簡聯合'
+
+// 全碼簡碼型别
+export type 全碼簡碼型别 = '全碼' | '簡碼'
+
 // 原始碼表類型定義 - 保持行順序
 export type 原始碼表型别 = Map<number, [string, string, number]> // number: 行號, [汉字, 編碼, N選]
 

@@ -70,7 +70,7 @@ export {
   isInCJKToG,
   isInCJKToH,
   isInCJKToI,
-  預設字符集檢查器映射,
+  漢字集檢查器映射,
   charsetInfo,
   getCharsetSize,
   getTheoreticalCharsetSize,

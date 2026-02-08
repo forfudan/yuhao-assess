@@ -4,7 +4,7 @@
  */
 
 import type { 碼表型别, 原始碼表型别 } from '../types/index'
-import type { 預設字符集名稱型别 } from './charsetService'
+import type { 細胞漢字集名稱型别, 累積漢字集名稱型别, 漢字集名稱型别 } from './charsetService'
 
 // CJK塊數據類型定義
 type CJKBlockData = {
@@ -65,148 +65,13 @@ export async function initializeCalculationService(): Promise<void> {
 }
 
 /**
- * 字符集生成函數
- * 使用位運算和緩存來提高性能
- */
-export async function generateCharset(
-  charsetType: 預設字符集名稱型别,
-  allChars: Set<string>
-): Promise<Set<string>> {
-  // 確保數據已加載
-  await initializeCalculationService()
-
-  const cacheKey = `${charsetType}-${allChars.size}`
-  if (charsetCache.has(cacheKey)) {
-    return charsetCache.get(cacheKey)!
-  }
-
-  const charset = new Set<string>()
-
-  // 使用批量處理和位運算優化
-  const chars = Array.from(allChars)
-
-  switch (charsetType) {
-    case 'cjk_basic': {
-      // 批量處理CJK基本區字符
-      const basicRange = cjkBlockRanges['cjk_basic']
-      if (basicRange) {
-        for (let i = 0; i < chars.length; i++) {
-          const char = chars[i]
-          if (!char) continue
-          const codePoint = char.codePointAt(0)
-          if (codePoint && codePoint >= basicRange.start && codePoint <= basicRange.end) {
-            charset.add(char)
-          }
-        }
-      }
-      break
-    }
-
-    case 'cjk_to_a': {
-      // 優化的CJK到A區檢查
-      const basicRangeA = cjkBlockRanges['cjk_basic']
-      const aRange = cjkBlockRanges['cjk_a']
-      if (basicRangeA && aRange) {
-        for (let i = 0; i < chars.length; i++) {
-          const char = chars[i]
-          if (!char) continue
-          const codePoint = char.codePointAt(0)
-          if (
-            codePoint &&
-            ((codePoint >= basicRangeA.start && codePoint <= basicRangeA.end) ||
-              (codePoint >= aRange.start && codePoint <= aRange.end))
-          ) {
-            charset.add(char)
-          }
-        }
-      }
-      break
-    }
-
-    case 'cjk_to_b': {
-      const basicRangeB = cjkBlockRanges['cjk_basic']
-      const aRangeB = cjkBlockRanges['cjk_a']
-      const bRange = cjkBlockRanges['cjk_b']
-      if (basicRangeB && aRangeB && bRange) {
-        for (let i = 0; i < chars.length; i++) {
-          const char = chars[i]
-          if (!char) continue
-          const codePoint = char.codePointAt(0)
-          if (
-            codePoint &&
-            ((codePoint >= basicRangeB.start && codePoint <= basicRangeB.end) ||
-              (codePoint >= aRangeB.start && codePoint <= aRangeB.end) ||
-              (codePoint >= bRange.start && codePoint <= bRange.end))
-          ) {
-            charset.add(char)
-          }
-        }
-      }
-      break
-    }
-
-    case 'cjk_to_f': {
-      const ranges = ['cjk_basic', 'cjk_a', 'cjk_b', 'cjk_c', 'cjk_d', 'cjk_e', 'cjk_f']
-      for (let i = 0; i < chars.length; i++) {
-        const char = chars[i]
-        if (!char) continue
-        const codePoint = char.codePointAt(0)
-        if (codePoint) {
-          for (const rangeName of ranges) {
-            const range = cjkBlockRanges[rangeName]
-            if (range && codePoint >= range.start && codePoint <= range.end) {
-              charset.add(char)
-              break
-            }
-          }
-        }
-      }
-      break
-    }
-
-    case 'cjk_to_j': {
-      const allRanges = [
-        'cjk_basic',
-        'cjk_a',
-        'cjk_b',
-        'cjk_c',
-        'cjk_d',
-        'cjk_e',
-        'cjk_f',
-        'cjk_g',
-        'cjk_h',
-        'cjk_i',
-        'cjk_j',
-      ]
-      for (let i = 0; i < chars.length; i++) {
-        const char = chars[i]
-        if (!char) continue
-        const codePoint = char.codePointAt(0)
-        if (codePoint) {
-          for (const rangeName of allRanges) {
-            const range = cjkBlockRanges[rangeName]
-            if (range && codePoint >= range.start && codePoint <= range.end) {
-              charset.add(char)
-              break
-            }
-          }
-        }
-      }
-      break
-    }
-  }
-
-  charsetCache.set(cacheKey, charset)
-  return charset
-}
-
-/**
  * 批量計算最大候選數
  * 一次性處理所有字符集，避免重復遍歷
+ * @deprecated TO DEPRECATE - 未被使用，可考慮删除
  */
 export function calculateAllMaxCandidates(
   fullCodeTable: 碼表型别,
-  charsetMap: Map<預設字符集名稱型别, Set<string>>
+  charsetMap: Map<漢字集名稱型别, Set<string>>
 ): Record<string, number> {
   // 預先構建編碼到字符的映射，只遍歷一次
   const codeToCharsGlobal = new Map<string, string[]>()
@@ -225,14 +90,14 @@ export function calculateAllMaxCandidates(
   const results: Record<string, number> = {}
 
   // 爲每個字符集計算最大候選數
-  const charsetTypes: 預設字符集名稱型别[] = [
-    'gb2312',
-    'guozi',
-    'cjk_basic',
-    'cjk_to_a',
-    'cjk_to_b',
-    'cjk_to_f',
-    'cjk_to_j',
+  const charsetTypes: 漢字集名稱型别[] = [
+    'GB2312',
+    '常用國字',
+    'CJK基本',
+    '到CJK擴A',
+    '到CJK擴B',
+    '到CJK擴F',
+    '到CJK擴J',
   ]
 
   for (const charsetType of charsetTypes) {
@@ -265,10 +130,11 @@ export function calculateAllMaxCandidates(
 /**
  * 靜態重碼計算
  * 使用更高效的數據結構和算法
+ * @deprecated TO DEPRECATE - 未被使用，可考慮删除
  */
 export function calculateStaticDuplicates(
   fullCodeTable: 碼表型别,
-  charsetMap: Map<預設字符集名稱型别, Set<string>>
+  charsetMap: Map<漢字集名稱型别, Set<string>>
 ): Record<string, number> {
   const results: Record<string, number> = {}
 
@@ -286,15 +152,15 @@ export function calculateStaticDuplicates(
   }
 
   // 爲每個字符集計算重碼
-  const charsetTypes: 預設字符集名稱型别[] = [
-    'gb2312',
-    'tonggui',
-    'guozi',
-    'cjk_basic',
-    'cjk_to_a',
-    'cjk_to_b',
-    'cjk_to_f',
-    'cjk_to_j',
+  const charsetTypes: 漢字集名稱型别[] = [
+    'GB2312',
+    '通用規範',
+    '常用國字',
+    'CJK基本',
+    '到CJK擴A',
+    '到CJK擴B',
+    '到CJK擴F',
+    '到CJK擴J',
   ]
 
   for (const charsetType of charsetTypes) {
@@ -331,18 +197,18 @@ export function calculateStaticDuplicates(
  * 使用位運算提高性能
  */
 function isInCJKToJ(codePoint: number): boolean {
-  const blocks = [
-    'cjk_basic',
-    'cjk_a',
-    'cjk_b',
-    'cjk_c',
-    'cjk_d',
-    'cjk_e',
-    'cjk_f',
-    'cjk_g',
-    'cjk_h',
-    'cjk_i',
-    'cjk_j',
+  const blocks: 細胞漢字集名稱型别[] = [
+    'CJK基本',
+    'CJK擴A',
+    'CJK擴B',
+    'CJK擴C',
+    'CJK擴D',
+    'CJK擴E',
+    'CJK擴F',
+    'CJK擴G',
+    'CJK擴H',
+    'CJK擴I',
+    'CJK擴J',
   ]
 
   for (const blockName of blocks) {
@@ -358,6 +224,7 @@ function isInCJKToJ(codePoint: number): boolean {
 /**
  * 修正的字符計數函數
  * 計算碼表中在CJK基本區到CJK-J範圍内的唯一字符數量
+ * @deprecated TO DEPRECATE - 未被使用，可考慮删除
  */
 export async function calculateCharCount(codeTable: 碼表型别): Promise<number> {
   // 確保數據已加載
@@ -386,6 +253,9 @@ export async function calculateCharCount(codeTable: 碼表型别): Promise<numbe
   return cjkCount
 }
 
+/**
+ * @deprecated TO DEPRECATE - 未被使用，可考慮删除
+ */
 export async function calculateCharCountFromRaw(原始碼表: 原始碼表型别): Promise<number> {
   // 確保數據已加載
   await initializeCalculationService()
@@ -414,96 +284,8 @@ export async function calculateCharCountFromRaw(原始碼表: 原始碼表型别
 }
 
 /**
- * 批量預處理函數
- * 一次性完成所有字符集生成和映射構建
- */
-export async function preprocessCodeTable(codeTable: 碼表型别): Promise<{
-  allUniqueChars: Set<string>
-  charsetMap: Map<預設字符集名稱型别, Set<string>>
-  fullCodeTable: 碼表型别
-  codeToCharsMap: Map<string, string[]>
-}> {
-  // 確保數據已加載
-  await initializeCalculationService()
-
-  // 1. 批量提取所有字符
-  const allUniqueChars = new Set<string>()
-  for (const key of codeTable.keys()) {
-    for (const char of key) {
-      allUniqueChars.add(char)
-    }
-  }
-
-  // 2. 生成全碼表（這裏假設已有generateFullCodeTable函數）
-  const fullCodeTable = new Map<string, string[]>(codeTable)
-
-  // 3. 批量生成所有需要的字符集
-  const charsetMap = new Map<預設字符集名稱型别, Set<string>>()
-  const charsetTypes: 預設字符集名稱型别[] = [
-    'gb2312',
-    'guozi',
-    'cjk_basic',
-    'cjk_to_a',
-    'cjk_to_b',
-    'cjk_to_f',
-    'cjk_to_j',
-  ]
-
-  for (const charsetType of charsetTypes) {
-    charsetMap.set(charsetType, await generateCharset(charsetType, allUniqueChars))
-  }
-
-  // 4. 預構建編碼到字符的映射
-  const codeToCharsMap = new Map<string, string[]>()
-  for (const [char, codes] of fullCodeTable.entries()) {
-    if (codes && codes.length > 0) {
-      const code = codes[0]
-      if (!code) continue
-      if (!codeToCharsMap.has(code)) {
-        codeToCharsMap.set(code, [])
-      }
-      codeToCharsMap.get(code)!.push(char)
-    }
-  }
-
-  return {
-    allUniqueChars,
-    charsetMap,
-    fullCodeTable,
-    codeToCharsMap,
-  }
-}
-
-/**
- * 一次性計算所有指標
- * 避免重復遍歷和計算
- */
-export async function calculateAllMetrics(preprocessedData: {
-  allUniqueChars: Set<string>
-  charsetMap: Map<預設字符集名稱型别, Set<string>>
-  fullCodeTable: 碼表型别
-  codeToCharsMap: Map<string, string[]>
-}): Promise<{
-  staticDuplicates: Record<string, number>
-  maxCandidates: Record<string, number>
-  charCount: number
-}> {
-  const { charsetMap, fullCodeTable } = preprocessedData
-
-  // 一次性計算所有指標
-  const staticDuplicates = calculateStaticDuplicates(fullCodeTable, charsetMap)
-  const maxCandidates = calculateAllMaxCandidates(fullCodeTable, charsetMap)
-  const charCount = await calculateCharCount(fullCodeTable)
-
-  return {
-    staticDuplicates,
-    maxCandidates,
-    charCount,
-  }
-}
-
-/**
  * 清除緩存
+ * @deprecated TO DEPRECATE - 未被使用，可考慮删除
  */
 export function clearCache(): void {
   charsetCache.clear()

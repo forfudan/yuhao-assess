@@ -6,7 +6,7 @@
 import {
   過濾自定義字符集,
   getTheoreticalCharsetSize,
-  type 預設字符集名稱型别,
+  type 漢字集名稱型别,
   charsetInfo,
 } from './charsetService'
 import type { 碼表型别, 頻率數據型别, 頻數數據型别 } from '../types/index'
@@ -128,7 +128,7 @@ export function 計算原始碼表的動態選重率(全碼加選重鍵表: 碼�
  */
 export interface 某字符集的重碼數據介面 {
   /** 指定的字符集 */
-  charset: 預設字符集名稱型别
+  charset: 漢字集名稱型别
   /** 字符集名稱 */
   charsetName: string
   description: string
@@ -357,7 +357,7 @@ export function getNonFirstWordDuplicateDetails(
  */
 export async function 計算某字符集的重碼數據(
   全碼表: 碼表型别,
-  字符集: 預設字符集名稱型别
+  字符集: 漢字集名稱型别
 ): Promise<某字符集的重碼數據介面> {
   const allChars = new Set(全碼表.keys())
   const charset = await 過濾自定義字符集(字符集, allChars)
