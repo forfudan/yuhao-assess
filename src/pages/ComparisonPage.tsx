@@ -17,6 +17,7 @@ import type { 最大候選個數分析結果 } from '@/atoms/maximumCandidates'
 import type { 速度當量分析結果介面 } from '@/atoms/speedEquivalent'
 import type { 簡碼效率分析結果介面 } from '@/atoms/shortCodeEfficiency'
 import type { 字頻來源型别, 全碼簡碼型别 } from '@/types'
+import { 漢字集名稱型别, 累積漢字集名稱型别 } from '@/services/charsetService'
 
 const { Paragraph } = Typography
 
@@ -198,6 +199,17 @@ const ComparisonPage: React.FC = () => {
   const 獲取靜態重碼字數列 = (全碼簡碼: 全碼簡碼型别): ColumnsType<對比方案數據介面> => {
     const 碼類型 = 全碼簡碼 === '全碼' ? '全碼重碼字數' : '簡碼重碼字數'
 
+    // 配置：字符集列表
+    const 字符集配置: { key: string; title: string; dataKey: 累積漢字集名稱型别 }[] = [
+      { key: 'gb2312', title: 'GB2312', dataKey: 'GB2312' as const },
+      { key: 'tonggui', title: '通用規範', dataKey: '通用規範' as const },
+      { key: 'guozi', title: '常用國字', dataKey: '常用國字' as const },
+      { key: 'cjk-basic', title: 'CJK基本', dataKey: 'CJK基本' as const },
+      { key: 'cjk-b', title: 'CJK擴B', dataKey: '到CJK擴B' as const },
+      { key: 'cjk-h', title: 'CJK擴H', dataKey: '到CJK擴H' as const },
+      { key: 'cjk-j', title: 'CJK擴J', dataKey: '到CJK擴J' as const },
+    ]
+
     return [
       {
         title: '方案名',
@@ -205,270 +217,67 @@ const ComparisonPage: React.FC = () => {
         key: '顯示名稱',
         fixed: 'left',
       },
-      {
-        title: 'GB2312',
-        key: 'gb2312',
-        sorter: (a, b) => {
-          const aData = a.靜態重碼分析?.GB2312
-          const bData = b.靜態重碼分析?.GB2312
+      ...字符集配置.map(({ key, title, dataKey }) => ({
+        title,
+        key,
+        sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+          const aData = a.靜態重碼分析?.[dataKey]
+          const bData = b.靜態重碼分析?.[dataKey]
           if (!aData || aData.字集覆蓋率 < 0.99) return 1
           if (!bData || bData.字集覆蓋率 < 0.99) return -1
           return (aData[碼類型] || 0) - (bData[碼類型] || 0)
         },
-        render: (_, record) => {
-          const data = record.靜態重碼分析?.GB2312
+        render: (_: any, record: 對比方案數據介面) => {
+          const data = record.靜態重碼分析?.[dataKey]
           if (!data) return '-'
           const 覆蓋率 = data.字集覆蓋率
           return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
         },
-      },
-      {
-        title: '通用規範',
-        key: 'tonggui',
-        sorter: (a, b) => {
-          const aData = a.靜態重碼分析?.通用規範
-          const bData = b.靜態重碼分析?.通用規範
-          if (!aData || aData.字集覆蓋率 < 0.99) return 1
-          if (!bData || bData.字集覆蓋率 < 0.99) return -1
-          return (aData[碼類型] || 0) - (bData[碼類型] || 0)
-        },
-        render: (_, record) => {
-          const data = record.靜態重碼分析?.通用規範
-          if (!data) return '-'
-          const 覆蓋率 = data.字集覆蓋率
-          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
-        },
-      },
-      {
-        title: '常用國字',
-        key: 'guozi',
-        sorter: (a, b) => {
-          const aData = a.靜態重碼分析?.常用國字
-          const bData = b.靜態重碼分析?.常用國字
-          if (!aData || aData.字集覆蓋率 < 0.99) return 1
-          if (!bData || bData.字集覆蓋率 < 0.99) return -1
-          return (aData[碼類型] || 0) - (bData[碼類型] || 0)
-        },
-        render: (_, record) => {
-          const data = record.靜態重碼分析?.常用國字
-          if (!data) return '-'
-          const 覆蓋率 = data.字集覆蓋率
-          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
-        },
-      },
-      {
-        title: 'CJK基本',
-        key: 'cjk-basic',
-        sorter: (a, b) => {
-          const aData = a.靜態重碼分析?.CJK基本
-          const bData = b.靜態重碼分析?.CJK基本
-          if (!aData || aData.字集覆蓋率 < 0.99) return 1
-          if (!bData || bData.字集覆蓋率 < 0.99) return -1
-          return (aData[碼類型] || 0) - (bData[碼類型] || 0)
-        },
-        render: (_, record) => {
-          const data = record.靜態重碼分析?.CJK基本
-          if (!data) return '-'
-          const 覆蓋率 = data.字集覆蓋率
-          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
-        },
-      },
-      {
-        title: 'CJK擴B',
-        key: 'cjk-b',
-        sorter: (a, b) => {
-          const aData = a.靜態重碼分析?.到CJK擴B
-          const bData = b.靜態重碼分析?.到CJK擴B
-          if (!aData || aData.字集覆蓋率 < 0.99) return 1
-          if (!bData || bData.字集覆蓋率 < 0.99) return -1
-          return (aData[碼類型] || 0) - (bData[碼類型] || 0)
-        },
-        render: (_, record) => {
-          const data = record.靜態重碼分析?.到CJK擴B
-          if (!data) return '-'
-          const 覆蓋率 = data.字集覆蓋率
-          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
-        },
-      },
-      {
-        title: 'CJK擴H',
-        key: 'cjk-h',
-        sorter: (a, b) => {
-          const aData = a.靜態重碼分析?.到CJK擴H
-          const bData = b.靜態重碼分析?.到CJK擴H
-          if (!aData || aData.字集覆蓋率 < 0.99) return 1
-          if (!bData || bData.字集覆蓋率 < 0.99) return -1
-          return (aData[碼類型] || 0) - (bData[碼類型] || 0)
-        },
-        render: (_, record) => {
-          const data = record.靜態重碼分析?.到CJK擴H
-          if (!data) return '-'
-          const 覆蓋率 = data.字集覆蓋率
-          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
-        },
-      },
-      {
-        title: 'CJK擴J',
-        key: 'cjk-j',
-        sorter: (a, b) => {
-          const aData = a.靜態重碼分析?.到CJK擴J
-          const bData = b.靜態重碼分析?.到CJK擴J
-          if (!aData || aData.字集覆蓋率 < 0.99) return 1
-          if (!bData || bData.字集覆蓋率 < 0.99) return -1
-          return (aData[碼類型] || 0) - (bData[碼類型] || 0)
-        },
-        render: (_, record) => {
-          const data = record.靜態重碼分析?.到CJK擴J
-          if (!data) return '-'
-          const 覆蓋率 = data.字集覆蓋率
-          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
-        },
-      },
+      })),
     ]
   }
 
   // 最大候選數列
-  const 最大候選數列: ColumnsType<對比方案數據介面> = [
-    {
-      title: '方案名',
-      dataIndex: '顯示名稱',
-      key: '顯示名稱',
-      fixed: 'left',
-    },
-    {
-      title: 'GB2312',
-      key: 'gb2312',
-      sorter: (a, b) => {
-        const aData = a.候選個數分析?.GB2312
-        const bData = b.候選個數分析?.GB2312
-        const aCoverage = a.靜態重碼分析?.GB2312.字集覆蓋率
-        const bCoverage = b.靜態重碼分析?.GB2312.字集覆蓋率
-        if (!aData || (aCoverage !== undefined && aCoverage < 0.99)) return 1
-        if (!bData || (bCoverage !== undefined && bCoverage < 0.99)) return -1
-        return (aData.最大候選個數 || 0) - (bData.最大候選個數 || 0)
+  const 最大候選數列: ColumnsType<對比方案數據介面> = (() => {
+    // 配置：字符集列表
+    const 字符集配置: { key: string; title: string; dataKey: 累積漢字集名稱型别 }[] = [
+      { key: 'gb2312', title: 'GB2312', dataKey: 'GB2312' as const },
+      { key: 'tonggui', title: '通用規範', dataKey: '通用規範' as const },
+      { key: 'guozi', title: '常用國字', dataKey: '常用國字' as const },
+      { key: 'cjk-basic', title: 'CJK基本', dataKey: 'CJK基本' as const },
+      { key: 'cjk-b', title: 'CJK擴B', dataKey: '到CJK擴B' as const },
+      { key: 'cjk-h', title: 'CJK擴H', dataKey: '到CJK擴H' as const },
+      { key: 'cjk-j', title: 'CJK擴J', dataKey: '到CJK擴J' as const },
+    ]
+
+    return [
+      {
+        title: '方案名',
+        dataIndex: '顯示名稱',
+        key: '顯示名稱',
+        fixed: 'left',
       },
-      render: (_, record) => {
-        const data = record.候選個數分析?.GB2312
-        if (!data) return '-'
-        const 覆蓋率 = record.靜態重碼分析?.GB2312.字集覆蓋率
-        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
-      },
-    },
-    {
-      title: '通用規範',
-      key: 'tonggui',
-      sorter: (a, b) => {
-        const aData = a.候選個數分析?.通用規範
-        const bData = b.候選個數分析?.通用規範
-        const aCoverage = a.靜態重碼分析?.通用規範.字集覆蓋率
-        const bCoverage = b.靜態重碼分析?.通用規範.字集覆蓋率
-        if (!aData || (aCoverage !== undefined && aCoverage < 0.99)) return 1
-        if (!bData || (bCoverage !== undefined && bCoverage < 0.99)) return -1
-        return (aData.最大候選個數 || 0) - (bData.最大候選個數 || 0)
-      },
-      render: (_, record) => {
-        const data = record.候選個數分析?.通用規範
-        if (!data) return '-'
-        const 覆蓋率 = record.靜態重碼分析?.通用規範.字集覆蓋率
-        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
-      },
-    },
-    {
-      title: '常用國字',
-      key: 'guozi',
-      sorter: (a, b) => {
-        const aData = a.候選個數分析?.常用國字
-        const bData = b.候選個數分析?.常用國字
-        const aCoverage = a.靜態重碼分析?.常用國字.字集覆蓋率
-        const bCoverage = b.靜態重碼分析?.常用國字.字集覆蓋率
-        if (!aData || (aCoverage !== undefined && aCoverage < 0.99)) return 1
-        if (!bData || (bCoverage !== undefined && bCoverage < 0.99)) return -1
-        return (aData.最大候選個數 || 0) - (bData.最大候選個數 || 0)
-      },
-      render: (_, record) => {
-        const data = record.候選個數分析?.常用國字
-        if (!data) return '-'
-        const 覆蓋率 = record.靜態重碼分析?.常用國字.字集覆蓋率
-        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
-      },
-    },
-    {
-      title: 'CJK基本',
-      key: 'cjk-basic',
-      sorter: (a, b) => {
-        const aData = a.候選個數分析?.CJK基本
-        const bData = b.候選個數分析?.CJK基本
-        const aCoverage = a.靜態重碼分析?.CJK基本.字集覆蓋率
-        const bCoverage = b.靜態重碼分析?.CJK基本.字集覆蓋率
-        if (!aData || (aCoverage !== undefined && aCoverage < 0.99)) return 1
-        if (!bData || (bCoverage !== undefined && bCoverage < 0.99)) return -1
-        return (aData.最大候選個數 || 0) - (bData.最大候選個數 || 0)
-      },
-      render: (_, record) => {
-        const data = record.候選個數分析?.CJK基本
-        if (!data) return '-'
-        const 覆蓋率 = record.靜態重碼分析?.CJK基本.字集覆蓋率
-        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
-      },
-    },
-    {
-      title: 'CJK擴B',
-      key: 'cjk-b',
-      sorter: (a, b) => {
-        const aData = a.候選個數分析?.到CJK擴B
-        const bData = b.候選個數分析?.到CJK擴B
-        const aCoverage = a.靜態重碼分析?.到CJK擴B.字集覆蓋率
-        const bCoverage = b.靜態重碼分析?.到CJK擴B.字集覆蓋率
-        if (!aData || (aCoverage !== undefined && aCoverage < 0.99)) return 1
-        if (!bData || (bCoverage !== undefined && bCoverage < 0.99)) return -1
-        return (aData.最大候選個數 || 0) - (bData.最大候選個數 || 0)
-      },
-      render: (_, record) => {
-        const data = record.候選個數分析?.到CJK擴B
-        if (!data) return '-'
-        const 覆蓋率 = record.靜態重碼分析?.到CJK擴B.字集覆蓋率
-        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
-      },
-    },
-    {
-      title: 'CJK擴H',
-      key: 'cjk-h',
-      sorter: (a, b) => {
-        const aData = a.候選個數分析?.到CJK擴H
-        const bData = b.候選個數分析?.到CJK擴H
-        const aCoverage = a.靜態重碼分析?.到CJK擴H.字集覆蓋率
-        const bCoverage = b.靜態重碼分析?.到CJK擴H.字集覆蓋率
-        if (!aData || (aCoverage !== undefined && aCoverage < 0.99)) return 1
-        if (!bData || (bCoverage !== undefined && bCoverage < 0.99)) return -1
-        return (aData.最大候選個數 || 0) - (bData.最大候選個數 || 0)
-      },
-      render: (_, record) => {
-        const data = record.候選個數分析?.到CJK擴H
-        if (!data) return '-'
-        const 覆蓋率 = record.靜態重碼分析?.到CJK擴H.字集覆蓋率
-        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
-      },
-    },
-    {
-      title: 'CJK擴J',
-      key: 'cjk-j',
-      sorter: (a, b) => {
-        const aData = a.候選個數分析?.到CJK擴J
-        const bData = b.候選個數分析?.到CJK擴J
-        const aCoverage = a.靜態重碼分析?.到CJK擴J.字集覆蓋率
-        const bCoverage = b.靜態重碼分析?.到CJK擴J.字集覆蓋率
-        if (!aData || (aCoverage !== undefined && aCoverage < 0.99)) return 1
-        if (!bData || (bCoverage !== undefined && bCoverage < 0.99)) return -1
-        return (aData.最大候選個數 || 0) - (bData.最大候選個數 || 0)
-      },
-      render: (_, record) => {
-        const data = record.候選個數分析?.到CJK擴J
-        if (!data) return '-'
-        const 覆蓋率 = record.靜態重碼分析?.到CJK擴J.字集覆蓋率
-        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
-      },
-    },
-  ]
+      ...字符集配置.map(({ key, title, dataKey }) => ({
+        title,
+        key,
+        sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+          const aData = a.候選個數分析?.[dataKey]
+          const bData = b.候選個數分析?.[dataKey]
+          const aCoverage = a.靜態重碼分析?.[dataKey].字集覆蓋率
+          const bCoverage = b.靜態重碼分析?.[dataKey].字集覆蓋率
+          if (!aData || (aCoverage !== undefined && aCoverage < 0.99)) return 1
+          if (!bData || (bCoverage !== undefined && bCoverage < 0.99)) return -1
+          return (aData.最大候選個數 || 0) - (bData.最大候選個數 || 0)
+        },
+        render: (_: any, record: 對比方案數據介面) => {
+          const data = record.候選個數分析?.[dataKey]
+          if (!data) return '-'
+          const 覆蓋率 = record.靜態重碼分析?.[dataKey].字集覆蓋率
+          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
+        },
+      })),
+    ]
+  })()
 
   // 速度當量列（根據字頻來源動態生成，顯示4列：全碼、一級簡碼、二級簡碼、全部簡碼）
   const 獲取速度當量列 = (字頻來源: 字頻來源型别): ColumnsType<對比方案數據介面> => {
@@ -482,6 +291,14 @@ const ComparisonPage: React.FC = () => {
 
     const 前綴 = 字頻前綴映射[字頻來源]
 
+    // 配置：當量類型列表
+    const 當量配置 = [
+      { key: 'full-equiv', title: '全碼當量', suffix: '全碼速度當量' },
+      { key: 'first-short-equiv', title: '一級簡碼當量', suffix: '一級簡碼速度當量' },
+      { key: 'second-short-equiv', title: '二級簡碼當量', suffix: '二級簡碼速度當量' },
+      { key: 'all-short-equiv', title: '全部簡碼當量', suffix: '全部簡碼速度當量' },
+    ]
+
     return [
       {
         title: '方案名',
@@ -489,66 +306,21 @@ const ComparisonPage: React.FC = () => {
         key: '顯示名稱',
         fixed: 'left',
       },
-      {
-        title: '全碼當量',
-        key: 'full-equiv',
-        sorter: (a, b) => {
-          const a值 = (a.速度當量分析 as any)?.[`${前綴}全碼速度當量`]
-          const b值 = (b.速度當量分析 as any)?.[`${前綴}全碼速度當量`]
+      ...當量配置.map(({ key, title, suffix }) => ({
+        title,
+        key,
+        sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+          const a值 = (a.速度當量分析 as any)?.[`${前綴}${suffix}`]
+          const b值 = (b.速度當量分析 as any)?.[`${前綴}${suffix}`]
           if (!a值) return 1
           if (!b值) return -1
           return a值 - b值
         },
-        render: (_, record) => {
-          const 值 = (record.速度當量分析 as any)?.[`${前綴}全碼速度當量`]
+        render: (_: any, record: 對比方案數據介面) => {
+          const 值 = (record.速度當量分析 as any)?.[`${前綴}${suffix}`]
           return 值 ? 值.toFixed(3) : '-'
         },
-      },
-      {
-        title: '一級簡碼當量',
-        key: 'first-short-equiv',
-        sorter: (a, b) => {
-          const a值 = (a.速度當量分析 as any)?.[`${前綴}一級簡碼速度當量`]
-          const b值 = (b.速度當量分析 as any)?.[`${前綴}一級簡碼速度當量`]
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const 值 = (record.速度當量分析 as any)?.[`${前綴}一級簡碼速度當量`]
-          return 值 ? 值.toFixed(3) : '-'
-        },
-      },
-      {
-        title: '二級簡碼當量',
-        key: 'second-short-equiv',
-        sorter: (a, b) => {
-          const a值 = (a.速度當量分析 as any)?.[`${前綴}二級簡碼速度當量`]
-          const b值 = (b.速度當量分析 as any)?.[`${前綴}二級簡碼速度當量`]
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const 值 = (record.速度當量分析 as any)?.[`${前綴}二級簡碼速度當量`]
-          return 值 ? 值.toFixed(3) : '-'
-        },
-      },
-      {
-        title: '全部簡碼當量',
-        key: 'all-short-equiv',
-        sorter: (a, b) => {
-          const a值 = (a.速度當量分析 as any)?.[`${前綴}全部簡碼速度當量`]
-          const b值 = (b.速度當量分析 as any)?.[`${前綴}全部簡碼速度當量`]
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const 值 = (record.速度當量分析 as any)?.[`${前綴}全部簡碼速度當量`]
-          return 值 ? 值.toFixed(3) : '-'
-        },
-      },
+      })),
     ]
   }
 
@@ -556,6 +328,15 @@ const ComparisonPage: React.FC = () => {
   const 獲取動態重碼率列 = (全碼簡碼: 全碼簡碼型别): ColumnsType<對比方案數據介面> => {
     const 碼類型 = 全碼簡碼 === '全碼' ? '全碼' : '簡碼'
 
+    // 配置：字頻來源列表
+    const 字頻來源配置 = [
+      { key: '知乎簡體', title: '知乎簡體', dataKey: '知乎簡體動態選重率' as const },
+      { key: '北語簡體', title: '北語簡體', dataKey: '北語簡體動態選重率' as const },
+      { key: '臺標繁體', title: '臺標繁體', dataKey: '臺標繁體動態選重率' as const },
+      { key: '古籍繁體', title: '古籍繁體', dataKey: '古籍繁體動態選重率' as const },
+      { key: '繁簡聯合', title: '繁簡聯合', dataKey: '繁簡聯合動態選重率' as const },
+    ]
+
     return [
       {
         title: '方案名',
@@ -563,81 +344,21 @@ const ComparisonPage: React.FC = () => {
         key: '顯示名稱',
         fixed: 'left',
       },
-      {
-        title: '知乎簡體',
-        key: '知乎簡體',
-        sorter: (a, b) => {
-          const a值 = a.動態選重分析?.知乎簡體動態選重率?.[碼類型]
-          const b值 = b.動態選重分析?.知乎簡體動態選重率?.[碼類型]
+      ...字頻來源配置.map(({ key, title, dataKey }) => ({
+        title,
+        key,
+        sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+          const a值 = a.動態選重分析?.[dataKey]?.[碼類型]
+          const b值 = b.動態選重分析?.[dataKey]?.[碼類型]
           if (!a值) return 1
           if (!b值) return -1
           return a值 - b值
         },
-        render: (_, record) => {
-          const 值 = record.動態選重分析?.知乎簡體動態選重率?.[碼類型]
+        render: (_: any, record: 對比方案數據介面) => {
+          const 值 = record.動態選重分析?.[dataKey]?.[碼類型]
           return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
         },
-      },
-      {
-        title: '北語簡體',
-        key: '北語簡體',
-        sorter: (a, b) => {
-          const a值 = a.動態選重分析?.北語簡體動態選重率?.[碼類型]
-          const b值 = b.動態選重分析?.北語簡體動態選重率?.[碼類型]
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const 值 = record.動態選重分析?.北語簡體動態選重率?.[碼類型]
-          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
-        },
-      },
-      {
-        title: '臺標繁體',
-        key: '臺標繁體',
-        sorter: (a, b) => {
-          const a值 = a.動態選重分析?.臺標繁體動態選重率?.[碼類型]
-          const b值 = b.動態選重分析?.臺標繁體動態選重率?.[碼類型]
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const 值 = record.動態選重分析?.臺標繁體動態選重率?.[碼類型]
-          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
-        },
-      },
-      {
-        title: '古籍繁體',
-        key: '古籍繁體',
-        sorter: (a, b) => {
-          const a值 = a.動態選重分析?.古籍繁體動態選重率?.[碼類型]
-          const b值 = b.動態選重分析?.古籍繁體動態選重率?.[碼類型]
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const 值 = record.動態選重分析?.古籍繁體動態選重率?.[碼類型]
-          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
-        },
-      },
-      {
-        title: '繁簡聯合',
-        key: '繁簡聯合',
-        sorter: (a, b) => {
-          const a值 = a.動態選重分析?.繁簡聯合動態選重率?.[碼類型]
-          const b值 = b.動態選重分析?.繁簡聯合動態選重率?.[碼類型]
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const 值 = record.動態選重分析?.繁簡聯合動態選重率?.[碼類型]
-          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
-        },
-      },
+      })),
     ]
   }
 
@@ -645,6 +366,15 @@ const ComparisonPage: React.FC = () => {
   const 獲取動態重碼率原始排序列 = (全碼簡碼: 全碼簡碼型别): ColumnsType<對比方案數據介面> => {
     const 碼類型 = 全碼簡碼 === '全碼' ? '全碼' : '簡碼'
 
+    // 配置：字頻來源列表
+    const 字頻來源配置 = [
+      { key: 'zhihu-orig', title: '知乎簡體', dataKey: '知乎簡體動態選重率原序' as const },
+      { key: 'sc-orig', title: '北語簡體', dataKey: '北語簡體動態選重率原序' as const },
+      { key: 'tc-orig', title: '臺標繁體', dataKey: '臺標繁體動態選重率原序' as const },
+      { key: 'guji-orig', title: '古籍繁體', dataKey: '古籍繁體動態選重率原序' as const },
+      { key: 'fanjian-orig', title: '繁簡聯合', dataKey: '繁簡聯合動態選重率原序' as const },
+    ]
+
     return [
       {
         title: '方案名',
@@ -652,81 +382,21 @@ const ComparisonPage: React.FC = () => {
         key: '顯示名稱',
         fixed: 'left',
       },
-      {
-        title: '知乎簡體',
-        key: 'zhihu-orig',
-        sorter: (a, b) => {
-          const a值 = a.動態選重分析?.知乎簡體動態選重率原序?.[碼類型]
-          const b值 = b.動態選重分析?.知乎簡體動態選重率原序?.[碼類型]
+      ...字頻來源配置.map(({ key, title, dataKey }) => ({
+        title,
+        key,
+        sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+          const a值 = a.動態選重分析?.[dataKey]?.[碼類型]
+          const b值 = b.動態選重分析?.[dataKey]?.[碼類型]
           if (!a值) return 1
           if (!b值) return -1
           return a值 - b值
         },
-        render: (_, record) => {
-          const 值 = record.動態選重分析?.知乎簡體動態選重率原序?.[碼類型]
+        render: (_: any, record: 對比方案數據介面) => {
+          const 值 = record.動態選重分析?.[dataKey]?.[碼類型]
           return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
         },
-      },
-      {
-        title: '北語簡體',
-        key: 'sc-orig',
-        sorter: (a, b) => {
-          const a值 = a.動態選重分析?.北語簡體動態選重率原序?.[碼類型]
-          const b值 = b.動態選重分析?.北語簡體動態選重率原序?.[碼類型]
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const 值 = record.動態選重分析?.北語簡體動態選重率原序?.[碼類型]
-          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
-        },
-      },
-      {
-        title: '臺標繁體',
-        key: 'tc-orig',
-        sorter: (a, b) => {
-          const a值 = a.動態選重分析?.臺標繁體動態選重率原序?.[碼類型]
-          const b值 = b.動態選重分析?.臺標繁體動態選重率原序?.[碼類型]
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const 值 = record.動態選重分析?.臺標繁體動態選重率原序?.[碼類型]
-          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
-        },
-      },
-      {
-        title: '古籍繁體',
-        key: 'guji-orig',
-        sorter: (a, b) => {
-          const a值 = a.動態選重分析?.古籍繁體動態選重率原序?.[碼類型]
-          const b值 = b.動態選重分析?.古籍繁體動態選重率原序?.[碼類型]
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const 值 = record.動態選重分析?.古籍繁體動態選重率原序?.[碼類型]
-          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
-        },
-      },
-      {
-        title: '繁簡聯合',
-        key: 'fanjian-orig',
-        sorter: (a, b) => {
-          const a值 = a.動態選重分析?.繁簡聯合動態選重率原序?.[碼類型]
-          const b值 = b.動態選重分析?.繁簡聯合動態選重率原序?.[碼類型]
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const 值 = record.動態選重分析?.繁簡聯合動態選重率原序?.[碼類型]
-          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
-        },
-      },
+      })),
     ]
   }
 
@@ -742,6 +412,15 @@ const ComparisonPage: React.FC = () => {
 
     const 字頻鍵 = 字頻鍵名映射[字頻來源]
 
+    // 配置：N值列表
+    const N值配置 = [
+      { key: 'n25', title: '25簡碼', N值: 25 },
+      { key: 'n50', title: '50簡碼', N值: 50 },
+      { key: 'n100', title: '100簡碼', N值: 100 },
+      { key: 'n200', title: '200簡碼', N值: 200 },
+      { key: 'n500', title: '500簡碼', N值: 500 },
+    ]
+
     return [
       {
         title: '方案名',
@@ -749,15 +428,15 @@ const ComparisonPage: React.FC = () => {
         key: '顯示名稱',
         fixed: 'left',
       },
-      {
-        title: '25簡碼',
-        key: 'n25',
-        sorter: (a, b) => {
+      ...N值配置.map(({ key, title, N值 }) => ({
+        title,
+        key,
+        sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
           const aResult = (a.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 25
+            (r: any) => r.最有效率的簡碼個數 === N值
           )
           const bResult = (b.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 25
+            (r: any) => r.最有效率的簡碼個數 === N值
           )
           const a值 = aResult?.字頻加權碼長
           const b值 = bResult?.字頻加權碼長
@@ -765,105 +444,13 @@ const ComparisonPage: React.FC = () => {
           if (!b值) return -1
           return a值 - b值
         },
-        render: (_, record) => {
+        render: (_: any, record: 對比方案數據介面) => {
           const result = (record.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 25
+            (r: any) => r.最有效率的簡碼個數 === N值
           )
           return result?.字頻加權碼長?.toFixed(3) || '-'
         },
-      },
-      {
-        title: '50簡碼',
-        key: 'n50',
-        sorter: (a, b) => {
-          const aResult = (a.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 50
-          )
-          const bResult = (b.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 50
-          )
-          const a值 = aResult?.字頻加權碼長
-          const b值 = bResult?.字頻加權碼長
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const result = (record.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 50
-          )
-          return result?.字頻加權碼長?.toFixed(3) || '-'
-        },
-      },
-      {
-        title: '100簡碼',
-        key: 'n100',
-        sorter: (a, b) => {
-          const aResult = (a.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 100
-          )
-          const bResult = (b.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 100
-          )
-          const a值 = aResult?.字頻加權碼長
-          const b值 = bResult?.字頻加權碼長
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const result = (record.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 100
-          )
-          return result?.字頻加權碼長?.toFixed(3) || '-'
-        },
-      },
-      {
-        title: '200簡碼',
-        key: 'n200',
-        sorter: (a, b) => {
-          const aResult = (a.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 200
-          )
-          const bResult = (b.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 200
-          )
-          const a值 = aResult?.字頻加權碼長
-          const b值 = bResult?.字頻加權碼長
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const result = (record.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 200
-          )
-          return result?.字頻加權碼長?.toFixed(3) || '-'
-        },
-      },
-      {
-        title: '500簡碼',
-        key: 'n500',
-        sorter: (a, b) => {
-          const aResult = (a.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 500
-          )
-          const bResult = (b.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 500
-          )
-          const a值 = aResult?.字頻加權碼長
-          const b值 = bResult?.字頻加權碼長
-          if (!a值) return 1
-          if (!b值) return -1
-          return a值 - b值
-        },
-        render: (_, record) => {
-          const result = (record.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
-            (r: any) => r.最有效率的簡碼個數 === 500
-          )
-          return result?.字頻加權碼長?.toFixed(3) || '-'
-        },
-      },
+      })),
     ]
   }
 
