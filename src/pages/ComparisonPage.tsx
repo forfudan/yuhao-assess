@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAtom, useAtomValue } from 'jotai'
-import { Button, Space, Typography, Table, Modal, Checkbox, message } from 'antd'
+import { Button, Space, Typography, Table, Modal, Checkbox, message, Alert } from 'antd'
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 當前方案原子狀態 } from '@/atoms/scheme'
@@ -213,37 +213,72 @@ const ComparisonPage: React.FC = () => {
       {
         title: 'GB2312',
         key: 'gb2312',
-        render: (_, record) => record.靜態重碼分析?.GB2312?.[碼類型] || '-',
+        render: (_, record) => {
+          const data = record.靜態重碼分析?.GB2312
+          if (!data) return '-'
+          const 覆蓋率 = data.字集覆蓋率
+          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
+        },
       },
       {
         title: '通用規範',
         key: 'tonggui',
-        render: (_, record) => record.靜態重碼分析?.通用規範?.[碼類型] || '-',
+        render: (_, record) => {
+          const data = record.靜態重碼分析?.通用規範
+          if (!data) return '-'
+          const 覆蓋率 = data.字集覆蓋率
+          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
+        },
       },
       {
         title: '常用國字',
         key: 'guozi',
-        render: (_, record) => record.靜態重碼分析?.常用國字?.[碼類型] || '-',
+        render: (_, record) => {
+          const data = record.靜態重碼分析?.常用國字
+          if (!data) return '-'
+          const 覆蓋率 = data.字集覆蓋率
+          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
+        },
       },
       {
         title: 'CJK基本',
         key: 'cjk-basic',
-        render: (_, record) => record.靜態重碼分析?.CJK基本?.[碼類型] || '-',
+        render: (_, record) => {
+          const data = record.靜態重碼分析?.CJK基本
+          if (!data) return '-'
+          const 覆蓋率 = data.字集覆蓋率
+          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
+        },
       },
       {
         title: 'CJK擴B',
         key: 'cjk-b',
-        render: (_, record) => record.靜態重碼分析?.到CJKB?.[碼類型] || '-',
+        render: (_, record) => {
+          const data = record.靜態重碼分析?.到CJKB
+          if (!data) return '-'
+          const 覆蓋率 = data.字集覆蓋率
+          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
+        },
       },
       {
         title: 'CJK擴H',
         key: 'cjk-h',
-        render: (_, record) => record.靜態重碼分析?.到CJKH?.[碼類型] || '-',
+        render: (_, record) => {
+          const data = record.靜態重碼分析?.到CJKH
+          if (!data) return '-'
+          const 覆蓋率 = data.字集覆蓋率
+          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
+        },
       },
       {
         title: 'CJK擴J',
         key: 'cjk-j',
-        render: (_, record) => record.靜態重碼分析?.到CJKJ?.[碼類型] || '-',
+        render: (_, record) => {
+          const data = record.靜態重碼分析?.到CJKJ
+          if (!data) return '-'
+          const 覆蓋率 = data.字集覆蓋率
+          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
+        },
       },
     ]
   }
@@ -259,37 +294,72 @@ const ComparisonPage: React.FC = () => {
     {
       title: 'GB2312',
       key: 'gb2312',
-      render: (_, record) => record.候選個數分析?.GB2312?.最大候選個數 || '-',
+      render: (_, record) => {
+        const data = record.候選個數分析?.GB2312
+        if (!data) return '-'
+        const 覆蓋率 = record.靜態重碼分析?.GB2312.字集覆蓋率
+        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
+      },
     },
     {
       title: '通用規範',
       key: 'tonggui',
-      render: (_, record) => record.候選個數分析?.通用規範?.最大候選個數 || '-',
+      render: (_, record) => {
+        const data = record.候選個數分析?.通用規範
+        if (!data) return '-'
+        const 覆蓋率 = record.靜態重碼分析?.通用規範.字集覆蓋率
+        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
+      },
     },
     {
       title: '常用國字',
       key: 'guozi',
-      render: (_, record) => record.候選個數分析?.常用國字?.最大候選個數 || '-',
+      render: (_, record) => {
+        const data = record.候選個數分析?.常用國字
+        if (!data) return '-'
+        const 覆蓋率 = record.靜態重碼分析?.常用國字.字集覆蓋率
+        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
+      },
     },
     {
       title: 'CJK基本',
       key: 'cjk-basic',
-      render: (_, record) => record.候選個數分析?.CJK基本?.最大候選個數 || '-',
+      render: (_, record) => {
+        const data = record.候選個數分析?.CJK基本
+        if (!data) return '-'
+        const 覆蓋率 = record.靜態重碼分析?.CJK基本.字集覆蓋率
+        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
+      },
     },
     {
       title: 'CJK擴B',
       key: 'cjk-b',
-      render: (_, record) => record.候選個數分析?.CJK擴B?.最大候選個數 || '-',
+      render: (_, record) => {
+        const data = record.候選個數分析?.CJK擴B
+        if (!data) return '-'
+        const 覆蓋率 = record.靜態重碼分析?.到CJKB.字集覆蓋率
+        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
+      },
     },
     {
       title: 'CJK擴H',
       key: 'cjk-h',
-      render: (_, record) => record.候選個數分析?.CJK擴H?.最大候選個數 || '-',
+      render: (_, record) => {
+        const data = record.候選個數分析?.CJK擴H
+        if (!data) return '-'
+        const 覆蓋率 = record.靜態重碼分析?.到CJKH.字集覆蓋率
+        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
+      },
     },
     {
       title: 'CJK擴J',
       key: 'cjk-j',
-      render: (_, record) => record.候選個數分析?.CJK擴J?.最大候選個數 || '-',
+      render: (_, record) => {
+        const data = record.候選個數分析?.CJK擴J
+        if (!data) return '-'
+        const 覆蓋率 = record.靜態重碼分析?.到CJKJ.字集覆蓋率
+        return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
+      },
     },
   ]
 
@@ -678,6 +748,18 @@ const ComparisonPage: React.FC = () => {
           rowKey="唯一鍵"
           pagination={false}
           scroll={{ x: 'max-content' }}
+        />
+
+        {/* 説明信息 */}
+        <Alert
+          title="説明"
+          description={
+            <div>
+              <p>如果某方案缺字超過當前字集1%，部分單元格不顯示數據。</p>
+            </div>
+          }
+          type="info"
+          showIcon
         />
       </Space>
 

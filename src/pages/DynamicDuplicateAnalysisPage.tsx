@@ -625,10 +625,10 @@ const DynamicDuplicateAnalysisPage: React.FC = () => {
           />
         )}
 
-        {/* 提示信息 */}
+        {/* 説明信息 */}
         {分析結果 && (
           <Alert
-            title="提示"
+            title="説明"
             description={
               <div>
                 <p>‱ 爲萬分符。</p>

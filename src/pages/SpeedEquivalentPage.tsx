@@ -617,7 +617,7 @@ const SpeedEquivalentPage: React.FC = () => {
         {/* 提示信息 */}
         {分析結果 && (
           <Alert
-            title="💡 提示"
+            title="説明"
             description="點擊字頻來源，可查看該字頻類型下全碼與簡碼的當量對比。"
             type="info"
             showIcon
