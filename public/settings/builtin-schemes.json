@@ -55,6 +55,12 @@
       "enabled": true
     },
     {
+      "key": "wubi-98",
+      "name": "五筆98",
+      "description": "",
+      "enabled": true
+    },
+    {
       "key": "zhengma",
       "name": "鄭碼",
       "description": "",
@@ -63,6 +69,12 @@
     {
       "key": "xuma",
       "name": "徐碼",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "zhangma",
+      "name": "張碼",
       "description": "",
       "enabled": true
     },
@@ -87,13 +99,19 @@
     {
       "key": "sky",
       "name": "天碼",
-      "description": "表形碼",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "ziyuan",
+      "name": "字源",
+      "description": "",
       "enabled": true
     },
     {
       "key": "snow-qingyun",
       "name": "冰雪清韻",
-      "description": "冰雪系列",
+      "description": "",
       "enabled": true
     }
   ]

@@ -225,13 +225,13 @@ const ComparisonPage: React.FC = () => {
           const bData = b.靜態重碼分析?.[dataKey]
           if (!aData || aData.字集覆蓋率 < 0.99) return 1
           if (!bData || bData.字集覆蓋率 < 0.99) return -1
-          return (aData[碼類型] || 0) - (bData[碼類型] || 0)
+          return (aData[碼類型] ?? 0) - (bData[碼類型] ?? 0)
         },
         render: (_: any, record: 對比方案數據介面) => {
           const data = record.靜態重碼分析?.[dataKey]
           if (!data) return '-'
           const 覆蓋率 = data.字集覆蓋率
-          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data[碼類型] || '-'
+          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : (data[碼類型] ?? '-')
         },
       })),
     ]
@@ -267,13 +267,13 @@ const ComparisonPage: React.FC = () => {
           const bCoverage = b.靜態重碼分析?.[dataKey].字集覆蓋率
           if (!aData || (aCoverage !== undefined && aCoverage < 0.99)) return 1
           if (!bData || (bCoverage !== undefined && bCoverage < 0.99)) return -1
-          return (aData.最大候選個數 || 0) - (bData.最大候選個數 || 0)
+          return (aData.最大候選個數 ?? 0) - (bData.最大候選個數 ?? 0)
         },
         render: (_: any, record: 對比方案數據介面) => {
           const data = record.候選個數分析?.[dataKey]
           if (!data) return '-'
           const 覆蓋率 = record.靜態重碼分析?.[dataKey].字集覆蓋率
-          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : data.最大候選個數 || '-'
+          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : (data.最大候選個數 ?? '-')
         },
       })),
     ]
@@ -312,13 +312,13 @@ const ComparisonPage: React.FC = () => {
         sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
           const a值 = (a.速度當量分析 as any)?.[`${前綴}${suffix}`]
           const b值 = (b.速度當量分析 as any)?.[`${前綴}${suffix}`]
-          if (!a值) return 1
-          if (!b值) return -1
+          if (a值 === undefined) return 1
+          if (b值 === undefined) return -1
           return a值 - b值
         },
         render: (_: any, record: 對比方案數據介面) => {
           const 值 = (record.速度當量分析 as any)?.[`${前綴}${suffix}`]
-          return 值 ? 值.toFixed(3) : '-'
+          return 值 !== undefined ? 值.toFixed(3) : '-'
         },
       })),
     ]
@@ -350,13 +350,13 @@ const ComparisonPage: React.FC = () => {
         sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
           const a值 = a.動態選重分析?.[dataKey]?.[碼類型]
           const b值 = b.動態選重分析?.[dataKey]?.[碼類型]
-          if (!a值) return 1
-          if (!b值) return -1
+          if (a值 === undefined) return 1
+          if (b值 === undefined) return -1
           return a值 - b值
         },
         render: (_: any, record: 對比方案數據介面) => {
           const 值 = record.動態選重分析?.[dataKey]?.[碼類型]
-          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
+          return 值 !== undefined ? `${(值 * 10000).toFixed(2)}‱` : '-'
         },
       })),
     ]
@@ -388,13 +388,13 @@ const ComparisonPage: React.FC = () => {
         sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
           const a值 = a.動態選重分析?.[dataKey]?.[碼類型]
           const b值 = b.動態選重分析?.[dataKey]?.[碼類型]
-          if (!a值) return 1
-          if (!b值) return -1
+          if (a值 === undefined) return 1
+          if (b值 === undefined) return -1
           return a值 - b值
         },
         render: (_: any, record: 對比方案數據介面) => {
           const 值 = record.動態選重分析?.[dataKey]?.[碼類型]
-          return 值 ? `${(值 * 10000).toFixed(2)}‱` : '-'
+          return 值 !== undefined ? `${(值 * 10000).toFixed(2)}‱` : '-'
         },
       })),
     ]
@@ -440,15 +440,15 @@ const ComparisonPage: React.FC = () => {
           )
           const a值 = aResult?.字頻加權碼長
           const b值 = bResult?.字頻加權碼長
-          if (!a值) return 1
-          if (!b值) return -1
+          if (a值 === undefined) return 1
+          if (b值 === undefined) return -1
           return a值 - b值
         },
         render: (_: any, record: 對比方案數據介面) => {
           const result = (record.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
             (r: any) => r.最有效率的簡碼個數 === N值
           )
-          return result?.字頻加權碼長?.toFixed(3) || '-'
+          return result?.字頻加權碼長?.toFixed(3) ?? '-'
         },
       })),
     ]
