@@ -201,15 +201,14 @@ const ProcessTablePage: React.FC = () => {
       return
     }
 
-    if (!當前方案.碼表元數據) {
-      設置錯誤信息('請先在首頁添加碼表元數據（分隔符、第一列類型等）')
-      return
-    }
-
     if (!選中的文件) {
       設置錯誤信息('請先上傳碼表文件')
       return
     }
+
+    // 如果没有碼表元數據，使用默認值創建
+    const 分隔符 = 當前方案.碼表元數據?.分隔符 || '製表符'
+    const 第一列類型 = 當前方案.碼表元數據?.第一列類型 || '字符'
 
     設置加載中(true)
     設置錯誤信息(null)
@@ -218,11 +217,7 @@ const ProcessTablePage: React.FC = () => {
 
     try {
       const 文本 = await 讀取文件(選中的文件)
-      const 解析結果 = await 碼表處理服務實例.解析原始碼表文本(
-        文本,
-        當前方案.碼表元數據.分隔符,
-        當前方案.碼表元數據.第一列類型
-      )
+      const 解析結果 = await 碼表處理服務實例.解析原始碼表文本(文本, 分隔符, 第一列類型)
 
       if (!解析結果.rawCodeTable || 解析結果.rawCodeTable.size === 0) {
         throw new Error('碼表解析失敗，請檢查格式是否正確')
@@ -294,19 +289,22 @@ const ProcessTablePage: React.FC = () => {
         )}
 
         {/* 碼表解析配置 */}
-        {當前方案?.碼表元數據 && 選中的文件 && (
+        {當前方案 && 選中的文件 && (
           <div style={{ marginBottom: '16px' }}>
             <Space size="large">
               <div>
                 <Text type="secondary">分隔符：</Text>
                 <Select
-                  value={當前方案.碼表元數據.分隔符}
+                  value={當前方案.碼表元數據?.分隔符 || '製表符'}
                   style={{ width: '120px' }}
                   onChange={值 => {
                     設置當前方案({
                       ...當前方案,
                       元數據: { ...當前方案.元數據, 更新時間: new Date().toISOString() },
-                      碼表元數據: { ...當前方案.碼表元數據!, 分隔符: 值 },
+                      碼表元數據: {
+                        分隔符: 值,
+                        第一列類型: 當前方案.碼表元數據?.第一列類型 || '字符',
+                      },
                     })
                   }}
                 >
@@ -319,13 +317,16 @@ const ProcessTablePage: React.FC = () => {
               <div>
                 <Text type="secondary">第一列類型：</Text>
                 <Select
-                  value={當前方案.碼表元數據.第一列類型}
+                  value={當前方案.碼表元數據?.第一列類型 || '字符'}
                   style={{ width: '120px' }}
                   onChange={值 => {
                     設置當前方案({
                       ...當前方案,
                       元數據: { ...當前方案.元數據, 更新時間: new Date().toISOString() },
-                      碼表元數據: { ...當前方案.碼表元數據!, 第一列類型: 值 },
+                      碼表元數據: {
+                        分隔符: 當前方案.碼表元數據?.分隔符 || '製表符',
+                        第一列類型: 值,
+                      },
                     })
                   }}
                 >
@@ -399,7 +400,7 @@ const ProcessTablePage: React.FC = () => {
             size="middle"
             icon={<ThunderboltOutlined />}
             onClick={開始解析}
-            disabled={!當前方案 || !當前方案.碼表元數據 || !選中的文件 || 加載中}
+            disabled={!當前方案 || !選中的文件 || 加載中}
             loading={加載中}
           >
             {加載中 ? '解析中...' : '開始解析'}

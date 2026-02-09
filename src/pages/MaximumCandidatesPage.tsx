@@ -226,31 +226,6 @@ const MaximumCandidatesPage: React.FC = () => {
         dataIndex: '候選個數',
         key: '候選個數',
         align: 'center',
-        render: (count: number) => {
-          let color = '#dcfce7'
-          let textColor = '#166534'
-          if (count > 5) {
-            color = '#fee2e2'
-            textColor = '#991b1b'
-          } else if (count > 2) {
-            color = '#fef3c7'
-            textColor = '#92400e'
-          }
-          return (
-            <span
-              style={{
-                display: 'inline-block',
-                padding: '4px 12px',
-                borderRadius: '20px',
-                fontWeight: 600,
-                background: color,
-                color: textColor,
-              }}
-            >
-              {count}
-            </span>
-          )
-        },
       },
       {
         title: '對應編碼',
@@ -263,9 +238,7 @@ const MaximumCandidatesPage: React.FC = () => {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
               {顯示編碼.map((編碼, index) => (
                 <React.Fragment key={編碼}>
-                  <Text code style={{ cursor: 'pointer' }} onClick={() => 顯示編碼詳情(編碼)}>
-                    {編碼}
-                  </Text>
+                  <Link onClick={() => 顯示編碼詳情(編碼)}>{編碼}</Link>
                   {index < 顯示編碼.length - 1 && <span>,</span>}
                 </React.Fragment>
               ))}
@@ -347,13 +320,6 @@ const MaximumCandidatesPage: React.FC = () => {
                   <p>
                     最大候選項個數評估輸入法的選字體驗，數值越小表示翻頁次數越少，檢字效率越高。
                     計算考慮了：一、單字全碼和指定字符集，統計每個編碼對應的漢字數量；二、取所有編碼中候選項個數的最大值作爲該字符集的評估指標。
-                  </p>
-                  <p>
-                    {' '}
-                    顔色標示：
-                    <span style={{ color: '#059669', fontWeight: 600 }}>≤2</span>、
-                    <span style={{ color: '#d97706', fontWeight: 600 }}>3-5</span>、
-                    <span style={{ color: '#dc2626', fontWeight: 600 }}>&gt;5</span>
                   </p>
                   <p>點擊編碼可查看該編碼對應的所有漢字。</p>
                 </div>
