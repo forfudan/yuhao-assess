@@ -61,6 +61,12 @@
       "enabled": true
     },
     {
+      "key": "wubi-06",
+      "name": "五筆06",
+      "description": "",
+      "enabled": true
+    },
+    {
       "key": "zhengma",
       "name": "鄭碼",
       "description": "",
@@ -109,8 +115,20 @@
       "enabled": true
     },
     {
+      "key": "wubi-866",
+      "name": "八六六五筆",
+      "description": "",
+      "enabled": true
+    },
+    {
       "key": "snow-qingyun",
       "name": "冰雪清韻",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "zhedou",
+      "name": "哲豆音形",
       "description": "",
       "enabled": true
     }

@@ -235,6 +235,25 @@ function HomePage() {
     更新元數據('標籤', 新標籤 as never)
   }
 
+  // 添加相關資源鏈接
+  const 添加相關資源鏈接 = (鏈接: string) => {
+    if (!當前方案 || !鏈接.trim()) return
+    const 當前鏈接列表 = 當前方案.元數據.相關資源鏈接 || []
+    if (當前鏈接列表.includes(鏈接.trim())) {
+      message.warning('鏈接已存在')
+      return
+    }
+    更新元數據('相關資源鏈接', [...當前鏈接列表, 鏈接.trim()] as never)
+  }
+
+  // 删除相關資源鏈接
+  const 删除相關資源鏈接 = (索引: number) => {
+    if (!當前方案) return
+    const 新鏈接列表 = [...(當前方案.元數據.相關資源鏈接 || [])]
+    新鏈接列表.splice(索引, 1)
+    更新元數據('相關資源鏈接', 新鏈接列表 as never)
+  }
+
   return (
     <Space orientation="vertical" size="large" style={{ width: '100%', padding: '24px' }}>
       {/* 方案選擇 */}
@@ -328,6 +347,45 @@ function HomePage() {
                   })
                 }
               />
+            </div>
+            <div style={{ gridColumn: 'span 2' }}>
+              <Text type="secondary">相關資源鏈接</Text>
+              <div style={{ marginTop: '8px' }}>
+                {(當前方案.元數據.相關資源鏈接 || []).map((鏈接, index) => (
+                  <div key={index} style={{ display: 'flex', marginBottom: '8px', gap: '8px' }}>
+                    <Input
+                      value={鏈接}
+                      onChange={e => {
+                        const 新鏈接列表 = [...(當前方案.元數據.相關資源鏈接 || [])]
+                        新鏈接列表[index] = e.target.value
+                        設置當前方案({
+                          ...當前方案,
+                          元數據: { ...當前方案.元數據, 相關資源鏈接: 新鏈接列表 },
+                        })
+                      }}
+                      onBlur={e => {
+                        const 新鏈接列表 = [...(當前方案.元數據.相關資源鏈接 || [])]
+                        新鏈接列表[index] = e.target.value
+                        更新元數據('相關資源鏈接', 新鏈接列表 as never)
+                      }}
+                    />
+                    <Button danger onClick={() => 删除相關資源鏈接(index)}>
+                      删除
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="dashed"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    const 鏈接 = prompt('輸入資源鏈接：')
+                    if (鏈接) 添加相關資源鏈接(鏈接)
+                  }}
+                  style={{ width: '100%' }}
+                >
+                  添加鏈接
+                </Button>
+              </div>
             </div>
             <div style={{ gridColumn: 'span 2' }}>
               <Text type="secondary">碼表下載鏈接</Text>

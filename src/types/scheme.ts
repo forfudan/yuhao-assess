@@ -21,6 +21,7 @@ export interface 方案元數據介面 {
   作者?: string // 作者（如「朱宇浩」）
   版本: string // 版本號（語義版本，如「1.0.0」）
   官網?: string // 官網（如「https://shurufa.app」）
+  相關資源鏈接?: string[] // 相關資源鏈接列表（如教程、社群等）
   碼表下載鏈接?: string // 碼表下載鏈接
   描述?: string // 描述
   標籤?: string[] // 標籤（如 ['形碼', '前綴碼', '五碼']）

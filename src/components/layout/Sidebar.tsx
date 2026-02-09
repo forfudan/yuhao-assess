@@ -17,6 +17,22 @@ import {
   SettingOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  BarChartOutlined,
+  LineChartOutlined,
+  PieChartOutlined,
+  FundOutlined,
+  RadarChartOutlined,
+  DotChartOutlined,
+  AreaChartOutlined,
+  HeatMapOutlined,
+  ClockCircleOutlined,
+  FastForwardOutlined,
+  BulbOutlined,
+  ExperimentOutlined,
+  FunnelPlotOutlined,
+  StockOutlined,
+  RiseOutlined,
+  FallOutlined,
 } from '@ant-design/icons'
 import styled from 'styled-components'
 
@@ -35,6 +51,12 @@ const LogoContainer = styled.div<{ $collapsed: boolean }>`
   justify-content: center;
   background: #001529;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #002140;
+  }
 
   img {
     width: ${props => (props.$collapsed ? '32px' : '48px')};
@@ -81,52 +103,52 @@ export function Sidebar({ collapsed = false, onCollapse }: SidebarProps) {
   const 菜單項 = [
     {
       key: '/',
-      icon: <HomeOutlined />,
+      icon: <HomeOutlined />, // 首頁圖標
       label: '首頁',
     },
     {
       key: '/process',
-      icon: <UploadOutlined />,
+      icon: <UploadOutlined />, // 上傳/處理圖標
       label: '碼表解析',
     },
     {
       key: '/static',
-      icon: <DashboardOutlined />,
+      icon: <BarChartOutlined />, // 柱狀圖圖標（可換成：LineChartOutlined, PieChartOutlined, FundOutlined）
       label: '靜態重碼',
     },
     {
       key: '/dynamic',
-      icon: <DashboardOutlined />,
+      icon: <LineChartOutlined />, // 折線圖圖標（可換成：AreaChartOutlined, DotChartOutlined, RadarChartOutlined）
       label: '動態選重',
     },
     {
       key: '/candidates',
-      icon: <NumberOutlined />,
+      icon: <NumberOutlined />, // 數字圖標（可換成：FunnelPlotOutlined, StockOutlined）
       label: '候選個數',
     },
     {
       key: '/speed',
-      icon: <ThunderboltOutlined />,
+      icon: <DashboardOutlined />, // 儀表盤圖標（可換成：ThunderboltOutlined, FastForwardOutlined, ClockCircleOutlined）
       label: '速度當量',
     },
     {
       key: '/efficiency',
-      icon: <RocketOutlined />,
+      icon: <RocketOutlined />, // 火箭圖標（可換成：RiseOutlined, BulbOutlined, ExperimentOutlined）
       label: '簡碼效率',
     },
     {
       key: '/heatmap',
-      icon: <FireOutlined />,
+      icon: <FireOutlined />, // 火焰圖標（可換成：HeatMapOutlined, RadarChartOutlined）
       label: '鍵位熱力',
     },
     {
       key: '/comparison',
-      icon: <SwapOutlined />,
+      icon: <SwapOutlined />, // 交換圖標（可換成：FundOutlined, PieChartOutlined）
       label: '方案對比',
     },
     {
       key: '/settings',
-      icon: <SettingOutlined />,
+      icon: <SettingOutlined />, // 設置圖標
       label: '設置',
     },
   ]
@@ -138,7 +160,7 @@ export function Sidebar({ collapsed = false, onCollapse }: SidebarProps) {
    */
   return (
     <StyledSider collapsible collapsed={折疊狀態} trigger={null} width={150} theme="dark">
-      <LogoContainer $collapsed={折疊狀態}>
+      <LogoContainer $collapsed={折疊狀態} onClick={切換折疊}>
         <img src="/logo_blue.png" alt="宇浩輸入法" />
       </LogoContainer>
 
