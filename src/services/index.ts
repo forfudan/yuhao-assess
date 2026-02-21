@@ -18,9 +18,6 @@ export {
   從碼表計算加權速度當量,
 } from './speedEquivalentService'
 
-// 導出服務
-export { ExportService } from './exportService'
-
 // 導出碼表服務（統一服務）
 export {
   碼表處理服務,

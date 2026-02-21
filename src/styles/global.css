@@ -1,5 +1,4 @@
 /* 导入公共样式 */
-@import './tabs-common.css';
 @import './table-common.css';
 
 /* 全局樣式重置和基礎樣式 */
@@ -36,17 +35,6 @@
   --color-border-primary: #dee2e6;
   --color-border-secondary: #e9ecef;
   --color-border-focus: #007acc;
-
-  /* 熱力圖顏色 - 仿照 genda.shurufa.app */
-  --heatmap-bg: #f8f9fa;
-  --heatmap-key-bg: #ffffff;
-  --heatmap-key-border: #dee2e6;
-  --heatmap-key-text: #495057;
-  --heatmap-key-active: #007acc;
-  --heatmap-low: #e3f2fd;
-  --heatmap-medium: #90caf9;
-  --heatmap-high: #42a5f5;
-  --heatmap-very-high: #1976d2;
 
   /* 陰影 */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -114,17 +102,6 @@
   --color-border-primary: #404040;
   --color-border-secondary: #2d2d2d;
   --color-border-focus: #0ea5e9;
-
-  /* 熱力圖顏色 - 深色模式 */
-  --heatmap-bg: #1a1a1a;
-  --heatmap-key-bg: #2d2d2d;
-  --heatmap-key-border: #404040;
-  --heatmap-key-text: #f8f9fa;
-  --heatmap-key-active: #0ea5e9;
-  --heatmap-low: #0f172a;
-  --heatmap-medium: #1e293b;
-  --heatmap-high: #334155;
-  --heatmap-very-high: #0ea5e9;
 
   /* 陰影 - 深色模式 */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -383,7 +360,6 @@ textarea:focus {
   /* 確保按鈕和交互元素在強制顏色模式下保持可見性 */
   .primary-btn,
   .secondary-btn,
-  .tab-button,
   button {
     forced-color-adjust: none;
     border: 2px solid ButtonText;
@@ -393,7 +369,6 @@ textarea:focus {
 
   .primary-btn:hover,
   .secondary-btn:hover,
-  .tab-button:hover,
   button:hover {
     background: Highlight;
     color: HighlightText;
