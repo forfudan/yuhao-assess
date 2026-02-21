@@ -122,70 +122,6 @@ body {
     color var(--transition-base);
 }
 
-/* 實用工具類 */
-.container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--spacing-lg);
-}
-
-.card {
-  background: var(--color-bg-card);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: var(--spacing-xl);
-  border: 1px solid var(--color-border-primary);
-  transition: all var(--transition-base);
-}
-
-.card:hover {
-  box-shadow: var(--shadow-md);
-}
-
-/* 按鈕樣式 */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-size: var(--font-size-base);
-  font-weight: 500;
-  border-radius: var(--radius-md);
-  border: none;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  text-decoration: none;
-  min-height: 44px;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background: var(--color-primary);
-  color: var(--color-text-inverse);
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-secondary {
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border-primary);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--color-bg-primary);
-  border-color: var(--color-border-focus);
-}
-
 /* 表單控件 */
 input,
 select,
@@ -208,158 +144,12 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.1);
 }
 
-/* 主題切換按鈕 */
-.theme-toggle {
-  position: fixed;
-  top: var(--spacing-lg);
-  right: var(--spacing-lg);
-  z-index: 1000;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-sm);
-  cursor: pointer;
-  font-size: var(--font-size-lg);
-  transition: all var(--transition-base);
-  box-shadow: var(--shadow-card);
-}
-
-.theme-toggle:hover {
-  transform: scale(1.05);
-  box-shadow: var(--shadow-md);
-}
-
-/* 響應式設計 */
-@media (max-width: 768px) {
-  .container {
-    padding: 0 var(--spacing-md);
-  }
-
-  .card {
-    padding: var(--spacing-lg);
-  }
-
-  .theme-toggle {
-    top: var(--spacing-sm);
-    right: var(--spacing-sm);
-  }
-}
-
-.btn-secondary {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border-primary);
-}
-
-.btn-secondary:hover {
-  background-color: var(--color-bg-tertiary);
-  border-color: var(--color-border-secondary);
-}
-
-.card {
-  background-color: var(--color-bg-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-border-primary);
-  padding: var(--spacing-xl);
-  transition: all 0.2s ease-in-out;
-}
-
-.card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.text-primary {
-  color: var(--color-text-primary);
-}
-
-.text-secondary {
-  color: var(--color-text-secondary);
-}
-
-.text-tertiary {
-  color: var(--color-text-tertiary);
-}
-
-/* 通用信息說明欄樣式 */
-.info-section {
-  background: #f8fafc;
-  border-radius: 8px;
-  padding: 16px;
-  font-size: 0.9rem;
-  border: 1px solid #e5e7eb;
-}
-
-.info-section strong {
-  color: #495057;
-}
-
-.info-section p {
-  margin: 0 0 12px 0;
-  color: #6c757d;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
-.info-section ul {
-  margin: 8px 0 0 20px;
-  color: #6c757d;
-  font-size: 0.875rem;
-}
-
-.info-section li {
-  margin-bottom: 4px;
-  line-height: 1.4;
-  color: #6c757d;
-}
-
-.grid {
-  display: grid;
-  gap: var(--spacing-lg);
-}
-
-.grid-cols-1 {
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-}
-
-.grid-cols-2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@media (min-width: 768px) {
-  .md\\:grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* 萬分號樣式增強 - 讓萬分號在非等寬字體下更加明顯 */
-.metric-value,
-.metric-cell {
-  /* 使用特殊的字體特性來增強符號的可讀性 */
-  font-variant-numeric: proportional-nums;
-}
-
-/* 響應式設計 */
-@media (max-width: 768px) {
-  .container {
-    padding: 0 var(--spacing-md);
-  }
-
-  .card {
-    padding: var(--spacing-lg);
-  }
-}
-
-/* 強制顏色模式支持 (新標準，替代 -ms-high-contrast) */
+/* 強制顏色模式支持 */
 @media (forced-colors: active) {
   * {
     forced-color-adjust: auto;
   }
 
-  /* 確保按鈕和交互元素在強制顏色模式下保持可見性 */
-  .primary-btn,
-  .secondary-btn,
   button {
     forced-color-adjust: none;
     border: 2px solid ButtonText;
@@ -367,18 +157,9 @@ textarea:focus {
     color: ButtonText;
   }
 
-  .primary-btn:hover,
-  .secondary-btn:hover,
   button:hover {
     background: Highlight;
     color: HighlightText;
-  }
-
-  /* 確保卡片和邊框在強制顏色模式下可見 */
-  .card,
-  .comparison-table,
-  .scheme-item {
-    border: 1px solid CanvasText;
   }
 }
 
@@ -424,37 +205,13 @@ textarea:focus {
 }
 
 /* 暗黑模式下的按鈕 */
-[data-theme='dark'] button:not(.btn) {
+[data-theme='dark'] button {
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   border-color: var(--color-border-primary);
 }
 
-[data-theme='dark'] button:not(.btn):hover {
+[data-theme='dark'] button:hover {
   background: var(--color-bg-tertiary);
   border-color: var(--color-border-secondary);
-}
-
-/* 暗黑模式下的卡片 */
-[data-theme='dark'] .card {
-  background: var(--color-bg-card);
-  border-color: var(--color-border-primary);
-}
-
-/* 暗黑模式下的說明欄 */
-[data-theme='dark'] .info-section,
-[data-theme='dark'] .scheme-name-annotation {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-border-primary);
-  color: var(--color-text-secondary);
-}
-
-[data-theme='dark'] .info-section p,
-[data-theme='dark'] .info-section ul,
-[data-theme='dark'] .info-section li {
-  color: var(--color-text-secondary);
-}
-
-[data-theme='dark'] .info-section strong {
-  color: var(--color-text-primary);
 }

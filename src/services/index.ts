@@ -83,6 +83,3 @@ export {
 
 // 導出簡碼效率服務
 export { 計算指定字頻下之簡碼效率 } from './shortCodeEfficiencyService'
-
-// 導出類型
-export type { 分析參數介面 } from '../types/index'
