@@ -64,6 +64,7 @@ const KeyButton = styled.button<{
   frequency: number
   maxFreq: number
   hidden?: boolean
+  mode?: string
 }>`
   position: relative;
   display: flex;
@@ -118,7 +119,14 @@ const KeyButton = styled.button<{
       const frequencyPercent = props.frequency * 100
       const intensity = Math.min(Math.sqrt(frequencyPercent / 10), 1.5)
 
-      // 完全復刻舊版本的藍色漸變
+      if (props.mode === 'short') {
+        // 簡碼模式：暖橙色漸變
+        return `linear-gradient(135deg, 
+          rgba(249, 115, 22, ${intensity * 0.9 + 0.1}), 
+          rgba(234, 88, 12, ${intensity * 0.8 + 0.1})
+        )`
+      }
+      // 全碼模式：藍色漸變
       return `linear-gradient(135deg, 
         rgba(99, 102, 241, ${intensity * 0.9 + 0.1}), 
         rgba(59, 130, 246, ${intensity * 0.8 + 0.1})
@@ -132,8 +140,8 @@ const KeyLabel = styled.div`
   position: relative;
   z-index: 2;
   font-size: calc(0.2rem + 1.2vw);
-  font-weight: 600;
-  color: ${props => props.color || '#1f2937'};
+  font-weight: normal;
+  color: #1f2937;
   text-transform: uppercase;
   font-family: monospace;
   min-height: 1.2em;
@@ -637,11 +645,10 @@ export default function KeyboardHeatmapPage() {
         className={widthClass}
         frequency={data.frequency}
         maxFreq={1}
+        mode={activeTab}
         title={`${keyInfo.label || keyInfo.key.toUpperCase()}\n${(data.frequency * 100).toFixed(2)}%`}
       >
-        <KeyLabel color={frequencyPercent > 3 ? '#ffffff' : '#1f2937'}>
-          {keyInfo.label || keyInfo.key.toUpperCase()}
-        </KeyLabel>
+        <KeyLabel>{keyInfo.label || keyInfo.key.toUpperCase()}</KeyLabel>
         {data.count > 0 && (
           <KeyFreq intensity={frequencyPercent / 100}>{(data.frequency * 100).toFixed(1)}%</KeyFreq>
         )}
