@@ -23,7 +23,7 @@ export function 觸發所有分析計算(
       '/candidates',
       '/speed',
       '/efficiency',
-      // 移除 heatmap，不需要触发计算
+      '/heatmap',
     ]
     let currentIndex = 0
 

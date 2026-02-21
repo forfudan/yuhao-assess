@@ -12,6 +12,7 @@ export interface AtomSetters {
   設置候選個數分析結果: (value: any) => void
   設置速度當量分析結果: (value: any) => void
   設置簡碼效率分析結果: (value: any) => void
+  設置鍵位熱力分析結果: (value: any) => void
 }
 
 /**
@@ -26,4 +27,5 @@ export function 清空所有Atom(setters: AtomSetters) {
   setters.設置候選個數分析結果(null)
   setters.設置速度當量分析結果(null)
   setters.設置簡碼效率分析結果(null)
+  setters.設置鍵位熱力分析結果(null)
 }

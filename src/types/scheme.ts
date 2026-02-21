@@ -11,6 +11,7 @@ import type { 重碼分析結果介面 } from '../atoms/dynamicDuplicate'
 import type { 最大候選個數分析結果 } from '../atoms/maximumCandidates'
 import type { 速度當量分析結果介面 } from '../atoms/speedEquivalent'
 import type { 簡碼效率分析結果介面 } from '../atoms/shortCodeEfficiency'
+import type { 鍵位熱力分析結果介面 } from '../atoms/keyboardHeatmap'
 
 /**
  * 方案元數據
@@ -52,14 +53,6 @@ export interface 方案碼表元數據介面 {
 }
 
 /**
- * 鍵位熱力結果
- */
-export interface 鍵位熱力結果介面 {
-  按鍵頻率: Record<string, number> // { 'a': 0.15, 'o': 0.12, ... }
-  左右手平衡: { 左手: number; 右手: number }
-}
-
-/**
  * 方案測評結果介面
  *
  * 直接使用各個 Atom 的類型定義，確保與應用中的數據結構保持同步
@@ -83,12 +76,8 @@ export interface 方案測評結果介面 {
   // 簡碼效率分析
   簡碼效率分析?: 簡碼效率分析結果介面
 
-  // 鍵位熱力（保留舊格式，因爲尚未有對應的 Atom）
-  鍵位熱力?: {
-    按鍵頻率: Record<string, number>
-    左右手平衡: { 左手: number; 右手: number }
-    更新時間: string
-  }
+  // 鍵位熱力分析
+  鍵位熱力?: 鍵位熱力分析結果介面
 }
 
 /**

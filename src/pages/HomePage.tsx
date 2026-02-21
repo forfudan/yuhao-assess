@@ -27,6 +27,7 @@ import { 靜態重碼分析原子狀態 } from '@/atoms/staticDuplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
+import { 鍵位熱力分析原子狀態 } from '@/atoms/keyboardHeatmap'
 import { 碼表原子狀態, 原始碼表原子狀態, 編碼預覽數據原子狀態 } from '@/atoms/codeTable'
 import { 加載方案, 列出可用方案, 從JSON導入, 創建空白方案 } from '@/services/schemeService'
 import { 清空所有Atom, type AtomSetters } from '@/services/atomResetService'
@@ -46,6 +47,7 @@ function HomePage() {
   const [候選個數分析結果, 設置候選個數分析結果] = useAtom(候選個數分析原子狀態)
   const [速度當量分析結果, 設置速度當量分析結果] = useAtom(速度當量分析原子狀態)
   const [簡碼效率分析結果, 設置簡碼效率分析結果] = useAtom(簡碼效率分析原子狀態)
+  const [鍵位熱力分析結果, 設置鍵位熱力分析結果] = useAtom(鍵位熱力分析原子狀態)
   const 設置碼表數據 = useSetAtom(碼表原子狀態)
   const 設置原始碼表 = useSetAtom(原始碼表原子狀態)
   const 設置編碼預覽數據 = useSetAtom(編碼預覽數據原子狀態)
@@ -62,6 +64,7 @@ function HomePage() {
       設置候選個數分析結果,
       設置速度當量分析結果,
       設置簡碼效率分析結果,
+      設置鍵位熱力分析結果,
     })
   }
 
@@ -87,6 +90,7 @@ function HomePage() {
     const 數據中的候選個數結果 = 測評結果?.候選個數分析
     const 數據中的速度當量結果 = 測評結果?.速度當量分析
     const 數據中的簡碼效率結果 = 測評結果?.簡碼效率分析
+    const 數據中的鍵位熱力結果 = 測評結果?.鍵位熱力
 
     // 驗證方案配置
     const 方案 = 從JSON導入(JSON.stringify(方案配置))
@@ -98,6 +102,7 @@ function HomePage() {
     const 有候選個數結果 = !!數據中的候選個數結果
     const 有速度當量結果 = !!數據中的速度當量結果
     const 有簡碼效率結果 = !!數據中的簡碼效率結果
+    const 有鍵位熱力結果 = !!數據中的鍵位熱力結果
 
     if (有動態選重結果) {
       設置動態選重分析結果(數據中的動態選重結果)
@@ -129,12 +134,19 @@ function HomePage() {
       設置簡碼效率分析結果(null)
     }
 
+    if (有鍵位熱力結果) {
+      設置鍵位熱力分析結果(數據中的鍵位熱力結果)
+    } else {
+      設置鍵位熱力分析結果(null)
+    }
+
     const 結果提示 = [
       有動態選重結果 && '動態選重分析',
       有靜態重碼結果 && '靜態重碼分析',
       有候選個數結果 && '候選個數分析',
       有速度當量結果 && '速度當量分析',
       有簡碼效率結果 && '簡碼效率分析',
+      有鍵位熱力結果 && '鍵位熱力分析',
     ]
       .filter(Boolean)
       .join('、')

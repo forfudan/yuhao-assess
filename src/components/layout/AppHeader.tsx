@@ -15,6 +15,7 @@ import { 靜態重碼分析原子狀態 } from '@/atoms/staticDuplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
+import { 鍵位熱力分析原子狀態 } from '@/atoms/keyboardHeatmap'
 import { 碼表原子狀態, 原始碼表原子狀態, 編碼預覽數據原子狀態 } from '@/atoms/codeTable'
 import { 從JSON導入, 創建空白方案 } from '@/services/schemeService'
 import { 清空所有Atom, type AtomSetters } from '@/services/atomResetService'
@@ -46,6 +47,7 @@ export function AppHeader() {
   const 設置候選個數分析結果 = useSetAtom(候選個數分析原子狀態)
   const 設置速度當量分析結果 = useSetAtom(速度當量分析原子狀態)
   const 設置簡碼效率分析結果 = useSetAtom(簡碼效率分析原子狀態)
+  const 設置鍵位熱力分析結果 = useSetAtom(鍵位熱力分析原子狀態)
   const 設置碼表數據 = useSetAtom(碼表原子狀態)
   const 設置原始碼表 = useSetAtom(原始碼表原子狀態)
   const 設置編碼預覽數據 = useSetAtom(編碼預覽數據原子狀態)
@@ -56,6 +58,7 @@ export function AppHeader() {
   const 候選個數分析結果 = useAtomValue(候選個數分析原子狀態)
   const 速度當量分析結果 = useAtomValue(速度當量分析原子狀態)
   const 簡碼效率分析結果 = useAtomValue(簡碼效率分析原子狀態)
+  const 鍵位熱力分析結果 = useAtomValue(鍵位熱力分析原子狀態)
   const 編碼預覽數據 = useAtomValue(編碼預覽數據原子狀態)
 
   const 顯示標題 = 當前方案 ? 當前方案.元數據.方案名 : '未選擇方案'
@@ -72,6 +75,7 @@ export function AppHeader() {
       設置候選個數分析結果,
       設置速度當量分析結果,
       設置簡碼效率分析結果,
+      設置鍵位熱力分析結果,
     })
   }
 
@@ -99,6 +103,7 @@ export function AppHeader() {
         const 數據中的候選個數結果 = 測評結果?.候選個數分析
         const 數據中的速度當量結果 = 測評結果?.速度當量分析
         const 數據中的簡碼效率結果 = 測評結果?.簡碼效率分析
+        const 數據中的鍵位熱力結果 = 測評結果?.鍵位熱力
 
         // 如果有分析結果，寫入 atom
         if (數據中的靜態重碼結果) {
@@ -131,12 +136,19 @@ export function AppHeader() {
           設置簡碼效率分析結果(null)
         }
 
+        if (數據中的鍵位熱力結果) {
+          設置鍵位熱力分析結果(數據中的鍵位熱力結果)
+        } else {
+          設置鍵位熱力分析結果(null)
+        }
+
         const 結果提示 = [
           數據中的靜態重碼結果 && '靜態重碼分析',
           數據中的動態選重結果 && '動態選重分析',
           數據中的候選個數結果 && '候選個數分析',
           數據中的速度當量結果 && '速度當量分析',
           數據中的簡碼效率結果 && '簡碼效率分析',
+          數據中的鍵位熱力結果 && '鍵位熱力分析',
         ]
           .filter(Boolean)
           .join('、')
@@ -166,6 +178,7 @@ export function AppHeader() {
         候選個數分析結果,
         速度當量分析結果,
         簡碼效率分析結果,
+        鍵位熱力分析結果,
       },
       false
     )
@@ -201,6 +214,7 @@ export function AppHeader() {
     設置候選個數分析結果(null)
     設置速度當量分析結果(null)
     設置簡碼效率分析結果(null)
+    設置鍵位熱力分析結果(null)
 
     message.loading('正在清除舊數據並觸发重新計算...', 1)
 

@@ -1,11 +1,13 @@
-import React, { useState, useMemo, useRef } from 'react'
-import { Card, Tabs, Checkbox, Button, Space, Alert, Modal } from 'antd'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
+import { Card, Tabs, Checkbox, Button, Space, Alert, Modal, Spin, message } from 'antd'
 import { ReloadOutlined, QuestionCircleOutlined, DownloadOutlined } from '@ant-design/icons'
 import { useAtom } from 'jotai'
 import styled from 'styled-components'
 import { 碼表原子狀態 } from '@/atoms/codeTable'
 import { 當前方案原子狀態 } from '@/atoms/scheme'
 import { 字頻表緩存原子狀態 } from '@/atoms/charFrequency'
+import { 鍵位熱力分析原子狀態 } from '@/atoms/keyboardHeatmap'
+import type { 鍵位熱力分析結果介面 } from '@/atoms/keyboardHeatmap'
 import type { 處理後的碼表結果介面 } from '@/types'
 
 const PageContainer = styled.div`
@@ -408,15 +410,95 @@ const punctuationKeys: Record<string, number> = {
 
 const PUNCTUATION_CHAR_RATIO = 0.13
 
+/**
+ * 從碼表和字頻計算某模式的按鍵加權使用計數
+ */
+function 計算按鍵計數(
+  碼表: Map<string, string[]>,
+  字頻: Record<string, number>
+): Record<string, number> {
+  const distribution = new Map<string, number>()
+
+  for (const [字符, codes] of 碼表.entries()) {
+    if (!codes || codes.length === 0) continue
+    const weight = 字頻[字符] || 0
+    for (const code of codes) {
+      if (!code) continue
+      for (const ch of code.toLowerCase()) {
+        const key = ch === '_' ? 'space' : ch
+        distribution.set(key, (distribution.get(key) || 0) + weight)
+      }
+    }
+  }
+
+  const result: Record<string, number> = {}
+  for (const [key, count] of distribution.entries()) {
+    result[key] = count
+  }
+  return result
+}
+
+/**
+ * 從按鍵計數即時演算統計數據（手指負擔、按排分布、左右手平衡）
+ */
+function 從按鍵分布計算統計(keyDist: Map<string, number>) {
+  const fingerLoad = new Map<string, number>()
+  const rowDist = new Map<string, number>()
+  let leftHand = 0
+  let rightHand = 0
+
+  for (const [key, count] of keyDist.entries()) {
+    const finger = fingerMapping[key]
+    if (finger) {
+      fingerLoad.set(finger, (fingerLoad.get(finger) || 0) + count)
+      if (finger.startsWith('左')) leftHand += count
+      else if (finger.startsWith('右')) rightHand += count
+    }
+    const row = rowMapping[key]
+    if (row) {
+      rowDist.set(row, (rowDist.get(row) || 0) + count)
+    }
+  }
+
+  const total = leftHand + rightHand
+  const fingerTotal = Array.from(fingerLoad.values()).reduce((s, v) => s + v, 0)
+  const rowTotal = Array.from(rowDist.values()).reduce((s, v) => s + v, 0)
+
+  // 轉換手指負擔爲百分比
+  const fingerPct = new Map<string, number>()
+  for (const [finger, load] of fingerLoad.entries()) {
+    fingerPct.set(finger, fingerTotal > 0 ? (load / fingerTotal) * 100 : 0)
+  }
+
+  // 轉換按排分布爲百分比
+  const rowPct = new Map<string, number>()
+  for (const [row, count] of rowDist.entries()) {
+    rowPct.set(row, rowTotal > 0 ? (count / rowTotal) * 100 : 0)
+  }
+
+  return {
+    fingerLoad: fingerPct,
+    rowDist: rowPct,
+    handBalance: {
+      left: total > 0 ? (leftHand / total) * 100 : 0,
+      right: total > 0 ? (rightHand / total) * 100 : 0,
+    },
+  }
+}
+
 export default function KeyboardHeatmapPage() {
   const [碼表數據] = useAtom(碼表原子狀態)
   const [當前方案] = useAtom(當前方案原子狀態)
   const [字頻表緩存] = useAtom(字頻表緩存原子狀態)
+  const [分析結果, 設置分析結果] = useAtom(鍵位熱力分析原子狀態)
   const [activeTab, setActiveTab] = useState('full')
   const [simulatePunctuation, setSimulatePunctuation] = useState(true)
   const [showHelp, setShowHelp] = useState(false)
   const [keyboardScale] = useState(1.0)
+  const [計算中, 設置計算中] = useState(false)
+  const [錯誤信息, 設置錯誤信息] = useState<string | null>(null)
   const keyboardWrapperRef = useRef(null)
+  const 已初始化計算 = useRef(false)
 
   // 類型斷言：碼表數據實際上是 處理後的碼表結果
   const 處理後碼表 = 碼表數據 as 處理後的碼表結果介面 | null
@@ -426,65 +508,59 @@ export default function KeyboardHeatmapPage() {
     return 字頻表緩存.get('北語簡體字頻') || {}
   }, [字頻表緩存])
 
-  // 计算按键分布（使用字頻加權，完全復刻舊版本邏輯）
+  // 重新計算：從碼表計算全碼和簡碼的按鍵計數並寫入 atom
+  const 重新計算 = async () => {
+    if (!處理後碼表) {
+      設置錯誤信息('請先上傳碼表')
+      return
+    }
+
+    設置計算中(true)
+    設置錯誤信息(null)
+
+    try {
+      const 全碼數據 = 計算按鍵計數(處理後碼表.全碼加選重鍵表, 當前字頻)
+      const 簡碼數據 = 計算按鍵計數(處理後碼表.簡碼加選重鍵表, 當前字頻)
+
+      const 新結果: 鍵位熱力分析結果介面 = {
+        全碼: 全碼數據,
+        簡碼: 簡碼數據,
+        更新時間: new Date().toISOString(),
+      }
+
+      設置分析結果(新結果)
+      message.success('鍵位熱力分析完成')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : '計算失敗'
+      設置錯誤信息(msg)
+    } finally {
+      設置計算中(false)
+    }
+  }
+
+  // 自動計算：碼表就緒且無分析結果時自動觸發
+  useEffect(() => {
+    if (!分析結果 && 處理後碼表 && !已初始化計算.current) {
+      已初始化計算.current = true
+      重新計算()
+    }
+  }, [處理後碼表, 字頻表緩存])
+
+  // 從 atom 中取得當前模式的按鍵計數
+  const 當前模式按鍵計數 = useMemo(() => {
+    if (!分析結果) return null
+    return activeTab === 'full' ? 分析結果.全碼 : 分析結果.簡碼
+  }, [分析結果, activeTab])
+
+  // 從 atom 數據中構建 keyDistribution Map
   const keyDistribution = useMemo(() => {
-    if (!處理後碼表) return new Map<string, number>()
+    if (!當前模式按鍵計數) return new Map<string, number>()
+    return new Map(Object.entries(當前模式按鍵計數))
+  }, [當前模式按鍵計數])
 
-    const distribution = new Map<string, number>()
-    // 使用帶選重鍵的碼表（下劃線代表空格鍵）
-    const 當前碼表 = activeTab === 'full' ? 處理後碼表.全碼加選重鍵表 : 處理後碼表.簡碼加選重鍵表
-
-    // 遍歷碼表，使用字頻加權（遍歷所有編碼）
-    for (const [字符, codes] of 當前碼表.entries()) {
-      if (!codes || codes.length === 0) continue
-
-      // 使用字頻作爲權重（完全復刻老 Vue 組件邏輯）
-      const weight = 當前字頻[字符] || 0
-
-      // 遍歷該字符的所有編碼
-      for (const code of codes) {
-        if (!code) continue
-
-        for (const ch of code.toLowerCase()) {
-          const key = ch === '_' ? 'space' : ch
-          distribution.set(key, (distribution.get(key) || 0) + weight)
-        }
-      }
-    }
-
-    return distribution
-  }, [處理後碼表, activeTab, 當前字頻])
-
-  // 计算统计数据
+  // 統計數據從按鍵分布即時演算
   const stats = useMemo(() => {
-    const fingerLoad = new Map<string, number>()
-    const rowDist = new Map<string, number>()
-    let leftHand = 0
-    let rightHand = 0
-
-    for (const [key, count] of keyDistribution.entries()) {
-      const finger = fingerMapping[key]
-      if (finger) {
-        fingerLoad.set(finger, (fingerLoad.get(finger) || 0) + count)
-        if (finger.startsWith('左')) leftHand += count
-        else if (finger.startsWith('右')) rightHand += count
-      }
-
-      const row = rowMapping[key]
-      if (row) {
-        rowDist.set(row, (rowDist.get(row) || 0) + count)
-      }
-    }
-
-    const total = leftHand + rightHand
-    return {
-      fingerLoad,
-      rowDist,
-      handBalance: {
-        left: total > 0 ? (leftHand / total) * 100 : 0,
-        right: total > 0 ? (rightHand / total) * 100 : 0,
-      },
-    }
+    return 從按鍵分布計算統計(keyDistribution)
   }, [keyDistribution])
 
   const getKeyData = (key: string): KeyData => {
@@ -573,13 +649,14 @@ export default function KeyboardHeatmapPage() {
     )
   }
 
-  if (!處理後碼表) {
+  // 無碼表且無已導入的分析結果時顯示提示
+  if (!處理後碼表 && !分析結果) {
     return (
       <PageContainer>
         <Card>
           <Alert
-            title="等待碼表上傳"
-            description="請先在「碼表解析」頁面上傳碼表後，再查看鍵位熱力圖分析"
+            message="等待數據"
+            description="請先在「碼表解析」頁面上傳碼表，或導入包含鍵位熱力數據的方案 JSON"
             type="info"
             showIcon
           />
@@ -606,104 +683,134 @@ export default function KeyboardHeatmapPage() {
             <Button icon={<QuestionCircleOutlined />} onClick={() => setShowHelp(true)}>
               説明
             </Button>
-            <Button type="primary" icon={<ReloadOutlined />}>
-              刷新
+            <Button
+              type="primary"
+              icon={<ReloadOutlined />}
+              onClick={重新計算}
+              loading={計算中}
+              disabled={!處理後碼表}
+            >
+              重新計算
             </Button>
-            <Button icon={<DownloadOutlined />}>導出</Button>
           </Space>
         }
       >
-        <TabsContainer>
-          <Tabs
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            items={[
-              { key: 'full', label: '全碼' },
-              { key: 'short', label: '出簡' },
-            ]}
+        {錯誤信息 && (
+          <Alert
+            message={錯誤信息}
+            type="error"
+            closable
+            onClose={() => 設置錯誤信息(null)}
+            style={{ marginBottom: 16 }}
           />
+        )}
 
-          <ControlsWrapper>
-            <Checkbox
-              checked={simulatePunctuation}
-              onChange={e => setSimulatePunctuation(e.target.checked)}
-            >
-              模擬標點使用頻率
-            </Checkbox>
-          </ControlsWrapper>
-        </TabsContainer>
+        {計算中 && (
+          <div style={{ textAlign: 'center', padding: '48px 0' }}>
+            <Spin size="large" />
+            <p style={{ marginTop: 16 }}>正在計算鍵位熱力...</p>
+          </div>
+        )}
 
-        <KeyboardWrapper ref={keyboardWrapperRef}>
-          <KeyboardLayout scale={keyboardScale}>
-            <KeyboardRow>{numberRowKeys.map(renderKey)}</KeyboardRow>
-            <KeyboardRow>{firstRowKeys.map(renderKey)}</KeyboardRow>
-            <KeyboardRow>{secondRowKeys.map(renderKey)}</KeyboardRow>
-            <KeyboardRow>{thirdRowKeys.map(renderKey)}</KeyboardRow>
-            <KeyboardRow>{spaceRowKeys.map(renderKey)}</KeyboardRow>
-          </KeyboardLayout>
-        </KeyboardWrapper>
+        {!計算中 && !分析結果 && !錯誤信息 && (
+          <Alert
+            message="請點擊「重新計算」來查看鍵位熱力分析結果"
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
 
-        <StatsContainer>
-          <StatsTitle>統計分析</StatsTitle>
+        {!計算中 && 分析結果 && (
+          <>
+            <TabsContainer>
+              <Tabs
+                activeKey={activeTab}
+                onChange={setActiveTab}
+                items={[
+                  { key: 'full', label: '全碼' },
+                  { key: 'short', label: '出簡' },
+                ]}
+              />
 
-          <StatsSection>
-            <SectionTitle>左右手平衡</SectionTitle>
-            <StatsGrid>
-              <StatItem>
-                <StatLabel>左手</StatLabel>
-                <StatValue>{stats.handBalance.left.toFixed(1)}%</StatValue>
-              </StatItem>
-              <StatItem>
-                <StatLabel>右手</StatLabel>
-                <StatValue>{stats.handBalance.right.toFixed(1)}%</StatValue>
-              </StatItem>
-            </StatsGrid>
-          </StatsSection>
+              <ControlsWrapper>
+                <Checkbox
+                  checked={simulatePunctuation}
+                  onChange={e => setSimulatePunctuation(e.target.checked)}
+                >
+                  模擬標點使用頻率
+                </Checkbox>
+              </ControlsWrapper>
+            </TabsContainer>
 
-          <StatsSection>
-            <SectionTitle>按排分布</SectionTitle>
-            <StatsGrid>
-              {Array.from(stats.rowDist.entries()).map(([row, count]) => {
-                const total = Array.from(stats.rowDist.values()).reduce((sum, val) => sum + val, 0)
-                return (
-                  <StatItem key={row}>
-                    <StatLabel>{row}</StatLabel>
-                    <StatValue>{total > 0 ? ((count / total) * 100).toFixed(1) : 0}%</StatValue>
+            <KeyboardWrapper ref={keyboardWrapperRef}>
+              <KeyboardLayout scale={keyboardScale}>
+                <KeyboardRow>{numberRowKeys.map(renderKey)}</KeyboardRow>
+                <KeyboardRow>{firstRowKeys.map(renderKey)}</KeyboardRow>
+                <KeyboardRow>{secondRowKeys.map(renderKey)}</KeyboardRow>
+                <KeyboardRow>{thirdRowKeys.map(renderKey)}</KeyboardRow>
+                <KeyboardRow>{spaceRowKeys.map(renderKey)}</KeyboardRow>
+              </KeyboardLayout>
+            </KeyboardWrapper>
+
+            <StatsContainer>
+              <StatsTitle>統計分析</StatsTitle>
+
+              <StatsSection>
+                <SectionTitle>左右手平衡</SectionTitle>
+                <StatsGrid>
+                  <StatItem>
+                    <StatLabel>左手</StatLabel>
+                    <StatValue>{stats.handBalance.left.toFixed(1)}%</StatValue>
                   </StatItem>
-                )
-              })}
-            </StatsGrid>
-          </StatsSection>
-
-          <StatsSection>
-            <SectionTitle>手指負擔</SectionTitle>
-            <StatsGrid>
-              {[
-                '左小指',
-                '左无名指',
-                '左中指',
-                '左食指',
-                '双拇指',
-                '右食指',
-                '右中指',
-                '右无名指',
-                '右小指',
-              ].map(finger => {
-                const load = stats.fingerLoad.get(finger) || 0
-                const total = Array.from(stats.fingerLoad.values()).reduce(
-                  (sum, val) => sum + val,
-                  0
-                )
-                return (
-                  <StatItem key={finger}>
-                    <StatLabel>{finger}</StatLabel>
-                    <StatValue>{total > 0 ? ((load / total) * 100).toFixed(1) : 0}%</StatValue>
+                  <StatItem>
+                    <StatLabel>右手</StatLabel>
+                    <StatValue>{stats.handBalance.right.toFixed(1)}%</StatValue>
                   </StatItem>
-                )
-              })}
-            </StatsGrid>
-          </StatsSection>
-        </StatsContainer>
+                </StatsGrid>
+              </StatsSection>
+
+              <StatsSection>
+                <SectionTitle>按排分布</SectionTitle>
+                <StatsGrid>
+                  {Array.from(stats.rowDist.entries()).map(([row, pct]) => {
+                    return (
+                      <StatItem key={row}>
+                        <StatLabel>{row}</StatLabel>
+                        <StatValue>{pct.toFixed(1)}%</StatValue>
+                      </StatItem>
+                    )
+                  })}
+                </StatsGrid>
+              </StatsSection>
+
+              <StatsSection>
+                <SectionTitle>手指負擔</SectionTitle>
+                <StatsGrid>
+                  {[
+                    '左小指',
+                    '左无名指',
+                    '左中指',
+                    '左食指',
+                    '双拇指',
+                    '右食指',
+                    '右中指',
+                    '右无名指',
+                    '右小指',
+                  ].map(finger => {
+                    const load = stats.fingerLoad.get(finger) || 0
+                    return (
+                      <StatItem key={finger}>
+                        <StatLabel>{finger}</StatLabel>
+                        <StatValue>{load.toFixed(1)}%</StatValue>
+                      </StatItem>
+                    )
+                  })}
+                </StatsGrid>
+              </StatsSection>
+            </StatsContainer>
+          </>
+        )}
       </Card>
 
       <Modal
