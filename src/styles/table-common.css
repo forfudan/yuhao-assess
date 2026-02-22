@@ -1,0 +1,28 @@
+/* 全局表格樣式 */
+
+/* 注意：表格的 padding、line-height、背景色等主要样式现在通过 ConfigProvider 控制 */
+/* 此文件只保留特殊的辅助样式 */
+
+/* 統一字符顯示（用於碼表等需要等寬字體的場景） */
+/* 使用動態 CSS 變量，與表格字體大小保持一致 */
+.ant-table .monospace-cell {
+  font-family: var(--font-mono);
+  font-size: var(--table-font-size, 13px);
+}
+
+/* 深色模式下的表格樣式 */
+[data-theme='dark'] .ant-table-thead > tr > th {
+  background-color: var(--color-bg-tertiary);
+}
+
+/* 表格分頁器樣式統一 */
+.ant-pagination {
+  font-size: var(--font-size-sm);
+}
+
+/* 響應式：移動端表格字體略小 */
+@media (max-width: 768px) {
+  .ant-table {
+    font-size: var(--font-size-sm);
+  }
+}

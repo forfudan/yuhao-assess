@@ -28,6 +28,8 @@ dist-ssr
 .env.local
 .env.development.local
 .env.test.local
+
+# Generated data files
 .env.production.local
 
 # TypeScript
@@ -67,3 +69,7 @@ dist
 tmp/
 temp/
 local/
+
+# Data files (loaded from yuhao-assess-data repo)
+public/data/
+public/schemes/

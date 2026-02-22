@@ -1,0 +1,18 @@
+# Cloudflare Pages Configuration
+name = "yuhao-assess"
+compatibility_date = "2024-01-01"
+
+[build]
+command = "pnpm run build"
+cwd = "."
+watch_dir = "src"
+
+[build.upload]
+format = "service-worker"
+
+# Pages specific settings
+pages_build_output_dir = "dist"
+
+# Disable Functions if not needed
+[env.production]
+workers_dev = false

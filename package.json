@@ -4,28 +4,63 @@
   "description": "宇浩測評網 - 輸入法性能測評工具",
   "type": "module",
   "scripts": {
+    "fetch": "node scripts/fetch-data.js",
+    "fetchlocal": "node scripts/fetch-local.js",
     "dev": "vite",
-    "build": "vue-tsc && vite build",
+    "build": "node scripts/fetch-data.js && tsc && vite build",
+    "buildcf": "node scripts/build-cf.js",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
+    "lint": "eslint . --ext .ts,.tsx --fix --ignore-path .gitignore",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md,css}\"",
+    "tc": "tsx src/utils/normalize-traditional-chars.ts \"src/**/*.{ts,tsx}\" \"docs/**/*.md\"",
+    "prepare": "husky init"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "tsx src/utils/normalize-traditional-chars.ts",
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.md": [
+      "tsx src/utils/normalize-traditional-chars.ts",
+      "markdownlint-cli2 --fix",
+      "prettier --write"
+    ],
+    "*.{json,css}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
-    "@vueuse/core": "^10.9.0",
+    "@ant-design/icons": "^6.1.0",
+    "antd": "^6.2.3",
     "html2canvas": "^1.4.1",
+    "jotai": "^2.17.0",
     "jspdf": "^3.0.2",
-    "vue": "^3.4.0"
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.0",
+    "styled-components": "^6.3.8"
   },
   "devDependencies": {
-    "@types/node": "^20.12.0",
-    "@typescript-eslint/eslint-plugin": "^7.5.0",
-    "@typescript-eslint/parser": "^7.5.0",
-    "@vitejs/plugin-vue": "^5.0.4",
-    "@vue/eslint-config-typescript": "^13.0.0",
-    "@vue/tsconfig": "^0.5.1",
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^20.19.11",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vitejs/plugin-react": "^5.1.3",
     "eslint": "^8.57.0",
-    "eslint-plugin-vue": "^9.23.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "fast-glob": "^3.3.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "markdownlint-cli2": "^0.20.0",
+    "markdownlint-cli2-formatter-pretty": "^0.0.9",
+    "prettier": "^3.8.1",
+    "tsx": "^4.21.0",
     "typescript": "~5.4.0",
-    "vite": "^5.2.0",
-    "vue-tsc": "^2.0.6"
+    "vite": "^5.2.0"
   }
 }

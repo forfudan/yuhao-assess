@@ -1,0 +1,136 @@
+{
+  "schemes": [
+    {
+      "key": "yuhao-ling",
+      "name": "靈明",
+      "description": "宇浩系列",
+      "enabled": true
+    },
+    {
+      "key": "yuhao-ling5",
+      "name": "靈明五碼",
+      "description": "宇浩系列",
+      "enabled": true
+    },
+    {
+      "key": "yuhao-star",
+      "name": "星陳",
+      "description": "宇浩系列",
+      "enabled": true
+    },
+    {
+      "key": "yuhao-joy",
+      "name": "卿雲",
+      "description": "宇浩系列",
+      "enabled": true
+    },
+    {
+      "key": "yuhao-ming",
+      "name": "日月",
+      "description": "宇浩系列",
+      "enabled": true
+    },
+    {
+      "key": "yuhao-light",
+      "name": "光華",
+      "description": "宇浩系列",
+      "enabled": true
+    },
+    {
+      "key": "cangjie-5",
+      "name": "倉頡五代",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "cangjie-6",
+      "name": "蒼頡檢字法",
+      "description": "倉頡六代",
+      "enabled": true
+    },
+    {
+      "key": "wubi-86",
+      "name": "五筆86",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "wubi-98",
+      "name": "五筆98",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "wubi-06",
+      "name": "五筆06",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "zhengma",
+      "name": "鄭碼",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "xuma",
+      "name": "徐碼",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "zhangma",
+      "name": "張碼",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "zhenma",
+      "name": "真碼",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "tiger",
+      "name": "虎碼",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "sapphire-3",
+      "name": "藍寶石第三代",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "sky",
+      "name": "天碼",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "ziyuan",
+      "name": "字源",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "wubi-866",
+      "name": "八六六五筆",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "snow-qingyun",
+      "name": "冰雪清韻",
+      "description": "",
+      "enabled": true
+    },
+    {
+      "key": "zhedou",
+      "name": "哲豆音形",
+      "description": "",
+      "enabled": true
+    }
+  ]
+}
