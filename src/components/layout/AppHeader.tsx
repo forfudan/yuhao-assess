@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Button, Space, Upload, message } from 'antd'
+import { Button, Space, Upload, App } from 'antd'
 import {
   DownloadOutlined,
   UploadOutlined,
@@ -41,6 +41,7 @@ const PageTitle = styled.h1`
 export function AppHeader() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { message } = App.useApp()
   const [當前方案, 設置當前方案] = useAtom(當前方案原子狀態)
   const 設置靜態重碼分析結果 = useSetAtom(靜態重碼分析原子狀態)
   const 設置動態選重分析結果 = useSetAtom(動態選重分析原子狀態)

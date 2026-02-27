@@ -21,6 +21,19 @@ import { 漢字集名稱型别, 累積漢字集名稱型别 } from '@/services/c
 
 const { Paragraph } = Typography
 
+// 覆蓋率閾值
+const 靜態重碼分析字集覆蓋率閾值 = 0.99 // 低於此覆蓋率的字集將被標記為「缺字」
+const 動態重碼分析字集覆蓋率閾值 = 0.975 // 低於此覆蓋率的字集將被標記為「缺字」
+
+// 動態選重字頻來源對應的字集（用於覆蓋率判定）
+const 動態選重字頻對應字集: Record<string, 累積漢字集名稱型别> = {
+  知乎簡體: '通用規範',
+  北語簡體: '通用規範',
+  臺標繁體: '常用國字',
+  古籍繁體: '常用國字',
+  繁簡聯合: 'CJK基本',
+}
+
 // 對比方案數據介面
 interface 對比方案數據介面 {
   唯一鍵: string // 用於 React key，格式：方案名-current 或 方案名-builtin
@@ -223,15 +236,17 @@ const ComparisonPage: React.FC = () => {
         sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
           const aData = a.靜態重碼分析?.[dataKey]
           const bData = b.靜態重碼分析?.[dataKey]
-          if (!aData || aData.字集覆蓋率 < 0.99) return 1
-          if (!bData || bData.字集覆蓋率 < 0.99) return -1
+          if (!aData || aData.字集覆蓋率 < 靜態重碼分析字集覆蓋率閾值) return 1
+          if (!bData || bData.字集覆蓋率 < 靜態重碼分析字集覆蓋率閾值) return -1
           return (aData[碼類型] ?? 0) - (bData[碼類型] ?? 0)
         },
         render: (_: any, record: 對比方案數據介面) => {
           const data = record.靜態重碼分析?.[dataKey]
           if (!data) return '-'
           const 覆蓋率 = data.字集覆蓋率
-          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : (data[碼類型] ?? '-')
+          return 覆蓋率 !== undefined && 覆蓋率 < 靜態重碼分析字集覆蓋率閾值
+            ? '缺字'
+            : (data[碼類型] ?? '-')
         },
       })),
     ]
@@ -265,15 +280,19 @@ const ComparisonPage: React.FC = () => {
           const bData = b.候選個數分析?.[dataKey]
           const aCoverage = a.靜態重碼分析?.[dataKey].字集覆蓋率
           const bCoverage = b.靜態重碼分析?.[dataKey].字集覆蓋率
-          if (!aData || (aCoverage !== undefined && aCoverage < 0.99)) return 1
-          if (!bData || (bCoverage !== undefined && bCoverage < 0.99)) return -1
+          if (!aData || (aCoverage !== undefined && aCoverage < 靜態重碼分析字集覆蓋率閾值))
+            return 1
+          if (!bData || (bCoverage !== undefined && bCoverage < 靜態重碼分析字集覆蓋率閾值))
+            return -1
           return (aData.最大候選個數 ?? 0) - (bData.最大候選個數 ?? 0)
         },
         render: (_: any, record: 對比方案數據介面) => {
           const data = record.候選個數分析?.[dataKey]
           if (!data) return '-'
           const 覆蓋率 = record.靜態重碼分析?.[dataKey].字集覆蓋率
-          return 覆蓋率 !== undefined && 覆蓋率 < 0.99 ? '缺字' : (data.最大候選個數 ?? '-')
+          return 覆蓋率 !== undefined && 覆蓋率 < 靜態重碼分析字集覆蓋率閾值
+            ? '缺字'
+            : (data.最大候選個數 ?? '-')
         },
       })),
     ]
@@ -348,6 +367,13 @@ const ComparisonPage: React.FC = () => {
         title,
         key,
         sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+          const 對應字集 = 動態選重字頻對應字集[title]
+          if (對應字集) {
+            const aCov = a.靜態重碼分析?.[對應字集]?.字集覆蓋率
+            const bCov = b.靜態重碼分析?.[對應字集]?.字集覆蓋率
+            if (aCov !== undefined && aCov < 動態重碼分析字集覆蓋率閾值) return 1
+            if (bCov !== undefined && bCov < 動態重碼分析字集覆蓋率閾值) return -1
+          }
           const a值 = a.動態選重分析?.[dataKey]?.[碼類型]
           const b值 = b.動態選重分析?.[dataKey]?.[碼類型]
           if (a值 === undefined) return 1
@@ -355,6 +381,11 @@ const ComparisonPage: React.FC = () => {
           return a值 - b值
         },
         render: (_: any, record: 對比方案數據介面) => {
+          const 對應字集 = 動態選重字頻對應字集[title]
+          if (對應字集) {
+            const 覆蓋率 = record.靜態重碼分析?.[對應字集]?.字集覆蓋率
+            if (覆蓋率 !== undefined && 覆蓋率 < 動態重碼分析字集覆蓋率閾值) return '缺字'
+          }
           const 值 = record.動態選重分析?.[dataKey]?.[碼類型]
           return 值 !== undefined ? `${(值 * 10000).toFixed(2)}‱` : '-'
         },
@@ -386,6 +417,13 @@ const ComparisonPage: React.FC = () => {
         title,
         key,
         sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+          const 對應字集 = 動態選重字頻對應字集[title]
+          if (對應字集) {
+            const aCov = a.靜態重碼分析?.[對應字集]?.字集覆蓋率
+            const bCov = b.靜態重碼分析?.[對應字集]?.字集覆蓋率
+            if (aCov !== undefined && aCov < 動態重碼分析字集覆蓋率閾值) return 1
+            if (bCov !== undefined && bCov < 動態重碼分析字集覆蓋率閾值) return -1
+          }
           const a值 = a.動態選重分析?.[dataKey]?.[碼類型]
           const b值 = b.動態選重分析?.[dataKey]?.[碼類型]
           if (a值 === undefined) return 1
@@ -393,6 +431,11 @@ const ComparisonPage: React.FC = () => {
           return a值 - b值
         },
         render: (_: any, record: 對比方案數據介面) => {
+          const 對應字集 = 動態選重字頻對應字集[title]
+          if (對應字集) {
+            const 覆蓋率 = record.靜態重碼分析?.[對應字集]?.字集覆蓋率
+            if (覆蓋率 !== undefined && 覆蓋率 < 動態重碼分析字集覆蓋率閾值) return '缺字'
+          }
           const 值 = record.動態選重分析?.[dataKey]?.[碼類型]
           return 值 !== undefined ? `${(值 * 10000).toFixed(2)}‱` : '-'
         },

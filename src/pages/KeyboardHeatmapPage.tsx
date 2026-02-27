@@ -61,10 +61,10 @@ const KeyboardRow = styled.div`
 `
 
 const KeyButton = styled.button<{
-  frequency: number
-  maxFreq: number
-  hidden?: boolean
-  mode?: string
+  $frequency: number
+  $maxFreq: number
+  $hidden?: boolean
+  $mode?: string
 }>`
   position: relative;
   display: flex;
@@ -75,7 +75,7 @@ const KeyButton = styled.button<{
   border: 1px solid #d1d5db;
   border-radius: 6px;
   background-color: #ffffff;
-  cursor: ${props => (props.hidden ? 'default' : 'pointer')};
+  cursor: ${props => (props.$hidden ? 'default' : 'pointer')};
   transition: all 0.2s ease;
   user-select: none;
   overflow: hidden;
@@ -85,13 +85,13 @@ const KeyButton = styled.button<{
   aspect-ratio: 1;
   min-width: 40px;
   min-height: 40px;
-  opacity: ${props => (props.hidden ? 0 : 1)};
-  pointer-events: ${props => (props.hidden ? 'none' : 'auto')};
+  opacity: ${props => (props.$hidden ? 0 : 1)};
+  pointer-events: ${props => (props.$hidden ? 'none' : 'auto')};
 
   &:hover {
-    border-color: ${props => (props.hidden ? 'transparent' : '#3b82f6')};
-    transform: ${props => (props.hidden ? 'none' : 'translateY(-2px)')};
-    box-shadow: ${props => (props.hidden ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)')};
+    border-color: ${props => (props.$hidden ? 'transparent' : '#3b82f6')};
+    transform: ${props => (props.$hidden ? 'none' : 'translateY(-2px)')};
+    box-shadow: ${props => (props.$hidden ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)')};
     z-index: 10;
   }
 
@@ -115,11 +115,11 @@ const KeyButton = styled.button<{
     z-index: 1;
     border-radius: 4px;
     background: ${props => {
-      if (props.hidden) return 'transparent'
-      const frequencyPercent = props.frequency * 100
+      if (props.$hidden) return 'transparent'
+      const frequencyPercent = props.$frequency * 100
       const intensity = Math.min(Math.sqrt(frequencyPercent / 10), 1.5)
 
-      if (props.mode === 'short') {
+      if (props.$mode === 'short') {
         // 簡碼模式：暖橙色漸變
         return `linear-gradient(135deg, 
           rgba(249, 115, 22, ${intensity * 0.9 + 0.1}), 
@@ -148,12 +148,12 @@ const KeyLabel = styled.div`
   transition: color 0.3s ease;
 `
 
-const KeyFreq = styled.div<{ intensity: number }>`
+const KeyFreq = styled.div<{ $intensity: number }>`
   position: relative;
   z-index: 2;
   font-size: calc(0.2rem + 1vw);
   font-weight: 500;
-  color: ${props => (props.intensity > 0.03 ? '#ffffff' : '#6b7280')};
+  color: ${props => (props.$intensity > 0.03 ? '#ffffff' : '#6b7280')};
   font-family: monospace;
   line-height: 1;
   margin-top: 2px;
@@ -631,7 +631,7 @@ export default function KeyboardHeatmapPage() {
 
   const renderKey = (keyInfo: KeyInfo) => {
     if (keyInfo.hidden) {
-      return <KeyButton key={keyInfo.key} frequency={0} maxFreq={1} hidden />
+      return <KeyButton key={keyInfo.key} $frequency={0} $maxFreq={1} $hidden />
     }
 
     const data = getKeyData(keyInfo.key)
@@ -643,14 +643,16 @@ export default function KeyboardHeatmapPage() {
       <KeyButton
         key={keyInfo.key}
         className={widthClass}
-        frequency={data.frequency}
-        maxFreq={1}
-        mode={activeTab}
+        $frequency={data.frequency}
+        $maxFreq={1}
+        $mode={activeTab}
         title={`${keyInfo.label || keyInfo.key.toUpperCase()}\n${(data.frequency * 100).toFixed(2)}%`}
       >
         <KeyLabel>{keyInfo.label || keyInfo.key.toUpperCase()}</KeyLabel>
         {data.count > 0 && (
-          <KeyFreq intensity={frequencyPercent / 100}>{(data.frequency * 100).toFixed(1)}%</KeyFreq>
+          <KeyFreq $intensity={frequencyPercent / 100}>
+            {(data.frequency * 100).toFixed(1)}%
+          </KeyFreq>
         )}
       </KeyButton>
     )
@@ -662,7 +664,7 @@ export default function KeyboardHeatmapPage() {
       <PageContainer>
         <Card>
           <Alert
-            message="等待數據"
+            title="等待數據"
             description="請先在「碼表解析」頁面上傳碼表，或導入包含鍵位熱力數據的方案 JSON"
             type="info"
             showIcon
@@ -704,7 +706,7 @@ export default function KeyboardHeatmapPage() {
       >
         {錯誤信息 && (
           <Alert
-            message={錯誤信息}
+            title={錯誤信息}
             type="error"
             closable
             onClose={() => 設置錯誤信息(null)}
@@ -721,7 +723,7 @@ export default function KeyboardHeatmapPage() {
 
         {!計算中 && !分析結果 && !錯誤信息 && (
           <Alert
-            message="請點擊「重新計算」來查看鍵位熱力分析結果"
+            title="請點擊「重新計算」來查看鍵位熱力分析結果"
             type="info"
             showIcon
             style={{ marginBottom: 16 }}

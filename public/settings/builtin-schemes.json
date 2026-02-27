@@ -91,6 +91,12 @@
       "enabled": true
     },
     {
+      "key": "wubi-986",
+      "name": "五筆986",
+      "description": "",
+      "enabled": true
+    },
+    {
       "key": "tiger",
       "name": "虎碼",
       "description": "",
