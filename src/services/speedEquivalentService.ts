@@ -91,7 +91,7 @@ export interface EquivDistributionItem {
  * @param equivTable 當量表
  * @returns 按當量值降序排列的分檔詳情
  */
-export function calculateEquivDistribution(
+export function 計算速度當量分佈(
   pairFrequencies: Record<string, number>,
   equivTable: Record<string, number>
 ): EquivDistributionItem[] {

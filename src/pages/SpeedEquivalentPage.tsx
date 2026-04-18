@@ -13,7 +13,7 @@ import {
   生成一級簡碼加選重鍵表,
   生成二級簡碼加選重鍵表,
   計算編碼對頻率,
-  calculateEquivDistribution,
+  計算速度當量分佈,
 } from '../services/speedEquivalentService'
 import type { EquivDistributionItem } from '../services/speedEquivalentService'
 import { 當量表服務實例 } from '../services/equivTableService'
@@ -37,10 +37,10 @@ const SpeedEquivalentPage: React.FC = () => {
   const [顯示詳情, 設置顯示詳情] = useState(false)
   const [詳情計算中, 設置詳情計算中] = useState(false)
   const [搜索关键词, 設置搜索关键词] = useState('')
-  const [顯示當量分布, 設置顯示當量分布] = useState(false)
-  const [當量分布數據, 設置當量分布數據] = useState<EquivDistributionItem[]>([])
-  const [當量分布標題, 設置當量分布標題] = useState('')
-  const [分布計算中, 設置分布計算中] = useState(false)
+  const [顯示當量分佈, 設置顯示當量分佈] = useState(false)
+  const [當量分佈數據, 設置當量分佈數據] = useState<EquivDistributionItem[]>([])
+  const [當量分佈標題, 設置當量分佈標題] = useState('')
+  const [分佈計算中, 設置分佈計算中] = useState(false)
   const 已初始化計算 = useRef(false)
 
   // 類型斷言：碼表數據實際上是 處理後的碼表結果
@@ -242,13 +242,13 @@ const SpeedEquivalentPage: React.FC = () => {
   }
 
   /**
-   * 顯示當量分布（點擊當量數值）
+   * 顯示當量分佈（點擊當量數值）
    */
-  const 顯示當量分布詳情 = async (字頻類型: string, 碼類型: string) => {
+  const 顯示當量分佈詳情 = async (字頻類型: string, 碼類型: string) => {
     if (!處理後碼表 || !字頻表緩存) return
 
-    設置分布計算中(true)
-    設置顯示當量分布(true)
+    設置分佈計算中(true)
+    設置顯示當量分佈(true)
 
     const 字頻名稱映射: Record<string, string> = {
       知乎簡體字頻: '知乎簡體字頻',
@@ -263,7 +263,7 @@ const SpeedEquivalentPage: React.FC = () => {
       二級簡碼: '二簡',
       簡碼: '全簡',
     }
-    設置當量分布標題(`${字頻名稱映射[字頻類型]} - ${碼類型名稱映射[碼類型]}當量分布`)
+    設置當量分佈標題(`${字頻名稱映射[字頻類型]} - ${碼類型名稱映射[碼類型]}當量分佈`)
 
     try {
       // 選擇碼表
@@ -293,14 +293,14 @@ const SpeedEquivalentPage: React.FC = () => {
       // 計算碼對頻率
       const 碼對頻率 = 計算編碼對頻率(使用碼表, 字頻)
 
-      // 計算當量分布
-      const 分布 = calculateEquivDistribution(碼對頻率, 當量表數據)
-      設置當量分布數據(分布)
+      // 計算當量分佈
+      const 分佈 = 計算速度當量分佈(碼對頻率, 當量表數據)
+      設置當量分佈數據(分佈)
     } catch (error) {
-      console.error('計算當量分布失敗:', error)
-      設置當量分布數據([])
+      console.error('計算當量分佈失敗:', error)
+      設置當量分佈數據([])
     } finally {
-      設置分布計算中(false)
+      設置分佈計算中(false)
     }
   }
 
@@ -544,7 +544,7 @@ const SpeedEquivalentPage: React.FC = () => {
         render: (value: number, record) => (
           <span
             style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() => 顯示當量分布詳情(record.key, '全碼')}
+            onClick={() => 顯示當量分佈詳情(record.key, '全碼')}
           >
             {value.toFixed(4)}
           </span>
@@ -559,7 +559,7 @@ const SpeedEquivalentPage: React.FC = () => {
         render: (value: number, record) => (
           <span
             style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() => 顯示當量分布詳情(record.key, '一級簡碼')}
+            onClick={() => 顯示當量分佈詳情(record.key, '一級簡碼')}
           >
             {value.toFixed(4)}
           </span>
@@ -574,7 +574,7 @@ const SpeedEquivalentPage: React.FC = () => {
         render: (value: number, record) => (
           <span
             style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() => 顯示當量分布詳情(record.key, '二級簡碼')}
+            onClick={() => 顯示當量分佈詳情(record.key, '二級簡碼')}
           >
             {value.toFixed(4)}
           </span>
@@ -589,7 +589,7 @@ const SpeedEquivalentPage: React.FC = () => {
         render: (value: number, record) => (
           <span
             style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() => 顯示當量分布詳情(record.key, '簡碼')}
+            onClick={() => 顯示當量分佈詳情(record.key, '簡碼')}
           >
             {value.toFixed(4)}
           </span>
@@ -723,24 +723,24 @@ const SpeedEquivalentPage: React.FC = () => {
         )}
       </Space>
 
-      {/* 當量分布 Modal */}
+      {/* 當量分佈 Modal */}
       <Modal
-        title={當量分布標題}
-        open={顯示當量分布}
-        onCancel={() => 設置顯示當量分布(false)}
+        title={當量分佈標題}
+        open={顯示當量分佈}
+        onCancel={() => 設置顯示當量分佈(false)}
         width={900}
         footer={[
-          <Button key="close" onClick={() => 設置顯示當量分布(false)}>
+          <Button key="close" onClick={() => 設置顯示當量分佈(false)}>
             關閉
           </Button>,
         ]}
       >
-        {分布計算中 ? (
+        {分佈計算中 ? (
           <div style={{ textAlign: 'center', padding: 48 }}>
             <Spin size="large" />
-            <p style={{ marginTop: 16 }}>正在計算當量分布...</p>
+            <p style={{ marginTop: 16 }}>正在計算當量分佈...</p>
           </div>
-        ) : 當量分布數據.length > 0 ? (
+        ) : 當量分佈數據.length > 0 ? (
           <Table
             columns={[
               {
@@ -789,7 +789,7 @@ const SpeedEquivalentPage: React.FC = () => {
                 render: (v: number) => (v * 100).toFixed(2) + '%',
               },
             ]}
-            dataSource={當量分布數據}
+            dataSource={當量分佈數據}
             rowKey="equivValue"
             pagination={false}
             bordered
