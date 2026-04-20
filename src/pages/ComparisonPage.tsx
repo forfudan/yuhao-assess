@@ -457,6 +457,7 @@ const ComparisonPage: React.FC = () => {
 
     // 配置：N值列表
     const N值配置 = [
+      { key: 'n0', title: '0簡碼', N值: 0 },
       { key: 'n25', title: '25簡碼', N值: 25 },
       { key: 'n50', title: '50簡碼', N值: 50 },
       { key: 'n100', title: '100簡碼', N值: 100 },
