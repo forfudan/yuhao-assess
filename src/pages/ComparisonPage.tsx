@@ -40,12 +40,38 @@ interface 對比方案數據介面 {
   方案名: string
   顯示名稱: string // 顯示用的名稱，當前方案會添加 "(當前方案)" 後綴
   是否當前方案: boolean
+  選重編碼化?: boolean // 是否啓用選重編碼化（影響重碼計算的可比性）
+  出簡不出全?: boolean // 是否「出簡不出全」（影響重碼計算的可比性）
   碼表哈希?: string // 用於去重判斷
   動態選重分析?: 動態選重分析結果介面 | null
   靜態重碼分析?: 靜態重碼分析結果介面 | null
   候選個數分析?: 最大候選個數分析結果 | null
   速度當量分析?: 速度當量分析結果介面 | null
   簡碼效率分析?: 簡碼效率分析結果介面 | null
+}
+
+// 判斷一個方案是否含有特殊參數（選重編碼化或出簡不出全）
+const 是否特殊方案 = (r: 對比方案數據介面): boolean => !!r.選重編碼化 || !!r.出簡不出全
+
+// 包裝排序函數：始終將特殊方案置於底部（升序時）
+const 包裝排序 = (基礎: (a: 對比方案數據介面, b: 對比方案數據介面) => number) => {
+  return (a: 對比方案數據介面, b: 對比方案數據介面): number => {
+    const aSpecial = 是否特殊方案(a)
+    const bSpecial = 是否特殊方案(b)
+    if (aSpecial && !bSpecial) return 1
+    if (!aSpecial && bSpecial) return -1
+    return 基礎(a, b)
+  }
+}
+
+// 在方案名後追加標記符號：
+// † = 出簡不出全；‡ = 選重編碼化
+const 渲染方案名 = (_: unknown, record: 對比方案數據介面) => {
+  const 標記: string[] = []
+  if (record.出簡不出全) 標記.push('†')
+  if (record.選重編碼化) 標記.push('‡')
+  if (標記.length === 0) return record.顯示名稱
+  return `${record.顯示名稱} ${標記.join('')}`
 }
 
 // 分析型别
@@ -101,6 +127,8 @@ const ComparisonPage: React.FC = () => {
         方案名,
         顯示名稱: `${方案名}（當前方案）`,
         是否當前方案: true,
+        選重編碼化: !!當前方案.方案參數.選重編碼化,
+        出簡不出全: !!當前方案.方案參數.出簡不出全,
         碼表哈希: 當前方案哈希,
         動態選重分析: 動態選重分析結果,
         靜態重碼分析: 靜態重碼分析結果,
@@ -130,6 +158,8 @@ const ComparisonPage: React.FC = () => {
           方案名,
           顯示名稱: 方案名,
           是否當前方案: false,
+          選重編碼化: !!方案.方案參數?.選重編碼化,
+          出簡不出全: !!方案.方案參數?.出簡不出全,
           碼表哈希: 方案哈希,
           動態選重分析: 測評結果?.動態選重分析 || null,
           靜態重碼分析: 測評結果?.靜態重碼分析 || null,
@@ -229,17 +259,18 @@ const ComparisonPage: React.FC = () => {
         dataIndex: '顯示名稱',
         key: '顯示名稱',
         fixed: 'left',
+        render: 渲染方案名,
       },
       ...字符集配置.map(({ key, title, dataKey }) => ({
         title,
         key,
-        sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+        sorter: 包裝排序((a: 對比方案數據介面, b: 對比方案數據介面) => {
           const aData = a.靜態重碼分析?.[dataKey]
           const bData = b.靜態重碼分析?.[dataKey]
           if (!aData || aData.字集覆蓋率 < 靜態重碼分析字集覆蓋率閾值) return 1
           if (!bData || bData.字集覆蓋率 < 靜態重碼分析字集覆蓋率閾值) return -1
           return (aData[碼類型] ?? 0) - (bData[碼類型] ?? 0)
-        },
+        }),
         render: (_: any, record: 對比方案數據介面) => {
           const data = record.靜態重碼分析?.[dataKey]
           if (!data) return '-'
@@ -271,11 +302,12 @@ const ComparisonPage: React.FC = () => {
         dataIndex: '顯示名稱',
         key: '顯示名稱',
         fixed: 'left',
+        render: 渲染方案名,
       },
       ...字符集配置.map(({ key, title, dataKey }) => ({
         title,
         key,
-        sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+        sorter: 包裝排序((a: 對比方案數據介面, b: 對比方案數據介面) => {
           const aData = a.候選個數分析?.[dataKey]
           const bData = b.候選個數分析?.[dataKey]
           const aCoverage = a.靜態重碼分析?.[dataKey].字集覆蓋率
@@ -285,7 +317,7 @@ const ComparisonPage: React.FC = () => {
           if (!bData || (bCoverage !== undefined && bCoverage < 靜態重碼分析字集覆蓋率閾值))
             return -1
           return (aData.最大候選個數 ?? 0) - (bData.最大候選個數 ?? 0)
-        },
+        }),
         render: (_: any, record: 對比方案數據介面) => {
           const data = record.候選個數分析?.[dataKey]
           if (!data) return '-'
@@ -324,17 +356,18 @@ const ComparisonPage: React.FC = () => {
         dataIndex: '顯示名稱',
         key: '顯示名稱',
         fixed: 'left',
+        render: 渲染方案名,
       },
       ...當量配置.map(({ key, title, suffix }) => ({
         title,
         key,
-        sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+        sorter: 包裝排序((a: 對比方案數據介面, b: 對比方案數據介面) => {
           const a值 = (a.速度當量分析 as any)?.[`${前綴}${suffix}`]
           const b值 = (b.速度當量分析 as any)?.[`${前綴}${suffix}`]
           if (a值 === undefined) return 1
           if (b值 === undefined) return -1
           return a值 - b值
-        },
+        }),
         render: (_: any, record: 對比方案數據介面) => {
           const 值 = (record.速度當量分析 as any)?.[`${前綴}${suffix}`]
           return 值 !== undefined ? 值.toFixed(3) : '-'
@@ -362,11 +395,12 @@ const ComparisonPage: React.FC = () => {
         dataIndex: '顯示名稱',
         key: '顯示名稱',
         fixed: 'left',
+        render: 渲染方案名,
       },
       ...字頻來源配置.map(({ key, title, dataKey }) => ({
         title,
         key,
-        sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+        sorter: 包裝排序((a: 對比方案數據介面, b: 對比方案數據介面) => {
           const 對應字集 = 動態選重字頻對應字集[title]
           if (對應字集) {
             const aCov = a.靜態重碼分析?.[對應字集]?.字集覆蓋率
@@ -379,7 +413,7 @@ const ComparisonPage: React.FC = () => {
           if (a值 === undefined) return 1
           if (b值 === undefined) return -1
           return a值 - b值
-        },
+        }),
         render: (_: any, record: 對比方案數據介面) => {
           const 對應字集 = 動態選重字頻對應字集[title]
           if (對應字集) {
@@ -412,11 +446,12 @@ const ComparisonPage: React.FC = () => {
         dataIndex: '顯示名稱',
         key: '顯示名稱',
         fixed: 'left',
+        render: 渲染方案名,
       },
       ...字頻來源配置.map(({ key, title, dataKey }) => ({
         title,
         key,
-        sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+        sorter: 包裝排序((a: 對比方案數據介面, b: 對比方案數據介面) => {
           const 對應字集 = 動態選重字頻對應字集[title]
           if (對應字集) {
             const aCov = a.靜態重碼分析?.[對應字集]?.字集覆蓋率
@@ -429,7 +464,7 @@ const ComparisonPage: React.FC = () => {
           if (a值 === undefined) return 1
           if (b值 === undefined) return -1
           return a值 - b值
-        },
+        }),
         render: (_: any, record: 對比方案數據介面) => {
           const 對應字集 = 動態選重字頻對應字集[title]
           if (對應字集) {
@@ -471,11 +506,12 @@ const ComparisonPage: React.FC = () => {
         dataIndex: '顯示名稱',
         key: '顯示名稱',
         fixed: 'left',
+        render: 渲染方案名,
       },
       ...N值配置.map(({ key, title, N值 }) => ({
         title,
         key,
-        sorter: (a: 對比方案數據介面, b: 對比方案數據介面) => {
+        sorter: 包裝排序((a: 對比方案數據介面, b: 對比方案數據介面) => {
           const aResult = (a.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
             (r: any) => r.最有效率的簡碼個數 === N值
           )
@@ -487,7 +523,7 @@ const ComparisonPage: React.FC = () => {
           if (a值 === undefined) return 1
           if (b值 === undefined) return -1
           return a值 - b值
-        },
+        }),
         render: (_: any, record: 對比方案數據介面) => {
           const result = (record.簡碼效率分析 as any)?.[字頻鍵]?.N值結果?.find(
             (r: any) => r.最有效率的簡碼個數 === N值
@@ -657,6 +693,11 @@ const ComparisonPage: React.FC = () => {
           description={
             <div>
               <p>如果某方案缺字超過當前字集1%，部分單元格不顯示數據。</p>
+              <p>
+                方案名旁邊的 <strong>†</strong> 標記表示該方案啓用了「出簡不出全」，
+                <strong>‡</strong> 標記表示該方案啓用了「選重編碼化」，
+                重碼計算方式與普通方案不可直接比較，排序時會被置於表格末尾。
+              </p>
             </div>
           }
           type="info"

@@ -36,6 +36,8 @@ export interface 方案元數據介面 {
 export interface 方案參數介面 {
   編碼終止指示符列表?: string[] // 編碼終止指示符（如 ['a','o','e','i','u','_']）
   最大碼長: number // 最大碼長（如 4 或 5）
+  選重編碼化?: boolean // 選重鍵是否計入編碼長度（默認 false）
+  出簡不出全?: boolean // 是否「出簡不出全」（默認 false）
   編碼規則?: {
     單字編碼規則?: string // 單字編碼規則描述
     詞語編碼規則?: string // 詞語編碼規則描述

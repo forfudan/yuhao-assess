@@ -489,6 +489,30 @@ function HomePage() {
                   onChange={值 => 更新方案參數('最大碼長', 值 as number)}
                 />
               </div>
+              <div>
+                <Text type="secondary">碼表選項</Text>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    height: '32px',
+                  }}
+                >
+                  <Checkbox
+                    checked={!!當前方案.方案參數.選重編碼化}
+                    onChange={e => 更新方案參數('選重編碼化', e.target.checked)}
+                  >
+                    選重編碼化
+                  </Checkbox>
+                  <Checkbox
+                    checked={!!當前方案.方案參數.出簡不出全}
+                    onChange={e => 更新方案參數('出簡不出全', e.target.checked)}
+                  >
+                    出簡不出全
+                  </Checkbox>
+                </div>
+              </div>
             </div>
           </div>
 

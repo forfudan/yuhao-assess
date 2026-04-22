@@ -137,6 +137,12 @@
       "name": "哲豆音形",
       "description": "",
       "enabled": true
+    },
+    {
+      "key": "hao-xi",
+      "name": "淅碼",
+      "description": "",
+      "enabled": true
     }
   ]
 }

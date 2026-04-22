@@ -153,6 +153,9 @@ export function 從JSON導入(json文本: string): 方案配置介面 {
   try {
     const 配置: 方案配置介面 = JSON.parse(json文本)
     驗證方案(配置)
+    // 對缺失的可選布爾字段補充默認值（false）
+    配置.方案參數.選重編碼化 = 配置.方案參數.選重編碼化 ?? false
+    配置.方案參數.出簡不出全 = 配置.方案參數.出簡不出全 ?? false
     return 配置
   } catch (error) {
     if (error instanceof SyntaxError) {
@@ -179,6 +182,8 @@ export function 創建空白方案(): 方案配置介面 {
     },
     方案參數: {
       最大碼長: 4,
+      選重編碼化: false,
+      出簡不出全: false,
     },
   }
 }
