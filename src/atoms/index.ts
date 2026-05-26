@@ -47,3 +47,12 @@ export type { 鍵位熱力分析結果介面 } from './keyboardHeatmap'
 
 // 當量表原子狀態
 export { 當量表原子狀態, 當量表加載中原子狀態, 當量表錯誤原子狀態 } from './equivTable'
+
+// 本地多方案管理原子狀態
+export {
+  本地方案列表原子狀態,
+  當前本地方案標識符原子狀態,
+  選中對比本地方案標識符列表原子狀態,
+  生成本地標識符,
+  生成克隆後綴,
+} from './localSchemes'
