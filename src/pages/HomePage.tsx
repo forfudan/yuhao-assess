@@ -278,7 +278,12 @@ function HomePage() {
           placeholder="選擇預設方案"
           loading={加載中}
           onChange={處理選擇方案}
-          value={當前方案?.元數據.標識符}
+          value={
+            // 本地方案（標識符以 local- 開頭）不干擾内置方案下拉框
+            當前方案 && !當前方案.元數據.標識符.startsWith('local-')
+              ? 當前方案.元數據.標識符
+              : undefined
+          }
         >
           {方案列表.map(方案 => (
             <Option key={方案.元數據.標識符} value={方案.元數據.標識符}>
