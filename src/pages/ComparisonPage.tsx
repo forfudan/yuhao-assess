@@ -11,13 +11,18 @@ import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 獲取内置方案列表, 加載方案, type 内置方案配置 } from '@/services/schemeService'
+import {
+  本地方案列表原子狀態,
+  當前本地方案標識符原子狀態,
+  選中對比本地方案標識符列表原子狀態,
+} from '@/atoms/localSchemes'
 import type { 動態選重分析結果介面 } from '@/atoms/dynamicDuplicate'
 import type { 靜態重碼分析結果介面 } from '@/atoms/staticDuplicate'
 import type { 最大候選個數分析結果 } from '@/atoms/maximumCandidates'
 import type { 速度當量分析結果介面 } from '@/atoms/speedEquivalent'
 import type { 簡碼效率分析結果介面 } from '@/atoms/shortCodeEfficiency'
 import type { 字頻來源型别, 全碼簡碼型别 } from '@/types'
-import { 漢字集名稱型别, 累積漢字集名稱型别 } from '@/services/charsetService'
+import { 累積漢字集名稱型别 } from '@/services/charsetService'
 
 const { Paragraph } = Typography
 
@@ -98,6 +103,23 @@ const ComparisonPage: React.FC = () => {
   const [顯示選擇彈窗, 設置顯示選擇彈窗] = useState(false)
   const [加載中, 設置加載中] = useState(false)
 
+  // 本地方案
+  const 本地方案列表 = useAtomValue(本地方案列表原子狀態)
+  const 當前本地方案標識符 = useAtomValue(當前本地方案標識符原子狀態)
+  const [選中本地方案標識符列表, 設置選中本地方案標識符列表] =
+    useAtom(選中對比本地方案標識符列表原子狀態)
+  const [臨時已選本地方案標識符列表, 設置臨時已選本地方案標識符列表] = useState<string[]>([])
+
+  // 本地方案列表變化時，自動將新增方案加入選中列表
+  useEffect(() => {
+    const 所有標識符 = 本地方案列表.map(s => s.元數據.標識符)
+    設置選中本地方案標識符列表(prev => {
+      const 新增 = 所有標識符.filter(id => !prev.includes(id))
+      const 保留 = prev.filter(id => 所有標識符.includes(id))
+      return [...保留, ...新增]
+    })
+  }, [本地方案列表])
+
   // 三層選擇狀態
   const [當前分析類型, 設置當前分析類型] = useState<分析型别>('靜態重碼')
   const [當前字頻來源, 設置當前字頻來源] = useState<字頻來源型别>('知乎簡體')
@@ -112,77 +134,100 @@ const ComparisonPage: React.FC = () => {
     加載列表()
   }, [])
 
-  // 加載對比方案數據
-  const 加載對比方案數據 = async () => {
-    const 方案列表: 對比方案數據介面[] = []
-    let 當前方案哈希: string | undefined = undefined
-
-    // 添加當前方案（如果存在且有分析數據）
-    if (當前方案 && (動態選重分析結果 || 靜態重碼分析結果)) {
-      當前方案哈希 = 當前方案.碼表元數據?.哈希值
-      const 方案名 = 當前方案.元數據.方案名
-
-      方案列表.push({
-        唯一鍵: `${方案名}-current`,
-        方案名,
-        顯示名稱: `${方案名}（當前方案）`,
-        是否當前方案: true,
-        選重編碼化: !!當前方案.方案參數.選重編碼化,
-        出簡不出全: !!當前方案.方案參數.出簡不出全,
-        碼表哈希: 當前方案哈希,
-        動態選重分析: 動態選重分析結果,
-        靜態重碼分析: 靜態重碼分析結果,
-        候選個數分析: 候選個數分析結果,
-        速度當量分析: 速度當量分析結果,
-        簡碼效率分析: 簡碼效率分析結果,
-      })
-    }
-
-    // 加載選中的内置方案數據
-    for (const key of 選中對比方案鍵名列表) {
-      try {
-        const 方案 = await 加載方案(key)
-
-        const 方案信息 = 内置方案列表.find(b => b.key === key)
-        const 測評結果 = 方案.測評結果
-        const 方案哈希 = 方案.碼表元數據?.哈希值
-
-        // 如果當前方案存在且哈希值相同，則跳過此内置方案
-        if (當前方案哈希 && 方案哈希 && 當前方案哈希 === 方案哈希) {
-          continue
-        }
-
-        const 方案名 = 方案信息?.name || 方案.元數據.方案名
-        const 新方案數據 = {
-          唯一鍵: `${方案名}-builtin-${key}`,
-          方案名,
-          顯示名稱: 方案名,
-          是否當前方案: false,
-          選重編碼化: !!方案.方案參數?.選重編碼化,
-          出簡不出全: !!方案.方案參數?.出簡不出全,
-          碼表哈希: 方案哈希,
-          動態選重分析: 測評結果?.動態選重分析 || null,
-          靜態重碼分析: 測評結果?.靜態重碼分析 || null,
-          候選個數分析: 測評結果?.候選個數分析 || null,
-          速度當量分析: 測評結果?.速度當量分析 || null,
-          簡碼效率分析: 測評結果?.簡碼效率分析 || null,
-        }
-
-        方案列表.push(新方案數據)
-      } catch (error) {
-        console.error(`❌ 加載方案 ${key} 失敗:`, error)
-      }
-    }
-
-    設置對比方案列表(方案列表)
+  // 刷新對比數據：用計數器觸發 useEffect 重新執行
+  const [刷新計數, 設置刷新計數] = useState(0)
+  const 刷新對比數據 = () => {
+    設置加載中(true)
+    設置刷新計數(c => c + 1)
+    setTimeout(() => 設置加載中(false), 500)
   }
 
-  // 初始化和刷新對比方案數據
+  // 加載對比方案數據（內聯於 useEffect 避免閉包問題）
   useEffect(() => {
-    if (内置方案列表.length > 0) {
-      加載對比方案數據()
+    if (内置方案列表.length === 0) return
+
+    const 執行加載 = async () => {
+      const 方案列表: 對比方案數據介面[] = []
+      let 當前方案哈希: string | undefined = undefined
+
+      // 添加當前方案（如果存在且有分析數據）
+      if (當前方案 && (動態選重分析結果 || 靜態重碼分析結果)) {
+        當前方案哈希 = 當前方案.碼表元數據?.哈希值
+        const 方案名 = 當前方案.元數據.方案名
+        方案列表.push({
+          唯一鍵: `${方案名}-current`,
+          方案名,
+          顯示名稱: `${方案名}（當前方案）`,
+          是否當前方案: true,
+          選重編碼化: !!當前方案.方案參數.選重編碼化,
+          出簡不出全: !!當前方案.方案參數.出簡不出全,
+          碼表哈希: 當前方案哈希,
+          動態選重分析: 動態選重分析結果,
+          靜態重碼分析: 靜態重碼分析結果,
+          候選個數分析: 候選個數分析結果,
+          速度當量分析: 速度當量分析結果,
+          簡碼效率分析: 簡碼效率分析結果,
+        })
+      }
+
+      // 添加選中的本地方案（排除當前激活的本地方案，它已以「當前方案」形式加入）
+      for (const 本地方案 of 本地方案列表) {
+        const 標識符 = 本地方案.元數據.標識符
+        if (!選中本地方案標識符列表.includes(標識符)) continue
+        if (標識符 === 當前本地方案標識符) continue
+        const 方案哈希 = 本地方案.碼表元數據?.哈希值
+        if (當前方案哈希 && 方案哈希 && 當前方案哈希 === 方案哈希) continue
+        const 方案名 = 本地方案.元數據.方案名
+        方案列表.push({
+          唯一鍵: `local-${標識符}`,
+          方案名,
+          顯示名稱: `${方案名}（本地）`,
+          是否當前方案: false,
+          選重編碼化: !!本地方案.方案參數.選重編碼化,
+          出簡不出全: !!本地方案.方案參數.出簡不出全,
+          碼表哈希: 方案哈希,
+          動態選重分析: 本地方案.測評結果?.動態選重分析 ?? null,
+          靜態重碼分析: 本地方案.測評結果?.靜態重碼分析 ?? null,
+          候選個數分析: 本地方案.測評結果?.候選個數分析 ?? null,
+          速度當量分析: 本地方案.測評結果?.速度當量分析 ?? null,
+          簡碼效率分析: 本地方案.測評結果?.簡碼效率分析 ?? null,
+        })
+      }
+
+      // 加載選中的内置方案數據
+      for (const key of 選中對比方案鍵名列表) {
+        try {
+          const 方案 = await 加載方案(key)
+          const 方案信息 = 内置方案列表.find(b => b.key === key)
+          const 測評結果 = 方案.測評結果
+          const 方案哈希 = 方案.碼表元數據?.哈希值
+          if (當前方案哈希 && 方案哈希 && 當前方案哈希 === 方案哈希) continue
+          const 方案名 = 方案信息?.name || 方案.元數據.方案名
+          方案列表.push({
+            唯一鍵: `${方案名}-builtin-${key}`,
+            方案名,
+            顯示名稱: 方案名,
+            是否當前方案: false,
+            選重編碼化: !!方案.方案參數?.選重編碼化,
+            出簡不出全: !!方案.方案參數?.出簡不出全,
+            碼表哈希: 方案哈希,
+            動態選重分析: 測評結果?.動態選重分析 || null,
+            靜態重碼分析: 測評結果?.靜態重碼分析 || null,
+            候選個數分析: 測評結果?.候選個數分析 || null,
+            速度當量分析: 測評結果?.速度當量分析 || null,
+            簡碼效率分析: 測評結果?.簡碼效率分析 || null,
+          })
+        } catch (error) {
+          console.error(`❌ 加載方案 ${key} 失敗:`, error)
+        }
+      }
+
+      設置對比方案列表(方案列表)
     }
+
+    執行加載()
   }, [
+    刷新計數,
     當前方案,
     動態選重分析結果,
     靜態重碼分析結果,
@@ -191,11 +236,15 @@ const ComparisonPage: React.FC = () => {
     簡碼效率分析結果,
     選中對比方案鍵名列表,
     内置方案列表,
+    本地方案列表,
+    選中本地方案標識符列表,
+    當前本地方案標識符,
   ])
 
   // 打開選擇彈窗時初始化臨時列表
   const 打開選擇彈窗 = () => {
     設置臨時已選方案鍵名列表(選中對比方案鍵名列表)
+    設置臨時已選本地方案標識符列表(選中本地方案標識符列表)
     設置顯示選擇彈窗(true)
   }
 
@@ -220,22 +269,9 @@ const ComparisonPage: React.FC = () => {
   // 確認選擇的方案
   const 確認選擇方案 = () => {
     設置選中對比方案鍵名列表(臨時已選方案鍵名列表)
+    設置選中本地方案標識符列表(臨時已選本地方案標識符列表)
     設置顯示選擇彈窗(false)
     message.success('已更新對比方案列表')
-  }
-
-  // 刷新對比數據
-  const 刷新對比數據 = async () => {
-    設置加載中(true)
-    try {
-      await 加載對比方案數據()
-      message.success('刷新成功')
-    } catch (error) {
-      console.error('❌ 刷新失敗:', error)
-      message.error('刷新失敗: ' + (error instanceof Error ? error.message : String(error)))
-    } finally {
-      設置加載中(false)
-    }
   }
 
   // 靜態重碼字數表格列定義（根據全碼/簡碼動態生成，顯示7個字符集）
@@ -714,36 +750,106 @@ const ComparisonPage: React.FC = () => {
         width={600}
       >
         <Space orientation="vertical" style={{ width: '100%' }}>
-          <Space>
-            <Checkbox
-              checked={臨時已選方案鍵名列表.length === 内置方案列表.length}
-              indeterminate={
-                臨時已選方案鍵名列表.length > 0 && 臨時已選方案鍵名列表.length < 内置方案列表.length
-              }
-              onChange={e => 處理全選(e.target.checked)}
-            >
-              全選
-            </Checkbox>
-            <span style={{ color: '#999' }}>
-              已選 {臨時已選方案鍵名列表.length} / {内置方案列表.length}
-            </span>
-          </Space>
-
-          <div style={{ maxHeight: 400, overflow: 'auto' }}>
-            <Space orientation="vertical" style={{ width: '100%' }}>
-              {内置方案列表.map(scheme => (
+          {/* 本地方案區塊（有本地方案時顯示） */}
+          {本地方案列表.length > 0 && (
+            <div>
+              <div style={{ fontWeight: 600, marginBottom: 8, color: '#1677ff' }}>本地方案</div>
+              <Space>
                 <Checkbox
-                  key={scheme.key}
-                  checked={臨時已選方案鍵名列表.includes(scheme.key)}
-                  onChange={e => 處理方案選擇(scheme.key, e.target.checked)}
+                  checked={臨時已選本地方案標識符列表.length === 本地方案列表.length}
+                  indeterminate={
+                    臨時已選本地方案標識符列表.length > 0 &&
+                    臨時已選本地方案標識符列表.length < 本地方案列表.length
+                  }
+                  onChange={e => {
+                    if (e.target.checked) {
+                      設置臨時已選本地方案標識符列表(本地方案列表.map(s => s.元數據.標識符))
+                    } else {
+                      設置臨時已選本地方案標識符列表([])
+                    }
+                  }}
                 >
-                  <div>
-                    <div style={{ fontWeight: 500 }}>{scheme.name}</div>
-                    <div style={{ fontSize: 12, color: '#999' }}>{scheme.description}</div>
-                  </div>
+                  全選
                 </Checkbox>
-              ))}
+                <span style={{ color: '#999' }}>
+                  已選 {臨時已選本地方案標識符列表.length} / {本地方案列表.length}
+                </span>
+              </Space>
+              <div style={{ maxHeight: 200, overflow: 'auto', marginTop: 8 }}>
+                <Space orientation="vertical" style={{ width: '100%' }}>
+                  {本地方案列表.map(方案 => {
+                    const 標識符 = 方案.元數據.標識符
+                    return (
+                      <Checkbox
+                        key={標識符}
+                        checked={臨時已選本地方案標識符列表.includes(標識符)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            設置臨時已選本地方案標識符列表([...臨時已選本地方案標識符列表, 標識符])
+                          } else {
+                            設置臨時已選本地方案標識符列表(
+                              臨時已選本地方案標識符列表.filter(id => id !== 標識符)
+                            )
+                          }
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 500 }}>
+                            {方案.元數據.方案名}
+                            {標識符 === 當前本地方案標識符 && (
+                              <span style={{ color: '#1677ff', marginLeft: 6, fontSize: 12 }}>
+                                （當前）
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: 12, color: '#999' }}>
+                            更新於 {new Date(方案.元數據.更新時間).toLocaleString('zh-CN')}
+                          </div>
+                        </div>
+                      </Checkbox>
+                    )
+                  })}
+                </Space>
+              </div>
+            </div>
+          )}
+
+          {/* 内置方案區塊 */}
+          <div>
+            {本地方案列表.length > 0 && (
+              <div style={{ fontWeight: 600, marginBottom: 8, marginTop: 8 }}>内置方案</div>
+            )}
+            <Space>
+              <Checkbox
+                checked={臨時已選方案鍵名列表.length === 内置方案列表.length}
+                indeterminate={
+                  臨時已選方案鍵名列表.length > 0 &&
+                  臨時已選方案鍵名列表.length < 内置方案列表.length
+                }
+                onChange={e => 處理全選(e.target.checked)}
+              >
+                全選
+              </Checkbox>
+              <span style={{ color: '#999' }}>
+                已選 {臨時已選方案鍵名列表.length} / {内置方案列表.length}
+              </span>
             </Space>
+            <div style={{ maxHeight: 400, overflow: 'auto', marginTop: 8 }}>
+              <Space orientation="vertical" style={{ width: '100%' }}>
+                {内置方案列表.map(scheme => (
+                  <Checkbox
+                    key={scheme.key}
+                    checked={臨時已選方案鍵名列表.includes(scheme.key)}
+                    onChange={e => 處理方案選擇(scheme.key, e.target.checked)}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 500 }}>{scheme.name}</div>
+                      <div style={{ fontSize: 12, color: '#999' }}>{scheme.description}</div>
+                    </div>
+                  </Checkbox>
+                ))}
+              </Space>
+            </div>
           </div>
         </Space>
       </Modal>
