@@ -343,7 +343,7 @@ const ProcessTablePage: React.FC = () => {
         {!選中的文件 && 編碼預覽數據.length === 0 && (
           <div>
             <Upload.Dragger
-              accept=".txt,.csv,.yaml,.yml"
+              accept=".txt,.csv,.tsv,.yaml,.yml"
               beforeUpload={處理文件變化}
               disabled={加載中 || !當前方案}
             >
@@ -351,7 +351,7 @@ const ProcessTablePage: React.FC = () => {
                 <InboxOutlined />
               </p>
               <p className="ant-upload-text">點擊上傳或拖拽文件到此處</p>
-              <p className="ant-upload-hint">支持 .txt、.csv、.yaml 和 .yml 格式</p>
+              <p className="ant-upload-hint">支持 .txt、.csv、.tsv、.yaml 和 .yml 格式</p>
             </Upload.Dragger>
           </div>
         )}
