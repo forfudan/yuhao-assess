@@ -8,7 +8,7 @@ import type { 方案配置介面 } from '../types/scheme'
 
 /**
  * 帶 debounce 的 localStorage storage
- * 讀取和刪除立即執行，寫入延遲 400ms，
+ * 讀取和刪除立即執行，寫入延遲 3000ms，
  * 避免用戶在主頁輸入框每次 onChange 都觸發 localStorage 寫入。
  */
 function createDebouncedStorage<T>(key: string, delay = 3000) {
