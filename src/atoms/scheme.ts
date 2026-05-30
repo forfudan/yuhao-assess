@@ -11,7 +11,7 @@ import type { 方案配置介面 } from '../types/scheme'
  * 讀取和刪除立即執行，寫入延遲 400ms，
  * 避免用戶在主頁輸入框每次 onChange 都觸發 localStorage 寫入。
  */
-function createDebouncedStorage<T>(key: string, delay = 400) {
+function createDebouncedStorage<T>(key: string, delay = 3000) {
   let timer: ReturnType<typeof setTimeout> | null = null
   return {
     getItem: (k: string, initialValue: T): T => {

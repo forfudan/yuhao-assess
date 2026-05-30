@@ -62,7 +62,7 @@ export function useLocalSchemeSyncMetrics() {
       clearTimeout(timerRef.current)
     }
 
-    // 300ms 後才真正寫入，合併重算期間的多次觸發
+    // 3000ms 後才真正寫入，合併重算期間的多次觸發
     timerRef.current = setTimeout(() => {
       const 方案 = 當前方案Ref.current
       if (!方案) return
@@ -84,7 +84,7 @@ export function useLocalSchemeSyncMetrics() {
           }
         })
       )
-    }, 300)
+    }, 3000)
 
     return () => {
       if (timerRef.current !== null) {
