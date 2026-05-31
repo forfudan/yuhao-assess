@@ -54,7 +54,7 @@ export default [
   },
   // Node.js 環境配置（用於CLI工具）
   {
-    files: ['src/utils/normalize-traditional-chars.ts', 'scripts/**/*.js'],
+    files: ['src/utils/normalize-traditional-chars.ts', 'scripts/**/*.js', 'src/cli/**/*.ts'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -67,6 +67,7 @@ export default [
         __dirname: 'readonly',
         __filename: 'readonly',
         Buffer: 'readonly',
+        NodeJS: 'readonly',
       },
     },
     plugins: {
