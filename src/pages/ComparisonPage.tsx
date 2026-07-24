@@ -77,6 +77,7 @@ const 渲染方案名 = (_: unknown, record: 對比方案數據介面) => {
 // 分析型别
 type 分析型别 =
   | '靜態重碼'
+  | '靜態選重個數'
   | '頻率降序動態選重'
   | '原始碼表動態選重'
   | '候選個數'
@@ -278,6 +279,63 @@ const ComparisonPage: React.FC = () => {
           return 覆蓋率 !== undefined && 覆蓋率 < 靜態重碼分析字集覆蓋率閾值
             ? '缺字'
             : (data[碼類型] ?? '-')
+        },
+      })),
+    ]
+  }
+
+  // 靜態選重個數表格列定義（根據全碼/簡碼動態生成，顯示7個字符集）
+  // 選重個數 = 重碼字數 - 重碼組數，為運行時直接計算，不參與導入導出
+  const 獲取靜態選重個數列 = (全碼簡碼: 全碼簡碼型别): ColumnsType<對比方案數據介面> => {
+    const 重碼字數鍵 = 全碼簡碼 === '全碼' ? '全碼重碼字數' : '簡碼重碼字數'
+    const 重碼組數鍵 = 全碼簡碼 === '全碼' ? '全碼重碼組數' : '簡碼重碼組數'
+
+    // 配置：字符集列表
+    const 字符集配置: { key: string; title: string; dataKey: 累積漢字集名稱型别 }[] = [
+      { key: 'gb2312', title: 'GB2312', dataKey: 'GB2312' as const },
+      { key: 'tonggui', title: '通用規範', dataKey: '通用規範' as const },
+      { key: 'guozi', title: '常用國字', dataKey: '常用國字' as const },
+      { key: 'cjk-basic', title: 'CJK基本', dataKey: 'CJK基本' as const },
+      { key: 'cjk-b', title: 'CJK擴B', dataKey: '到CJK擴B' as const },
+      { key: 'cjk-h', title: 'CJK擴H', dataKey: '到CJK擴H' as const },
+      { key: 'cjk-j', title: 'CJK擴J', dataKey: '到CJK擴J' as const },
+    ]
+
+    // 計算某方案某字集的選重個數（數據缺失時返回 undefined）
+    const 計算選重個數 = (
+      record: 對比方案數據介面,
+      dataKey: 累積漢字集名稱型别
+    ): number | undefined => {
+      const data = record.靜態重碼分析?.[dataKey]
+      if (!data) return undefined
+      return (data[重碼字數鍵] ?? 0) - (data[重碼組數鍵] ?? 0)
+    }
+
+    return [
+      {
+        title: '方案名',
+        dataIndex: '顯示名稱',
+        key: '顯示名稱',
+        fixed: 'left',
+        render: 渲染方案名,
+      },
+      ...字符集配置.map(({ key, title, dataKey }) => ({
+        title,
+        key,
+        sorter: 包裝排序((a: 對比方案數據介面, b: 對比方案數據介面) => {
+          const aData = a.靜態重碼分析?.[dataKey]
+          const bData = b.靜態重碼分析?.[dataKey]
+          if (!aData || aData.字集覆蓋率 < 靜態重碼分析字集覆蓋率閾值) return 1
+          if (!bData || bData.字集覆蓋率 < 靜態重碼分析字集覆蓋率閾值) return -1
+          return (計算選重個數(a, dataKey) ?? 0) - (計算選重個數(b, dataKey) ?? 0)
+        }),
+        render: (_: any, record: 對比方案數據介面) => {
+          const data = record.靜態重碼分析?.[dataKey]
+          if (!data) return '-'
+          const 覆蓋率 = data.字集覆蓋率
+          if (覆蓋率 !== undefined && 覆蓋率 < 靜態重碼分析字集覆蓋率閾值) return '缺字'
+          const 選重個數 = 計算選重個數(record, dataKey)
+          return 選重個數 !== undefined ? 選重個數.toLocaleString() : '-'
         },
       })),
     ]
@@ -539,6 +597,8 @@ const ComparisonPage: React.FC = () => {
     switch (當前分析類型) {
       case '靜態重碼':
         return 獲取靜態重碼字數列(當前全碼簡碼)
+      case '靜態選重個數':
+        return 獲取靜態選重個數列(當前全碼簡碼)
       case '頻率降序動態選重':
         return 獲取動態重碼率列(當前全碼簡碼)
       case '原始碼表動態選重':
@@ -571,7 +631,13 @@ const ComparisonPage: React.FC = () => {
             type={當前分析類型 === '靜態重碼' ? 'primary' : 'default'}
             onClick={() => 設置當前分析類型('靜態重碼')}
           >
-            靜重
+            靜態重碼字數
+          </Button>
+          <Button
+            type={當前分析類型 === '靜態選重個數' ? 'primary' : 'default'}
+            onClick={() => 設置當前分析類型('靜態選重個數')}
+          >
+            靜態選重個數
           </Button>
           <Button
             type={當前分析類型 === '頻率降序動態選重' ? 'primary' : 'default'}
@@ -646,8 +712,9 @@ const ComparisonPage: React.FC = () => {
           </Space>
         )}
 
-        {/* 第三行：全碼/簡碼選擇（在靜重、動重和原始碼表動重時顯示） */}
+        {/* 第三行：全碼/簡碼選擇（在靜態重碼字數、靜態選重個數、動重和原始碼表動重時顯示） */}
         {(當前分析類型 === '靜態重碼' ||
+          當前分析類型 === '靜態選重個數' ||
           當前分析類型 === '頻率降序動態選重' ||
           當前分析類型 === '原始碼表動態選重') && (
           <Space wrap>
