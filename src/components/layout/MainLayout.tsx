@@ -3,6 +3,7 @@ import { Layout } from 'antd'
 import styled from 'styled-components'
 import { Sidebar } from './Sidebar'
 import { AppHeader } from './AppHeader'
+import { useLocalSchemeSyncMetrics } from '@/hooks/useLocalSchemeSyncMetrics'
 
 const { Header, Content, Footer } = Layout
 
@@ -42,6 +43,8 @@ const StyledFooter = styled(Footer)`
 `
 
 function MainLayout() {
+  useLocalSchemeSyncMetrics()
+
   return (
     <StyledLayout>
       <Sidebar />
