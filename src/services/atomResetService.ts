@@ -11,6 +11,8 @@ export interface AtomSetters {
   設置動態選重分析結果: (value: any) => void
   設置候選個數分析結果: (value: any) => void
   設置速度當量分析結果: (value: any) => void
+  設置當量詳情: (value: any) => void
+  設置連續文本當量分析結果: (value: any) => void
   設置簡碼效率分析結果: (value: any) => void
   設置鍵位熱力分析結果: (value: any) => void
 }
@@ -26,6 +28,10 @@ export function 清空所有Atom(setters: AtomSetters) {
   setters.設置動態選重分析結果(null)
   setters.設置候選個數分析結果(null)
   setters.設置速度當量分析結果(null)
+  setters.設置當量詳情(null)
+  // 連續文本當量必須一併清空：它不會隨碼表變化自動失效，
+  // 漏清就會在新方案的頁面上繼續顯示上一個方案的分佈圖
+  setters.設置連續文本當量分析結果(null)
   setters.設置簡碼效率分析結果(null)
   setters.設置鍵位熱力分析結果(null)
 }

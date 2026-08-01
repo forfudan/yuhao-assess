@@ -73,3 +73,4 @@ local/
 # Data files (loaded from yuhao-assess-data repo)
 public/data/
 public/schemes/
+public/texts/

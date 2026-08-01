@@ -19,13 +19,14 @@ import {
   ReloadOutlined,
   PlusCircleOutlined,
 } from '@ant-design/icons'
-import { useAtom, useSetAtom } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { 當前方案原子狀態, 方案列表原子狀態 } from '@/atoms/scheme'
 import { 動態選重分析原子狀態 } from '@/atoms/dynamicDuplicate'
 import { 靜態重碼分析原子狀態 } from '@/atoms/staticDuplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
-import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
+import { 速度當量分析原子狀態, 當量詳情原子狀態 } from '@/atoms/speedEquivalent'
+import { 連續文本當量分析原子狀態 } from '@/atoms/continuousEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 鍵位熱力分析原子狀態 } from '@/atoms/keyboardHeatmap'
 import { 碼表原子狀態, 原始碼表原子狀態, 編碼預覽數據原子狀態 } from '@/atoms/codeTable'
@@ -48,7 +49,10 @@ function HomePage() {
   const [速度當量分析結果, 設置速度當量分析結果] = useAtom(速度當量分析原子狀態)
   const [簡碼效率分析結果, 設置簡碼效率分析結果] = useAtom(簡碼效率分析原子狀態)
   const [鍵位熱力分析結果, 設置鍵位熱力分析結果] = useAtom(鍵位熱力分析原子狀態)
+  const 設置當量詳情 = useSetAtom(當量詳情原子狀態)
+  const 設置連續文本當量分析結果 = useSetAtom(連續文本當量分析原子狀態)
   const 設置碼表數據 = useSetAtom(碼表原子狀態)
+  const 碼表數據 = useAtomValue(碼表原子狀態)
   const 設置原始碼表 = useSetAtom(原始碼表原子狀態)
   const 設置編碼預覽數據 = useSetAtom(編碼預覽數據原子狀態)
   const [加載中, 設置加載中] = useState(false)
@@ -63,6 +67,8 @@ function HomePage() {
       設置動態選重分析結果,
       設置候選個數分析結果,
       設置速度當量分析結果,
+      設置當量詳情,
+      設置連續文本當量分析結果,
       設置簡碼效率分析結果,
       設置鍵位熱力分析結果,
     })
@@ -227,6 +233,33 @@ function HomePage() {
       },
     })
   }
+
+  // 更新某個位次的選重鍵；留空表示該位次沿用數字鍵
+  const 更新選重鍵 = (位次: string, 按鍵: string) => {
+    if (!當前方案) return
+    const 新表 = { ...(當前方案.方案參數.選重鍵表 ?? {}) }
+    const 值 = 按鍵.trim()
+    if (值 === '') delete 新表[位次]
+    else 新表[位次] = 值
+    更新方案參數('選重鍵表', 新表)
+  }
+
+  // 選重鍵若同時也是編碼用鍵，實際輸入時會衝突（如雪·青韻用 ; 編碼）
+  const 選重鍵衝突列表 = (() => {
+    const 處理後碼表 = 碼表數據 as { 全碼加選重鍵表?: Map<string, string[]> } | null
+    const 全碼表 = 處理後碼表?.全碼加選重鍵表
+    const 選重鍵表 = 當前方案?.方案參數.選重鍵表
+    if (!全碼表 || !選重鍵表) return []
+
+    // 收集編碼中實際用到的鍵（去掉補位空格和末尾選重數字）
+    const 編碼用鍵 = new Set<string>()
+    for (const codes of 全碼表.values()) {
+      const code = codes?.[0]
+      if (!code) continue
+      for (const ch of code.replace(/[0-9]+$/, '').replace(/_/g, '')) 編碼用鍵.add(ch)
+    }
+    return [...new Set(Object.values(選重鍵表))].filter(鍵 => 編碼用鍵.has(鍵))
+  })()
 
   // 添加標籤
   const 添加標籤 = (標籤: string) => {
@@ -511,6 +544,30 @@ function HomePage() {
                   >
                     出簡不出全
                   </Checkbox>
+                </div>
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <Text type="secondary">選重鍵（首選由空格上屏；留空則該位次沿用數字鍵）</Text>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {['2', '3'].map(位次 => (
+                    <div key={位次} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Text type="secondary" style={{ whiteSpace: 'nowrap' }}>
+                        第 {位次} 選
+                      </Text>
+                      <Input
+                        value={當前方案.方案參數.選重鍵表?.[位次] ?? ''}
+                        maxLength={1}
+                        placeholder={位次}
+                        style={{ width: 56, textAlign: 'center', fontFamily: 'monospace' }}
+                        onChange={e => 更新選重鍵(位次, e.target.value)}
+                      />
+                    </div>
+                  ))}
+                  {選重鍵衝突列表.length > 0 && (
+                    <Text type="warning">
+                      {選重鍵衝突列表.join('、')} 也出現在本方案的編碼裡，實際輸入時會衝突
+                    </Text>
+                  )}
                 </div>
               </div>
             </div>

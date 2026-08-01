@@ -4,16 +4,40 @@
  */
 
 import type { 碼表型别, 頻率數據型别 } from '../types'
+import { 默認選重鍵表 } from '../types/scheme'
+import type { 選重鍵表型别 } from '../types/scheme'
+
+/**
+ * 把編碼末尾的選重鍵數字替換爲方案實際使用的按鍵
+ *
+ * 碼表生成時，第 n 選的編碼末尾補的是數字 n。但多數方案並不用數字鍵選重，
+ * 而是用 `;` 選二重、`'` 選三重——這兩個鍵在基準行、數字鍵在上排，
+ * 擊鍵成本差別很大，所以做各項分析前先按方案配置折算。
+ *
+ * 只看末尾成串的數字，且整串在選重鍵表中有對應項時才替換，
+ * 以免把「第 12 選」的 `12` 誤傷成 `1;`。表中没有的位次保持數字鍵原樣。
+ * @param 編碼 帶選重鍵的編碼
+ * @param 選重鍵表 第 n 選 → 實際按鍵，缺省用 默認選重鍵表
+ */
+export function 替換選重鍵(編碼: string, 選重鍵表: 選重鍵表型别 = 默認選重鍵表): string {
+  const 匹配 = /[0-9]+$/.exec(編碼)
+  if (!匹配) return 編碼
+
+  const 替換 = 選重鍵表[匹配[0]]
+  return 替換 === undefined || 替換 === '' ? 編碼 : 編碼.slice(0, 匹配.index) + 替換
+}
 
 /**
  * 計算編碼對頻率
  * @param codeTable 碼表
  * @param charFrequency 字頻數據
+ * @param 選重鍵表 第 n 選 → 實際按鍵
  * @returns 碼對頻率數據
  */
 export function 計算編碼對頻率(
   codeTable: 碼表型别,
-  charFrequency: Record<string, number>
+  charFrequency: Record<string, number>,
+  選重鍵表: 選重鍵表型别 = 默認選重鍵表
 ): Record<string, number> {
   const pairFrequencies: Record<string, number> = {}
 
@@ -21,8 +45,9 @@ export function 計算編碼對頻率(
     const frequency = charFrequency[char] || 0
     if (frequency === 0 || codes.length === 0) continue
 
-    const code = codes[0] // 使用第一個編碼
-    if (!code) continue
+    const rawCode = codes[0] // 使用第一個編碼
+    if (!rawCode) continue
+    const code = 替換選重鍵(rawCode, 選重鍵表)
 
     // 生成所有相鄰的編碼對
     for (let i = 0; i < code.length - 1; i++) {
@@ -68,9 +93,10 @@ export function 從編碼對頻率計算加權速度當量(
 export function 從碼表計算加權速度當量(
   codeTable: 碼表型别,
   charFrequency: Record<string, number>,
-  equivTable: Record<string, number>
+  equivTable: Record<string, number>,
+  選重鍵表: 選重鍵表型别 = 默認選重鍵表
 ): number {
-  const pairFrequencies = 計算編碼對頻率(codeTable, charFrequency)
+  const pairFrequencies = 計算編碼對頻率(codeTable, charFrequency, 選重鍵表)
   return 從編碼對頻率計算加權速度當量(pairFrequencies, equivTable)
 }
 

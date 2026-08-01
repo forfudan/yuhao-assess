@@ -1,11 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useAtom } from 'jotai'
-import { Button, Space, Typography, Alert, Spin, Modal, Table, Input, message } from 'antd'
-import { ReloadOutlined } from '@ant-design/icons'
+import {
+  Button,
+  Space,
+  Typography,
+  Alert,
+  Spin,
+  Modal,
+  Table,
+  Input,
+  Select,
+  Divider,
+  message,
+} from 'antd'
+import { ReloadOutlined, LineChartOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 碼表原子狀態 } from '../atoms/codeTable'
+import { 當前方案原子狀態 } from '../atoms/scheme'
 import { 速度當量分析原子狀態, 當量詳情原子狀態 } from '../atoms/speedEquivalent'
 import type { 速度當量分析結果介面, 當量例字信息介面 } from '../atoms/speedEquivalent'
+import { 連續文本當量分析原子狀態 } from '../atoms/continuousEquivalent'
+import type { 連續文本當量碼表口徑, 連續文本當量分析結果介面 } from '../atoms/continuousEquivalent'
 import { 字頻表緩存原子狀態 } from '../atoms/charFrequency'
 import { 當量表原子狀態 } from '../atoms/equivTable'
 import {
@@ -14,13 +29,25 @@ import {
   生成二級簡碼加選重鍵表,
   計算編碼對頻率,
   計算速度當量分佈,
+  替換選重鍵,
 } from '../services/speedEquivalentService'
 import type { EquivDistributionItem } from '../services/speedEquivalentService'
+import {
+  加載連續文本,
+  清洗連續文本,
+  蒙特卡洛連續文本當量,
+} from '../services/continuousEquivalentService'
 import { 當量表服務實例 } from '../services/equivTableService'
 import { 字頻表服務類别 } from '../services/charFrequencyService'
+import ContinuousEquivalentChart from '../components/ContinuousEquivalentChart'
+import { 取參考分佈, 參考方案名 } from '../data/continuousEquivalentReference'
+import { 默認選重鍵表 } from '../types/scheme'
 import type { 處理後的碼表結果介面 } from '../types'
 
-const { Paragraph, Link } = Typography
+const { Paragraph, Text, Link } = Typography
+
+/** 連續文本當量：參與分析的碼表口徑 */
+const 連續文本當量口徑列表: 連續文本當量碼表口徑[] = ['全碼加選重', '全部簡碼加選重']
 
 /**
  * 速度當量分析頁面
@@ -31,6 +58,7 @@ const SpeedEquivalentPage: React.FC = () => {
   const [當量詳情, 設置當量詳情] = useAtom(當量詳情原子狀態)
   const [字頻表緩存] = useAtom(字頻表緩存原子狀態)
   const [當量表] = useAtom(當量表原子狀態)
+  const [當前方案] = useAtom(當前方案原子狀態)
 
   const [計算中, 設置計算中] = useState(false)
   const [錯誤信息, 設置錯誤信息] = useState<string | null>(null)
@@ -43,8 +71,20 @@ const SpeedEquivalentPage: React.FC = () => {
   const [分佈計算中, 設置分佈計算中] = useState(false)
   const 已初始化計算 = useRef(false)
 
+  // 連續文本當量相關狀態
+  const [連續文本當量結果, 設置連續文本當量結果] = useAtom(連續文本當量分析原子狀態)
+  const [連續文本當量計算中, 設置連續文本當量計算中] = useState(false)
+  const [連續文本當量錯誤, 設置連續文本當量錯誤] = useState<string | null>(null)
+  const [窗口長度, 設置窗口長度] = useState(100)
+  const [樣本數, 設置樣本數] = useState(20000)
+  // 記住上次算過的碼表對象，換方案後自動重算（而不是留着上一個方案的圖）
+  const 上次連續文本當量碼表 = useRef<unknown>(null)
+
   // 類型斷言：碼表數據實際上是 處理後的碼表結果
   const 處理後碼表 = 碼表數據 as 處理後的碼表結果介面 | null
+
+  // 選重鍵按方案配置折算（如二重按 ; 、三重按 '）
+  const 選重鍵表 = 當前方案?.方案參數?.選重鍵表 ?? 默認選重鍵表
 
   /**
    * 加載當量表（使用服务）
@@ -92,54 +132,64 @@ const SpeedEquivalentPage: React.FC = () => {
       const 知乎簡體字頻全碼速度當量 = 從碼表計算加權速度當量(
         全碼加選重鍵表,
         字頻表緩存.get('知乎簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 北語簡體字頻全碼速度當量 = 從碼表計算加權速度當量(
         全碼加選重鍵表,
         字頻表緩存.get('北語簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 臺標繁體字頻全碼速度當量 = 從碼表計算加權速度當量(
         全碼加選重鍵表,
         字頻表緩存.get('臺標繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 古籍繁體字頻全碼速度當量 = 從碼表計算加權速度當量(
         全碼加選重鍵表,
         字頻表緩存.get('古籍繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 繁簡聯合字頻全碼速度當量 = 從碼表計算加權速度當量(
         全碼加選重鍵表,
         字頻表緩存.get('繁簡聯合字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
 
       // 計算簡碼當量
       const 知乎簡體字頻全部簡碼速度當量 = 從碼表計算加權速度當量(
         簡碼加選重鍵表,
         字頻表緩存.get('知乎簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 北語簡體字頻全部簡碼速度當量 = 從碼表計算加權速度當量(
         簡碼加選重鍵表,
         字頻表緩存.get('北語簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 臺標繁體字頻全部簡碼速度當量 = 從碼表計算加權速度當量(
         簡碼加選重鍵表,
         字頻表緩存.get('臺標繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 古籍繁體字頻全部簡碼速度當量 = 從碼表計算加權速度當量(
         簡碼加選重鍵表,
         字頻表緩存.get('古籍繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 繁簡聯合字頻全部簡碼速度當量 = 從碼表計算加權速度當量(
         簡碼加選重鍵表,
         字頻表緩存.get('繁簡聯合字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
 
       // 生成一級簡碼表和二級簡碼表
@@ -158,54 +208,64 @@ const SpeedEquivalentPage: React.FC = () => {
       const 知乎簡體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
         一級簡碼加選重鍵表,
         字頻表緩存.get('知乎簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 北語簡體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
         一級簡碼加選重鍵表,
         字頻表緩存.get('北語簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 臺標繁體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
         一級簡碼加選重鍵表,
         字頻表緩存.get('臺標繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 古籍繁體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
         一級簡碼加選重鍵表,
         字頻表緩存.get('古籍繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 繁簡聯合字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
         一級簡碼加選重鍵表,
         字頻表緩存.get('繁簡聯合字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
 
       // 計算二級簡碼當量
       const 知乎簡體字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
         二級簡碼加選重鍵表,
         字頻表緩存.get('知乎簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 北語簡體字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
         二級簡碼加選重鍵表,
         字頻表緩存.get('北語簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 臺標繁體字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
         二級簡碼加選重鍵表,
         字頻表緩存.get('臺標繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 古籍繁體字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
         二級簡碼加選重鍵表,
         字頻表緩存.get('古籍繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 繁簡聯合字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
         二級簡碼加選重鍵表,
         字頻表緩存.get('繁簡聯合字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
 
       const 新結果: 速度當量分析結果介面 = {
@@ -238,6 +298,54 @@ const SpeedEquivalentPage: React.FC = () => {
       設置錯誤信息(error instanceof Error ? error.message : '計算失敗')
     } finally {
       設置計算中(false)
+    }
+  }
+
+  /**
+   * 計算連續文本當量（蒙特卡洛抽樣連續文本）
+   */
+  const 計算連續文本當量 = async () => {
+    if (!處理後碼表) {
+      設置連續文本當量錯誤('請先在「碼表解析」頁面上傳碼表')
+      return
+    }
+
+    設置連續文本當量計算中(true)
+    設置連續文本當量錯誤(null)
+
+    try {
+      const [原始文本, 當量表數據] = await Promise.all([
+        加載連續文本(),
+        Object.keys(當量表).length > 0 ? Promise.resolve(當量表) : 加載當量表(),
+      ])
+
+      const 清洗後文本 = 清洗連續文本(原始文本)
+
+      const 碼表映射: Record<連續文本當量碼表口徑, Map<string, string[]>> = {
+        全碼加選重: 處理後碼表.全碼加選重鍵表,
+        全部簡碼加選重: 處理後碼表.簡碼加選重鍵表,
+      }
+
+      const 統計: 連續文本當量分析結果介面['統計'] = {}
+      for (const 口徑 of 連續文本當量口徑列表) {
+        統計[口徑] = 蒙特卡洛連續文本當量(清洗後文本, 碼表映射[口徑], 當量表數據, {
+          窗口長度,
+          樣本數,
+          選重鍵表,
+        })
+      }
+
+      設置連續文本當量結果({
+        統計,
+        樣本數,
+        窗口長度,
+        更新時間: new Date().toISOString(),
+      })
+      message.success('連續文本當量計算完成')
+    } catch (error) {
+      設置連續文本當量錯誤(error instanceof Error ? error.message : '連續文本當量計算失敗')
+    } finally {
+      設置連續文本當量計算中(false)
     }
   }
 
@@ -291,7 +399,7 @@ const SpeedEquivalentPage: React.FC = () => {
       const 當量表數據 = Object.keys(當量表).length > 0 ? 當量表 : await 加載當量表()
 
       // 計算碼對頻率
-      const 碼對頻率 = 計算編碼對頻率(使用碼表, 字頻)
+      const 碼對頻率 = 計算編碼對頻率(使用碼表, 字頻, 選重鍵表)
 
       // 計算當量分佈
       const 分佈 = 計算速度當量分佈(碼對頻率, 當量表數據)
@@ -357,8 +465,9 @@ const SpeedEquivalentPage: React.FC = () => {
 
         if (!全碼編碼數組 || !簡碼編碼數組) continue
 
-        const 全碼 = 全碼編碼數組[0]
-        const 簡碼 = 簡碼編碼數組[0]
+        // 選重鍵 2、3 換成實際按鍵 `;`、`'` 後再算當量
+        const 全碼 = 全碼編碼數組[0] ? 替換選重鍵(全碼編碼數組[0], 選重鍵表) : undefined
+        const 簡碼 = 簡碼編碼數組[0] ? 替換選重鍵(簡碼編碼數組[0], 選重鍵表) : undefined
 
         if (!全碼 || !簡碼) continue
 
@@ -427,6 +536,21 @@ const SpeedEquivalentPage: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [處理後碼表, 字頻表緩存])
+
+  /**
+   * 碼表變化後自動重算連續文本當量
+   *
+   * 換方案時 連續文本當量分析原子狀態 會被清空，這裡把圖補回來；
+   * 用碼表對象本身做標記，即使頁面没有重新掛載（在本頁直接載入新方案）也能觸發。
+   * 計算失敗時結果仍爲空，但標記已更新，不會反覆重試。
+   */
+  useEffect(() => {
+    if (處理後碼表 && !連續文本當量結果 && 上次連續文本當量碼表.current !== 處理後碼表) {
+      上次連續文本當量碼表.current = 處理後碼表
+      計算連續文本當量()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [處理後碼表, 連續文本當量結果])
 
   /**
    * 渲染表格
@@ -614,6 +738,171 @@ const SpeedEquivalentPage: React.FC = () => {
   }
 
   /**
+   * 渲染連續文本當量分析區塊
+   */
+  const 渲染連續文本當量 = () => {
+    // 兩張圖共用 x 軸範圍，便於橫向比較全碼與簡碼的分佈位置
+    const 全部統計 = 連續文本當量結果
+      ? 連續文本當量口徑列表
+          .map(口徑 => 連續文本當量結果.統計[口徑])
+          .filter((項): 項 is NonNullable<typeof 項> => 項 !== undefined)
+      : []
+    // x 軸範圍要同時容下實測分佈和參考曲線的 ±3σ，
+    // 否則參考方案和當前方案差得遠時，曲線會整條落在畫面外
+    const 參考端點: number[] = []
+    if (連續文本當量結果) {
+      for (const 口徑 of 連續文本當量口徑列表) {
+        const 參考 = 取參考分佈(口徑, 連續文本當量結果.窗口長度)
+        if (參考) {
+          參考端點.push(參考.平均數 - 3 * 參考.標準差, 參考.平均數 + 3 * 參考.標準差)
+        }
+      }
+    }
+    const 共用範圍 =
+      全部統計.length > 0
+        ? {
+            最小值: Math.min(...全部統計.map(項 => 項.最小值), ...參考端點),
+            最大值: Math.max(...全部統計.map(項 => 項.最大值), ...參考端點),
+          }
+        : undefined
+
+    return (
+      <div>
+        <Divider titlePlacement="start" style={{ marginTop: 8 }}>
+          連續文本當量
+        </Divider>
+
+        <Paragraph type="secondary" style={{ marginBottom: 12 }}>
+          上表的當量按單字加權，衡量的是孤立單字的擊鍵成本。
+          <strong>連續文本當量</strong>
+          則衡量方案在成段文本下的表現：把語料只保留漢字與逗號句號，逐字映射爲按鍵串（逗號句號直接映射爲{' '}
+          <code>,</code> <code>.</code>），再用蒙特卡洛在語料中隨機截取連續{窗口長度}
+          字的窗口，計算窗口內相鄰碼對的平均當量，重複多次得到當量的分佈。不足一個窗口的尾部不參與計算。
+        </Paragraph>
+
+        <Paragraph type="secondary" style={{ marginBottom: 12 }}>
+          <strong>90% VaR</strong> 是右側 90% 分位數：只有一成的文本比它更慢。
+          <strong>90% CVaR</strong> 是這一成最慢文本的平均當量，圖中紅色區域即這批樣本。 VaR
+          只給出門檻，CVaR 進一步告訴你「真碰上難打的段落時，平均有多慢」。
+        </Paragraph>
+
+        <Space wrap style={{ marginBottom: 12 }}>
+          <Space size={4}>
+            <Text type="secondary">窗口長度</Text>
+            <Select
+              value={窗口長度}
+              onChange={設置窗口長度}
+              style={{ width: 100 }}
+              options={[10, 20, 50, 100, 200].map(值 => ({ value: 值, label: `${值} 字` }))}
+            />
+          </Space>
+          <Space size={4}>
+            <Text type="secondary">抽樣次數</Text>
+            <Select
+              value={樣本數}
+              onChange={設置樣本數}
+              style={{ width: 110 }}
+              options={[5000, 20000, 50000, 100000].map(值 => ({
+                value: 值,
+                label: 值.toLocaleString(),
+              }))}
+            />
+          </Space>
+          <Button
+            type="primary"
+            icon={<LineChartOutlined />}
+            onClick={計算連續文本當量}
+            loading={連續文本當量計算中}
+            disabled={!處理後碼表}
+          >
+            計算連續文本當量
+          </Button>
+        </Space>
+
+        {連續文本當量錯誤 && (
+          <Alert
+            title={連續文本當量錯誤}
+            type="error"
+            closable
+            onClose={() => 設置連續文本當量錯誤(null)}
+            style={{ marginBottom: 12 }}
+          />
+        )}
+
+        {連續文本當量計算中 && (
+          <div style={{ textAlign: 'center', padding: '48px 0' }}>
+            <Spin size="large" />
+            <p style={{ marginTop: 16 }}>正在抽樣計算連續文本當量...</p>
+          </div>
+        )}
+
+        {!連續文本當量計算中 && !連續文本當量結果 && !連續文本當量錯誤 && (
+          <Alert
+            title={
+              處理後碼表
+                ? '點擊「計算連續文本當量」查看方案在成段文本下的當量分佈'
+                : '請先在「碼表解析」頁面上傳碼表'
+            }
+            type="info"
+            showIcon
+          />
+        )}
+
+        {!連續文本當量計算中 && 連續文本當量結果 && (
+          <>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
+                gap: 32,
+              }}
+            >
+              {連續文本當量口徑列表.map(口徑 => {
+                const 統計 = 連續文本當量結果.統計[口徑]
+                if (!統計) return null
+                return (
+                  <ContinuousEquivalentChart
+                    key={口徑}
+                    統計={統計}
+                    標題={口徑}
+                    共用範圍={共用範圍}
+                    參考分佈={取參考分佈(口徑, 連續文本當量結果.窗口長度)}
+                    參考方案名={參考方案名}
+                  />
+                )
+              })}
+            </div>
+
+            {全部統計[0] && (
+              <Paragraph type="secondary" style={{ fontSize: 12, marginTop: 16 }}>
+                語料：
+                <Link
+                  href="https://github.com/forfudan/yuhao-assess-data/blob/main/texts/literature.txt"
+                  target="_blank"
+                >
+                  literature.txt
+                </Link>
+                （經典文學作品節選），清洗後共 {全部統計[0].語料字數.toLocaleString()} 字。
+                {全部統計[0].未編碼字數 > 0 && (
+                  <>其中 {全部統計[0].未編碼字數.toLocaleString()} 字不在碼表内，已跳過。</>
+                )}
+                {全部統計.some(項 => 項.碼對覆蓋率 < 0.9999) && (
+                  <>
+                    {' '}
+                    碼對覆蓋率{' '}
+                    {全部統計.map(項 => (項.碼對覆蓋率 * 100).toFixed(2) + '%').join(' / ')}
+                    ，未覆蓋的碼對（多爲選重鍵數字）不計入平均。
+                  </>
+                )}
+              </Paragraph>
+            )}
+          </>
+        )}
+      </div>
+    )
+  }
+
+  /**
    * 詳情表格列定義
    */
   const 詳情列定義: ColumnsType<當量例字信息介面> = [
@@ -716,11 +1005,14 @@ const SpeedEquivalentPage: React.FC = () => {
         {分析結果 && (
           <Alert
             title="説明"
-            description="點擊字頻來源，可查看該字頻類型下全碼與簡碼的當量對比。"
+            description="點擊字頻來源，可查看該字頻類型下全碼與簡碼的當量對比。選重鍵按實際輸入習慣折算：二重記爲 ; 、三重記爲 ' ，四重及以後仍記爲數字鍵。"
             type="info"
             showIcon
           />
         )}
+
+        {/* 連續文本當量分析 */}
+        {渲染連續文本當量()}
       </Space>
 
       {/* 當量分佈 Modal */}

@@ -19,6 +19,7 @@ const CDN_BASE = 'https://zhuyuhao.com/yuhao-assess-data/'
 // const CDN_BASE = 'https://raw.githubusercontent.com/forfudan/yuhao-assess-data/main/'
 const DATA_DIR = path.resolve(__dirname, '../public/data')
 const SCHEMES_DIR = path.resolve(__dirname, '../public/schemes')
+const TEXTS_DIR = path.resolve(__dirname, '../public/texts')
 
 // 需要下載的數據文件列表（從 data/ 路徑）
 const DATA_FILES = [
@@ -30,17 +31,20 @@ const DATA_FILES = [
   'data/charsets.json',
 ]
 
+// 連續文本語料（用於連續文本當量分析）
+const TEXT_FILES = ['texts/literature.txt']
+
 /**
  * 從 builtin-schemes.json 讀取啟用的方案列表
  */
 function getEnabledSchemes() {
   const builtinSchemesPath = path.resolve(__dirname, '../public/settings/builtin-schemes.json')
-  
+
   if (!fs.existsSync(builtinSchemesPath)) {
     console.warn('⚠️  找不到 builtin-schemes.json，跳過方案文件')
     return []
   }
-  
+
   try {
     const builtinSchemes = JSON.parse(fs.readFileSync(builtinSchemesPath, 'utf-8'))
     return builtinSchemes.schemes
@@ -63,27 +67,29 @@ function downloadFile(filename, targetDir) {
     console.log(`📥 下載: ${filename}`)
 
     https
-      .get(url, { followRedirects: true }, (response) => {
+      .get(url, { followRedirects: true }, response => {
         // 处理重定向
         if (response.statusCode === 301 || response.statusCode === 302) {
           const redirectUrl = response.headers.location
-          https.get(redirectUrl, (redirectResponse) => {
-            if (redirectResponse.statusCode !== 200) {
-              reject(new Error(`HTTP ${redirectResponse.statusCode}: ${redirectUrl}`))
-              return
-            }
+          https
+            .get(redirectUrl, redirectResponse => {
+              if (redirectResponse.statusCode !== 200) {
+                reject(new Error(`HTTP ${redirectResponse.statusCode}: ${redirectUrl}`))
+                return
+              }
 
-            const fileStream = fs.createWriteStream(targetPath)
-            redirectResponse.pipe(fileStream)
+              const fileStream = fs.createWriteStream(targetPath)
+              redirectResponse.pipe(fileStream)
 
-            fileStream.on('finish', () => {
-              fileStream.close()
-              const stats = fs.statSync(targetPath)
-              const size = (stats.size / 1024).toFixed(2)
-              console.log(`✅ 完成: ${filename} (${size} KB)`)
-              resolve()
+              fileStream.on('finish', () => {
+                fileStream.close()
+                const stats = fs.statSync(targetPath)
+                const size = (stats.size / 1024).toFixed(2)
+                console.log(`✅ 完成: ${filename} (${size} KB)`)
+                resolve()
+              })
             })
-          }).on('error', reject)
+            .on('error', reject)
           return
         }
 
@@ -103,7 +109,7 @@ function downloadFile(filename, targetDir) {
           resolve()
         })
       })
-      .on('error', (err) => {
+      .on('error', err => {
         reject(err)
       })
   })
@@ -126,6 +132,10 @@ async function main() {
     fs.mkdirSync(SCHEMES_DIR, { recursive: true })
     console.log(`✅ 創建目錄: ${SCHEMES_DIR}`)
   }
+  if (!fs.existsSync(TEXTS_DIR)) {
+    fs.mkdirSync(TEXTS_DIR, { recursive: true })
+    console.log(`✅ 創建目錄: ${TEXTS_DIR}`)
+  }
   console.log('')
 
   // 下載所有數據文件
@@ -133,6 +143,12 @@ async function main() {
     console.log('📦 下載數據文件...')
     for (const filename of DATA_FILES) {
       await downloadFile(filename, DATA_DIR)
+    }
+
+    console.log('')
+    console.log('📦 下載連續文本語料...')
+    for (const filename of TEXT_FILES) {
+      await downloadFile(filename, TEXTS_DIR)
     }
 
     console.log('')
