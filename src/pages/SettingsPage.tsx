@@ -21,6 +21,7 @@ import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 鍵位熱力分析原子狀態 } from '@/atoms/keyboardHeatmap'
+import { 連續文本當量分析原子狀態 } from '@/atoms/continuousEquivalent'
 import { 碼表原子狀態 } from '@/atoms/codeTable'
 import { 從JSON導入 } from '@/services/schemeService'
 import { 碼表處理服務實例 } from '@/services/codeTableService'
@@ -50,6 +51,7 @@ const SettingsPage: React.FC = () => {
   const 設置速度當量分析結果 = useSetAtom(速度當量分析原子狀態)
   const 設置簡碼效率分析結果 = useSetAtom(簡碼效率分析原子狀態)
   const 設置鍵位熱力分析結果 = useSetAtom(鍵位熱力分析原子狀態)
+  const 設置連續文本當量分析結果 = useSetAtom(連續文本當量分析原子狀態)
   const 設置碼表數據 = useSetAtom(碼表原子狀態)
 
   // 生成并导出当前方案
@@ -103,6 +105,7 @@ const SettingsPage: React.FC = () => {
       設置速度當量分析結果(null)
       設置簡碼效率分析結果(null)
       設置鍵位熱力分析結果(null)
+      設置連續文本當量分析結果(null)
       console.log('  ✓ 分析结果已清空')
 
       message.loading('正在觸發所有分析計算...', 1)
@@ -125,6 +128,7 @@ const SettingsPage: React.FC = () => {
       const 速度當量分析結果 = store.get(速度當量分析原子狀態)
       const 簡碼效率分析結果 = store.get(簡碼效率分析原子狀態)
       const 鍵位熱力分析結果 = store.get(鍵位熱力分析原子狀態)
+      const 連續文本當量分析結果 = store.get(連續文本當量分析原子狀態)
 
       console.log('  检查 atom 状态:')
       console.log('  - 靜態重碼:', 靜態重碼分析結果 ? '✓ 有数据' : '✗ 无数据')
@@ -133,6 +137,7 @@ const SettingsPage: React.FC = () => {
       console.log('  - 速度當量:', 速度當量分析結果 ? '✓ 有数据' : '✗ 无数据')
       console.log('  - 簡碼效率:', 簡碼效率分析結果 ? '✓ 有数据' : '✗ 无数据')
       console.log('  - 鍵位熱力:', 鍵位熱力分析結果 ? '✓ 有数据' : '✗ 无数据')
+      console.log('  - 連續文本當量:', 連續文本當量分析結果 ? '✓ 有数据' : '✗ 无数据')
 
       // 步骤6：导出JSON
       console.log('[步驟 6] 导出 JSON...')
@@ -145,6 +150,7 @@ const SettingsPage: React.FC = () => {
           速度當量分析結果,
           簡碼效率分析結果,
           鍵位熱力分析結果,
+          連續文本當量分析結果,
         },
         true
       )

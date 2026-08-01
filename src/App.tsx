@@ -7,6 +7,7 @@ import StaticDuplicateAnalysisPage from './pages/StaticDuplicateAnalysisPage'
 import DynamicDuplicateAnalysisPage from './pages/DynamicDuplicateAnalysisPage'
 import MaximumCandidatesPage from './pages/MaximumCandidatesPage'
 import SpeedEquivalentPage from './pages/SpeedEquivalentPage'
+import ContinuousSpeedEquivalentPage from './pages/ContinuousSpeedEquivalentPage'
 import ShortCodeEfficiencyPage from './pages/ShortCodeEfficiencyPage'
 import KeyboardHeatmapPage from './pages/KeyboardHeatmapPage'
 import ComparisonPage from './pages/ComparisonPage'
@@ -44,6 +45,10 @@ const routes = [
         element: <SpeedEquivalentPage />,
       },
       {
+        path: '/continuous',
+        element: <ContinuousSpeedEquivalentPage />,
+      },
+      {
         path: '/efficiency',
         element: <ShortCodeEfficiencyPage />,
       },
@@ -69,6 +74,7 @@ const 分析頁面路徑 = [
   '/static',
   '/candidates',
   '/speed',
+  '/continuous',
   '/efficiency',
   '/heatmap',
 ] as const

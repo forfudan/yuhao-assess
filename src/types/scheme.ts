@@ -12,6 +12,7 @@ import type { 最大候選個數分析結果 } from '../atoms/maximumCandidates'
 import type { 速度當量分析結果介面 } from '../atoms/speedEquivalent'
 import type { 簡碼效率分析結果介面 } from '../atoms/shortCodeEfficiency'
 import type { 鍵位熱力分析結果介面 } from '../atoms/keyboardHeatmap'
+import type { 連續文本當量存檔介面 } from '../atoms/continuousEquivalent'
 
 /**
  * 方案元數據
@@ -31,11 +32,32 @@ export interface 方案元數據介面 {
 }
 
 /**
+ * 選重鍵表：第 n 選 → 實際按下的鍵
+ *
+ * 鍵是候選位次的字符串形式（'2' 表示第二選），值是單個按鍵字符。
+ * 首選由空格上屏，不在表内；表内没有的位次回落到數字鍵本身
+ * （第 4 選按 `4`，以此類推）。
+ */
+export type 選重鍵表型别 = Record<string, string>
+
+/**
+ * 選重鍵表默認值
+ *
+ * 用 `;` 選二重、`'` 選三重的人比用數字鍵 2、3 的多得多，
+ * 而這兩個鍵在基準行、數字鍵在上排，擊鍵成本差別很大。
+ */
+export const 默認選重鍵表: 選重鍵表型别 = {
+  '2': ';',
+  '3': "'",
+}
+
+/**
  * 方案參數
  */
 export interface 方案參數介面 {
   編碼終止指示符列表?: string[] // 編碼終止指示符（如 ['a','o','e','i','u','_']）
   最大碼長: number // 最大碼長（如 4 或 5）
+  選重鍵表?: 選重鍵表型别 // 第 n 選對應的實際按鍵（如 { '2': ';', '3': "'" }）
   選重編碼化?: boolean // 選重鍵是否計入編碼長度（默認 false）
   出簡不出全?: boolean // 是否「出簡不出全」（默認 false）
   編碼規則?: {
@@ -80,6 +102,9 @@ export interface 方案測評結果介面 {
 
   // 鍵位熱力分析
   鍵位熱力?: 鍵位熱力分析結果介面
+
+  // 連續文本當量分析（分佈存成緊湊格點形式，導入後無需重算即可出圖）
+  連續文本當量?: 連續文本當量存檔介面
 }
 
 /**

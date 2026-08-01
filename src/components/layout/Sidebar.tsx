@@ -132,6 +132,11 @@ export function Sidebar({ collapsed = false, onCollapse }: SidebarProps) {
       label: '速度當量',
     },
     {
+      key: '/continuous',
+      icon: <AreaChartOutlined />, // 面積圖圖標，呼應連續文本當量的分佈圖
+      label: '連續當量', // 側邊欄只放得下四個字，正式名稱是「連續文本當量」
+    },
+    {
       key: '/efficiency',
       icon: <RocketOutlined />, // 火箭圖標（可換成：RiseOutlined, BulbOutlined, ExperimentOutlined）
       label: '簡碼效率',

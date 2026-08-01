@@ -18,6 +18,23 @@ export {
   從碼表計算加權速度當量,
 } from './speedEquivalentService'
 
+// 連續文本當量分析服務
+export {
+  加載連續文本,
+  清洗連續文本,
+  構建字符按鍵映射,
+  文本轉按鍵序列,
+  計算序列當量,
+  蒙特卡洛連續文本當量,
+  分佈重新分箱,
+} from './continuousEquivalentService'
+export type {
+  連續文本當量統計介面,
+  窗口當量結果介面,
+  分佈項介面,
+  抽樣選項介面,
+} from './continuousEquivalentService'
+
 // 導出碼表服務（統一服務）
 export {
   碼表處理服務,

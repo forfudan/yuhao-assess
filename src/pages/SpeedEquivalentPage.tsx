@@ -4,6 +4,7 @@ import { Button, Space, Typography, Alert, Spin, Modal, Table, Input, message } 
 import { ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 碼表原子狀態 } from '../atoms/codeTable'
+import { 當前方案原子狀態 } from '../atoms/scheme'
 import { 速度當量分析原子狀態, 當量詳情原子狀態 } from '../atoms/speedEquivalent'
 import type { 速度當量分析結果介面, 當量例字信息介面 } from '../atoms/speedEquivalent'
 import { 字頻表緩存原子狀態 } from '../atoms/charFrequency'
@@ -14,10 +15,12 @@ import {
   生成二級簡碼加選重鍵表,
   計算編碼對頻率,
   計算速度當量分佈,
+  替換選重鍵,
 } from '../services/speedEquivalentService'
 import type { EquivDistributionItem } from '../services/speedEquivalentService'
 import { 當量表服務實例 } from '../services/equivTableService'
 import { 字頻表服務類别 } from '../services/charFrequencyService'
+import { 默認選重鍵表 } from '../types/scheme'
 import type { 處理後的碼表結果介面 } from '../types'
 
 const { Paragraph, Link } = Typography
@@ -31,6 +34,7 @@ const SpeedEquivalentPage: React.FC = () => {
   const [當量詳情, 設置當量詳情] = useAtom(當量詳情原子狀態)
   const [字頻表緩存] = useAtom(字頻表緩存原子狀態)
   const [當量表] = useAtom(當量表原子狀態)
+  const [當前方案] = useAtom(當前方案原子狀態)
 
   const [計算中, 設置計算中] = useState(false)
   const [錯誤信息, 設置錯誤信息] = useState<string | null>(null)
@@ -45,6 +49,9 @@ const SpeedEquivalentPage: React.FC = () => {
 
   // 類型斷言：碼表數據實際上是 處理後的碼表結果
   const 處理後碼表 = 碼表數據 as 處理後的碼表結果介面 | null
+
+  // 選重鍵按方案配置折算（如二重按 ; 、三重按 '）
+  const 選重鍵表 = 當前方案?.方案參數?.選重鍵表 ?? 默認選重鍵表
 
   /**
    * 加載當量表（使用服务）
@@ -92,54 +99,64 @@ const SpeedEquivalentPage: React.FC = () => {
       const 知乎簡體字頻全碼速度當量 = 從碼表計算加權速度當量(
         全碼加選重鍵表,
         字頻表緩存.get('知乎簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 北語簡體字頻全碼速度當量 = 從碼表計算加權速度當量(
         全碼加選重鍵表,
         字頻表緩存.get('北語簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 臺標繁體字頻全碼速度當量 = 從碼表計算加權速度當量(
         全碼加選重鍵表,
         字頻表緩存.get('臺標繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 古籍繁體字頻全碼速度當量 = 從碼表計算加權速度當量(
         全碼加選重鍵表,
         字頻表緩存.get('古籍繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 繁簡聯合字頻全碼速度當量 = 從碼表計算加權速度當量(
         全碼加選重鍵表,
         字頻表緩存.get('繁簡聯合字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
 
       // 計算簡碼當量
       const 知乎簡體字頻全部簡碼速度當量 = 從碼表計算加權速度當量(
         簡碼加選重鍵表,
         字頻表緩存.get('知乎簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 北語簡體字頻全部簡碼速度當量 = 從碼表計算加權速度當量(
         簡碼加選重鍵表,
         字頻表緩存.get('北語簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 臺標繁體字頻全部簡碼速度當量 = 從碼表計算加權速度當量(
         簡碼加選重鍵表,
         字頻表緩存.get('臺標繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 古籍繁體字頻全部簡碼速度當量 = 從碼表計算加權速度當量(
         簡碼加選重鍵表,
         字頻表緩存.get('古籍繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 繁簡聯合字頻全部簡碼速度當量 = 從碼表計算加權速度當量(
         簡碼加選重鍵表,
         字頻表緩存.get('繁簡聯合字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
 
       // 生成一級簡碼表和二級簡碼表
@@ -158,54 +175,64 @@ const SpeedEquivalentPage: React.FC = () => {
       const 知乎簡體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
         一級簡碼加選重鍵表,
         字頻表緩存.get('知乎簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 北語簡體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
         一級簡碼加選重鍵表,
         字頻表緩存.get('北語簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 臺標繁體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
         一級簡碼加選重鍵表,
         字頻表緩存.get('臺標繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 古籍繁體字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
         一級簡碼加選重鍵表,
         字頻表緩存.get('古籍繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 繁簡聯合字頻一級簡碼速度當量 = 從碼表計算加權速度當量(
         一級簡碼加選重鍵表,
         字頻表緩存.get('繁簡聯合字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
 
       // 計算二級簡碼當量
       const 知乎簡體字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
         二級簡碼加選重鍵表,
         字頻表緩存.get('知乎簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 北語簡體字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
         二級簡碼加選重鍵表,
         字頻表緩存.get('北語簡體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 臺標繁體字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
         二級簡碼加選重鍵表,
         字頻表緩存.get('臺標繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 古籍繁體字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
         二級簡碼加選重鍵表,
         字頻表緩存.get('古籍繁體字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
       const 繁簡聯合字頻二級簡碼速度當量 = 從碼表計算加權速度當量(
         二級簡碼加選重鍵表,
         字頻表緩存.get('繁簡聯合字頻') || {},
-        當量表數據
+        當量表數據,
+        選重鍵表
       )
 
       const 新結果: 速度當量分析結果介面 = {
@@ -291,7 +318,7 @@ const SpeedEquivalentPage: React.FC = () => {
       const 當量表數據 = Object.keys(當量表).length > 0 ? 當量表 : await 加載當量表()
 
       // 計算碼對頻率
-      const 碼對頻率 = 計算編碼對頻率(使用碼表, 字頻)
+      const 碼對頻率 = 計算編碼對頻率(使用碼表, 字頻, 選重鍵表)
 
       // 計算當量分佈
       const 分佈 = 計算速度當量分佈(碼對頻率, 當量表數據)
@@ -357,8 +384,9 @@ const SpeedEquivalentPage: React.FC = () => {
 
         if (!全碼編碼數組 || !簡碼編碼數組) continue
 
-        const 全碼 = 全碼編碼數組[0]
-        const 簡碼 = 簡碼編碼數組[0]
+        // 選重鍵 2、3 換成實際按鍵 `;`、`'` 後再算當量
+        const 全碼 = 全碼編碼數組[0] ? 替換選重鍵(全碼編碼數組[0], 選重鍵表) : undefined
+        const 簡碼 = 簡碼編碼數組[0] ? 替換選重鍵(簡碼編碼數組[0], 選重鍵表) : undefined
 
         if (!全碼 || !簡碼) continue
 
@@ -716,7 +744,7 @@ const SpeedEquivalentPage: React.FC = () => {
         {分析結果 && (
           <Alert
             title="説明"
-            description="點擊字頻來源，可查看該字頻類型下全碼與簡碼的當量對比。"
+            description="點擊字頻來源，可查看該字頻類型下全碼與簡碼的當量對比。選重鍵按實際輸入習慣折算：二重記爲 ; 、三重記爲 ' ，四重及以後仍記爲數字鍵。"
             type="info"
             showIcon
           />

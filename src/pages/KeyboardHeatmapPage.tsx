@@ -8,6 +8,8 @@ import { 當前方案原子狀態 } from '@/atoms/scheme'
 import { 字頻表緩存原子狀態 } from '@/atoms/charFrequency'
 import { 鍵位熱力分析原子狀態 } from '@/atoms/keyboardHeatmap'
 import type { 鍵位熱力分析結果介面 } from '@/atoms/keyboardHeatmap'
+import { 計算按鍵計數 } from '@/services/keyboardHeatmapService'
+import { 默認選重鍵表 } from '@/types/scheme'
 import type { 處理後的碼表結果介面 } from '@/types'
 
 const PageContainer = styled.div`
@@ -419,34 +421,6 @@ const punctuationKeys: Record<string, number> = {
 const PUNCTUATION_CHAR_RATIO = 0.13
 
 /**
- * 從碼表和字頻計算某模式的按鍵加權使用計數
- */
-function 計算按鍵計數(
-  碼表: Map<string, string[]>,
-  字頻: Record<string, number>
-): Record<string, number> {
-  const distribution = new Map<string, number>()
-
-  for (const [字符, codes] of 碼表.entries()) {
-    if (!codes || codes.length === 0) continue
-    const weight = 字頻[字符] || 0
-    for (const code of codes) {
-      if (!code) continue
-      for (const ch of code.toLowerCase()) {
-        const key = ch === '_' ? 'space' : ch
-        distribution.set(key, (distribution.get(key) || 0) + weight)
-      }
-    }
-  }
-
-  const result: Record<string, number> = {}
-  for (const [key, count] of distribution.entries()) {
-    result[key] = count
-  }
-  return result
-}
-
-/**
  * 從按鍵計數即時演算統計數據（手指負擔、按排分布、左右手平衡）
  */
 function 從按鍵分布計算統計(keyDist: Map<string, number>) {
@@ -527,8 +501,9 @@ export default function KeyboardHeatmapPage() {
     設置錯誤信息(null)
 
     try {
-      const 全碼數據 = 計算按鍵計數(處理後碼表.全碼加選重鍵表, 當前字頻)
-      const 簡碼數據 = 計算按鍵計數(處理後碼表.簡碼加選重鍵表, 當前字頻)
+      const 選重鍵表 = 當前方案?.方案參數?.選重鍵表 ?? 默認選重鍵表
+      const 全碼數據 = 計算按鍵計數(處理後碼表.全碼加選重鍵表, 當前字頻, 選重鍵表)
+      const 簡碼數據 = 計算按鍵計數(處理後碼表.簡碼加選重鍵表, 當前字頻, 選重鍵表)
 
       const 新結果: 鍵位熱力分析結果介面 = {
         全碼: 全碼數據,

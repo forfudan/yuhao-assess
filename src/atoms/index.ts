@@ -41,6 +41,10 @@ export type { 字符集數據型别, 字符集記録型别, CJK區塊數據型�
 export { 速度當量分析原子狀態, 當量詳情原子狀態 } from './speedEquivalent'
 export type { 速度當量分析結果介面, 當量例字信息介面, 當量詳情數據介面 } from './speedEquivalent'
 
+// 連續文本當量分析原子狀態
+export { 連續文本當量分析原子狀態 } from './continuousEquivalent'
+export type { 連續文本當量分析結果介面, 連續文本當量碼表口徑 } from './continuousEquivalent'
+
 // 鍵位熱力分析原子狀態
 export { 鍵位熱力分析原子狀態 } from './keyboardHeatmap'
 export type { 鍵位熱力分析結果介面 } from './keyboardHeatmap'

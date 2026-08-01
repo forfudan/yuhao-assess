@@ -31,11 +31,13 @@ export default [
         URL: 'readonly',
         FileReader: 'readonly',
         prompt: 'readonly',
+        HTMLDivElement: 'readonly',
+        ResizeObserver: 'readonly',
       },
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
-      'react': reactPlugin,
+      react: reactPlugin,
       'react-hooks': reactHooksPlugin,
     },
     rules: {

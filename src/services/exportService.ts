@@ -5,6 +5,8 @@ import type { 最大候選個數分析結果 } from '@/atoms/maximumCandidates'
 import type { 速度當量分析結果介面 } from '@/atoms/speedEquivalent'
 import type { 簡碼效率分析結果介面 } from '@/atoms/shortCodeEfficiency'
 import type { 鍵位熱力分析結果介面 } from '@/atoms/keyboardHeatmap'
+import type { 連續文本當量分析結果介面 } from '@/atoms/continuousEquivalent'
+import { 壓縮連續文本當量結果 } from '@/atoms/continuousEquivalent'
 
 /**
  * 分析結果集合
@@ -16,6 +18,7 @@ export interface 分析結果集 {
   速度當量分析結果: 速度當量分析結果介面 | null
   簡碼效率分析結果: 簡碼效率分析結果介面 | null
   鍵位熱力分析結果: 鍵位熱力分析結果介面 | null
+  連續文本當量分析結果?: 連續文本當量分析結果介面 | null
 }
 
 /**
@@ -41,6 +44,9 @@ export function 導出方案配置JSON(
         速度當量分析: 分析結果.速度當量分析結果 ?? undefined,
         簡碼效率分析: 分析結果.簡碼效率分析結果 ?? undefined,
         鍵位熱力: 分析結果.鍵位熱力分析結果 ?? undefined,
+        連續文本當量: 分析結果.連續文本當量分析結果
+          ? 壓縮連續文本當量結果(分析結果.連續文本當量分析結果)
+          : undefined,
       },
     }
 
@@ -73,6 +79,7 @@ export function 導出方案配置JSON(
       分析結果.速度當量分析結果 && '速度當量分析',
       分析結果.簡碼效率分析結果 && '簡碼效率分析',
       分析結果.鍵位熱力分析結果 && '鍵位熱力分析',
+      分析結果.連續文本當量分析結果 && '連續文本當量分析',
     ].filter(Boolean)
     const 提示 = 結果列表.length > 0 ? `（包含${結果列表.join('、')}結果）` : ''
 

@@ -3,7 +3,23 @@
  * 提供方案的加載、導出、驗證等功能
  */
 
+import { 默認選重鍵表 } from '../types/scheme'
 import type { 方案配置介面 } from '../types/scheme'
+
+/**
+ * 給可選字段補默認值
+ *
+ * 舊版方案 JSON 裡没有這些字段，補上默認值以保持向後兼容。
+ * 注意：選重鍵表默認 `{ '2': ';', '3': "'" }`，
+ * 而更早期的存檔是按數字鍵口徑算出來的，數值不可直接比較，
+ * 需用 `pnpm recompute` 重算後回寫。
+ */
+function 補全方案默認值(配置: 方案配置介面): 方案配置介面 {
+  配置.方案參數.選重鍵表 = 配置.方案參數.選重鍵表 ?? { ...默認選重鍵表 }
+  配置.方案參數.選重編碼化 = 配置.方案參數.選重編碼化 ?? false
+  配置.方案參數.出簡不出全 = 配置.方案參數.出簡不出全 ?? false
+  return 配置
+}
 
 /**
  * 從 public/schemes/ 加載方案配置
@@ -21,7 +37,7 @@ export async function 加載方案(方案鍵名: string): Promise<方案配置�
     // 驗證基本結構
     驗證方案(配置)
 
-    return 配置
+    return 補全方案默認值(配置)
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`加載方案「${方案鍵名}」失敗: ${error.message}`)
@@ -153,10 +169,7 @@ export function 從JSON導入(json文本: string): 方案配置介面 {
   try {
     const 配置: 方案配置介面 = JSON.parse(json文本)
     驗證方案(配置)
-    // 對缺失的可選布爾字段補充默認值（false）
-    配置.方案參數.選重編碼化 = 配置.方案參數.選重編碼化 ?? false
-    配置.方案參數.出簡不出全 = 配置.方案參數.出簡不出全 ?? false
-    return 配置
+    return 補全方案默認值(配置)
   } catch (error) {
     if (error instanceof SyntaxError) {
       throw new Error('JSON 格式錯誤: ' + error.message)
@@ -182,6 +195,7 @@ export function 創建空白方案(): 方案配置介面 {
     },
     方案參數: {
       最大碼長: 4,
+      選重鍵表: { ...默認選重鍵表 },
       選重編碼化: false,
       出簡不出全: false,
     },

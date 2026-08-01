@@ -20,12 +20,12 @@ const PUBLIC_DIR = path.resolve(__dirname, '../public')
  */
 function getEnabledSchemes() {
   const builtinSchemesPath = path.resolve(__dirname, '../public/settings/builtin-schemes.json')
-  
+
   if (!fs.existsSync(builtinSchemesPath)) {
     console.warn('⚠️  找不到 builtin-schemes.json')
     return []
   }
-  
+
   try {
     const builtinSchemes = JSON.parse(fs.readFileSync(builtinSchemesPath, 'utf-8'))
     return builtinSchemes.schemes
@@ -89,6 +89,7 @@ function main() {
   // 檢查 data 和 schemes 文件夾是否存在
   const dataSource = path.join(LOCAL_DATA_SOURCE, 'data')
   const schemesSource = path.join(LOCAL_DATA_SOURCE, 'schemes')
+  const textsSource = path.join(LOCAL_DATA_SOURCE, 'texts')
 
   if (!fs.existsSync(dataSource)) {
     console.error('❌ 錯誤: 找不到 data 目錄')
@@ -114,14 +115,22 @@ function main() {
     copyDir(dataSource, dataTarget)
 
     console.log('')
+    console.log('📦 複製 texts 文件夾...')
+    if (fs.existsSync(textsSource)) {
+      copyDir(textsSource, path.join(PUBLIC_DIR, 'texts'))
+    } else {
+      console.warn('⚠️  找不到 texts 目錄，跳過連續文本語料')
+    }
+
+    console.log('')
     console.log('📦 複製 schemes 文件夾...')
     const schemesTarget = path.join(PUBLIC_DIR, 'schemes')
-    
+
     // 確保目標目錄存在
     if (!fs.existsSync(schemesTarget)) {
       fs.mkdirSync(schemesTarget, { recursive: true })
     }
-    
+
     // 獲取啟用的方案列表
     const enabledSchemes = getEnabledSchemes()
     if (enabledSchemes.length === 0) {
@@ -131,7 +140,7 @@ function main() {
       for (const schemeFile of enabledSchemes) {
         const sourcePath = path.join(schemesSource, schemeFile)
         const targetPath = path.join(schemesTarget, schemeFile)
-        
+
         if (fs.existsSync(sourcePath)) {
           try {
             const stats = fs.statSync(sourcePath)

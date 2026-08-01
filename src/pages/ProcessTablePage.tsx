@@ -138,16 +138,41 @@ const ProcessTablePage: React.FC = () => {
     )
   }
 
-  // 抓取碼表（仅下載不解析）
-  const 抓取碼表 = async () => {
-    if (!當前方案?.元數據.碼表下載鏈接) {
-      設置錯誤信息('没有碼表下載鏈接')
+  // 解析指定文件（不管理加載中狀態，由調用方負責）
+  const 解析碼表文件 = async (文件: RcFile) => {
+    if (!當前方案) {
+      設置錯誤信息('請先在首頁選擇或創建方案')
       return
     }
 
-    設置加載中(true)
-    設置錯誤信息(null)
-    設置成功信息(null)
+    // 如果没有碼表元數據，使用默認值創建
+    const 分隔符 = 當前方案.碼表元數據?.分隔符 || '製表符'
+    const 第一列類型 = 當前方案.碼表元數據?.第一列類型 || '字符'
+
+    設置編碼預覽數據([])
+
+    try {
+      const 文本 = await 讀取文件(文件)
+      const 解析結果 = await 碼表處理服務實例.解析原始碼表文本(文本, 分隔符, 第一列類型)
+
+      if (!解析結果.rawCodeTable || 解析結果.rawCodeTable.size === 0) {
+        throw new Error('碼表解析失敗，請檢查格式是否正確')
+      }
+
+      await 處理碼表(解析結果.rawCodeTable, 文件.name)
+    } catch (error) {
+      設置錯誤信息(error instanceof Error ? error.message : '解析失敗')
+    }
+  }
+
+  // 下載碼表並生成虚拟文件；失敗時返回 null（錯誤信息已就位）
+  // 之所以把文件返回出去，是因爲「抓取＋解析」要在同一輪事件裏接着解析，
+  // 而此時 設置選中的文件 引起的狀態更新還没生效，只能用返回值傳遞
+  const 下載碼表文件 = async (): Promise<RcFile | null> => {
+    if (!當前方案?.元數據.碼表下載鏈接) {
+      設置錯誤信息('没有碼表下載鏈接')
+      return null
+    }
 
     try {
       // 下載碼表
@@ -168,9 +193,40 @@ const ProcessTablePage: React.FC = () => {
       }) as RcFile
       設置選中的文件(虚拟文件)
 
-      設置成功信息('碼表已抓取，請點擊「開始解析」')
+      return 虚拟文件
     } catch (error) {
       設置錯誤信息(error instanceof Error ? error.message : '抓取失敗')
+      return null
+    }
+  }
+
+  // 抓取碼表（仅下載不解析）
+  const 抓取碼表 = async () => {
+    設置加載中(true)
+    設置錯誤信息(null)
+    設置成功信息(null)
+
+    try {
+      const 文件 = await 下載碼表文件()
+      if (文件) {
+        設置成功信息('碼表已抓取，請點擊「開始解析」')
+      }
+    } finally {
+      設置加載中(false)
+    }
+  }
+
+  // 抓取＋解析（快捷路徑：等同於先點「抓取」再點「開始解析」）
+  const 抓取並解析 = async () => {
+    設置加載中(true)
+    設置錯誤信息(null)
+    設置成功信息(null)
+
+    try {
+      const 文件 = await 下載碼表文件()
+      if (文件) {
+        await 解析碼表文件(文件)
+      }
     } finally {
       設置加載中(false)
     }
@@ -207,26 +263,12 @@ const ProcessTablePage: React.FC = () => {
       return
     }
 
-    // 如果没有碼表元數據，使用默認值創建
-    const 分隔符 = 當前方案.碼表元數據?.分隔符 || '製表符'
-    const 第一列類型 = 當前方案.碼表元數據?.第一列類型 || '字符'
-
     設置加載中(true)
     設置錯誤信息(null)
     設置成功信息(null)
-    設置編碼預覽數據([])
 
     try {
-      const 文本 = await 讀取文件(選中的文件)
-      const 解析結果 = await 碼表處理服務實例.解析原始碼表文本(文本, 分隔符, 第一列類型)
-
-      if (!解析結果.rawCodeTable || 解析結果.rawCodeTable.size === 0) {
-        throw new Error('碼表解析失敗，請檢查格式是否正確')
-      }
-
-      await 處理碼表(解析結果.rawCodeTable, 選中的文件.name)
-    } catch (error) {
-      設置錯誤信息(error instanceof Error ? error.message : '解析失敗')
+      await 解析碼表文件(選中的文件)
     } finally {
       設置加載中(false)
     }
@@ -283,6 +325,16 @@ const ProcessTablePage: React.FC = () => {
                   disabled={!當前方案.碼表元數據}
                 >
                   抓取
+                </Button>
+                {/* 快捷路徑：抓取後直接接着解析，省掉中間那一次點擊 */}
+                <Button
+                  icon={<ThunderboltOutlined />}
+                  size="middle"
+                  onClick={抓取並解析}
+                  loading={加載中}
+                  disabled={!當前方案.碼表元數據}
+                >
+                  抓取+解析
                 </Button>
               </Space>
             </div>

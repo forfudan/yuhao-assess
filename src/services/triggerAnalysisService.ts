@@ -22,6 +22,7 @@ export function 觸發所有分析計算(
       '/static',
       '/candidates',
       '/speed',
+      '/continuous',
       '/efficiency',
       '/heatmap',
     ]

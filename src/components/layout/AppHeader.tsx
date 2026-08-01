@@ -13,7 +13,8 @@ import { 當前方案原子狀態 } from '@/atoms/scheme'
 import { 動態選重分析原子狀態 } from '@/atoms/dynamicDuplicate'
 import { 靜態重碼分析原子狀態 } from '@/atoms/staticDuplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
-import { 速度當量分析原子狀態 } from '@/atoms/speedEquivalent'
+import { 速度當量分析原子狀態, 當量詳情原子狀態 } from '@/atoms/speedEquivalent'
+import { 連續文本當量分析原子狀態, 展開連續文本當量結果 } from '@/atoms/continuousEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 鍵位熱力分析原子狀態 } from '@/atoms/keyboardHeatmap'
 import { 碼表原子狀態, 原始碼表原子狀態, 編碼預覽數據原子狀態 } from '@/atoms/codeTable'
@@ -58,6 +59,8 @@ export function AppHeader() {
   const 動態選重分析結果 = useAtomValue(動態選重分析原子狀態)
   const 候選個數分析結果 = useAtomValue(候選個數分析原子狀態)
   const 速度當量分析結果 = useAtomValue(速度當量分析原子狀態)
+  const 設置當量詳情 = useSetAtom(當量詳情原子狀態)
+  const [連續文本當量分析結果, 設置連續文本當量分析結果] = useAtom(連續文本當量分析原子狀態)
   const 簡碼效率分析結果 = useAtomValue(簡碼效率分析原子狀態)
   const 鍵位熱力分析結果 = useAtomValue(鍵位熱力分析原子狀態)
   const 編碼預覽數據 = useAtomValue(編碼預覽數據原子狀態)
@@ -75,6 +78,8 @@ export function AppHeader() {
       設置動態選重分析結果,
       設置候選個數分析結果,
       設置速度當量分析結果,
+      設置當量詳情,
+      設置連續文本當量分析結果,
       設置簡碼效率分析結果,
       設置鍵位熱力分析結果,
     })
@@ -105,6 +110,8 @@ export function AppHeader() {
         const 數據中的速度當量結果 = 測評結果?.速度當量分析
         const 數據中的簡碼效率結果 = 測評結果?.簡碼效率分析
         const 數據中的鍵位熱力結果 = 測評結果?.鍵位熱力
+        // 存檔裡的分佈是緊湊格點形式，展開後才能直接餵給圖表
+        const 數據中的連續文本當量結果 = 展開連續文本當量結果(測評結果?.連續文本當量)
 
         // 如果有分析結果，寫入 atom
         if (數據中的靜態重碼結果) {
@@ -143,6 +150,8 @@ export function AppHeader() {
           設置鍵位熱力分析結果(null)
         }
 
+        設置連續文本當量分析結果(數據中的連續文本當量結果)
+
         const 結果提示 = [
           數據中的靜態重碼結果 && '靜態重碼分析',
           數據中的動態選重結果 && '動態選重分析',
@@ -150,6 +159,7 @@ export function AppHeader() {
           數據中的速度當量結果 && '速度當量分析',
           數據中的簡碼效率結果 && '簡碼效率分析',
           數據中的鍵位熱力結果 && '鍵位熱力分析',
+          數據中的連續文本當量結果 && '連續文本當量分析',
         ]
           .filter(Boolean)
           .join('、')
@@ -180,6 +190,7 @@ export function AppHeader() {
         速度當量分析結果,
         簡碼效率分析結果,
         鍵位熱力分析結果,
+        連續文本當量分析結果,
       },
       false
     )
