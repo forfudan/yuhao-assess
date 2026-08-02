@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useAtom } from 'jotai'
-import { Button, Space, Typography, Alert, Spin, Select, Divider, message } from 'antd'
+import { useAtom, useAtomValue } from 'jotai'
+import { Button, Space, Typography, Alert, Spin, Select, Divider, message, Tooltip } from 'antd'
 import { LineChartOutlined } from '@ant-design/icons'
 import { 碼表原子狀態 } from '../atoms/codeTable'
-import { 當前方案原子狀態 } from '../atoms/scheme'
+import { 當前方案原子狀態, 方案列表原子狀態 } from '../atoms/scheme'
 import { 當量表原子狀態 } from '../atoms/equivTable'
 import { 連續文本當量分析原子狀態 } from '../atoms/continuousEquivalent'
 import type { 連續文本當量碼表口徑, 連續文本當量分析結果介面 } from '../atoms/continuousEquivalent'
@@ -15,12 +15,12 @@ import {
 import { 當量表服務實例 } from '../services/equivTableService'
 import ContinuousEquivalentChart from '../components/ContinuousEquivalentChart'
 import {
+  取可用參考方案,
   取參考分佈,
   取參考方案名,
-  參考方案列表,
-  默認參考方案,
-} from '../data/continuousEquivalentReference'
-import type { 參考方案鍵名 } from '../data/continuousEquivalentReference'
+  取參考窗口長度,
+  默認參考方案鍵名,
+} from '../services/continuousEquivalentReference'
 import { 默認選重鍵表 } from '../types/scheme'
 import type { 處理後的碼表結果介面 } from '../types'
 
@@ -29,8 +29,8 @@ const { Paragraph, Text, Link } = Typography
 /** 參與分析的碼表口徑 */
 const 連續文本當量口徑列表: 連續文本當量碼表口徑[] = ['全碼加選重', '全部簡碼加選重']
 
-/** 參考曲線的下拉選項值：某個參考方案，或關掉不畫 */
-type 參考方案選擇 = 參考方案鍵名 | '不顯示'
+/** 參考曲線的下拉選項值：某個方案的標識符，或關掉不畫 */
+const 不顯示參考 = '不顯示'
 
 /**
  * 連續文本當量分析頁面
@@ -42,13 +42,15 @@ const ContinuousSpeedEquivalentPage: React.FC = () => {
   const [碼表數據] = useAtom(碼表原子狀態)
   const [當量表] = useAtom(當量表原子狀態)
   const [當前方案] = useAtom(當前方案原子狀態)
+  // 參考曲線的 μ / σ 就從這些方案的 測評結果.連續文本當量 裡讀
+  const 方案列表 = useAtomValue(方案列表原子狀態)
   const [連續文本當量結果, 設置連續文本當量結果] = useAtom(連續文本當量分析原子狀態)
 
   const [計算中, 設置計算中] = useState(false)
   const [錯誤信息, 設置錯誤信息] = useState<string | null>(null)
   const [窗口長度, 設置窗口長度] = useState(100)
   const [樣本數, 設置樣本數] = useState(20000)
-  const [參考方案, 設置參考方案] = useState<參考方案選擇>(默認參考方案)
+  const [參考方案, 設置參考方案] = useState<string>(默認參考方案鍵名)
   // 記住上次算過的碼表對象，換方案後自動重算（而不是留着上一個方案的圖）
   const 上次碼表 = useRef<unknown>(null)
   // 已經按存檔對齊過下拉選單的那個結果對象，避免蓋掉用戶隨後的手動選擇
@@ -144,10 +146,29 @@ const ContinuousSpeedEquivalentPage: React.FC = () => {
         .map(口徑 => 連續文本當量結果.統計[口徑])
         .filter((項): 項 is NonNullable<typeof 項> => 項 !== undefined)
     : []
-  // 選了「不顯示」就完全不查參考分佈，圖上只剩實測分佈
-  const 當前參考方案 = 參考方案 === '不顯示' ? null : 參考方案
+  // 可選的參考方案：内置方案裡存有連續文本當量的那些，順序同内置方案列表
+  const 可用參考方案 = 取可用參考方案(方案列表)
+  /**
+   * 實際生效的參考方案
+   *
+   * 選了「不顯示」就完全不查參考分佈，圖上只剩實測分佈。
+   * 默認的卿雲萬一不在列表裡（被停用、或方案列表還没加載完），
+   * 退回列表第一項，免得選單顯示一個查不到數據的鍵名。
+   */
+  const 當前參考方案 =
+    參考方案 === 不顯示參考
+      ? null
+      : (可用參考方案.find(項 => 項.鍵名 === 參考方案)?.鍵名 ?? 可用參考方案[0]?.鍵名 ?? null)
   const 取當前參考 = (口徑: 連續文本當量碼表口徑, 窗口: number) =>
-    當前參考方案 ? 取參考分佈(當前參考方案, 口徑, 窗口) : undefined
+    當前參考方案 ? 取參考分佈(方案列表, 當前參考方案, 口徑, 窗口) : undefined
+
+  // 參考方案的存檔只有一個窗口長度；和當前圖對不上時不畫曲線，並説明原因
+  const 參考存檔窗口 = 當前參考方案 ? 取參考窗口長度(方案列表, 當前參考方案) : undefined
+  const 參考窗口不符 =
+    當前參考方案 !== null &&
+    連續文本當量結果 !== null &&
+    參考存檔窗口 !== undefined &&
+    參考存檔窗口 !== 連續文本當量結果.窗口長度
 
   // x 軸範圍要同時容下實測分佈和參考曲線的 ±3σ，
   // 否則參考方案和當前方案差得遠時，曲線會整條落在畫面外
@@ -223,14 +244,25 @@ const ContinuousSpeedEquivalentPage: React.FC = () => {
           <Space size={4}>
             <Text type="secondary">參考方案</Text>
             <Select
-              value={參考方案}
+              value={當前參考方案 ?? 不顯示參考}
               onChange={設置參考方案}
-              style={{ width: 110 }}
+              style={{ width: 130 }}
+              showSearch
+              optionFilterProp="label"
               options={[
-                ...參考方案列表.map(項 => ({ value: 項.鍵名, label: 項.方案名 })),
-                { value: '不顯示' as const, label: '不顯示' },
+                ...可用參考方案.map(項 => ({ value: 項.鍵名, label: 項.方案名 })),
+                { value: 不顯示參考, label: 不顯示參考 },
               ]}
             />
+            {參考窗口不符 && (
+              <Tooltip
+                title={`${取參考方案名(方案列表, 當前參考方案!)}的存檔是按 ${參考存檔窗口} 字窗口算的，和當前的 ${連續文本當量結果?.窗口長度} 字不可比，故不畫參考曲線。`}
+              >
+                <Text type="warning" style={{ cursor: 'help' }}>
+                  窗口不符
+                </Text>
+              </Tooltip>
+            )}
           </Space>
           <Button
             type="primary"
@@ -285,7 +317,7 @@ const ContinuousSpeedEquivalentPage: React.FC = () => {
                     標題={口徑}
                     共用範圍={共用範圍}
                     參考分佈={取當前參考(口徑, 連續文本當量結果.窗口長度)}
-                    參考方案名={當前參考方案 ? 取參考方案名(當前參考方案) : undefined}
+                    參考方案名={當前參考方案 ? 取參考方案名(方案列表, 當前參考方案) : undefined}
                   />
                 )
               })}

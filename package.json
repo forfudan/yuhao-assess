@@ -7,7 +7,6 @@
     "fetch": "node scripts/fetch-data.js",
     "fetchlocal": "node scripts/fetch-local.js",
     "recompute": "tsx scripts/recompute-schemes.mts",
-    "reference": "tsx scripts/compute-reference.mts",
     "dev": "vite",
     "build": "node scripts/fetch-data.js && tsc && vite build",
     "buildcf": "node scripts/build-cf.js",
@@ -16,7 +15,7 @@
     "lint": "eslint . --ext .ts,.tsx --fix --ignore-path .gitignore",
     "format": "prettier --write \"**/*.{ts,tsx,json,md,css}\"",
     "tc": "tsx src/utils/normalize-traditional-chars.ts \"src/**/*.{ts,tsx}\" \"docs/**/*.md\"",
-    "prepare": "husky init"
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

@@ -2,7 +2,7 @@
  * 簡碼效率分析 Atom 狀態
  */
 
-import { atom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
 
 /**
  * 單個 N 值的簡碼效率結果（不含字符串）
@@ -75,5 +75,11 @@ export interface 簡碼效率分析結果介面 {
 /**
  * 簡碼效率分析結果的原子狀態
  * 全局狀態，可以被導入導出
+ *
+ * 持久化到 localStorage：選預設方案時結果是從方案 JSON 的存檔讀出來的，
+ * 碼表本身並没有載入，刷新後無從重算，只能靠持久化把結果留住。
  */
-export const 簡碼效率分析原子狀態 = atom<簡碼效率分析結果介面 | null>(null)
+export const 簡碼效率分析原子狀態 = atomWithStorage<簡碼效率分析結果介面 | null>(
+  '簡碼效率分析',
+  null
+)

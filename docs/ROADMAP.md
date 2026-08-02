@@ -131,7 +131,7 @@
 **目録結構**（2026-02-04 更新）：
 
 ```text
-/Users/ZHU/Programs/ime/
+/Users/ZHU/Programs/yuhao-ime/
 ├── yuhao-assess/              # 主應用
 │   ├── public/
 │   │   ├── data/             # ← .gitignore（大型數據，開發保留）

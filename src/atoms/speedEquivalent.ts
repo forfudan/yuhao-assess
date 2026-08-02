@@ -2,6 +2,7 @@
  * 速度當量分析結果的 Atom 狀態管理
  */
 import { atom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
 
 /**
  * 速度當量分析結果數據結構
@@ -73,11 +74,20 @@ export interface 當量詳情數據介面 {
 /**
  * 速度當量分析結果
  * 存儲所有字頻類型和碼表類型的當量計算結果
+ *
+ * 持久化到 localStorage：選預設方案時結果是從方案 JSON 的存檔讀出來的，
+ * 碼表本身並没有載入，刷新後無從重算，只能靠持久化把結果留住。
  */
-export const 速度當量分析原子狀態 = atom<速度當量分析結果介面 | null>(null)
+export const 速度當量分析原子狀態 = atomWithStorage<速度當量分析結果介面 | null>(
+  '速度當量分析',
+  null
+)
 
 /**
  * 當量詳情數據介面（用於 Modal 展示）
  * 存儲當前選中的當量例字信息
+ *
+ * 不持久化：這是點開 Modal 才算的幾千條例字，體積大且隨手可重算，
+ * 塞進 localStorage 只會白白擠佔配額。
  */
 export const 當量詳情原子狀態 = atom<當量詳情數據介面 | null>(null)

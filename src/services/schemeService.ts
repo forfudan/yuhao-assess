@@ -4,7 +4,7 @@
  */
 
 import { 默認選重鍵表 } from '../types/scheme'
-import type { 方案配置介面 } from '../types/scheme'
+import type { 方案配置介面, 方案列表項介面 } from '../types/scheme'
 
 /**
  * 給可選字段補默認值
@@ -32,6 +32,14 @@ export async function 加載方案(方案鍵名: string): Promise<方案配置�
       throw new Error(`加載方案失敗: ${response.status} ${response.statusText}`)
     }
 
+    // 部署用的 SPA 回退（見 public/_redirects）會把任何不存在的路徑回成 index.html，
+    // 狀態碼還是 200，於是 response.json() 只能抛出看不懂的 "Unexpected token '<'"。
+    // 這裏按 content-type 攔一道，把它翻譯成人話。
+    const 内容類型 = response.headers.get('content-type') ?? ''
+    if (!内容類型.includes('json')) {
+      throw new Error('方案文件不存在')
+    }
+
     const 配置: 方案配置介面 = await response.json()
 
     // 驗證基本結構
@@ -44,6 +52,21 @@ export async function 加載方案(方案鍵名: string): Promise<方案配置�
     }
     throw new Error(`加載方案「${方案鍵名}」失敗`)
   }
+}
+
+/**
+ * 在方案列表裏反查當前方案的鍵名
+ *
+ * 用 標識符 比對只是爲了在列表裏認出是哪一份存檔（標識符各方案間不重複），
+ * 返回的鍵名纔是文件名。用戶自己導入的方案不在列表裏，返回 undefined，
+ * 選單顯示爲空即可。
+ */
+export function 查找方案鍵名(
+  方案列表: 方案列表項介面[],
+  當前方案: 方案配置介面 | null | undefined
+): string | undefined {
+  if (!當前方案) return undefined
+  return 方案列表.find(項 => 項.配置.元數據.標識符 === 當前方案.元數據.標識符)?.鍵名
 }
 
 /**
