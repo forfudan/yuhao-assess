@@ -7,7 +7,6 @@
     "fetch": "node scripts/fetch-data.js",
     "fetchlocal": "node scripts/fetch-local.js",
     "recompute": "tsx scripts/recompute-schemes.mts",
-    "reference": "tsx scripts/compute-reference.mts",
     "dev": "vite",
     "build": "node scripts/fetch-data.js && tsc && vite build",
     "buildcf": "node scripts/build-cf.js",

@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Button, Space, Upload, App } from 'antd'
+import { Button, Space, Upload, App, Select } from 'antd'
 import {
   DownloadOutlined,
   UploadOutlined,
@@ -9,17 +10,17 @@ import {
 } from '@ant-design/icons'
 import { useAtom, useSetAtom, useAtomValue } from 'jotai'
 import styled from 'styled-components'
-import { 當前方案原子狀態 } from '@/atoms/scheme'
+import { 當前方案原子狀態, 方案列表原子狀態 } from '@/atoms/scheme'
 import { 動態選重分析原子狀態 } from '@/atoms/dynamicDuplicate'
 import { 靜態重碼分析原子狀態 } from '@/atoms/staticDuplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
 import { 速度當量分析原子狀態, 當量詳情原子狀態 } from '@/atoms/speedEquivalent'
-import { 連續文本當量分析原子狀態, 展開連續文本當量結果 } from '@/atoms/continuousEquivalent'
+import { 連續文本當量分析原子狀態 } from '@/atoms/continuousEquivalent'
 import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 鍵位熱力分析原子狀態 } from '@/atoms/keyboardHeatmap'
 import { 碼表原子狀態, 原始碼表原子狀態, 編碼預覽數據原子狀態 } from '@/atoms/codeTable'
-import { 從JSON導入, 創建空白方案 } from '@/services/schemeService'
-import { 清空所有Atom, type AtomSetters } from '@/services/atomResetService'
+import { 創建空白方案, 加載方案, 列出可用方案 } from '@/services/schemeService'
+import { 清空所有Atom, 應用方案數據, type 方案應用Setters } from '@/services/atomResetService'
 import { 導出方案配置JSON } from '@/services/exportService'
 import { 觸發所有分析計算 } from '@/services/triggerAnalysisService'
 import type { 方案配置介面 } from '@/types/scheme'
@@ -44,6 +45,8 @@ export function AppHeader() {
   const navigate = useNavigate()
   const { message } = App.useApp()
   const [當前方案, 設置當前方案] = useAtom(當前方案原子狀態)
+  const [方案列表, 設置方案列表] = useAtom(方案列表原子狀態)
+  const [方案切換中, 設置方案切換中] = useState(false)
   const 設置靜態重碼分析結果 = useSetAtom(靜態重碼分析原子狀態)
   const 設置動態選重分析結果 = useSetAtom(動態選重分析原子狀態)
   const 設置候選個數分析結果 = useSetAtom(候選個數分析原子狀態)
@@ -68,21 +71,70 @@ export function AppHeader() {
   const 顯示標題 = 當前方案 ? 當前方案.元數據.方案名 : '未選擇方案'
   const 可以全局重算 = 編碼預覽數據.length > 0
 
+  // 所有寫入方案狀態的 setter，供 atomResetService 統一調度
+  const 方案Setters: 方案應用Setters = {
+    設置當前方案,
+    設置碼表數據,
+    設置原始碼表,
+    設置編碼預覽數據,
+    設置靜態重碼分析結果,
+    設置動態選重分析結果,
+    設置候選個數分析結果,
+    設置速度當量分析結果,
+    設置當量詳情,
+    設置連續文本當量分析結果,
+    設置簡碼效率分析結果,
+    設置鍵位熱力分析結果,
+  }
+
   // 清空所有原子狀態（統一函數）
-  const 清空所有原子狀態 = () => {
-    清空所有Atom({
-      設置碼表數據,
-      設置原始碼表,
-      設置編碼預覽數據,
-      設置靜態重碼分析結果,
-      設置動態選重分析結果,
-      設置候選個數分析結果,
-      設置速度當量分析結果,
-      設置當量詳情,
-      設置連續文本當量分析結果,
-      設置簡碼效率分析結果,
-      設置鍵位熱力分析結果,
-    })
+  const 清空所有原子狀態 = () => 清空所有Atom(方案Setters)
+
+  /**
+   * 加載預設方案列表
+   *
+   * 頂欄在每個路由下都掛着，由它負責拉列表，
+   * 用戶就算不經過首頁也能直接在頂欄切換方案。
+   */
+  useEffect(() => {
+    let 已卸載 = false
+    async function 初始化方案列表() {
+      try {
+        const 方案鍵名列表 = await 列出可用方案()
+        const 加載的方案列表 = await Promise.all(
+          方案鍵名列表.map(鍵名 =>
+            加載方案(鍵名).catch(錯誤 => {
+              console.error(`❌ [AppHeader] 方案 ${鍵名} 加載失敗:`, 錯誤)
+              return null
+            })
+          )
+        )
+        if (已卸載) return
+        設置方案列表(加載的方案列表.filter((方案): 方案 is 方案配置介面 => 方案 !== null))
+      } catch (錯誤) {
+        console.error('❌ [AppHeader] 加載方案列表失敗:', 錯誤)
+      }
+    }
+    初始化方案列表()
+    return () => {
+      已卸載 = true
+    }
+  }, [設置方案列表])
+
+  // 切換預設方案（與首頁的下拉選單同一套邏輯）
+  const 處理選擇方案 = async (方案鍵名: string) => {
+    設置方案切換中(true)
+    try {
+      const 加載的數據 = await 加載方案(方案鍵名)
+      const { 方案, 已載入結果 } = 應用方案數據(加載的數據, 方案Setters)
+      const 完整提示 = 已載入結果.length > 0 ? `（包含${已載入結果.join('、')}結果）` : ''
+      message.success(`已加載方案「${方案.元數據.方案名}」${完整提示}`)
+    } catch (錯誤) {
+      console.error('[AppHeader] 加載方案失敗:', 錯誤)
+      message.error(錯誤 instanceof Error ? 錯誤.message : '加載方案失敗')
+    } finally {
+      設置方案切換中(false)
+    }
   }
 
   // 導入配置
@@ -93,77 +145,8 @@ export function AppHeader() {
         const 導入數據 = JSON.parse(e.target?.result as string)
         console.log('[AppHeader] 從文件導入的原始數據:', 導入數據)
 
-        // 先清空所有原子狀態
-        清空所有原子狀態()
-
-        // 分離方案配置和測評結果
-        const { 測評結果, ...方案配置 } = 導入數據
-
-        // 驗證方案配置
-        const 方案 = 從JSON導入(JSON.stringify(方案配置))
-        設置當前方案(方案)
-
-        // 從測評結果中讀取分析數據
-        const 數據中的靜態重碼結果 = 測評結果?.靜態重碼分析
-        const 數據中的動態選重結果 = 測評結果?.動態選重分析
-        const 數據中的候選個數結果 = 測評結果?.候選個數分析
-        const 數據中的速度當量結果 = 測評結果?.速度當量分析
-        const 數據中的簡碼效率結果 = 測評結果?.簡碼效率分析
-        const 數據中的鍵位熱力結果 = 測評結果?.鍵位熱力
-        // 存檔裡的分佈是緊湊格點形式，展開後才能直接餵給圖表
-        const 數據中的連續文本當量結果 = 展開連續文本當量結果(測評結果?.連續文本當量)
-
-        // 如果有分析結果，寫入 atom
-        if (數據中的靜態重碼結果) {
-          設置靜態重碼分析結果(數據中的靜態重碼結果)
-        } else {
-          設置靜態重碼分析結果(null)
-        }
-
-        if (數據中的動態選重結果) {
-          設置動態選重分析結果(數據中的動態選重結果)
-        } else {
-          設置動態選重分析結果(null)
-        }
-
-        if (數據中的候選個數結果) {
-          設置候選個數分析結果(數據中的候選個數結果)
-        } else {
-          設置候選個數分析結果(null)
-        }
-
-        if (數據中的速度當量結果) {
-          設置速度當量分析結果(數據中的速度當量結果)
-        } else {
-          設置速度當量分析結果(null)
-        }
-
-        if (數據中的簡碼效率結果) {
-          設置簡碼效率分析結果(數據中的簡碼效率結果)
-        } else {
-          設置簡碼效率分析結果(null)
-        }
-
-        if (數據中的鍵位熱力結果) {
-          設置鍵位熱力分析結果(數據中的鍵位熱力結果)
-        } else {
-          設置鍵位熱力分析結果(null)
-        }
-
-        設置連續文本當量分析結果(數據中的連續文本當量結果)
-
-        const 結果提示 = [
-          數據中的靜態重碼結果 && '靜態重碼分析',
-          數據中的動態選重結果 && '動態選重分析',
-          數據中的候選個數結果 && '候選個數分析',
-          數據中的速度當量結果 && '速度當量分析',
-          數據中的簡碼效率結果 && '簡碼效率分析',
-          數據中的鍵位熱力結果 && '鍵位熱力分析',
-          數據中的連續文本當量結果 && '連續文本當量分析',
-        ]
-          .filter(Boolean)
-          .join('、')
-        const 完整提示 = 結果提示 ? `（包含${結果提示}結果）` : ''
+        const { 方案, 已載入結果 } = 應用方案數據(導入數據, 方案Setters)
+        const 完整提示 = 已載入結果.length > 0 ? `（包含${已載入結果.join('、')}結果）` : ''
         message.success(`已導入配置「${方案.元數據.方案名}」${完整提示}`)
       } catch (錯誤) {
         console.error('[AppHeader] 導入配置失敗:', 錯誤)
@@ -239,6 +222,23 @@ export function AppHeader() {
     <HeaderContainer>
       <PageTitle>{顯示標題}</PageTitle>
       <Space>
+        {/* 不加文字標籤：左邊的大標題已經是當前方案名，選單指向什麼一望而知 */}
+        <Select
+          style={{ width: 160 }}
+          size="small"
+          placeholder="切換預設方案"
+          loading={方案切換中}
+          value={
+            方案列表.some(方案 => 方案.元數據.標識符 === 當前方案?.元數據.標識符)
+              ? 當前方案?.元數據.標識符
+              : undefined
+          }
+          onChange={處理選擇方案}
+          options={方案列表.map(方案 => ({
+            value: 方案.元數據.標識符,
+            label: 方案.元數據.方案名,
+          }))}
+        />
         <Upload beforeUpload={處理導入JSON} showUploadList={false} accept="application/json">
           <Button icon={<UploadOutlined />} size="small">
             導入

@@ -12,8 +12,8 @@
  * 連續文本當量存的是分佈的格點計數加幾個統計量，不是幾萬個原始樣本值，
  * 每個方案只多出幾 KB，換來的是導入 JSON 的人不必再等一次抽樣就能看圖。
  *
- * 跑完會順帶更新連續文本當量的參考分佈常量（見 compute-reference.mts），
- * 所以平時只需要這一條命令。參考分佈的輸入没變時會自動跳過，不會白等一分鐘。
+ * 連續文本當量圖上的參考曲線直接讀各方案 JSON 裡的這份存檔，
+ * 不再另外生成常量表，所以這條命令跑完就沒有别的東西要同步了。
  *
  * 碼表來源優先級：
  *   1. yuhao-assess-data/tables/<方案>.txt（有就用，便於把碼表釘在某個版本）
@@ -22,8 +22,8 @@
  * 用法：
  *   pnpm recompute            重算並回寫
  *   pnpm recompute --dry-run  只報告差異，不寫文件
- *   pnpm recompute --refresh  忽略下載緩存與參考分佈指紋，全部重新拉取和重算
- *   pnpm recompute xuma sky   只重算指定方案（參考分佈照常檢查）
+ *   pnpm recompute --refresh  忽略碼表下載緩存，全部重新拉取和重算
+ *   pnpm recompute xuma sky   只重算指定方案
  *
  * 注意：腳本直接複用 src/services 下的生產代碼，不另寫一份解析邏輯，
  * 以免和網頁端算出不同的結果。瀏覽器 API（fetch）在下面用本地文件墊片。
@@ -64,8 +64,6 @@ const { 清洗連續文本, 蒙特卡洛連續文本當量 } =
   await import('../src/services/continuousEquivalentService.ts')
 const { 壓縮連續文本當量結果 } = await import('../src/atoms/continuousEquivalent.ts')
 const { 默認選重鍵表 } = await import('../src/types/scheme.ts')
-// 參考分佈跟着一起更新，省得用戶記兩條命令；輸入没變時它自己會跳過
-const { 生成參考分佈 } = await import('./compute-reference.mts')
 
 // ---------------------------------------------------------------------------
 // 工具
@@ -366,12 +364,6 @@ async function main() {
     console.log('💡 修法二選一：把 txt 放進 yuhao-assess-data/tables/，')
     console.log('   或在方案 JSON 的 元數據.碼表下載鏈接 填上碼表地址，然後重跑')
   }
-  // 參考分佈依賴卿雲的 選重鍵表，所以必須排在方案重算之後
-  console.log('')
-  console.log('─'.repeat(60))
-  console.log('')
-  await 生成參考分佈({ 試運行, 強制: 強制刷新 })
-
   if (!試運行 && 已更新.length > 0) {
     console.log('')
     console.log('💡 接下來：cd ../yuhao-assess-data && ./update-data.sh 推送，')

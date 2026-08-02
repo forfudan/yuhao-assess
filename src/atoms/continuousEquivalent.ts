@@ -1,7 +1,7 @@
 /**
  * 連續文本當量分析結果的 Atom 狀態管理
  */
-import { atom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
 import type { 連續文本當量統計介面, 緊湊分佈介面 } from '../services/continuousEquivalentService'
 import { 壓縮分佈, 展開分佈 } from '../services/continuousEquivalentService'
 
@@ -77,5 +77,11 @@ export function 展開連續文本當量結果(
 
 /**
  * 連續文本當量分析結果原子狀態
+ *
+ * 持久化到 localStorage：選預設方案時結果是從方案 JSON 的存檔讀出來的，
+ * 碼表本身並没有載入，刷新後無從重算，只能靠持久化把結果留住。
  */
-export const 連續文本當量分析原子狀態 = atom<連續文本當量分析結果介面 | null>(null)
+export const 連續文本當量分析原子狀態 = atomWithStorage<連續文本當量分析結果介面 | null>(
+  '連續文本當量分析',
+  null
+)

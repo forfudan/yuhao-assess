@@ -1,7 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react'
 import { 分佈重新分箱 } from '../services/continuousEquivalentService'
 import type { 連續文本當量統計介面 } from '../services/continuousEquivalentService'
-import type { 參考分佈項介面 } from '../data/continuousEquivalentReference'
+import type { 參考分佈項介面 } from '../services/continuousEquivalentReference'
 
 /**
  * 連續文本當量分佈圖
