@@ -37,6 +37,8 @@ interface 屬性介面 {
   統計: 連續文本當量統計介面
   /** 圖表標題（如「全碼加選重」） */
   標題: string
+  /** 標題下的一行補充，例如兩邊實際參與的簡碼個數 */
+  副標題?: string
   /** 多圖共用的 x 軸範圍，便於橫向比較 */
   共用範圍?: { 最小值: number; 最大值: number }
   /** 參考方案的常態分佈參數，疊在直方圖下作對照 */
@@ -74,6 +76,7 @@ function 取整齊步長(原始步長: number): number {
 export const ContinuousEquivalentChart: React.FC<屬性介面> = ({
   統計,
   標題,
+  副標題,
   共用範圍,
   參考分佈,
   參考方案名,
@@ -150,6 +153,7 @@ export const ContinuousEquivalentChart: React.FC<屬性介面> = ({
       >
         {標題}
       </div>
+      {副標題 && <div style={{ fontSize: 12, color: 配色.次要字, marginBottom: 2 }}>{副標題}</div>}
       <div style={{ fontSize: 12, color: 配色.弱化字, marginBottom: 6 }}>
         {統計.樣本數.toLocaleString()} 個樣本 · 每樣本 {統計.窗口長度} 字 · 標準差 σ={' '}
         {統計.標準差.toFixed(3)}

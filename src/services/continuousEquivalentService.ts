@@ -6,9 +6,10 @@
  * 逐窗口計算相鄰碼對的平均當量，得到當量的分佈。
  */
 
-import type { 碼表型别 } from '../types'
+import type { 碼表型别, 字頻來源型别, 頻率數據型别 } from '../types'
 import { 默認選重鍵表 } from '../types/scheme'
 import type { 選重鍵表型别 } from '../types/scheme'
+import { 取按收益排序的簡碼字符 } from './shortCodeEfficiencyService'
 import { 替換選重鍵 } from './speedEquivalentService'
 
 /** 連續文本語料路徑（由 pnpm run fetch / fetchlocal 同步到 public/texts/） */
@@ -449,4 +450,143 @@ export function 分佈重新分箱(
     佔比: 總數 > 0 ? 個數 / 總數 : 0,
     原始個數: 計數[i] as number,
   }))
+}
+
+/**
+ * 簡碼加選重的分檔
+ *
+ * 數字檔是該字頻下收益最高的前 N 個簡碼；「全部」是這份排序裏的每一個有效簡碼。
+ * 某一檔只有在方案的有效簡碼不少于該數字時才會被算出來。
+ */
+export const 簡碼分檔數值列表 = [25, 50, 100, 200, 300, 400, 500] as const
+
+export const 全部簡碼分檔 = '全部' as const
+
+export type 簡碼分檔鍵 = `${(typeof 簡碼分檔數值列表)[number]}` | typeof 全部簡碼分檔
+
+/** 頁面上字頻下拉的順序，與對比頁一致 */
+export const 簡碼分檔字頻列表: readonly 字頻來源型别[] = [
+  '知乎簡體',
+  '北語簡體',
+  '臺標繁體',
+  '古籍繁體',
+  '繁簡聯合',
+]
+
+/** 一個字頻、一個檔位下的連續文本當量 */
+export interface 簡碼分檔當量項介面 {
+  /** 這一檔真正走簡碼的字數。數字檔等於檔位本身，「全部」等於有效簡碼總數 */
+  簡碼個數: number
+  統計: 連續文本當量統計介面
+}
+
+export type 一字頻簡碼分檔介面 = Partial<Record<簡碼分檔鍵, 簡碼分檔當量項介面>>
+
+export type 簡碼分檔表介面 = Partial<Record<字頻來源型别, 一字頻簡碼分檔介面>>
+
+/**
+ * 碼表裏每個字只留一條編碼
+ *
+ * 簡碼取最短，全碼取最長，與簡碼效率頁的口徑一致。
+ */
+function 碼表轉單碼(碼表: 碼表型别, 取最長: boolean): Map<string, string> {
+  const 映射 = new Map<string, string>()
+  for (const [字符, 編碼數組] of 碼表) {
+    if (編碼數組.length === 0) continue
+    const 編碼 = 編碼數組.reduce((甲, 乙) => {
+      if (取最長) return 甲.length >= 乙.length ? 甲 : 乙
+      return 甲.length <= 乙.length ? 甲 : 乙
+    })
+    映射.set(字符, 編碼)
+  }
+  return 映射
+}
+
+/**
+ * 前 N 個字走簡碼，其餘走全碼
+ *
+ * 以全碼表爲底，只把選中的字換成簡碼。選中集合之外的擊鍵與全碼口徑相同。
+ */
+export function 構建前N簡碼碼表(
+  全碼加選重鍵表: 碼表型别,
+  簡碼加選重鍵表: 碼表型别,
+  排序後簡碼字符: readonly string[],
+  個數: number
+): 碼表型别 {
+  const 實際個數 = Math.min(個數, 排序後簡碼字符.length)
+  const 選中 = new Set(排序後簡碼字符.slice(0, 實際個數))
+  const 碼表: 碼表型别 = new Map(全碼加選重鍵表)
+  for (const 字符 of 選中) {
+    const 簡碼 = 簡碼加選重鍵表.get(字符)
+    if (簡碼) 碼表.set(字符, 簡碼)
+  }
+  return 碼表
+}
+
+/**
+ * 計算一個字頻下各檔位的連續文本當量
+ *
+ * 有效簡碼不足某個數字檔時，該檔不寫入。兩邊方案以後按「檔位鍵是否都在」取交集。
+ */
+export function 計算一字頻簡碼分檔當量(
+  清洗後文本: string,
+  全碼加選重鍵表: 碼表型别,
+  簡碼加選重鍵表: 碼表型别,
+  字頻數據: 頻率數據型别,
+  最大碼長: number,
+  當量表: Record<string, number>,
+  選項: 抽樣選項介面 = {}
+): 一字頻簡碼分檔介面 {
+  const 簡碼映射 = 碼表轉單碼(簡碼加選重鍵表, false)
+  const 全碼映射 = 碼表轉單碼(全碼加選重鍵表, true)
+  const 排序 = 取按收益排序的簡碼字符(字頻數據, 簡碼映射, 全碼映射, 最大碼長)
+
+  const 結果: 一字頻簡碼分檔介面 = {}
+  const 檔位: Array<{ 鍵: 簡碼分檔鍵; 個數: number }> = [
+    ...簡碼分檔數值列表
+      .filter(數 => 數 <= 排序.length)
+      .map(數 => ({
+        鍵: String(數) as 簡碼分檔鍵,
+        個數: 數,
+      })),
+    { 鍵: 全部簡碼分檔, 個數: 排序.length },
+  ]
+
+  for (const { 鍵, 個數 } of 檔位) {
+    const 碼表 = 構建前N簡碼碼表(全碼加選重鍵表, 簡碼加選重鍵表, 排序, 個數)
+    結果[鍵] = {
+      簡碼個數: 個數,
+      統計: 蒙特卡洛連續文本當量(清洗後文本, 碼表, 當量表, 選項),
+    }
+  }
+  return 結果
+}
+
+/**
+ * 五個字頻各算一遍分檔
+ */
+export function 計算各字頻簡碼分檔當量(
+  清洗後文本: string,
+  全碼加選重鍵表: 碼表型别,
+  簡碼加選重鍵表: 碼表型别,
+  各字頻: Partial<Record<字頻來源型别, 頻率數據型别>>,
+  最大碼長: number,
+  當量表: Record<string, number>,
+  選項: 抽樣選項介面 = {}
+): 簡碼分檔表介面 {
+  const 結果: 簡碼分檔表介面 = {}
+  for (const 字頻 of 簡碼分檔字頻列表) {
+    const 字頻數據 = 各字頻[字頻]
+    if (!字頻數據) continue
+    結果[字頻] = 計算一字頻簡碼分檔當量(
+      清洗後文本,
+      全碼加選重鍵表,
+      簡碼加選重鍵表,
+      字頻數據,
+      最大碼長,
+      當量表,
+      選項
+    )
+  }
+  return 結果
 }

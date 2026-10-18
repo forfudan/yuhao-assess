@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useAtom, useAtomValue } from 'jotai'
 import { Button, Space, Typography, Alert, Spin, Select, Divider, message, Tooltip } from 'antd'
 import { LineChartOutlined } from '@ant-design/icons'
@@ -11,18 +11,30 @@ import {
   加載連續文本,
   清洗連續文本,
   蒙特卡洛連續文本當量,
+  計算一字頻簡碼分檔當量,
+  簡碼分檔字頻列表,
+  簡碼分檔數值列表,
+  全部簡碼分檔,
 } from '../services/continuousEquivalentService'
+import type { 簡碼分檔鍵, 簡碼分檔表介面 } from '../services/continuousEquivalentService'
 import { 當量表服務實例 } from '../services/equivTableService'
+import { 字頻表服務類别 } from '../services/charFrequencyService'
 import ContinuousEquivalentChart from '../components/ContinuousEquivalentChart'
 import {
   取可用參考方案,
   取參考分佈,
   取參考方案名,
   取參考窗口長度,
+  取當前字頻分檔,
+  取參考字頻分檔,
+  取可比較簡碼檔位,
+  取參考簡碼分檔,
+  讀取簡碼分檔項,
   默認參考方案鍵名,
 } from '../services/continuousEquivalentReference'
 import { 默認選重鍵表 } from '../types/scheme'
-import type { 處理後的碼表結果介面 } from '../types'
+import type { 字頻來源型别, 處理後的碼表結果介面 } from '../types'
+import { 等界面繪製 } from '../utils/wait-for-paint'
 
 const { Paragraph, Text, Link } = Typography
 
@@ -51,6 +63,8 @@ const ContinuousSpeedEquivalentPage: React.FC = () => {
   const [窗口長度, 設置窗口長度] = useState(100)
   const [樣本數, 設置樣本數] = useState(20000)
   const [參考方案, 設置參考方案] = useState<string>(默認參考方案鍵名)
+  const [字頻, 設置字頻] = useState<字頻來源型别>('知乎簡體')
+  const [簡碼檔位, 設置簡碼檔位] = useState<簡碼分檔鍵>(全部簡碼分檔)
   // 記住上次算過的碼表對象，換方案後自動重算（而不是留着上一個方案的圖）
   const 上次碼表 = useRef<unknown>(null)
   // 已經按存檔對齊過下拉選單的那個結果對象，避免蓋掉用户隨後的手動選擇
@@ -87,17 +101,46 @@ const ContinuousSpeedEquivalentPage: React.FC = () => {
         全部簡碼加選重: 處理後碼表.簡碼加選重鍵表,
       }
 
+      const 抽樣 = { 窗口長度, 樣本數, 選重鍵表 }
       const 統計: 連續文本當量分析結果介面['統計'] = {}
       for (const 口徑 of 連續文本當量口徑列表) {
-        統計[口徑] = 蒙特卡洛連續文本當量(清洗後文本, 碼表映射[口徑], 當量表數據, {
-          窗口長度,
-          樣本數,
-          選重鍵表,
-        })
+        統計[口徑] = 蒙特卡洛連續文本當量(清洗後文本, 碼表映射[口徑], 當量表數據, 抽樣)
+      }
+
+      // 簡碼分檔按字頻重排 top N，五個字頻都算好，換下拉時不必再抽樣
+      const [知乎簡體, 北語簡體, 臺標繁體, 古籍繁體] = await Promise.all([
+        字頻表服務類别.加載知乎簡體字頻(),
+        字頻表服務類别.加載北語簡體字頻(),
+        字頻表服務類别.加載臺標繁體字頻(),
+        字頻表服務類别.加載古籍繁體字頻(),
+      ])
+      const 各字頻 = {
+        知乎簡體,
+        北語簡體,
+        臺標繁體,
+        古籍繁體,
+        繁簡聯合: await 字頻表服務類别.計算繁簡聯合字頻(),
+      }
+      const 最大碼長 = 當前方案?.方案參數?.最大碼長 || 4
+      const 簡碼分檔: 簡碼分檔表介面 = {}
+      for (const 來源 of 簡碼分檔字頻列表) {
+        const 字頻數據 = 各字頻[來源]
+        簡碼分檔[來源] = 計算一字頻簡碼分檔當量(
+          清洗後文本,
+          處理後碼表.全碼加選重鍵表,
+          處理後碼表.簡碼加選重鍵表,
+          字頻數據,
+          最大碼長,
+          當量表數據,
+          抽樣
+        )
+        // 每一檔都是一次整段抽樣，讓出主線程，旋轉提示才畫得出來
+        await 等界面繪製()
       }
 
       設置連續文本當量結果({
         統計,
+        簡碼分檔,
         樣本數,
         窗口長度,
         更新時間: new Date().toISOString(),
@@ -140,12 +183,6 @@ const ContinuousSpeedEquivalentPage: React.FC = () => {
     }
   }, [連續文本當量結果])
 
-  // 兩張圖共用 x 軸範圍，便於橫向比較全碼與簡碼的分佈位置
-  const 全部統計 = 連續文本當量結果
-    ? 連續文本當量口徑列表
-        .map(口徑 => 連續文本當量結果.統計[口徑])
-        .filter((項): 項 is NonNullable<typeof 項> => 項 !== undefined)
-    : []
   // 可選的參考方案：内置方案裏存有連續文本當量的那些，順序同内置方案列表
   const 可用參考方案 = 取可用參考方案(方案列表)
   /**
@@ -162,6 +199,74 @@ const ContinuousSpeedEquivalentPage: React.FC = () => {
   const 取當前參考 = (口徑: 連續文本當量碼表口徑, 窗口: number) =>
     當前參考方案 ? 取參考分佈(方案列表, 當前參考方案, 口徑, 窗口) : undefined
 
+  const 當前字頻分檔 = useMemo(
+    () => 取當前字頻分檔(連續文本當量結果, 方案列表, 當前方案?.元數據.標識符, 字頻),
+    [連續文本當量結果, 方案列表, 當前方案, 字頻]
+  )
+  const 參考字頻分檔 = useMemo(
+    () => (當前參考方案 ? 取參考字頻分檔(方案列表, 當前參考方案, 字頻) : undefined),
+    [方案列表, 當前參考方案, 字頻]
+  )
+  const 可比較檔位 = useMemo(
+    () => 取可比較簡碼檔位(當前字頻分檔, 參考字頻分檔, 當前參考方案 !== null),
+    [當前字頻分檔, 參考字頻分檔, 當前參考方案]
+  )
+  const 分檔可用 = 可比較檔位.length > 0
+  const 生效檔位: 簡碼分檔鍵 = 分檔可用
+    ? 可比較檔位.includes(簡碼檔位)
+      ? 簡碼檔位
+      : 可比較檔位.includes(全部簡碼分檔)
+        ? 全部簡碼分檔
+        : (可比較檔位[0] as 簡碼分檔鍵)
+    : 全部簡碼分檔
+
+  // 換字頻或換參考方案後，原先的檔可能已經不在交集裏，拉回一個還在的檔
+  const 檔位簽名 = 可比較檔位.join('|')
+  useEffect(() => {
+    if (!分檔可用 || 可比較檔位.includes(簡碼檔位)) return
+    設置簡碼檔位(生效檔位)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [檔位簽名, 簡碼檔位, 分檔可用])
+
+  const 列表中的當前存檔 = 方案列表.find(項 => 項.配置.元數據.標識符 === 當前方案?.元數據.標識符)
+    ?.配置.測評結果?.連續文本當量
+  // 與 取當前字頻分檔 同一優先級：頁面上的結果裏已有這一字頻，就不用存檔蓋掉
+  const 用運行時分檔 = !!連續文本當量結果?.簡碼分檔?.[字頻]
+  const 當前簡碼項 = 分檔可用
+    ? 讀取簡碼分檔項(用運行時分檔 ? 連續文本當量結果 : 列表中的當前存檔, 字頻, 生效檔位)
+    : undefined
+
+  const 全碼統計 = 連續文本當量結果?.統計.全碼加選重
+  const 簡碼統計 = 分檔可用 ? 當前簡碼項?.統計 : 連續文本當量結果?.統計.全部簡碼加選重
+  const 簡碼參考 =
+    分檔可用 && 當前參考方案 && 連續文本當量結果
+      ? 取參考簡碼分檔(方案列表, 當前參考方案, 字頻, 生效檔位, 連續文本當量結果.窗口長度)
+      : 取當前參考('全部簡碼加選重', 連續文本當量結果?.窗口長度 ?? 窗口長度)
+
+  const 簡碼標題 = !分檔可用
+    ? '全部簡碼加選重'
+    : 生效檔位 === 全部簡碼分檔
+      ? '簡碼加選重 · 全部'
+      : `簡碼加選重 · 前 ${生效檔位}`
+
+  const 簡碼個數説明 = (() => {
+    if (!分檔可用 || !當前簡碼項) return undefined
+    const 當前名 = 當前方案?.元數據.方案名 ?? '當前方案'
+    const 當前句 = `${當前名} ${當前簡碼項.簡碼個數.toLocaleString()} 個簡碼`
+    if (!當前參考方案) return 當前句
+    const 參考個數 = 參考字頻分檔?.[生效檔位]?.簡碼個數
+    if (參考個數 === undefined) return 當前句
+    return `${當前句} · ${取參考方案名(方案列表, 當前參考方案)} ${參考個數.toLocaleString()} 個簡碼`
+  })()
+
+  const 有檔被隱藏 = 分檔可用 && 可比較檔位.length < 簡碼分檔數值列表.length + 1
+  const 參考缺分檔 = 當前參考方案 !== null && !!當前字頻分檔 && !參考字頻分檔
+
+  // 兩張圖共用 x 軸範圍，便於橫向比較全碼與簡碼的分佈位置
+  const 全部統計 = [全碼統計, 簡碼統計].filter(
+    (項): 項 is NonNullable<typeof 項> => 項 !== undefined
+  )
+
   // 參考方案的存檔只有一個窗口長度；和當前圖對不上時不畫曲線，並説明原因
   const 參考存檔窗口 = 當前參考方案 ? 取參考窗口長度(方案列表, 當前參考方案) : undefined
   const 參考窗口不符 =
@@ -174,8 +279,8 @@ const ContinuousSpeedEquivalentPage: React.FC = () => {
   // 否則參考方案和當前方案差得遠時，曲線會整條落在畫面外
   const 參考端點: number[] = []
   if (連續文本當量結果) {
-    for (const 口徑 of 連續文本當量口徑列表) {
-      const 參考 = 取當前參考(口徑, 連續文本當量結果.窗口長度)
+    const 全碼參考 = 取當前參考('全碼加選重', 連續文本當量結果.窗口長度)
+    for (const 參考 of [全碼參考, 簡碼參考]) {
       if (參考) {
         參考端點.push(參考.平均數 - 3 * 參考.標準差, 參考.平均數 + 3 * 參考.標準差)
       }
@@ -212,10 +317,15 @@ const ContinuousSpeedEquivalentPage: React.FC = () => {
             字的窗口，計算窗口内相鄰碼對的平均當量，重複多次得到當量的分佈。不足一個窗口的尾部不參與計算。
           </Paragraph>
 
-          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+          <Paragraph type="secondary" style={{ marginBottom: 12 }}>
             <strong>90% VaR</strong> 是右側 90% 分位數：只有一成的文本比它更慢。
             <strong>90% CVaR</strong> 是這一成最慢文本的平均當量，圖中紅色區域即這批樣本。 VaR
             只給出門檻，CVaR 進一步告訴你「真碰上難打的段落時，平均有多慢」。
+          </Paragraph>
+
+          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+            簡碼圖按所選字頻把有效簡碼排成 top N（字頻 ×
+            節省的碼長）。選中的字走簡碼，其餘走全碼。數字檔只有在當前方案和參考方案都有不少於該檔的簡碼時才出現；選「全部」時兩邊各自用上自己的全部有效簡碼，個數可以不同。
           </Paragraph>
         </div>
 
@@ -264,6 +374,38 @@ const ContinuousSpeedEquivalentPage: React.FC = () => {
               </Tooltip>
             )}
           </Space>
+          <Space size={4}>
+            <Text type="secondary">字頻</Text>
+            <Select
+              value={字頻}
+              onChange={設置字頻}
+              style={{ width: 110 }}
+              options={簡碼分檔字頻列表.map(項 => ({ value: 項, label: 項 }))}
+            />
+          </Space>
+          <Space size={4}>
+            <Tooltip
+              title={
+                有檔被隱藏
+                  ? '某個方案的有效簡碼少於該檔時，這一檔不出現。圖下的個數是兩邊真正走簡碼的字數。'
+                  : '前 N 個字走簡碼，其餘走全碼。圖下寫出兩邊實際參與的簡碼個數。'
+              }
+            >
+              <Text type="secondary" style={{ cursor: 'help' }}>
+                簡碼檔位
+              </Text>
+            </Tooltip>
+            <Select
+              value={生效檔位}
+              onChange={設置簡碼檔位}
+              style={{ width: 110 }}
+              options={(分檔可用 ? 可比較檔位 : [全部簡碼分檔]).map(檔 => ({
+                value: 檔,
+                label: 檔 === 全部簡碼分檔 ? '全部' : `前 ${檔}`,
+              }))}
+            />
+            {參考缺分檔 && <Text type="secondary">參考方案還没有簡碼分檔，暫按全部簡碼比較</Text>}
+          </Space>
           <Button
             type="primary"
             icon={<LineChartOutlined />}
@@ -307,20 +449,25 @@ const ContinuousSpeedEquivalentPage: React.FC = () => {
                 gap: 32,
               }}
             >
-              {連續文本當量口徑列表.map(口徑 => {
-                const 統計 = 連續文本當量結果.統計[口徑]
-                if (!統計) return null
-                return (
-                  <ContinuousEquivalentChart
-                    key={口徑}
-                    統計={統計}
-                    標題={口徑}
-                    共用範圍={共用範圍}
-                    參考分佈={取當前參考(口徑, 連續文本當量結果.窗口長度)}
-                    參考方案名={當前參考方案 ? 取參考方案名(方案列表, 當前參考方案) : undefined}
-                  />
-                )
-              })}
+              {全碼統計 && (
+                <ContinuousEquivalentChart
+                  統計={全碼統計}
+                  標題="全碼加選重"
+                  共用範圍={共用範圍}
+                  參考分佈={取當前參考('全碼加選重', 連續文本當量結果.窗口長度)}
+                  參考方案名={當前參考方案 ? 取參考方案名(方案列表, 當前參考方案) : undefined}
+                />
+              )}
+              {簡碼統計 && (
+                <ContinuousEquivalentChart
+                  統計={簡碼統計}
+                  標題={簡碼標題}
+                  副標題={簡碼個數説明}
+                  共用範圍={共用範圍}
+                  參考分佈={簡碼參考}
+                  參考方案名={當前參考方案 ? 取參考方案名(方案列表, 當前參考方案) : undefined}
+                />
+              )}
             </div>
 
             {全部統計[0] && (

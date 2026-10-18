@@ -11,7 +11,8 @@ import {
 } from '@ant-design/icons'
 import { useAtom, useSetAtom, useAtomValue } from 'jotai'
 import styled from 'styled-components'
-import { 當前方案原子狀態, 方案列表原子狀態 } from '@/atoms/scheme'
+import { 當前方案原子狀態, 方案列表原子狀態, 頂欄方案載入名原子狀態 } from '@/atoms/scheme'
+import { 等界面繪製 } from '@/utils/wait-for-paint'
 import { 動態選重分析原子狀態 } from '@/atoms/dynamicDuplicate'
 import { 靜態重碼分析原子狀態 } from '@/atoms/staticDuplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
@@ -40,7 +41,7 @@ const HeaderContainer = styled.div`
   width: 100%;
 
   /* 頂欄底色是深的，而 antd 的禁用態是 4% 黑底 ＋ 25% 黑字——兩者在深色上
-     都看不見，整顆按鈕連字帶框一起消失。「重算」在沒有碼表時就是禁用的，
+     都看不見，整顆按鈕連字帶框一起消失。「重算」在没有碼表時就是禁用的，
      於是頂欄上會憑空出現一個黑方塊。這裏把禁用態改成淺色的半透明。 */
   button:disabled {
     background: rgba(255, 255, 255, 0.08);
@@ -68,6 +69,9 @@ export function AppHeader() {
   const [當前方案, 設置當前方案] = useAtom(當前方案原子狀態)
   const [方案列表, 設置方案列表] = useAtom(方案列表原子狀態)
   const [方案切換中, 設置方案切換中] = useState(false)
+  const 頂欄方案載入名 = useAtomValue(頂欄方案載入名原子狀態)
+  const 設置頂欄方案載入名 = useSetAtom(頂欄方案載入名原子狀態)
+  const 方案載入中 = 方案切換中 || 頂欄方案載入名 !== null
   const 設置靜態重碼分析結果 = useSetAtom(靜態重碼分析原子狀態)
   const 設置動態選重分析結果 = useSetAtom(動態選重分析原子狀態)
   const 設置候選個數分析結果 = useSetAtom(候選個數分析原子狀態)
@@ -161,8 +165,12 @@ export function AppHeader() {
 
   // 切換預設方案（與首頁的下拉選單同一套邏輯）
   const 處理選擇方案 = async (方案鍵名: string) => {
+    const 方案名 = 方案列表.find(項 => 項.鍵名 === 方案鍵名)?.配置.元數據.方案名 ?? 方案鍵名
     設置方案切換中(true)
+    設置頂欄方案載入名(方案名)
     try {
+      // 先讓遮罩畫出來，再解析方案 JSON，否則主線程被占住時提示出不來
+      await 等界面繪製()
       const 加載的數據 = await 加載方案(方案鍵名)
       const { 方案, 已載入結果 } = 應用方案數據(加載的數據, 方案Setters)
       const 完整提示 = 已載入結果.length > 0 ? `（包含${已載入結果.join('、')}結果）` : ''
@@ -172,6 +180,7 @@ export function AppHeader() {
       message.error(錯誤 instanceof Error ? 錯誤.message : '加載方案失敗')
     } finally {
       設置方案切換中(false)
+      設置頂欄方案載入名(null)
     }
   }
 
@@ -227,7 +236,7 @@ export function AppHeader() {
       return
     }
     const 現在 = new Date().toISOString()
-    // 當前方案身上是沒有測評結果的（`應用方案數據` 載入時就把它拆走了，
+    // 當前方案身上是没有測評結果的（`應用方案數據` 載入時就把它拆走了，
     // 結果只活在各個 atom 裏），所以快照與克隆都要在這裏現收一份。
     const 當前測評結果 = 收集測評結果(當前分析結果)
     // 1. 原方案快照（含當前測評結果）存入 local schemes
@@ -255,7 +264,7 @@ export function AppHeader() {
         更新時間: 現在,
       },
       // 克隆的那一份也要帶上結果：自動同步那支 hook 在剛切換標識符時會
-      // 刻意跳過一次，而克隆之後沒有任何結果 atom 變化，它就再也不會觸發，
+      // 刻意跳過一次，而克隆之後没有任何結果 atom 變化，它就再也不會觸發，
       // 這裏不寫的話克隆出來的方案在 localStorage 裏永遠是空的。
       測評結果: 當前測評結果,
     }
@@ -330,7 +339,9 @@ export function AppHeader() {
           style={{ width: 160 }}
           size="small"
           placeholder="切換預設方案"
-          loading={方案切換中}
+          disabled={方案載入中}
+          loading={方案載入中}
+          open={方案載入中 ? false : undefined}
           value={查找方案鍵名(方案列表, 當前方案)}
           onChange={處理選擇方案}
           options={方案列表.map(項 => ({

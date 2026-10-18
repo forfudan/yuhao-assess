@@ -14,7 +14,7 @@ import {
 import { PlusOutlined, PlusCircleOutlined } from '@ant-design/icons'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useState } from 'react'
-import { 當前方案原子狀態, 方案列表原子狀態 } from '@/atoms/scheme'
+import { 當前方案原子狀態, 方案列表原子狀態, 頂欄方案載入名原子狀態 } from '@/atoms/scheme'
 import { 動態選重分析原子狀態 } from '@/atoms/dynamicDuplicate'
 import { 靜態重碼分析原子狀態 } from '@/atoms/staticDuplicate'
 import { 候選個數分析原子狀態 } from '@/atoms/maximumCandidates'
@@ -24,6 +24,7 @@ import { 簡碼效率分析原子狀態 } from '@/atoms/shortCodeEfficiency'
 import { 鍵位熱力分析原子狀態 } from '@/atoms/keyboardHeatmap'
 import { 碼表原子狀態, 原始碼表原子狀態, 編碼預覽數據原子狀態 } from '@/atoms/codeTable'
 import { 加載方案, 查找方案鍵名 } from '@/services/schemeService'
+import { 等界面繪製 } from '@/utils/wait-for-paint'
 import { 清空所有Atom, 應用方案數據, type 方案應用Setters } from '@/services/atomResetService'
 import { useDataPreload } from '@/hooks/useDataPreload'
 import type { 方案配置介面 } from '@/types/scheme'
@@ -48,6 +49,9 @@ function HomePage() {
   const 設置原始碼表 = useSetAtom(原始碼表原子狀態)
   const 設置編碼預覽數據 = useSetAtom(編碼預覽數據原子狀態)
   const [加載中, 設置加載中] = useState(false)
+  const 頂欄方案載入名 = useAtomValue(頂欄方案載入名原子狀態)
+  const 設置頂欄方案載入名 = useSetAtom(頂欄方案載入名原子狀態)
+  const 方案載入中 = 加載中 || 頂欄方案載入名 !== null
 
   // 所有寫入方案狀態的 setter，供 atomResetService 統一調度
   const 方案Setters: 方案應用Setters = {
@@ -78,8 +82,12 @@ function HomePage() {
 
   // 加載預設方案
   const 處理選擇方案 = async (方案鍵名: string) => {
+    const 方案名 = 方案列表.find(項 => 項.鍵名 === 方案鍵名)?.配置.元數據.方案名 ?? 方案鍵名
     設置加載中(true)
+    設置頂欄方案載入名(方案名)
     try {
+      // 先讓遮罩畫出來，再解析方案 JSON，否則主線程被占住時提示出不來
+      await 等界面繪製()
       const 加載的數據 = await 加載方案(方案鍵名)
       const { 方案, 已載入結果 } = 應用方案數據(加載的數據, 方案Setters)
       const 完整提示 = 已載入結果.length > 0 ? `（包含${已載入結果.join('、')}結果）` : ''
@@ -89,6 +97,7 @@ function HomePage() {
       message.error(錯誤 instanceof Error ? 錯誤.message : '加載方案失敗')
     } finally {
       設置加載中(false)
+      設置頂欄方案載入名(null)
     }
   }
 
@@ -199,7 +208,9 @@ function HomePage() {
         <Select
           style={{ width: 300 }}
           placeholder="選擇預設方案"
-          loading={加載中}
+          disabled={方案載入中}
+          loading={方案載入中}
+          open={方案載入中 ? false : undefined}
           onChange={處理選擇方案}
           value={查找方案鍵名(方案列表, 當前方案)}
         >

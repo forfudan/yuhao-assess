@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useAtom, useAtomValue } from 'jotai'
-import { Button, Space, Typography, Table, Modal, Checkbox, message, Alert } from 'antd'
+import { Button, Space, Typography, Table, Modal, Checkbox, message, Alert, Spin } from 'antd'
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { 當前方案原子狀態 } from '@/atoms/scheme'
@@ -23,6 +23,7 @@ import type { 速度當量分析結果介面 } from '@/atoms/speedEquivalent'
 import type { 簡碼效率分析結果介面 } from '@/atoms/shortCodeEfficiency'
 import type { 字頻來源型别, 全碼簡碼型别 } from '@/types'
 import { 累積漢字集名稱型别 } from '@/services/charsetService'
+import { 等界面繪製 } from '@/utils/wait-for-paint'
 
 const { Paragraph } = Typography
 
@@ -102,7 +103,11 @@ const ComparisonPage: React.FC = () => {
   const [臨時已選方案鍵名列表, 設置臨時已選方案鍵名列表] = useState<string[]>([])
   const [對比方案列表, 設置對比方案列表] = useState<對比方案數據介面[]>([])
   const [顯示選擇彈窗, 設置顯示選擇彈窗] = useState(false)
-  const [加載中, 設置加載中] = useState(false)
+  const [載入進度, 設置載入進度] = useState<{ 當前: number; 總數: number; 名稱: string } | null>(
+    null
+  )
+  /** 確認選擇後，等這輪下載結束再提示；進頁和依賴變化觸發的重載不提示 */
+  const 完成後提示 = useRef(false)
 
   // 本地方案
   const 本地方案列表 = useAtomValue(本地方案列表原子狀態)
@@ -138,16 +143,17 @@ const ComparisonPage: React.FC = () => {
   // 刷新對比數據：用計數器觸發 useEffect 重新執行
   const [刷新計數, 設置刷新計數] = useState(0)
   const 刷新對比數據 = () => {
-    設置加載中(true)
     設置刷新計數(c => c + 1)
-    setTimeout(() => 設置加載中(false), 500)
   }
 
   // 加載對比方案數據（内聯於 useEffect 避免閉包問題）
   useEffect(() => {
     if (内置方案列表.length === 0) return
 
+    let 已取消 = false
+
     const 執行加載 = async () => {
+      const 要提示 = 完成後提示.current
       const 方案列表: 對比方案數據介面[] = []
       let 當前方案哈希: string | undefined = undefined
 
@@ -195,38 +201,69 @@ const ComparisonPage: React.FC = () => {
         })
       }
 
-      // 加載選中的内置方案數據
-      for (const key of 選中對比方案鍵名列表) {
-        try {
-          const 方案 = await 加載方案(key)
-          const 方案信息 = 内置方案列表.find(b => b.key === key)
-          const 測評結果 = 方案.測評結果
-          const 方案哈希 = 方案.碼表元數據?.哈希值
-          if (當前方案哈希 && 方案哈希 && 當前方案哈希 === 方案哈希) continue
-          const 方案名 = 方案信息?.name || 方案.元數據.方案名
-          方案列表.push({
-            唯一鍵: `${方案名}-builtin-${key}`,
-            方案名,
-            顯示名稱: 方案名,
-            是否當前方案: false,
-            選重編碼化: !!方案.方案參數?.選重編碼化,
-            出簡不出全: !!方案.方案參數?.出簡不出全,
-            碼表哈希: 方案哈希,
-            動態選重分析: 測評結果?.動態選重分析 || null,
-            靜態重碼分析: 測評結果?.靜態重碼分析 || null,
-            候選個數分析: 測評結果?.候選個數分析 || null,
-            速度當量分析: 測評結果?.速度當量分析 || null,
-            簡碼效率分析: 測評結果?.簡碼效率分析 || null,
-          })
-        } catch (error) {
-          console.error(`❌ 加載方案 ${key} 失敗:`, error)
-        }
-      }
+      const 鍵名列表 = 選中對比方案鍵名列表
+      let 成功數 = 0
+      let 失敗數 = 0
 
-      設置對比方案列表(方案列表)
+      try {
+        // 逐個下載内置方案。每開始一個都先把進度畫出來，再去解析 JSON
+        for (const [i, key] of 鍵名列表.entries()) {
+          const 預覽名 = 内置方案列表.find(b => b.key === key)?.name ?? key
+          設置載入進度({ 當前: i + 1, 總數: 鍵名列表.length, 名稱: 預覽名 })
+          await 等界面繪製()
+          if (已取消) return
+
+          try {
+            const 方案 = await 加載方案(key)
+            if (已取消) return
+            成功數++
+            const 方案信息 = 内置方案列表.find(b => b.key === key)
+            const 測評結果 = 方案.測評結果
+            const 方案哈希 = 方案.碼表元數據?.哈希值
+            if (當前方案哈希 && 方案哈希 && 當前方案哈希 === 方案哈希) continue
+            const 方案名 = 方案信息?.name || 方案.元數據.方案名
+            方案列表.push({
+              唯一鍵: `${方案名}-builtin-${key}`,
+              方案名,
+              顯示名稱: 方案名,
+              是否當前方案: false,
+              選重編碼化: !!方案.方案參數?.選重編碼化,
+              出簡不出全: !!方案.方案參數?.出簡不出全,
+              碼表哈希: 方案哈希,
+              動態選重分析: 測評結果?.動態選重分析 || null,
+              靜態重碼分析: 測評結果?.靜態重碼分析 || null,
+              候選個數分析: 測評結果?.候選個數分析 || null,
+              速度當量分析: 測評結果?.速度當量分析 || null,
+              簡碼效率分析: 測評結果?.簡碼效率分析 || null,
+            })
+          } catch (error) {
+            if (已取消) return
+            失敗數++
+            console.error(`❌ 加載方案 ${key} 失敗:`, error)
+          }
+        }
+
+        if (已取消) return
+        設置對比方案列表(方案列表)
+        if (要提示) {
+          完成後提示.current = false
+          if (鍵名列表.length === 0) {
+            message.success('已更新對比方案列表')
+          } else if (失敗數 > 0) {
+            message.warning(`已載入 ${成功數} 個對比方案，${失敗數} 個載入失敗`)
+          } else {
+            message.success(`已載入 ${成功數} 個對比方案`)
+          }
+        }
+      } finally {
+        if (!已取消) 設置載入進度(null)
+      }
     }
 
     執行加載()
+    return () => {
+      已取消 = true
+    }
   }, [
     刷新計數,
     當前方案,
@@ -267,12 +304,24 @@ const ComparisonPage: React.FC = () => {
     }
   }
 
-  // 確認選擇的方案
+  const 同一組 = (甲: string[], 乙: string[]) => {
+    if (甲.length !== 乙.length) return false
+    const 乙集合 = new Set(乙)
+    return 甲.every(項 => 乙集合.has(項))
+  }
+
+  // 確認選擇的方案。下載還没開始，成功提示留到這輪加載結束
   const 確認選擇方案 = () => {
+    const 内置未變 = 同一組(臨時已選方案鍵名列表, 選中對比方案鍵名列表)
+    const 本地未變 = 同一組(臨時已選本地方案標識符列表, 選中本地方案標識符列表)
+    設置顯示選擇彈窗(false)
+    if (内置未變 && 本地未變) {
+      message.success('已更新對比方案列表')
+      return
+    }
+    完成後提示.current = true
     設置選中對比方案鍵名列表(臨時已選方案鍵名列表)
     設置選中本地方案標識符列表(臨時已選本地方案標識符列表)
-    設置顯示選擇彈窗(false)
-    message.success('已更新對比方案列表')
   }
 
   // 靜態重碼字數表格列定義（根據全碼/簡碼動態生成，顯示7個字符集）
@@ -773,22 +822,63 @@ const ComparisonPage: React.FC = () => {
 
         {/* 操作按鈕 */}
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={打開選擇彈窗}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={打開選擇彈窗}
+            disabled={載入進度 !== null}
+          >
             選擇對比方案
           </Button>
-          <Button icon={<ReloadOutlined />} onClick={刷新對比數據} loading={加載中}>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={刷新對比數據}
+            loading={載入進度 !== null}
+            disabled={載入進度 !== null}
+          >
             刷新
           </Button>
         </Space>
 
-        {/* 對比表格 */}
-        <Table
-          columns={當前列定義}
-          dataSource={對比方案列表}
-          rowKey="唯一鍵"
-          pagination={false}
-          scroll={{ x: 'max-content' }}
-        />
+        {/* 對比表格。下載時蓋住表格，已有數字留在下面，避免卸掉再閃回來 */}
+        <div style={{ position: 'relative', minHeight: 載入進度 ? 220 : undefined }}>
+          <Table
+            columns={當前列定義}
+            dataSource={對比方案列表}
+            rowKey="唯一鍵"
+            pagination={false}
+            scroll={{ x: 'max-content' }}
+          />
+          {載入進度 && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 2,
+                background: 'rgba(255, 255, 255, 0.72)',
+              }}
+            >
+              <div
+                style={{
+                  position: 'sticky',
+                  top: 80,
+                  height: 220,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 16,
+                  color: 'rgba(0, 0, 0, 0.65)',
+                }}
+              >
+                <Spin size="large" />
+                <div>
+                  正在載入對比方案（{載入進度.當前}/{載入進度.總數}）{載入進度.名稱}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* 説明信息 */}
         <Alert

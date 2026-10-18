@@ -62,6 +62,12 @@ export const 方案列表原子狀態 = atom<方案列表項介面[]>([])
 export const 加載中原子狀態 = atom<boolean>(false)
 
 /**
+ * 頂欄正在切換的預設方案名
+ * 有值時主内容區顯示載入遮罩；null 表示没在切換
+ */
+export const 頂欄方案載入名原子狀態 = atom<string | null>(null)
+
+/**
  * 錯誤信息原子狀態
  * 方案加載或操作的錯誤信息
  */

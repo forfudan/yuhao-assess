@@ -1,9 +1,11 @@
 import { Outlet } from 'react-router-dom'
-import { Layout } from 'antd'
+import { Layout, Spin } from 'antd'
+import { useAtomValue } from 'jotai'
 import styled from 'styled-components'
 import { Sidebar } from './Sidebar'
 import { AppHeader } from './AppHeader'
 import { useLocalSchemeSyncMetrics } from '@/hooks/useLocalSchemeSyncMetrics'
+import { 頂欄方案載入名原子狀態 } from '@/atoms/scheme'
 
 const { Header, Content, Footer } = Layout
 
@@ -42,13 +44,43 @@ const StyledFooter = styled(Footer)`
   color: rgba(0, 0, 0, 0.45);
 `
 
+const MainColumn = styled(Layout)`
+  position: relative;
+`
+
+/* 蓋住頂欄以下的主欄，側欄和頂欄留在外面。
+   内層用 sticky 把轉圈釘在當前視口正中，長頁面滚下去也能看見。 */
+const SchemeLoadingMask = styled.div`
+  position: absolute;
+  z-index: 20;
+  top: 56px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(255, 255, 255, 0.72);
+`
+
+const SchemeLoadingContent = styled.div`
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: rgba(0, 0, 0, 0.65);
+`
+
 function MainLayout() {
   useLocalSchemeSyncMetrics()
+  const 頂欄方案載入名 = useAtomValue(頂欄方案載入名原子狀態)
 
   return (
     <StyledLayout>
       <Sidebar />
-      <Layout>
+      <MainColumn>
         <StyledHeader>
           <AppHeader />
         </StyledHeader>
@@ -58,7 +90,15 @@ function MainLayout() {
           </ContentInner>
         </StyledContent>
         <StyledFooter>宇浩漢字輸入法測評系統 © {new Date().getFullYear()}</StyledFooter>
-      </Layout>
+        {頂欄方案載入名 && (
+          <SchemeLoadingMask>
+            <SchemeLoadingContent>
+              <Spin size="large" />
+              <div>正在載入方案「{頂欄方案載入名}」</div>
+            </SchemeLoadingContent>
+          </SchemeLoadingMask>
+        )}
+      </MainColumn>
     </StyledLayout>
   )
 }
