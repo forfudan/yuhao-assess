@@ -11,6 +11,9 @@ importers:
       '@ant-design/icons':
         specifier: ^6.1.0
         version: 6.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@forfudan/yuhao-metrics':
+        specifier: ^0.3.0
+        version: 0.3.0
       antd:
         specifier: ^6.2.3
         version: 6.2.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -567,6 +570,10 @@ packages:
   '@eslint/js@9.39.2':
     resolution: {integrity: sha512-q1mjIoW1VX4IvSocvM/vbTiveKC4k9eLrajNEuSsmjymSDEbpGddtpfOoN7YGAqBK3NG+uqo8ia4PDTt8buCYA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@forfudan/yuhao-metrics@0.3.0':
+    resolution: {integrity: sha512-Kac4lwY8Ic/UWNLDGB/zGF6LATHMYwGCEk3YQ/sYi9e/7Uxpoxj+DRfbaeAyfJTAXCez0mI0qnb2Efz1YXskgQ==}
+    engines: {node: '>=18'}
 
   '@humanwhocodes/config-array@0.13.0':
     resolution: {integrity: sha512-DZLEEqFWQFiyK6h5YIeynKx7JlvCYWL0cImfSRXZ9l4Sg2efkFGTuFf6vzXjK1cq6IYkU+Eg/JizXw+TD2vRNw==}
@@ -3025,6 +3032,8 @@ snapshots:
   '@eslint/js@8.57.1': {}
 
   '@eslint/js@9.39.2': {}
+
+  '@forfudan/yuhao-metrics@0.3.0': {}
 
   '@humanwhocodes/config-array@0.13.0':
     dependencies:

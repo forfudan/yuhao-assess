@@ -21,8 +21,8 @@ export async function analyzeKeyboardHeatmap(
   選重鍵表?: 選重鍵表型别
 ): Promise<鍵位熱力分析結果介面> {
   return {
-    全碼: 計算按鍵計數(fullCodeWithSelectionTable, charFreq, 選重鍵表),
-    簡碼: 計算按鍵計數(shortCodeWithSelectionTable, charFreq, 選重鍵表),
+    全碼: await 計算按鍵計數(fullCodeWithSelectionTable, charFreq, 選重鍵表),
+    簡碼: await 計算按鍵計數(shortCodeWithSelectionTable, charFreq, 選重鍵表),
     更新時間: new Date().toISOString(),
   }
 }
